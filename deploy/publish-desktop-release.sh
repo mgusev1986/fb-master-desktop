@@ -43,17 +43,33 @@ do
   fi
 done
 
+# Windows .exe — опционально: если файл есть, тоже зальём и пропишем URL в .env
+WIN_FILE="${PREFIX}-${VER}-win-x64.exe"
+HAS_WIN=0
+if [[ -f "$REL/$WIN_FILE" ]]; then
+  HAS_WIN=1
+  echo "(info: найден $WIN_FILE — залью Windows-сборку)"
+fi
+
 echo ">>> SSH: удаляю старые FbMaster-* и SOCMASTER-* в $REMOTE_DIR"
-ssh "$SSH_TARGET" "mkdir -p '$REMOTE_DIR' && rm -f '$REMOTE_DIR'/FbMaster-*.dmg '$REMOTE_DIR'/FbMaster-*.zip '$REMOTE_DIR'/FbMaster-*.exe '$REMOTE_DIR'/SOCMASTER-*.dmg '$REMOTE_DIR'/SOCMASTER-*.zip 2>/dev/null || true"
+ssh "$SSH_TARGET" "mkdir -p '$REMOTE_DIR' && rm -f '$REMOTE_DIR'/FbMaster-*.dmg '$REMOTE_DIR'/FbMaster-*.zip '$REMOTE_DIR'/FbMaster-*.exe '$REMOTE_DIR'/SOCMASTER-*.dmg '$REMOTE_DIR'/SOCMASTER-*.zip '$REMOTE_DIR'/SOCMASTER-*.exe 2>/dev/null || true"
 
 echo ">>> rsync → ${SSH_TARGET}:$REMOTE_DIR/  (prefix=$PREFIX)"
-rsync -avz --progress \
-  "$REL/${PREFIX}-${VER}-mac-arm64.dmg" \
-  "$REL/${PREFIX}-${VER}-mac-arm64-bundle.zip" \
-  "${SSH_TARGET}:${REMOTE_DIR}/"
+RSYNC_FILES=(
+  "$REL/${PREFIX}-${VER}-mac-arm64.dmg"
+  "$REL/${PREFIX}-${VER}-mac-arm64-bundle.zip"
+)
+if [[ $HAS_WIN -eq 1 ]]; then
+  RSYNC_FILES+=("$REL/$WIN_FILE")
+fi
+rsync -avz --progress "${RSYNC_FILES[@]}" "${SSH_TARGET}:${REMOTE_DIR}/"
 
 echo ">>> SSH: владелец fbmaster для артефактов"
-ssh "$SSH_TARGET" "chown fbmaster:fbmaster '$REMOTE_DIR'/${PREFIX}-${VER}-mac-arm64.dmg '$REMOTE_DIR'/${PREFIX}-${VER}-mac-arm64-bundle.zip 2>/dev/null || true"
+CHOWN_ARGS="'$REMOTE_DIR'/${PREFIX}-${VER}-mac-arm64.dmg '$REMOTE_DIR'/${PREFIX}-${VER}-mac-arm64-bundle.zip"
+if [[ $HAS_WIN -eq 1 ]]; then
+  CHOWN_ARGS="$CHOWN_ARGS '$REMOTE_DIR'/$WIN_FILE"
+fi
+ssh "$SSH_TARGET" "chown fbmaster:fbmaster $CHOWN_ARGS 2>/dev/null || true"
 
 if [[ -n "$DOMAIN_RAW" ]]; then
   DOM="${DOMAIN_RAW#https://}"
@@ -70,7 +86,7 @@ if [[ -n "$DOMAIN_RAW" ]]; then
   fi
   echo ">>> SSH: правлю /opt/fb-master/.env — FB_DESKTOP_LATEST_VERSION=$VER (prefix=$PREFIX), base=$BASE"
   ssh "$SSH_TARGET" \
-    "env VER=$(printf '%q' "$VER") BASE=$(printf '%q' "$BASE") PREFIX=$(printf '%q' "$PREFIX") NOTES_B64=$(printf '%q' "$NOTES_B64") python3 -" <<'PY'
+    "env VER=$(printf '%q' "$VER") BASE=$(printf '%q' "$BASE") PREFIX=$(printf '%q' "$PREFIX") NOTES_B64=$(printf '%q' "$NOTES_B64") HAS_WIN=$(printf '%q' "$HAS_WIN") python3 -" <<'PY'
 import base64
 import os
 import pathlib
@@ -84,6 +100,8 @@ updates = {
     "FB_DESKTOP_DOWNLOAD_DARWIN_ARM64": f"{base}/static/releases/{prefix}-{ver}-mac-arm64.dmg",
     "FB_DESKTOP_DOWNLOAD_DARWIN_ARM64_BUNDLE": f"{base}/static/releases/{prefix}-{ver}-mac-arm64-bundle.zip",
 }
+if os.environ.get("HAS_WIN") == "1":
+    updates["FB_DESKTOP_DOWNLOAD_WIN32_X64"] = f"{base}/static/releases/{prefix}-{ver}-win-x64.exe"
 nb = (os.environ.get("NOTES_B64") or "").strip()
 if nb:
     try:
@@ -107,6 +125,7 @@ for key in (
     "FB_DESKTOP_LATEST_VERSION",
     "FB_DESKTOP_DOWNLOAD_DARWIN_ARM64",
     "FB_DESKTOP_DOWNLOAD_DARWIN_ARM64_BUNDLE",
+    "FB_DESKTOP_DOWNLOAD_WIN32_X64",
     "FB_DESKTOP_RELEASE_NOTES",
 ):
     if key in pending:

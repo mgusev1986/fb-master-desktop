@@ -138,6 +138,66 @@
       border-color: rgba(231, 213, 176, 0.45);
       box-shadow: 0 6px 20px rgba(201, 169, 98, 0.12);
     }
+    /* Две кнопки скачивания: Windows / macOS */
+    .fbm-premium-os-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+    @media (max-width: 520px) {
+      .fbm-premium-os-row { grid-template-columns: 1fr; }
+    }
+    .fbm-premium-os-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.65rem;
+      padding: 1.05rem 1.25rem;
+      border: none;
+      border-radius: 16px;
+      font-size: 1.15rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: #1a1410 !important;
+      cursor: pointer;
+      background: linear-gradient(135deg, #e8d5a8 0%, #c9a962 45%, #a67c3d 100%);
+      box-shadow: 0 4px 20px rgba(201, 169, 98, 0.35), 0 1px 2px rgba(0, 0, 0, 0.25);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      text-decoration: none !important;
+      text-align: center;
+      box-sizing: border-box;
+    }
+    .fbm-premium-os-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 28px rgba(201, 169, 98, 0.45);
+    }
+    .fbm-premium-os-btn[aria-disabled="true"] {
+      opacity: 0.55;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    .fbm-premium-os-btn svg {
+      width: 22px;
+      height: 22px;
+      fill: currentColor;
+      flex-shrink: 0;
+    }
+    .fbm-premium-os-btn small {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 500;
+      opacity: 0.75;
+      letter-spacing: 0.04em;
+      margin-top: 2px;
+      text-transform: uppercase;
+    }
+    .fbm-premium-os-label {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      line-height: 1.05;
+    }
     .fbm-premium-link-muted {
       display: inline-block;
       margin-top: 1.25rem;
@@ -203,7 +263,18 @@
     <div class="unlock-banner-info">
       Если вы нажали «Уже есть ключ» со страницы оплаты: откройте программу SOCMASTER на компьютере и вставьте ключ там. Сайт нужен для оплаты и скачивания установщика.
     </div>
-    <a href="{{ unlock_app_download_href }}" class="fbm-premium-submit" {% if unlock_app_download_href.startswith('http') %}target="_blank" rel="noopener noreferrer"{% endif %}>Скачать приложение</a>
+    <div class="fbm-premium-os-row">
+      {% set win_href = unlock_app_download_hrefs.get('win') %}
+      {% set mac_href = unlock_app_download_hrefs.get('mac') %}
+      <a class="fbm-premium-os-btn" {% if win_href %}href="{{ win_href }}" {% if win_href.startswith('http') %}target="_blank" rel="noopener noreferrer"{% endif %}{% else %}href="{{ unlock_buy_fallback }}" aria-disabled="true" title="Сборка для Windows появится после выпуска релиза"{% endif %}>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5l8-1.1v8.1H3V5.5zm0 13l8 1.1v-8H3v6.9zM12 4.3L22 3v9.5H12V4.3zm0 15.4L22 21v-9.5H12v8.2z"/></svg>
+        <span class="fbm-premium-os-label"><span>Windows</span><small>x64 · .exe</small></span>
+      </a>
+      <a class="fbm-premium-os-btn" {% if mac_href %}href="{{ mac_href }}" {% if mac_href.startswith('http') %}target="_blank" rel="noopener noreferrer"{% endif %}{% else %}href="{{ unlock_buy_fallback }}" aria-disabled="true" title="Сборка для macOS появится после выпуска релиза"{% endif %}>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+        <span class="fbm-premium-os-label"><span>macOS</span><small>Apple Silicon · .dmg</small></span>
+      </a>
+    </div>
     <a class="fbm-premium-link-muted" href="/purchase" style="margin-top:1rem">Вернуться к оплате</a>
     {% else %}
 

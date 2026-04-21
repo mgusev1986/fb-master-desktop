@@ -623,6 +623,18 @@ def _buy_page_auto_dmg_url() -> str:
     return ""
 
 
+def _buy_page_auto_exe_url() -> str:
+    """Авто‑ссылка на Windows‑инсталлятор SOCMASTER‑<версия>‑win‑x64.exe в static/releases/."""
+    ver = FB_DESKTOP_LATEST_VERSION.strip()
+    if not ver:
+        return ""
+    for prefix in ("SOCMASTER", "FbMaster"):
+        fn = f"{prefix}-{ver}-win-x64.exe"
+        if _static_release_file_path(fn).is_file():
+            return f"{public_app_base_url().rstrip('/')}/static/releases/{fn}"
+    return ""
+
+
 def desktop_buy_page_download_urls(*, for_paid_flow: bool = False) -> dict[str, str]:
     """
     Ссылки для витрины /buy и после оплаты.
@@ -643,6 +655,12 @@ def desktop_buy_page_download_urls(*, for_paid_flow: bool = False) -> dict[str, 
             full["darwin_arm64"] = auto_dmg
     if "darwin_arm64" in full:
         out["darwin_arm64"] = full["darwin_arm64"]
+    if "win32_x64" not in full:
+        auto_exe = _buy_page_auto_exe_url()
+        if auto_exe:
+            full["win32_x64"] = auto_exe
+    if "win32_x64" in full:
+        out["win32_x64"] = full["win32_x64"]
 
     from backend.services.release_download import sign_url_dict
 
@@ -655,16 +673,27 @@ def unlock_page_desktop_download_href() -> str:
     Ссылка для кнопки «Скачать приложение» на /auth/unlock, когда в браузере нет формы ключа.
     Прямой скачивание (как после оплаты), без marketing_buy_page_url — он может указывать на /purchase.
     """
-    du = desktop_buy_page_download_urls(for_paid_flow=False)
-    if du:
-        for k in ("darwin_arm64_bundle", "darwin_arm64"):
-            v = du.get(k)
-            if isinstance(v, str) and v.strip():
-                return v.strip()
-        for v in du.values():
-            if isinstance(v, str) and v.strip():
-                return v.strip()
-    return f"{public_app_base_url().rstrip('/')}/buy"
+    hrefs = unlock_page_desktop_download_hrefs()
+    return hrefs.get("mac") or hrefs.get("win") or f"{public_app_base_url().rstrip('/')}/buy"
+
+
+def unlock_page_desktop_download_hrefs() -> dict[str, str]:
+    """
+    Ссылки для двух кнопок «Скачать» (Windows и macOS) на /auth/unlock.
+    Возвращает словарь с ключами 'mac' и/или 'win', значения — подписанные URL.
+    Ключ может отсутствовать, если для платформы ещё нет сборки.
+    """
+    out: dict[str, str] = {}
+    du = desktop_buy_page_download_urls(for_paid_flow=False) or {}
+    for k in ("darwin_arm64_bundle", "darwin_arm64"):
+        v = du.get(k)
+        if isinstance(v, str) and v.strip():
+            out["mac"] = v.strip()
+            break
+    win = du.get("win32_x64")
+    if isinstance(win, str) and win.strip():
+        out["win"] = win.strip()
+    return out
 
 
 # ── NOWPayments (продление ключа доступа) ─────────────

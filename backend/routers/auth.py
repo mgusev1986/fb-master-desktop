@@ -162,6 +162,8 @@ async def access_key_unlock_page(request: Request, db: Session = Depends(get_db)
             "show_unlock_key_form": show_key,
             "buy_url": app_config.marketing_buy_page_url(),
             "unlock_app_download_href": app_config.unlock_page_desktop_download_href(),
+            "unlock_app_download_hrefs": app_config.unlock_page_desktop_download_hrefs(),
+            "unlock_buy_fallback": app_config.marketing_buy_page_url(),
             "purchase_url": app_config.marketing_purchase_page_url(),
             "unlock_error": err,
             "unlock_reason": reason,
