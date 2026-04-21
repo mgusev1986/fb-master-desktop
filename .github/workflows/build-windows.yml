@@ -17,10 +17,6 @@ jobs:
   build-windows:
     runs-on: windows-latest
     timeout-minutes: 45
-    # Относительные пути — FB Master живёт в DEVELOPMENTS/FB - Master/
-    defaults:
-      run:
-        working-directory: "DEVELOPMENTS/FB - Master"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -64,13 +60,13 @@ jobs:
 
       - name: Install Electron dependencies
         shell: pwsh
-        working-directory: "DEVELOPMENTS/FB - Master/desktop/fb-master-desktop"
+        working-directory: "desktop/fb-master-desktop"
         run: |
           npm ci --no-audit --no-fund
 
       - name: Build Windows installer (NSIS .exe)
         shell: pwsh
-        working-directory: "DEVELOPMENTS/FB - Master/desktop/fb-master-desktop"
+        working-directory: "desktop/fb-master-desktop"
         env:
           # На CI нет Apple-сертификатов → выключаем любые попытки подписать Mac-артефакты
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
@@ -93,6 +89,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: SOCMASTER-${{ steps.ver.outputs.v }}-win
-          path: "DEVELOPMENTS/FB - Master/artifacts-win/*"
+          path: "artifacts-win/*"
           if-no-files-found: error
           retention-days: 30
