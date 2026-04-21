@@ -181,10 +181,19 @@ function normalizeElectronCookieExpiry(cookie) {
   if (raw == null || raw === -1) return null;
   let exp = Number(raw);
   if (!Number.isFinite(exp) || exp <= 0) return null;
-  /* Chrome/market мусор (например 134513026190882962) — без срока, иначе Electron отклоняет. */
-  if (exp > 1e15) return null;
+  /* Windows FILETIME (100-нс тики с 1601-01-01 UTC) — так отдаёт Chrome Cookie-Editor в ряде версий.
+   * Раньше мы отбрасывали такие значения → cookies становились session-only → FB показывал
+   * «Продолжить»-picker вместо автологина. */
+  if (exp > 1e15) {
+    const sec = (exp / 1e7) - 11_644_473_600;
+    const nowSec = Date.now() / 1000;
+    if (sec > nowSec - 86400 && sec < nowSec + 10 * 365 * 86400) {
+      return Math.floor(sec);
+    }
+    /* Sentinel / за пределами разумного — ставим 2 года вперёд, чтобы cookie был persistent. */
+    return Math.floor(nowSec + 2 * 365 * 86400);
+  }
   if (exp > 1e12) exp = Math.floor(exp / 1000);
-  if (exp > 1e11) exp = Math.floor(exp / 1000);
   /* разумный верх (~2100) */
   if (exp > 4102444800) exp = 4102444800;
   return exp;
@@ -247,6 +256,30 @@ function sanitizeCookieForElectron(cookie) {
   const expNorm = normalizeElectronCookieExpiry(cookie);
   if (expNorm != null) {
     out.expirationDate = expNorm;
+  } else {
+    /* FB auth cookies без expirationDate → Electron сохраняет как session-only,
+     * они не доживают до перезапуска webview, и FB показывает «Saved login»-picker.
+     * Для критичных cookie в домене facebook.com/messenger.com ставим 2 года вперёд. */
+    const hostLower = String(host || '').toLowerCase();
+    const nameLower = String(out.name || '').toLowerCase();
+    const isFbDomain =
+      hostLower === 'facebook.com' ||
+      hostLower === 'messenger.com' ||
+      hostLower.endsWith('.facebook.com') ||
+      hostLower.endsWith('.messenger.com');
+    const isCritical =
+      nameLower === 'c_user' ||
+      nameLower === 'xs' ||
+      nameLower === 'fr' ||
+      nameLower === 'datr' ||
+      nameLower === 'sb' ||
+      nameLower === 'locale' ||
+      nameLower === 'wd' ||
+      nameLower === 'dpr' ||
+      nameLower === 'presence';
+    if (isFbDomain && isCritical) {
+      out.expirationDate = Math.floor(Date.now() / 1000 + 2 * 365 * 86400);
+    }
   }
   /* Сохраняем domain (`.facebook.com`) — важно: host-only cookie на www.facebook.com
    * FB потом перезаписывает своим `.facebook.com` Set-Cookie, получается дубликат с

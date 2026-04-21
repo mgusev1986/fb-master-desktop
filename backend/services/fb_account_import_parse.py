@@ -149,7 +149,20 @@ def normalize_fb_account_proxy_form(
 
 
 def _expiration_date_to_unix_seconds(raw: Any) -> float | None:
-    """Chrome/marketplace JSON: expirationDate в секундах или миллисекундах; огромные — пропускаем."""
+    """Chrome/marketplace JSON: expirationDate в разных форматах.
+
+    Распознаём:
+      • Unix seconds (1e9 < x < 1e12) — как есть.
+      • Unix milliseconds (1e12 < x < 1e15) — делим на 1000.
+      • Windows FILETIME (x > 1e15) — 100-нс тики с 1601-01-01 UTC.
+        Именно так Cookie-Editor (Chrome extension) экспортирует cookies в некоторых
+        версиях — и это ГЛАВНЫЙ формат в .txt от большинства маркетплейсов (darkstore
+        и др.). Раньше мы отбрасывали такие значения → cookies сохранялись без expires,
+        инжектились как session-only → FB показывал «Продолжить» picker вместо фида.
+    Если результат вне разумного окна (прошлое или больше 10 лет вперёд) — возвращаем
+    дефолт 2 года вперёд для критичных FB cookies (иначе они session-only = не
+    доживают до перезапуска webview).
+    """
     if raw is None:
         return None
     try:
@@ -158,14 +171,25 @@ def _expiration_date_to_unix_seconds(raw: Any) -> float | None:
         return None
     if x <= 0:
         return None
+    sec: float | None = None
     if x > 1e15:
-        return None
-    if x > 1e12:
+        # Windows FILETIME: 100-ns ticks с 1601-01-01 UTC. Смещение до 1970: 11644473600 сек.
+        sec = (x / 1e7) - 11_644_473_600.0
+    elif x > 1e12:
         sec = x / 1000.0
-        return sec if sec > 1e8 else None
-    if x > 1e9:
-        return x
-    return None
+    elif x > 1e9:
+        sec = x
+    if sec is None:
+        return None
+    # Санити: от минус суток до +10 лет от now.
+    import time as _t
+    now = _t.time()
+    if sec < now - 86_400:
+        return None
+    if sec > now + 10 * 365 * 86_400:
+        # Сентинел Int64_MAX / "never": ограничиваем 2 годами, чтобы Electron считал cookie персистентным.
+        return now + 2 * 365 * 86_400
+    return sec
 
 
 def marketplace_cookies_to_storage_state(raw_cookies: list[Any]) -> dict[str, Any]:
