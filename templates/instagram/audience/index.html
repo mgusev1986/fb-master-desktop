@@ -1,0 +1,61 @@
+{% extends "instagram/base.html" %}
+{% block title %}Поиск аудитории · Instagram Master{% endblock %}
+{% block content %}
+<div class="ig-page">
+  <header class="ig-page__header">
+    <div class="ig-page__title-wrap">
+      <h1 class="ig-page__title">Поиск аудитории <span class="ig-page__beta-pill">Beta</span></h1>
+      <p class="ig-page__subtitle">Browser-парсер по hashtag (топ-посты + recent) или users keyword search. Сохраняет handles в leads с дедупом.</p>
+    </div>
+  </header>
+
+  {% if accounts %}
+  <section class="ig-card ig-card--accent">
+    <h2 class="ig-card__title"><i class="ti ti-search"></i> Запустить поиск</h2>
+    <form method="post" action="/instagram/audience/search" style="display:flex;flex-direction:column;gap:8px;" onsubmit="this.querySelector('button.search-go').disabled=true; this.querySelector('button.search-go').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Ищу…';">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <select name="account_id" required style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
+          <option value="">— аккаунт —</option>
+          {% for a in accounts %}<option value="{{ a.id }}">{{ a.label }} [{{ a.status }}]</option>{% endfor %}
+        </select>
+        <select name="search_kind" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
+          <option value="hashtag">hashtag (без #)</option>
+          <option value="users">users (по keyword)</option>
+        </select>
+        <input type="text" name="keywords" required placeholder="startup или photography (для hashtag) / Иван (для users)" style="flex:2;min-width:240px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+        <input type="number" name="max_results" min="5" max="60" value="20" style="width:80px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+        <button type="submit" class="ig-btn ig-btn--primary search-go"><i class="ti ti-search"></i> Найти</button>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <select name="segment_id" style="flex:1;min-width:200px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font-size:12px;">
+          <option value="">— или сохранённый сегмент —</option>
+          {% for s in (segments or []) %}<option value="{{ s.id }}">{{ s.name }} ({{ s.search_kind }} · {{ s.last_run_count or 0 }} рез.)</option>{% endfor %}
+        </select>
+        <label style="font:400 12px/1 Inter;color:var(--text-secondary);display:inline-flex;align-items:center;gap:4px;">
+          <input type="checkbox" name="save_as_segment" value="on"/> сохранить как сегмент:
+          <input type="text" name="save_segment_name" placeholder="название" style="padding:4px;border-radius:6px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font-size:12px;width:160px;"/>
+        </label>
+      </div>
+    </form>
+  </section>
+  {% else %}
+  <section class="ig-banner"><div class="ig-banner__icon"><i class="ti ti-info-circle"></i></div><div class="ig-banner__body"><h2 class="ig-banner__title">Нужен аккаунт</h2><p class="ig-banner__text">Подключите минимум один <a href="/instagram/accounts">аккаунт</a>.</p></div></section>
+  {% endif %}
+
+  {% if segments %}
+  <section class="ig-card">
+    <h2 class="ig-card__title"><i class="ti ti-bookmark"></i> Сохранённые сегменты ({{ segments|length }})</h2>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+      {% for s in segments %}
+      <div style="display:flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--border);border-radius:999px;background:color-mix(in srgb,var(--ws-accent) 4%,transparent);">
+        <strong style="font:500 13px/1 Inter;">{{ s.name }}</strong>
+        <small style="color:var(--text-muted);">{{ s.search_kind }} · {{ s.keywords[:60] }}</small>
+        {% if s.last_run_count %}<span style="font-size:11px;color:var(--ws-accent);">{{ s.last_run_count }}</span>{% endif %}
+        <form method="post" action="/instagram/audience/segments/{{ s.id }}/archive" style="margin:0;" onsubmit="return confirm('Архивировать?');"><button class="ig-btn" style="background:transparent;border:none;color:#c33;font-size:11px;padding:0 4px;" type="submit">×</button></form>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

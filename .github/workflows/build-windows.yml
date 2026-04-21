@@ -1,0 +1,98 @@
+name: Build Windows SOCMASTER
+
+on:
+  # Запуск вручную из вкладки Actions с указанием версии
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Версия сборки (например 2.28.0)'
+        required: true
+        default: '2.28.0'
+  # Автозапуск на git tag v*
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    # Относительные пути — FB Master живёт в DEVELOPMENTS/FB - Master/
+    defaults:
+      run:
+        working-directory: "DEVELOPMENTS/FB - Master"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Python 3.12 (для pip запуска на CI — embedded Python качает ps1)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Determine version
+        id: ver
+        shell: bash
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            echo "v=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "v=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          else
+            echo "v=0.0.0-dev" >> $GITHUB_OUTPUT
+          fi
+          echo "Building version ${{ steps.ver.outputs.v }}"
+
+      - name: Set package.json version
+        shell: pwsh
+        run: |
+          $v = "${{ steps.ver.outputs.v }}"
+          $pkg = Get-Content "desktop\fb-master-desktop\package.json" -Raw | ConvertFrom-Json
+          $pkg.version = $v
+          $pkg | ConvertTo-Json -Depth 99 | Set-Content "desktop\fb-master-desktop\package.json" -Encoding utf8
+          Write-Host "package.json version → $v"
+
+      - name: Prepare backend bundle (Windows)
+        shell: pwsh
+        run: |
+          powershell -ExecutionPolicy Bypass -File .\scripts\prepare-desktop-backend-bundle-win.ps1
+
+      - name: Install Electron dependencies
+        shell: pwsh
+        working-directory: "DEVELOPMENTS/FB - Master/desktop/fb-master-desktop"
+        run: |
+          npm ci --no-audit --no-fund
+
+      - name: Build Windows installer (NSIS .exe)
+        shell: pwsh
+        working-directory: "DEVELOPMENTS/FB - Master/desktop/fb-master-desktop"
+        env:
+          # На CI нет Apple-сертификатов → выключаем любые попытки подписать Mac-артефакты
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+          SKIP_NOTARIZE: '1'
+        run: |
+          npm run dist:win
+
+      - name: Collect artifacts
+        shell: pwsh
+        run: |
+          $dist = "desktop\fb-master-desktop\dist"
+          Get-ChildItem $dist | Format-Table -AutoSize
+          New-Item -ItemType Directory -Force -Path "artifacts-win" | Out-Null
+          # Копируем .exe и blockmap (убираем latest.yml с приватными данными при желании)
+          Copy-Item "$dist\*.exe" "artifacts-win\" -ErrorAction SilentlyContinue
+          Copy-Item "$dist\*.exe.blockmap" "artifacts-win\" -ErrorAction SilentlyContinue
+          Get-ChildItem "artifacts-win"
+
+      - name: Upload .exe artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SOCMASTER-${{ steps.ver.outputs.v }}-win
+          path: "DEVELOPMENTS/FB - Master/artifacts-win/*"
+          if-no-files-found: error
+          retention-days: 30

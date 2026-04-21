@@ -1,0 +1,69 @@
+{#
+  Reddit Master base template.
+
+  Наследуется от _shell/base.html. Sidebar рендерится из
+  backend/modules/reddit/manifest.NAVIGATION через Jinja-global
+  fbm_workspace_nav("reddit").
+#}
+{% extends "_shell/base.html" %}
+
+{% block shell_workspace %}reddit{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/reddit.css') }}?v={{ static_v }}"/>
+{% endblock %}
+
+{% block shell_sidebar %}
+{% set _reddit_nav = fbm_workspace_nav("reddit") %}
+<aside class="sidebar" data-workspace="reddit">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <span class="sidebar-logo__mark sidebar-logo__mark--reddit">SOC</span>MASTER
+    </div>
+    {% if fbm_desktop_app_version %}
+    <div class="sidebar-version-line" title="Версия программы">v{{ fbm_desktop_app_version }}</div>
+    {% endif %}
+  </div>
+
+  <nav class="sidebar-nav">
+    {% if _reddit_nav %}
+      {% for group in _reddit_nav.groups %}
+      <div class="nav-group">
+        <div class="nav-group-label">{{ group.label }}</div>
+        {% for item in group.items %}
+        <a href="{{ item.href }}"
+           class="nav-item{% if item.hidden %} nav-item--sidebar-hidden{% endif %}{% if page_id == item.id %} active{% endif %}">
+          <i class="ti ti-{{ item.icon }}"></i>
+          <span>{{ item.label }}</span>
+          {% if item.badge %}<span class="nav-item__badge">{{ item.badge }}</span>{% endif %}
+        </a>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    {% endif %}
+
+    <div class="nav-group">
+      <div class="nav-group-label">Навигация</div>
+      <a href="/workspaces" class="nav-item">
+        <i class="ti ti-layout-grid"></i> Все пространства
+      </a>
+      <a href="/" class="nav-item">
+        <i class="ti ti-brand-facebook"></i> Facebook Master
+      </a>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-actions">
+      <button id="theme-toggle" class="btn-sidebar" title="Сменить тему">
+        <i id="theme-icon" class="ti ti-moon"></i>
+      </button>
+      {% if sidebar_show_logout(request, user) %}
+      <a href="/auth/logout" class="btn-sidebar">
+        <i class="ti ti-logout"></i> Выйти
+      </a>
+      {% endif %}
+    </div>
+  </div>
+</aside>
+{% endblock %}

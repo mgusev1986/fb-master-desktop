@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="robots" content="noindex,nofollow"/>
+  <title>Вход</title>
+  <style>
+    :root { font-family: system-ui, sans-serif; }
+    body { max-width: 22rem; margin: 3rem auto; padding: 0 1rem; line-height: 1.5; }
+    h1 { font-size: 1.15rem; margin: 0 0 1rem; }
+    label { display: block; font-weight: 600; margin-bottom: 0.35rem; font-size: 0.9rem; }
+    input[type="password"] { width: 100%; box-sizing: border-box; padding: 0.5rem 0.65rem; font-size: 1rem; }
+    button { margin-top: 0.85rem; width: 100%; padding: 0.55rem 1rem; font-size: 1rem; cursor: pointer; }
+    .err { background: #fef2f2; color: #b91c1c; padding: 0.65rem 0.85rem; border-radius: 8px; font-size: 0.875rem; margin-bottom: 1rem; }
+    .hint { color: #64748b; font-size: 0.8rem; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Доступ к входу в кабинет</h1>
+  {% if gate_error %}
+  <div class="err">{{ gate_error }}</div>
+  {% endif %}
+  <form method="post" action="">
+    <label for="password">Пароль</label>
+    <input id="password" name="password" type="password" autocomplete="current-password" required autofocus/>
+    <button type="submit">Продолжить</button>
+  </form>
+  <p class="hint">После успешного ввода откроется обычная страница входа (Google / почта).</p>
+</body>
+</html>

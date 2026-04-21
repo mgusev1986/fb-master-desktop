@@ -1,0 +1,381 @@
+{% extends "reddit/base.html" %}
+
+{% block title %}Reddit-аккаунты · Reddit Master{% endblock %}
+
+{% block head %}
+{{ super() }}
+<style>
+  /* Reddit-style вход: мимикрируем login-модалку reddit.com */
+  .reddit-login-card {
+    max-width: 560px;
+    margin: 40px auto 0;
+    padding: 32px 36px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    box-shadow: 0 12px 40px rgba(0,0,0,.08);
+  }
+  .reddit-login-card__close {
+    float: right;
+    width: 28px; height: 28px;
+    display: grid; place-items: center;
+    background: color-mix(in srgb, var(--text-secondary) 12%, transparent);
+    color: var(--text-secondary);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .reddit-login-card__logo {
+    display: flex;
+    justify-content: center;
+    margin: 4px 0 18px;
+  }
+  .reddit-login-card__logo-circle {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: #ff4500;
+    color: #fff;
+    display: grid; place-items: center;
+    font-size: 28px;
+  }
+  .reddit-login-card__title {
+    margin: 0 0 8px;
+    text-align: center;
+    font: 700 22px/1.2 Inter, sans-serif;
+    color: var(--text-primary);
+  }
+  .reddit-login-card__desc {
+    margin: 0 0 24px;
+    text-align: center;
+    font: 400 13px/1.5 Inter, sans-serif;
+    color: var(--text-secondary);
+  }
+  .reddit-login-card__desc a {
+    color: #4299ff;
+    text-decoration: none;
+  }
+  .reddit-login-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 13px 18px;
+    margin-bottom: 10px;
+    background: color-mix(in srgb, var(--text-secondary) 10%, transparent);
+    border: 1px solid transparent;
+    border-radius: 999px;
+    color: var(--text-primary);
+    font: 600 14px/1 Inter, sans-serif;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .reddit-login-btn:hover {
+    background: color-mix(in srgb, var(--text-secondary) 16%, transparent);
+  }
+  .reddit-login-btn--reddit {
+    background: #ff4500;
+    color: #fff;
+    font-weight: 700;
+    font-size: 15px;
+    padding: 14px 18px;
+  }
+  .reddit-login-btn--reddit:hover {
+    background: #e63e00;
+  }
+  .reddit-login-btn--reddit i { font-size: 20px; }
+  .reddit-login-btn--disabled {
+    opacity: .5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+  .reddit-login-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 18px 0;
+    color: var(--text-secondary);
+    font: 600 12px/1 Inter, sans-serif;
+    text-transform: uppercase;
+  }
+  .reddit-login-divider::before,
+  .reddit-login-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .reddit-login-hint {
+    margin: 16px 0 0;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: color-mix(in srgb, #ff4500 6%, transparent);
+    color: var(--text-secondary);
+    font: 400 12px/1.5 Inter, sans-serif;
+  }
+  .reddit-login-hint strong { color: var(--text-primary); }
+  .reddit-login-footer {
+    margin-top: 24px;
+    text-align: center;
+    font: 400 12px/1.4 Inter, sans-serif;
+    color: var(--text-secondary);
+  }
+  .reddit-login-footer a { color: #4299ff; text-decoration: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="reddit-page">
+  <header class="reddit-page__header">
+    <div class="reddit-page__title-wrap">
+      <h1 class="reddit-page__title">Reddit-аккаунты</h1>
+      <p class="reddit-page__subtitle">
+        Поддерживаются ДВА способа подключения: <strong>browser-profile</strong> (Chromium + cookies, без OAuth-ограничений)
+        и <strong>OAuth</strong> (официальный API, ограниченный rate-limit'ами).
+      </p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <a href="/reddit/settings" class="reddit-btn"><i class="ti ti-settings"></i> Настройки</a>
+    </div>
+  </header>
+
+  {% if notice == 'imported' %}
+  <div class="reddit-card" style="border-color:color-mix(in srgb,#1b873f 30%,var(--border));background:color-mix(in srgb,#1b873f 6%,var(--bg-surface));">
+    <strong>Импорт завершён.</strong> Добавлено: <strong>{{ imported }}</strong>. Ошибок: <strong>{{ errors_count }}</strong>.
+    {% if (errors_count|int) > 0 %}<small>Часть строк не распарсилась — проверьте формат или наличие <code>reddit_session</code> / <code>token_v2</code>.</small>{% endif %}
+  </div>
+  {% endif %}
+
+  {% if browser_mode_enabled %}
+  <section class="reddit-card reddit-card--accent">
+    <h2 class="reddit-card__title"><i class="ti ti-upload"></i> Импорт купленных аккаунтов через cookies (browser-mode)</h2>
+    <p class="reddit-card__desc">Поддерживаемые форматы (одна строка = один аккаунт):</p>
+    <ul style="margin:0;padding-left:20px;color:var(--text-secondary,#606770);font:400 13px/1.6 Inter,sans-serif;">
+      <li><strong>JSON-объект</strong>: <code>{"label":"u/name","username":"name","cookies":[...],"proxy_url":"http://user:pass@host:port","user_agent":"..."}</code></li>
+      <li><strong>Массив cookies</strong>: <code>[{"name":"reddit_session","value":"...","domain":".reddit.com","path":"/"}, ...]</code></li>
+      <li><strong>TSV</strong>: <code>label&lt;TAB&gt;cookies_json&lt;TAB&gt;proxy_url</code></li>
+    </ul>
+    <p class="reddit-card__desc" style="margin-top:8px;color:var(--text-muted,#888);font-size:12px;">
+      Обязательная cookie — <code>reddit_session</code> или <code>token_v2</code>. На каждый аккаунт создаётся свой Chromium-профиль.
+    </p>
+    <form method="post" action="/reddit/accounts/import-cookies" style="display:flex;flex-direction:column;gap:10px;">
+      <textarea name="blob" rows="7" placeholder='{"label":"u/myaccount","username":"myaccount","cookies":[{"name":"reddit_session","value":"..."}],"proxy_url":"http://user:pass@1.2.3.4:8080"}'
+                style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);font:400 13px/1.4 ui-monospace,Menlo,monospace;resize:vertical;"></textarea>
+      <div style="display:flex;justify-content:flex-end;gap:8px;">
+        <button type="submit" class="reddit-btn reddit-btn--primary">
+          <i class="ti ti-upload"></i> Импортировать
+        </button>
+      </div>
+    </form>
+  </section>
+
+  {# browser-mode карточки аккаунтов с действиями probe/proxy #}
+  {% set has_browser_acc = false %}
+  {% for a in accounts_raw %}{% if a.auth_mode == 'browser_profile' %}{% set has_browser_acc = true %}{% endif %}{% endfor %}
+  {% if has_browser_acc %}
+  <section>
+    <h2 class="reddit-card__title" style="margin:8px 0 12px;">Browser-mode аккаунты</h2>
+    <div class="reddit-grid reddit-grid--wide">
+      {% for a in accounts_raw if a.auth_mode == 'browser_profile' %}
+      <article class="reddit-card">
+        <header style="display:flex;align-items:flex-start;gap:10px;justify-content:space-between;">
+          <h3 class="reddit-card__title" style="font-size:15px;">
+            <i class="ti ti-brand-reddit"></i> {{ a.label }}
+            {% if a.username_snapshot %}<small style="color:var(--text-muted,#888);font-weight:400;">u/{{ a.username_snapshot }}</small>{% endif %}
+          </h3>
+          <span class="compliance-cell__level
+            {% if a.status == 'connected' %}compliance-cell__level--supported
+            {% elif a.status == 'restricted' %}compliance-cell__level--restricted
+            {% elif a.status == 'disconnected' %}compliance-cell__level--unsupported
+            {% else %}compliance-cell__level--partial{% endif %}">
+            {{ a.status }}
+          </span>
+        </header>
+        <p class="reddit-card__desc" style="font-size:13px;">
+          cookies: <strong>{{ (a.cookies_json or [])|length }}</strong>
+          {% if a.cookies_imported_at %} · импорт: {{ a.cookies_imported_at.strftime('%d.%m.%Y %H:%M') }}{% endif %}
+        </p>
+        {% if a.login_blocked_reason %}
+        <p style="margin:0;padding:8px 10px;border-radius:8px;background:color-mix(in srgb,#c33 12%,transparent);color:#c33;font:400 12px/1.4 Inter,sans-serif;">
+          <i class="ti ti-alert-triangle"></i> {{ a.login_blocked_reason }}
+        </p>
+        {% endif %}
+        <details>
+          <summary style="cursor:pointer;color:var(--ws-accent);font:500 13px/1 Inter,sans-serif;">Прокси</summary>
+          <form method="post" action="/reddit/accounts/{{ a.id }}/proxy" style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">
+            <input type="text" name="proxy_url" value="{{ a.proxy_url or '' }}" placeholder="http://host:port или socks5://host:port"
+                   style="padding:8px;border-radius:8px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);font:400 12px/1 Inter,sans-serif;"/>
+            <div style="display:flex;gap:6px;">
+              <input type="text" name="proxy_username" value="{{ a.proxy_username or '' }}" placeholder="user"
+                     style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);font:400 12px/1 Inter,sans-serif;"/>
+              <input type="password" name="proxy_password" value="{{ a.proxy_password or '' }}" placeholder="pass"
+                     style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);font:400 12px/1 Inter,sans-serif;"/>
+            </div>
+            <label style="font:400 12px/1.2 Inter,sans-serif;color:var(--text-secondary,#606770);">
+              <input type="checkbox" name="proxy_enabled" value="on" {% if a.proxy_enabled %}checked{% endif %}/> использовать прокси
+            </label>
+            <button type="submit" class="reddit-btn" style="font-size:12px;padding:6px 10px;align-self:flex-start;">Сохранить прокси</button>
+          </form>
+        </details>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <form method="post" action="/reddit/accounts/{{ a.id }}/probe-browser" style="margin:0;"
+                onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Проверяю…';">
+            <button class="reddit-btn" type="submit" style="font-size:12px;padding:6px 10px;" title="Открыть Reddit и проверить, что cookies живые">
+              <i class="ti ti-refresh"></i> Проверить (browser)
+            </button>
+          </form>
+          <form method="post" action="/reddit/accounts/{{ a.id }}/inbox-sync-browser" style="margin:0;"
+                onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Sync…';">
+            <button class="reddit-btn" type="submit" style="font-size:12px;padding:6px 10px;" title="Синхронизировать /message/inbox через Playwright">
+              <i class="ti ti-mail-down"></i> Sync inbox
+            </button>
+          </form>
+          <form method="post" action="/reddit/accounts/{{ a.id }}/delete" style="margin:0;"
+                onsubmit="return confirm('Удалить аккаунт {{ a.label }}? Profile-каталог на диске не удаляется.');">
+            <button type="submit" class="reddit-btn" style="background:transparent;border-color:#c33;color:#c33;font-size:12px;padding:6px 10px;">
+              <i class="ti ti-trash"></i> Удалить
+            </button>
+          </form>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+  {% endif %}
+
+  {% if accounts %}
+    <section class="reddit-grid reddit-grid--wide">
+      {% for acc in accounts %}
+      <article class="reddit-card" data-status="{{ acc.status|ru_status }}">
+        <header style="display:flex;align-items:center;gap:12px;">
+          <div style="width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#ff4500;color:#fff;font-size:22px;">
+            <i class="ti ti-brand-reddit"></i>
+          </div>
+          <div style="flex:1 1 auto;min-width:0;">
+            <h3 class="reddit-card__title" style="margin-bottom:2px;">
+              {% if acc.username %}u/{{ acc.username }}{% else %}{{ acc.label or 'Аккаунт без имени' }}{% endif %}
+            </h3>
+            <div style="font:500 12px/1 Inter,sans-serif;color:var(--text-muted, var(--text-secondary));">
+              {{ acc.label }}
+            </div>
+          </div>
+          <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:999px;font:500 12px/1 Inter,sans-serif;
+                background:{% if acc.status == 'connected' %}color-mix(in srgb, #1b873f 14%, transparent);color:#1b873f
+                          {% elif acc.status == 'needs_reauth' %}color-mix(in srgb, #c33 14%, transparent);color:#c33
+                          {% elif acc.status == 'cooldown' %}color-mix(in srgb, #b26a00 14%, transparent);color:#b26a00
+                          {% else %}color-mix(in srgb, var(--text-secondary) 14%, transparent);color:var(--text-secondary){% endif %};">
+            {% if acc.status == 'connected' %}подключён
+            {% elif acc.status == 'needs_reauth' %}нужен повторный вход
+            {% elif acc.status == 'cooldown' %}временная пауза
+            {% elif acc.status == 'disconnected' %}отключён
+            {% else %}{{ acc.status|ru_status }}{% endif %}
+          </span>
+        </header>
+
+        <div class="reddit-card__desc" style="display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;">
+          <div><span style="color:var(--text-muted, var(--text-secondary))">карма</span> {{ acc.karma_total }} <small style="color:var(--text-muted, var(--text-secondary))">({{ acc.karma_link or 0 }} / {{ acc.karma_comment or 0 }})</small></div>
+          <div><span style="color:var(--text-muted, var(--text-secondary))">возраст</span> {{ acc.account_age_days if acc.account_age_days is not none else '—' }} дн</div>
+          <div><span style="color:var(--text-muted, var(--text-secondary))">email</span> {{ 'да' if acc.email_verified else '—' }}</div>
+          <div><span style="color:var(--text-muted, var(--text-secondary))">чат</span> {{ 'да' if acc.can_chat else '—' }}</div>
+          <div><span style="color:var(--text-muted, var(--text-secondary))">ЛС</span> {{ 'да' if acc.can_dm else '—' }}</div>
+          <div><span style="color:var(--text-muted, var(--text-secondary))">последняя проверка</span> {{ format_dt_madrid(acc.last_readiness_probe_at) }}</div>
+        </div>
+
+        {% if acc.last_error %}
+        <div class="reddit-card__desc" style="color:#c33;font-size:13px;">
+          <i class="ti ti-alert-circle"></i> {{ acc.last_error }}
+        </div>
+        {% endif %}
+
+        <footer style="display:flex;gap:6px;flex-wrap:wrap;">
+          <form method="post" action="/reddit/accounts/{{ acc.id }}/refresh" style="display:inline">
+            <button type="submit" class="reddit-btn"><i class="ti ti-refresh"></i> Обновить</button>
+          </form>
+          <form method="post" action="/reddit/accounts/{{ acc.id }}/disconnect" style="display:inline"
+                onsubmit="return confirm('Отключить аккаунт u/{{ acc.username }}?');">
+            <button type="submit" class="reddit-btn"><i class="ti ti-plug-off"></i> Отключить</button>
+          </form>
+          <form method="post" action="/reddit/accounts/{{ acc.id }}/delete" style="display:inline"
+                onsubmit="return confirm('Удалить аккаунт u/{{ acc.username }} и все его локальные данные?');">
+            <button type="submit" class="reddit-btn"><i class="ti ti-trash"></i> Удалить</button>
+          </form>
+        </footer>
+      </article>
+      {% endfor %}
+    </section>
+
+    {# Блок «добавить ещё один аккаунт» — компактная версия Reddit-логина #}
+    <section style="margin-top:20px;">
+      <form method="post" action="/reddit/accounts/connect" style="display:flex;justify-content:center;">
+        <button type="submit" class="reddit-login-btn reddit-login-btn--reddit {% if not oauth_configured %}reddit-login-btn--disabled{% endif %}" style="max-width:360px;">
+          <i class="ti ti-brand-reddit"></i> Подключить ещё один аккаунт
+        </button>
+      </form>
+    </section>
+  {% else %}
+    {# Reddit-style login card (как модалка на reddit.com) #}
+    <div class="reddit-login-card">
+      <div class="reddit-login-card__logo">
+        <div class="reddit-login-card__logo-circle">
+          <i class="ti ti-brand-reddit-filled"></i>
+        </div>
+      </div>
+      <h2 class="reddit-login-card__title">Войти в Reddit</h2>
+      <p class="reddit-login-card__desc">
+        Продолжая, вы соглашаетесь с
+        <a href="https://www.redditinc.com/policies/user-agreement" target="_blank" rel="noreferrer noopener">Пользовательским соглашением</a>
+        и подтверждаете, что ознакомились с
+        <a href="https://www.reddit.com/policies/privacy-policy" target="_blank" rel="noreferrer noopener">Политикой конфиденциальности</a>.
+      </p>
+
+      {% if oauth_configured %}
+      <form method="post" action="/reddit/accounts/connect">
+        <button type="submit" class="reddit-login-btn reddit-login-btn--reddit">
+          <i class="ti ti-brand-reddit"></i> Войти через Reddit
+        </button>
+      </form>
+      {% else %}
+      <a href="/reddit/settings" class="reddit-login-btn reddit-login-btn--reddit reddit-login-btn--disabled" aria-disabled="true">
+        <i class="ti ti-brand-reddit"></i> Войти через Reddit
+      </a>
+      {% endif %}
+
+      <div class="reddit-login-divider">или</div>
+
+      <a class="reddit-login-btn reddit-login-btn--disabled" aria-disabled="true">
+        <i class="ti ti-device-mobile"></i> Войти по номеру телефона
+      </a>
+      <a class="reddit-login-btn reddit-login-btn--disabled" aria-disabled="true">
+        <i class="ti ti-brand-google"></i> Продолжить через Google
+      </a>
+      <a class="reddit-login-btn reddit-login-btn--disabled" aria-disabled="true">
+        <i class="ti ti-brand-apple"></i> Войти с Apple ID
+      </a>
+      <a class="reddit-login-btn reddit-login-btn--disabled" aria-disabled="true">
+        <i class="ti ti-mail"></i> Ссылка на почту
+      </a>
+
+      {% if not oauth_configured %}
+      <div class="reddit-login-hint">
+        <strong>OAuth ещё не настроен.</strong> Для подключения создайте Reddit App на
+        <a href="https://www.reddit.com/prefs/apps" target="_blank" rel="noreferrer noopener" style="color:#4299ff;">reddit.com/prefs/apps</a>
+        и введите <code>client_id</code> / <code>client_secret</code> на
+        <a href="/reddit/settings" style="color:#4299ff;">странице настроек</a>.
+        После этого активной станет только кнопка «Войти через Reddit» — остальные способы сделаны специально для визуальной консистентности с сайтом Reddit.
+      </div>
+      {% else %}
+      <div class="reddit-login-hint">
+        После нажатия «Войти через Reddit» откроется страница reddit.com с запросом разрешений.
+        После <strong>одобрения</strong> вы автоматически вернётесь сюда, и аккаунт появится в списке.
+      </div>
+      {% endif %}
+
+      <div class="reddit-login-footer">
+        Нет аккаунта Reddit? <a href="https://www.reddit.com/register" target="_blank" rel="noreferrer noopener">Зарегистрироваться</a>
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

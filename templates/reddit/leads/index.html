@@ -1,0 +1,167 @@
+{% extends "reddit/base.html" %}
+
+{% block title %}Лиды · Reddit Master{% endblock %}
+
+{% block content %}
+<div class="reddit-page">
+  <header class="reddit-page__header">
+    <div class="reddit-page__title-wrap">
+      <h1 class="reddit-page__title">Лиды</h1>
+      <p class="reddit-page__subtitle">
+        Единое хранилище собранных пользователей. Источник, теги, CRM-стадия,
+        статус и связь с кампаниями. Всего: {{ total }}.
+      </p>
+    </div>
+  </header>
+
+  {% if notice %}
+  <div class="reddit-card" style="border-color:#1b873f;background:color-mix(in srgb,#1b873f 6%,var(--bg-surface));color:#1b873f;">
+    <i class="ti ti-check"></i> Изменения применены.
+  </div>
+  {% endif %}
+
+  <form method="get" action="/reddit/leads" class="reddit-card" style="gap:10px;">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:10px;">
+      <input type="text" name="search" value="{{ filter.search }}" placeholder="поиск по username/notes"
+             style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;"/>
+      <select name="status" style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;">
+        <option value="">любой статус</option>
+        {% for s in statuses %}
+        <option value="{{ s }}" {% if filter.status == s %}selected{% endif %}>{{ s|ru_status }}</option>
+        {% endfor %}
+      </select>
+      <select name="source_type" data-original style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;">
+        <option value="">любой источник</option>
+        <option value="manual" {% if filter.source_type == 'manual' %}selected{% endif %}>manual</option>
+        <option value="subreddit_posts" {% if filter.source_type == 'subreddit_posts' %}selected{% endif %}>subreddit_posts</option>
+        <option value="subreddit_comments" {% if filter.source_type == 'subreddit_comments' %}selected{% endif %}>subreddit_comments</option>
+        <option value="post_comments" {% if filter.source_type == 'post_comments' %}selected{% endif %}>post_comments</option>
+        <option value="user_mentions" {% if filter.source_type == 'user_mentions' %}selected{% endif %}>user_mentions</option>
+        <option value="recent_activity" {% if filter.source_type == 'recent_activity' %}selected{% endif %}>recent_activity</option>
+      </select>
+      <select name="has_campaign" style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;">
+        <option value="">в любой кампании</option>
+        <option value="yes" {% if filter.has_campaign == 'yes' %}selected{% endif %}>в кампании</option>
+        <option value="no"  {% if filter.has_campaign == 'no'  %}selected{% endif %}>без кампании</option>
+      </select>
+      <button type="submit" class="reddit-btn reddit-btn--primary"><i class="ti ti-filter"></i> Применить</button>
+    </div>
+  </form>
+
+  <form method="post" action="/reddit/leads/bulk" id="reddit-leads-bulk-form">
+    <input type="hidden" name="ids" id="reddit-leads-ids"/>
+
+    <div class="reddit-card" style="flex-direction:row;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span id="reddit-leads-count" style="font:500 14px/1 Inter;color:var(--text-secondary);">0 выбрано</span>
+      <span style="flex:1 1 auto;"></span>
+      <select name="status" id="reddit-leads-status-select" style="padding:8px 10px;border:1px solid var(--border);border-radius:10px;">
+        <option value="">статус…</option>
+        {% for s in statuses %}<option value="{{ s }}">{{ s|ru_status }}</option>{% endfor %}
+      </select>
+      <button type="submit" class="reddit-btn" name="action" value="set_status"
+              onclick="if(!document.getElementById('reddit-leads-status-select').value){alert('Выберите статус');return false;}">
+        Применить статус
+      </button>
+      <button type="submit" class="reddit-btn" name="action" value="delete"
+              onclick="return confirm('Удалить выбранных лидов?');">
+        <i class="ti ti-trash"></i> Удалить
+      </button>
+    </div>
+
+    <table style="width:100%;border-collapse:collapse;margin-top:12px;">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border);font:600 12px/1.2 Inter;color:var(--text-muted);text-transform:uppercase;">
+          <th style="text-align:left;padding:10px;"><input type="checkbox" id="reddit-leads-select-all"/></th>
+          <th style="text-align:left;padding:10px;">Username</th>
+          <th style="text-align:left;padding:10px;">Статус</th>
+          <th style="text-align:left;padding:10px;">Источник</th>
+          <th style="text-align:left;padding:10px;">Активность</th>
+          <th style="text-align:left;padding:10px;">Карма / Возраст</th>
+          <th style="text-align:left;padding:10px;">Notes</th>
+          <th style="text-align:left;padding:10px;"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr style="border-bottom:1px solid var(--border);" data-id="{{ r.id }}">
+          <td style="padding:10px;"><input type="checkbox" class="reddit-leads-row-checkbox" value="{{ r.id }}"/></td>
+          <td style="padding:10px;">
+            <a href="https://www.reddit.com/user/{{ r.username }}" target="_blank" rel="noreferrer noopener" style="color:var(--ws-accent);">u/{{ r.username }}</a>
+          </td>
+          <td style="padding:10px;">
+            <span style="padding:2px 8px;border-radius:999px;font:500 11px/1 Inter;
+              background:{% if r.status == 'new' %}var(--ws-accent-soft);color:var(--ws-accent)
+                       {% elif r.status == 'contacted' %}color-mix(in srgb,#1877f2 14%,transparent);color:#1877f2
+                       {% elif r.status == 'replied' %}color-mix(in srgb,#1b873f 14%,transparent);color:#1b873f
+                       {% else %}color-mix(in srgb,#777 14%,transparent);color:#777{% endif %};">
+              {{ r.status|ru_status }}
+            </span>
+          </td>
+          <td style="padding:10px;">
+            <div style="font:500 13px/1.2 Inter;">{{ r.source_type|ru_status }}</div>
+            {% if r.source_ref %}<div style="font-size:11px;color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ r.source_ref }}</div>{% endif %}
+          </td>
+          <td style="padding:10px;white-space:nowrap;">{{ format_dt_madrid(r.activity_timestamp) }}</td>
+          <td style="padding:10px;font-size:13px;">
+            {% if r.user_profile %}
+            К:{{ (r.user_profile.karma_link or 0) + (r.user_profile.karma_comment or 0) }} / В:{{ r.user_profile.account_age_days or '—' }}
+            {% else %}—{% endif %}
+          </td>
+          <td style="padding:10px;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+            {{ r.notes[:120] }}
+          </td>
+          <td style="padding:10px;">
+            <details>
+              <summary style="cursor:pointer;color:var(--ws-accent);font-size:13px;">edit</summary>
+              <form method="post" action="/reddit/leads/{{ r.id }}/update" style="display:flex;flex-direction:column;gap:6px;margin-top:6px;min-width:260px;">
+                <textarea name="notes" rows="3" placeholder="заметки"
+                          style="padding:6px 8px;border:1px solid var(--border);border-radius:8px;">{{ r.notes }}</textarea>
+                <input type="text" name="persona_tags" value="{{ r.persona_tags }}" placeholder="теги (через запятую)"
+                       style="padding:6px 8px;border:1px solid var(--border);border-radius:8px;"/>
+                <select name="status" style="padding:6px 8px;border:1px solid var(--border);border-radius:8px;">
+                  {% for s in statuses %}<option value="{{ s }}" {% if r.status == s %}selected{% endif %}>{{ s|ru_status }}</option>{% endfor %}
+                </select>
+                <button type="submit" class="reddit-btn reddit-btn--primary" style="padding:6px 10px;">Сохранить</button>
+              </form>
+            </details>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" style="padding:32px;text-align:center;color:var(--text-muted);">Лидов пока нет — начните с «Поиска аудитории» или «Недавней активности».</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div style="display:flex;gap:6px;padding:14px 0;align-items:center;">
+      <span style="flex:1;color:var(--text-muted);font-size:13px;">Страница {{ page }} · {{ per_page }} на страницу</span>
+      {% if page > 1 %}
+      <a href="?{% for k, v in request.query_params.items() if k != 'page' %}{{ k }}={{ v }}&{% endfor %}page={{ page - 1 }}" class="reddit-btn">← назад</a>
+      {% endif %}
+      {% if rows|length == per_page and (page * per_page) < total %}
+      <a href="?{% for k, v in request.query_params.items() if k != 'page' %}{{ k }}={{ v }}&{% endfor %}page={{ page + 1 }}" class="reddit-btn">вперёд →</a>
+      {% endif %}
+    </div>
+  </form>
+
+  <script>
+  (function () {
+    var hidden = document.getElementById('reddit-leads-ids');
+    var all = document.getElementById('reddit-leads-select-all');
+    var checkboxes = Array.prototype.slice.call(document.querySelectorAll('.reddit-leads-row-checkbox'));
+    var counter = document.getElementById('reddit-leads-count');
+    function sync() {
+      var selected = [];
+      checkboxes.forEach(function (cb) { if (cb.checked) selected.push(cb.value); });
+      hidden.value = selected.join(',');
+      counter.textContent = selected.length + ' выбрано';
+    }
+    if (all) all.addEventListener('change', function () {
+      checkboxes.forEach(function (cb) { cb.checked = all.checked; });
+      sync();
+    });
+    checkboxes.forEach(function (cb) { cb.addEventListener('change', sync); });
+    sync();
+  })();
+  </script>
+</div>
+{% endblock %}

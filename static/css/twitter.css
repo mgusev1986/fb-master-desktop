@@ -1,0 +1,131 @@
+/*
+ * Twitter / X Master — стилистические акценты поверх main.css.
+ * Цветовые токены — _workspace-tokens.css [data-workspace="twitter"].
+ */
+
+.sidebar-logo__mark--twitter {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--ws-accent);
+  color: #fff;
+  font: 700 14px/1 Inter, sans-serif;
+  margin-right: 4px;
+}
+
+.sidebar-beta-line {
+  margin-top: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--ws-accent-soft);
+  color: var(--ws-accent);
+  font: 500 11px/1.2 Inter, sans-serif;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+}
+
+[data-workspace="twitter"] .nav-item.active {
+  background: var(--ws-accent-soft);
+  color: var(--ws-accent);
+  border-left: 3px solid var(--ws-accent);
+}
+[data-workspace="twitter"] .nav-item:hover {
+  background: color-mix(in srgb, var(--ws-accent) 8%, transparent);
+}
+
+.nav-item__badge {
+  margin-left: auto;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 11px;
+  background: var(--ws-accent-soft);
+  color: var(--ws-accent);
+}
+
+.x-page {
+  display: flex; flex-direction: column; gap: 20px;
+  padding: 24px 32px 48px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing: border-box;
+}
+.x-page__header {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+}
+.x-page__title-wrap { flex: 1 1 auto; min-width: 240px; }
+.x-page__title {
+  margin: 0; font: 700 24px/1.2 Inter, sans-serif; color: var(--text-primary);
+  display: inline-flex; align-items: center; gap: 10px;
+}
+.x-page__beta-pill {
+  display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 999px;
+  background: var(--ws-accent-soft); color: var(--ws-accent);
+  font: 600 11px/1 Inter, sans-serif; text-transform: uppercase; letter-spacing: .04em;
+}
+.x-page__subtitle { margin: 6px 0 0; font: 400 14px/1.4 Inter, sans-serif; color: var(--text-secondary, #606770); max-width: 760px; }
+.x-page__status {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px;
+  font: 500 13px/1 Inter; background: var(--ws-accent-soft); color: var(--ws-accent);
+}
+.x-page__status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ws-accent); }
+
+.x-banner {
+  display: flex; gap: 14px; align-items: flex-start; padding: 16px 18px;
+  border: 1px solid color-mix(in srgb, var(--ws-accent) 30%, var(--border, #e4e6eb));
+  border-radius: 14px; background: color-mix(in srgb, var(--ws-accent) 4%, var(--bg-surface, #fff));
+}
+.x-banner__icon {
+  width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%;
+  background: var(--ws-accent-soft); color: var(--ws-accent); font-size: 20px; flex-shrink: 0;
+}
+.x-banner__title { margin: 0 0 4px; font: 600 15px/1.3 Inter; color: var(--text-primary); }
+.x-banner__text { margin: 0; font: 400 13px/1.5 Inter; color: var(--text-secondary, #606770); }
+.x-banner__list { margin: 6px 0 0; padding-left: 20px; font: 400 13px/1.6 Inter; color: var(--text-secondary, #606770); }
+
+.x-card {
+  background: var(--bg-surface, #fff); border: 1px solid var(--border, #e4e6eb);
+  border-radius: 14px; padding: 20px 24px; display: flex; flex-direction: column; gap: 12px;
+}
+.x-card--accent {
+  border-color: color-mix(in srgb, var(--ws-accent) 30%, var(--border, #e4e6eb));
+  background: color-mix(in srgb, var(--ws-accent) 4%, var(--bg-surface, #fff));
+}
+.x-card__title { margin: 0; font: 600 16px/1.2 Inter; color: var(--text-primary); display: inline-flex; align-items: center; gap: 8px; }
+.x-card__desc { margin: 0; font: 400 14px/1.5 Inter; color: var(--text-secondary, #606770); }
+
+.x-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.x-grid--wide { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); }
+
+.x-btn {
+  display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 10px;
+  border: 1px solid transparent; cursor: pointer; font: 500 14px/1 Inter; text-decoration: none;
+  background: var(--bg-surface, #fff); color: var(--text-primary); border-color: var(--border, #e4e6eb);
+}
+.x-btn:hover { background: var(--ws-accent-soft); color: var(--ws-accent); border-color: var(--ws-accent); }
+.x-btn--primary { background: var(--ws-accent); color: #fff; border-color: var(--ws-accent); }
+.x-btn--primary:hover { background: color-mix(in srgb, var(--ws-accent) 90%, black); color: #fff; }
+.x-btn--ghost { background: transparent; border-style: dashed; }
+
+.x-placeholder {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+  padding: 48px 24px;
+  border: 1px dashed color-mix(in srgb, var(--ws-accent) 30%, var(--border, #e4e6eb));
+  border-radius: 16px; background: color-mix(in srgb, var(--ws-accent) 3%, transparent);
+  text-align: center; min-height: 280px;
+}
+.x-placeholder__icon {
+  width: 56px; height: 56px; display: grid; place-items: center; border-radius: 50%;
+  background: var(--ws-accent-soft); color: var(--ws-accent); font-size: 28px;
+}
+.x-placeholder__title { margin: 0; font: 600 18px/1.2 Inter; color: var(--text-primary); }
+.x-placeholder__text { margin: 0; max-width: 540px; font: 400 14px/1.6 Inter; color: var(--text-secondary, #606770); }
+
+/* Compliance grid (общие классы — дублируются здесь для изоляции). */
+.compliance-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.compliance-cell { border: 1px solid var(--border); border-radius: 12px; padding: 16px; background: var(--bg-surface); display: flex; flex-direction: column; gap: 8px; }
+.compliance-cell__level { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border-radius: 999px; font: 500 11px/1 Inter; align-self: flex-start; }
+.compliance-cell__level--supported  { background: color-mix(in srgb, #1b873f 16%, transparent); color: #1b873f; }
+.compliance-cell__level--partial    { background: color-mix(in srgb, #b26a00 16%, transparent); color: #b26a00; }
+.compliance-cell__level--restricted { background: color-mix(in srgb, #c33 16%, transparent);    color: #c33;    }
+.compliance-cell__level--unsupported{ background: color-mix(in srgb, #666 16%, transparent);    color: #666;    }
+.compliance-cell__label { font: 600 14px/1.3 Inter; color: var(--text-primary); margin: 0; }
+.compliance-cell__notes { font: 400 13px/1.4 Inter; color: var(--text-secondary, #606770); margin: 0; }

@@ -1,0 +1,26 @@
+{#
+  Launcher layout — наследуется от _shell/base.html, но без sidebar.
+  Экран полностью занимает main-content.
+#}
+{% extends "_shell/base.html" %}
+
+{% block shell_workspace %}core{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/launcher.css') }}?v={{ static_v }}"/>
+{% endblock %}
+
+{# Sidebar в launcher не нужен — main-content растягиваем на всю ширину. #}
+{% block shell_sidebar %}{% endblock %}
+
+{% block shell_head %}
+<style>
+  .main-content {
+    margin-left: 0 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+  }
+</style>
+{% endblock %}
+
+{% block body_class %}fbm-launcher-page{% endblock %}

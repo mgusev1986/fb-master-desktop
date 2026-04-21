@@ -1,0 +1,122 @@
+{% extends "reddit/base.html" %}
+
+{% block title %}{{ sequence.name }} · Reddit Master{% endblock %}
+
+{% block content %}
+<div class="reddit-page">
+  <header class="reddit-page__header">
+    <div class="reddit-page__title-wrap">
+      <h1 class="reddit-page__title">{{ sequence.name }}</h1>
+      <p class="reddit-page__subtitle">status: {{ sequence.status }} · шагов: {{ (sequence.nodes_json or []) | length }} · TZ: {{ sequence.timezone }}</p>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <a href="/reddit/sequences/{{ sequence.id }}/edit" class="reddit-btn">Редактировать</a>
+      <a href="/reddit/sequences" class="reddit-btn"><i class="ti ti-arrow-left"></i> Назад</a>
+    </div>
+  </header>
+
+  {% if notice %}
+  <div class="reddit-card" style="border-color:#1b873f;color:#1b873f;background:color-mix(in srgb,#1b873f 6%,var(--bg-surface));">
+    <i class="ti ti-info-circle"></i> {{ notice|replace('+', ' ') }}
+  </div>
+  {% endif %}
+
+  <section>
+    <h2 class="reddit-card__title" style="margin:0 0 12px;">Шаги</h2>
+    <div class="reddit-grid">
+      {% for n in (sequence.nodes_json or []) %}
+      <article class="reddit-card">
+        <header style="display:flex;align-items:center;gap:8px;">
+          <span style="font:600 11px/1 Inter;padding:2px 8px;border-radius:999px;background:var(--ws-accent-soft);color:var(--ws-accent);">#{{ loop.index }}</span>
+          <h3 class="reddit-card__title" style="margin:0;flex:1;">{{ n.kind|ru_status }}</h3>
+          {% if n.requires_approval %}
+          <span style="font:500 11px/1 Inter;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,#b26a00 14%,transparent);color:#b26a00;">approval</span>
+          {% endif %}
+        </header>
+        <div class="reddit-card__desc">id: <code>{{ n.id }}</code></div>
+        {% if n.description %}<div class="reddit-card__desc">{{ n.description }}</div>{% endif %}
+        {% if n.params %}
+        <pre style="white-space:pre-wrap;font:400 12px/1.4 ui-monospace,monospace;background:color-mix(in srgb,#000 4%,transparent);padding:6px;border-radius:6px;margin:0;">{{ n.params }}</pre>
+        {% endif %}
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section>
+    <h2 class="reddit-card__title" style="margin:16px 0 10px;">Добавить лиды</h2>
+    <form method="post" action="/reddit/sequences/{{ sequence.id }}/enroll" class="reddit-card" style="gap:10px;">
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font:600 12px/1 Inter;color:var(--text-muted)">lead ids (через запятую)</span>
+        <input type="text" name="lead_ids" placeholder="1,2,3"
+               style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-family:ui-monospace,monospace;"/>
+      </label>
+      <div>
+        <button type="submit" class="reddit-btn reddit-btn--primary"><i class="ti ti-plus"></i> Добавить</button>
+      </div>
+    </form>
+  </section>
+
+  <section>
+    <h2 class="reddit-card__title" style="margin:16px 0 10px;">Запуски</h2>
+    <div class="reddit-card" style="flex-direction:row;gap:8px;flex-wrap:wrap;align-items:center;">
+      <a href="/reddit/sequences/{{ sequence.id }}" class="reddit-btn{% if not state_filter %} reddit-btn--primary{% endif %}" style="padding:6px 10px;">все</a>
+      {% for s in run_states %}
+      <a href="/reddit/sequences/{{ sequence.id }}?state={{ s }}" class="reddit-btn{% if state_filter == s %} reddit-btn--primary{% endif %}" style="padding:6px 10px;">{{ s|ru_status }}</a>
+      {% endfor %}
+    </div>
+
+    {% if runs %}
+    <div class="reddit-grid reddit-grid--wide" style="margin-top:10px;">
+      {% for r in runs %}
+      <article class="reddit-card">
+        <header style="display:flex;align-items:center;gap:8px;">
+          <h3 class="reddit-card__title" style="margin:0;flex:1;">run #{{ r.id }}</h3>
+          <span style="font:500 11px/1 Inter;padding:2px 8px;border-radius:999px;
+            background:{% if r.state == 'completed' %}color-mix(in srgb,#1b873f 14%,transparent);color:#1b873f
+                     {% elif r.state == 'failed' %}color-mix(in srgb,#c33 14%,transparent);color:#c33
+                     {% elif r.state == 'awaiting_approval' %}color-mix(in srgb,#b26a00 14%,transparent);color:#b26a00
+                     {% else %}var(--ws-accent-soft);color:var(--ws-accent){% endif %};">
+            {{ r.state|ru_status }}
+          </span>
+        </header>
+        <div class="reddit-card__desc" style="font-size:13px;">
+          lead_id: {{ r.lead_id }} · account_id: {{ r.account_id or '—' }} · current_node: <code>{{ r.current_node_id or '—' }}</code>
+        </div>
+        {% if r.last_error %}
+        <div class="reddit-card__desc" style="color:#c33;font-size:12px;">
+          <i class="ti ti-alert-circle"></i> {{ r.last_error }}
+        </div>
+        {% endif %}
+        {% if r.run_state_json and r.run_state_json.history %}
+        <details>
+          <summary style="cursor:pointer;color:var(--ws-accent);font-size:12px;">history · {{ r.run_state_json.history | length }}</summary>
+          <ol style="margin:6px 0 0 16px;font-size:12px;">
+            {% for h in r.run_state_json.history %}
+            <li>{{ h.kind|ru_status }} @ {{ h.node_id }} — {{ h.result.message or '—' }}</li>
+            {% endfor %}
+          </ol>
+        </details>
+        {% endif %}
+        <footer style="display:flex;gap:6px;flex-wrap:wrap;">
+          {% if r.state not in ('completed', 'failed', 'cancelled') %}
+          <form method="post" action="/reddit/sequences/{{ sequence.id }}/run/{{ r.id }}/advance" style="display:inline">
+            <button type="submit" class="reddit-btn reddit-btn--primary"><i class="ti ti-player-play"></i> Продолжить</button>
+          </form>
+          <form method="post" action="/reddit/sequences/{{ sequence.id }}/run/{{ r.id }}/cancel" style="display:inline">
+            <button type="submit" class="reddit-btn"><i class="ti ti-x"></i> Отменить</button>
+          </form>
+          {% endif %}
+        </footer>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="reddit-placeholder">
+      <div class="reddit-placeholder__icon"><i class="ti ti-playlist"></i></div>
+      <p class="reddit-placeholder__text">Runs нет. Enroll leads выше, чтобы создать первые runs.</p>
+    </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

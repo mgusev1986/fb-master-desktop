@@ -1,0 +1,26 @@
+{% extends "instagram/base.html" %}
+{% block title %}Правила и лимиты · Instagram Master{% endblock %}
+{% block content %}
+<div class="ig-page">
+  <header class="ig-page__header">
+    <div class="ig-page__title-wrap"><h1 class="ig-page__title">Правила и лимиты <span class="ig-page__beta-pill">Beta</span></h1><p class="ig-page__subtitle">Честный список того, что Instagram-runtime реально может, что частично, что только manual review и что запрещено.</p></div>
+  </header>
+  <section class="ig-banner">
+    <div class="ig-banner__icon"><i class="ti ti-flask-2"></i></div>
+    <div class="ig-banner__body"><h2 class="ig-banner__title">Beta — известные ограничения</h2><ul class="ig-banner__list">{% for line in known_limitations %}<li>{{ line }}</li>{% endfor %}</ul></div>
+  </section>
+  <section>
+    <h2 class="ig-card__title" style="margin:0 0 12px;">Что умеет модуль</h2>
+    <div class="compliance-grid">
+      {% for level, label, tone in [('supported','Поддерживается','supported'),('partial','Частично','partial'),('restricted','Только с подтверждением','restricted'),('unsupported','Недоступно','unsupported')] %}
+      {% for c in capabilities[level] %}
+      <div class="compliance-cell">
+        <span class="compliance-cell__level compliance-cell__level--{{ tone }}">{{ label }}</span>
+        <h3 class="compliance-cell__label">{{ c.label }}</h3>
+        {% if c.notes %}<p class="compliance-cell__notes">{{ c.notes }}</p>{% endif %}
+      </div>
+      {% endfor %}{% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}

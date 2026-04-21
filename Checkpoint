@@ -1,0 +1,1045 @@
+# Checkpoint — FB Master: полный снимок проекта
+
+Документ для передачи контекста нейросети или разработчику: продукт, **архитектура клиент–сервер**, лицензирование, **обновления десктопа**, защита, деплой, маршруты, механики, дерево файлов. Язык: русский.
+
+**Последнее обновление документа:** 20 апреля 2026. **Текущая версия десктопа (semver):** **2.18.0** (`desktop/fb-master-desktop/package.json`). **Текущая публичная версия релиза (marketing):** **2.18** (`/api/public/desktop-update`, имена артефактов, `.env` на VPS).
+
+---
+
+## 0. Назначение и модель «кто что делает»
+
+**Основной продукт для пользователя** — настольное приложение **FB Master Desktop** (Electron). Сайт **socmaster.pro** — публичная витрина: оплата, выдача ключа, API лицензий, статика установщиков; **не** замена десктопу для ежедневной работы с Facebook.
+
+| Роль | Компонент | Суть |
+|------|-----------|------|
+| **Рабочий клиент** | Electron + вложенный Python (uvicorn) | UI back-office, Playwright, профили браузера, парсер, рассылки, CRM, встроенный Messenger — **всё выполняется на ПК пользователя** (`127.0.0.1` и локальные каталоги). На **macOS** в установщике — **встроенный CPython + Chromium** в Resources, не зависимость от Homebrew. |
+| **Лицензионный и маркетинговый сервер** | FastAPI на VPS (`/opt/fb-master`) | `/buy`, `/purchase`, NOWPayments, webhook, **`/api/public/desktop-license/activate`**, **`/api/public/desktop-update`**, раздача подписанных ссылок на файлы из `static/releases/`. |
+| **Отдельный инструмент** | `app.py` :8765 | Мини-парсер списков друзей → Excel; **другой процесс**, не путать с `main.py`. |
+
+Запросы из десктопа к VPS для **активации ключа** идут на базу **`FB_MASTER_LICENSE_API_BASE`** (в `launch.json` вложенного бэкенда: `licenseApiBase`, по умолчанию прод-URL). В HTTP к своему origin приложение помечает себя User-Agent **`FBMasterDesktop/...`** и при необходимости заголовок устройства — см. `backend/services/desktop_client.py`, `main.js` (`attachDesktopIdentityHeaders`).
+
+### 0.1. Актуальные координаты проекта, продакшена и релизов
+
+#### Локальный проект
+
+- Корень проекта: **`/Users/maksimgusev/Desktop/Automatization/DEVELOPMENTS/FB - Master`**
+- Основной desktop-клиент Electron: **`desktop/fb-master-desktop/`**
+- Legacy-обвязка под отдельный Messenger frame: **`desktop/messenger2-frame/`**
+- Собранное macOS-приложение: **`desktop/fb-master-desktop/dist/mac-arm64/FB Master.app`**
+- Локальный DMG сборки: **`desktop/fb-master-desktop/dist/FbMaster-2.18-mac-arm64.dmg`**
+- Локальный ZIP bundle для клиентов: **`static/releases/FbMaster-2.18-mac-arm64-bundle.zip`**
+- Публично-готовый локальный DMG после релиза: **`static/releases/FbMaster-2.18-mac-arm64.dmg`**
+
+#### Продакшен / сервер
+
+- Домен: **`https://socmaster.pro`**
+- Сервер: **`root@46.62.230.106`**
+- Папка проекта на сервере: **`/opt/fb-master`**
+- Папка релизов на сервере: **`/opt/fb-master/static/releases`**
+- systemd-сервис: **`fb-master`**
+- Внутренний backend на сервере: **`127.0.0.1:8000`**
+- Публичный манифест desktop-обновлений: **`GET https://socmaster.pro/api/public/desktop-update`**
+
+#### Актуальные публичные файлы релиза 2.18
+
+- **`https://socmaster.pro/static/releases/FbMaster-2.18-mac-arm64.dmg`**
+- **`https://socmaster.pro/static/releases/FbMaster-2.18-mac-arm64-bundle.zip`**
+
+#### Обязательное правило проекта
+
+Если в проекте менялись **backend / templates / parser / outreach / messenger / agent mode / system UI**, то для релиза нужно обновлять **сразу три слоя**:
+
+1. **локальные исходники**;
+2. **desktop backend bundle** (`resources-fb-master-backend`);
+3. **серверную версию в `/opt/fb-master`**.
+
+Если обновилась только desktop-сборка, а сервер продолжает раздавать старые шаблоны или старый backend, релиз считается **незавершённым**.
+
+### 0.2. Текущее состояние проекта и прогресс
+
+На 20.04.2026 проект уже включает:
+
+- полноценный desktop-клиент Electron с локальным встроенным FastAPI backend;
+- рабочую систему лицензий, desktop-обновлений и публичной раздачи релизов через `socmaster.pro`;
+- управление FB-аккаунтами, слотами 1–3, прогревом и health-диагностикой;
+- раздел **«Оформление аккаунтов»** с сохранением сценария оформления на аккаунт;
+- раздел **«Автопоиск»** для поиска групп / страниц / профилей по ключевым словам с последующим переносом в доноры и парсер;
+- парсер friends / followers / following / group members;
+- импорт базы, общую базу контактов и языковую сегментацию;
+- CRM-воронку;
+- сценарии / режим агента;
+- рассылку ЛС и комментинга;
+- Messenger Old и Messenger 2;
+- текущий release-поток для macOS с DMG и bundle.zip до публичного релиза **2.18**.
+
+Зоны, которые остаются наиболее чувствительными и требуют регулярного контроля:
+
+- стабильность Playwright против изменений Facebook / Meta;
+- живучесть FB-сессий при смене IP, прокси, пароля и remembered-login сценариях;
+- точность догрузки длинных списков (`following`, `followers`, `members`);
+- визуальное поведение `Messenger 2` внутри Electron после обновлений интерфейса Meta;
+- синхронность между локальным desktop bundle, server backend и шаблонами после релизов;
+- корректность локального старта desktop на машинах клиентов при занятом порту, локальном мусоре в `Application Support` и внешних переменных окружения.
+
+### 0.3. Ключевые изменения после 10.04.2026
+
+- **Multi-workspace shell + Reddit Master (20.04.2026).** В десктопе появился launcher `/workspaces` и workspace switcher в header'е. Второй продуктовый модуль — **Reddit Master** — со своими 15 разделами (Dashboard, Accounts, Readiness, Subreddits, Audience, Activity, Leads, Templates, Campaigns, Sequences, Conversations, Comments, Analytics, Compliance, Settings). Архитектура модульная: `backend/core/modules` (реестр, ABC-интерфейсы), `backend/modules/{facebook,reddit}/`. FB Master работает как module-implementation без переезда существующего кода. В desktop-лаунчере автоматически включены **`FB_MASTER_MULTI_WORKSPACE_ENABLED=1`**, **`FB_MASTER_REDDIT_MODULE_ENABLED=1`**, **`FB_MASTER_REDDIT_OFFICIAL_API_ONLY=1`**, **`FB_MASTER_REDDIT_SEND_APPROVAL=manual`**, **`FB_MASTER_LAUNCHER_DEFAULT=1`**. На сервере (**socmaster.pro**) флаги не выставляются — там остаётся только FB Master. Подробности — §9.10.
+- Desktop-релизы доведены до цепочки **2.15 → 2.16 → 2.17 → 2.18**; текущий публичный ориентир — **2.18**.
+- Локальный launcher десктопа больше не зависит от случайного состояния машины клиента:
+  - принудительно очищает **`DATABASE_URL`** и **`SUPABASE_DATABASE_URL`**, чтобы desktop всегда работал на локальной SQLite;
+  - автоматически выбирает свободный loopback-порт, если **`127.0.0.1:8799`** уже занят;
+  - хранит постоянный session-secret в **`fb-master-local-data/.fb_master_session_secret`**.
+- Исправлены машинозависимые падения при первом старте чистой локальной БД и конфликтах локального порта.
+- В Electron переработано открытие внешних ссылок: внешние URL теперь открываются в системном браузере, а внутренние / OAuth-сценарии остаются в приложении.
+- Усилена диагностика FB-сессий:
+  - система различает отсутствие `c_user` в импортированном наборе cookies;
+  - отдельно распознаёт случай, когда Facebook принял cookies, а потом сам сбросил `c_user/xs/fr` после первого запроса;
+  - отдельно распознаёт **remembered-login gate** с кнопкой **«Продолжить»**.
+- Окно **`Войти в Facebook`** и автологин умеют проходить промежуточный remembered-login экран и продолжать сценарий, если Meta показывает только поле пароля.
+- В разделе **`/fb-accounts`** карточки аккаунтов сделаны сворачиваемой гармошкой по умолчанию; состояние раскрытия запоминается локально.
+- Кнопка выбора файла в блоке импорта аккаунта оформлена в стиле продукта и больше не теряется на светлой теме.
+
+---
+
+## 1. Два FastAPI-приложения в репозитории
+
+| Вход | Файл | Порт по умолчанию | Назначение |
+|------|------|-------------------|------------|
+| Бэк-офис FB Master | `main.py` → `backend.app_factory.create_app()` | `8000` (`BO_HOST` / `BO_PORT`) | Полный кабинет, всё из разделов ниже. |
+| Парсер друзей | `app.py` | `8765` | Локальный инструмент Excel. |
+
+Дальше «бэкенд проекта» без уточнений = **`main.py`**.
+
+---
+
+## 2. Архитектура FB Master Desktop (Electron)
+
+### 2.1. Каталоги и запуск
+
+- Код: **`desktop/fb-master-desktop/`**
+- Разработка: `npm install`, `npm start` или **`Запуск.command`**
+- **Упакованное приложение**: ресурсы внутри `.app` / установщика; исполняемый код приложения отделён от **данных пользователя**.
+
+### 2.2. Где лежат данные пользователя (критично для обновлений и поддержки)
+
+- Electron **`userData`**: в dev часто `desktop/fb-master-desktop/.electron-app-data/`; в проде — системный каталог вида `~/Library/Application Support/<имя приложения>` (macOS) / `AppData\Roaming\...` (Windows). В текущих macOS-сборках пользователя реально ведут в **`~/Library/Application Support/fb-master-desktop/`**. Путь задаётся через `app.getPath('userData')` и при необходимости `app.setPath('userData', ...)` в **`main.js`**.
+- Локальная база и файлы встроенного бэкенда: **`{userData}/fb-master-local-data/`** — см. **`local-backend-launcher.js`** (`DATA_DIR` для uvicorn). Там SQLite, логи приложения, diagnostics, browser-профили и **`.fb_master_session_secret`** (постоянный `SECRET_KEY` для cookie-сессии между перезапусками).
+- **Сессии встроенного Messenger** (partition `persist:m2-desktop-...`) живут в userData Electron, **отдельно** от **`browser_profiles/`** Playwright на диске.
+
+**При обновлении установщиком** обычно заменяется только пакет приложения; **userData и `fb-master-local-data` не внутри .app** — настройки, база, привязка ключа и сохранённые FB-сессии **сохраняются**, пока не меняются `appId`/`productName` в electron-builder и пользователь не удаляет данные вручную. Простая переустановка DMG эти данные **не очищает**.
+
+### 2.3. Встроенный бэкенд (`local-backend-launcher.js`)
+
+- Запускает **`uvicorn main:app`** из **`Resources/fb-master-backend/`** (копия корневого `backend/`, `templates/`, `static/` — синхронизация: **`scripts/prepare-desktop-backend-bundle.sh`**).
+- **`launch.json`**: базовый порт (`8799`), `appModule`, **`licenseApiBase`** (прод для активации ключа).
+- Launcher сначала пытается поднять backend на **`127.0.0.1:8799`**, но если порт уже занят, автоматически выбирает **свободный loopback-порт** (`pickEmbeddedBackendPort`) и перестраивает `APP_BASE_URL`.
+- Перед стартом Python launcher **принудительно очищает** у процесса **`DATABASE_URL`** и **`SUPABASE_DATABASE_URL`**. Это защищает desktop от ситуации, когда на машине клиента в shell / `.env` случайно задан внешний Postgres или Supabase и локальный backend уходит не в свою SQLite.
+- Переменные окружения процесса Python: **`APP_BASE_URL=http://127.0.0.1:<port>`**, **`FB_MASTER_LICENSE_API_BASE`**, **`DATA_DIR`**, **`PLAYWRIGHT_BROWSERS_PATH`**, **`FB_DESKTOP_APP_VERSION`** (из **`package.json`** десктопа — для подписи версии в Jinja: сайдбар и **`/auth/unlock`**), по умолчанию **`FB_MASTER_ACCESS_KEY_REQUIRED=1`**, **`FB_MASTER_OPERATOR_AFTER_ACCESS_KEY=1`**, **`FB_MASTER_HIDE_LOGOUT=1`**, **`FB_MASTER_HIDE_INFRA_SETTINGS=1`**, **`FB_MASTER_OUTREACH_SHARED_PROFILE=1`** (см. **`local-backend-launcher.js`**).
+- Session secret для cookie-сессии backend хранится в **`{DATA_DIR}/.fb_master_session_secret`** и переиспользуется между перезапусками, поэтому обновление приложения не ломает локальную авторизацию по cookie само по себе.
+
+### 2.4. Какой URL открывает окно браузера (UI)
+
+**`defaultStartUrl()`** в **`main.js`** (порядок):
+
+1. `FB_MASTER_APP_URL` из окружения, если задан.
+2. Иначе **`embeddedBackendBaseUrl`** (локальный uvicorn), если встроенный бэкенд поднят.
+3. Иначе для упакованного приложения — **`PACKAGED_APP_BASE_URL`** (`https://socmaster.pro/`); для dev — `http://localhost:8000/`.
+
+Типичный прод: UI грузится с **`http://127.0.0.1:8799/`**, а не с публичного домена — интерфейс тот же FastAPI+Jinja, что и на VPS, но экземпляр локальный.
+
+### 2.5. Главное окно, webview, IPC
+
+- **`webPreferences.webviewTag: true`** — `<webview>` на **`/messenger2`**.
+- **`will-attach-webview` / `did-attach-webview`**: User-Agent гостя, масштаб; **не задавать `display: block` на элемент webview** — ломает раскладку (внутренний flex в Electron).
+- **`will-navigate`** и **`setWindowOpenHandler`** в **`main.js`** фильтруют навигацию:
+  - внутренние URL FB Master и loopback-страницы остаются внутри приложения;
+  - OAuth-ссылки, которые должны отработать в том же окне, тоже остаются внутри;
+  - **внешние ссылки** теперь уходят в **системный браузер** через `shell.openExternal`.
+- Это закрывает типичную проблему desktop-клиента «ссылка не открывается / открывается не там».
+- **IPC** `fb-desktop:prepare-webview-session` — cookies/storage state для partition аккаунта.
+- **Health**: `127.0.0.1:MESSENGER2_FRAME_HEALTH_PORT` (по умолчанию **37821**) для проверок со страницы `/messenger2`.
+
+### 2.6. Preload (`preload.js`)
+
+Объект **`fbMasterDesktop`**: подготовка сессии мессенджера, открытие Chrome-профиля и т.д.
+
+### 2.7. Автозапуск sidecar Messenger (опционально)
+
+- **`backend/services/messenger2_frame_sidecar.py`** → **`try_autostart_messenger2_frame()`** в **`lifespan`**.
+- Управление: **`FB_MASTER_AUTOSTART_DESKTOP`**, **`FB_MASTER_AUTOSTART_MESSENGER2_FRAME`**; на macOS по умолчанию может быть включено (`backend/config.py`).
+- Legacy: **`desktop/messenger2-frame/`** — отдельное окно «только Messenger».
+
+### 2.8. Сборка бэкенда для DMG (macOS): переносимый Python, не Homebrew-venv
+
+На **macOS** каталог **`desktop/fb-master-desktop/resources-fb-master-backend`** собирается скриптом **`scripts/prepare-desktop-backend-bundle.sh`** так:
+
+- **`scripts/ensure-macos-embedded-python.sh`** — скачивает **standalone CPython 3.12** ([python-build-standalone](https://github.com/indygreg/python-build-standalone)) под **arm64** или **x86_64**, ставит зависимости в **`python-lib/`**, **`playwright install chromium`** в **`playwright-browsers/`**, удаляет **`venv`**, создаёт маркер **`.embedded_python`**.
+- Раньше **`venv`** указывал на **`/opt/homebrew/...`** — на машине клиента путь отсутствовал → не стартовал локальный uvicorn (диалог «Не удалось запустить локальный модуль»).
+- **`local-backend-launcher.js`**: при **`.embedded_python`** запускает **`python/bin/python3.12`**, выставляет **`PYTHONPATH`** на **`python-lib/.../site-packages`** и встроенный **`python/lib/.../site-packages`**; **`PLAYWRIGHT_BROWSERS_PATH`** всегда на **`.../playwright-browsers`** рядом с бэкендом.
+- В **`launch.json`** поле **`executable`** может оставаться **`venv/bin/python3`** — на Mac при embedded оно игнорируется в пользу **`python/bin/python3.12`**.
+- Кэш tarball: **`.cache/fbm-embedded-python-macos/`** (в **`.gitignore`**).
+
+**Linux/Windows** в **`resources-fb-master-backend`**: по-прежнему свой **`venv`** + Chromium по инструкции в **`LOCAL_BACKEND.md`**.
+
+### 2.9. Релиз десктопа на прод (типичный цикл, **socmaster.pro**)
+
+1. Базовый путь релиза — скрипт **`scripts/release-fb-master-desktop.sh`**. Он принимает **marketing-версию** вида `2.18` и внутри доводит desktop package до **semver `2.18.0`**.
+2. Внутри сценария релиза выполняются:
+   - обновление версии в **`desktop/fb-master-desktop/package.json`** и **`package-lock.json`**;
+   - синхронизация desktop backend bundle через **`scripts/prepare-desktop-backend-bundle.sh`**;
+   - проверка встроенного Chromium через **`scripts/verify-desktop-chromium.sh`**;
+   - сборка DMG (`npm run dist:mac:arm64`);
+   - переименование DMG из semver-имени в marketing-имя через **`scripts/rename-fbmaster-dmg-marketing.sh`**;
+   - сборка клиентского ZIP bundle;
+   - публикация артефактов на VPS через **`deploy/publish-desktop-release.sh`**.
+3. Если менялись **backend / templates / static**, релиз нужно делать с обновлением серверного кода (`--deploy-backend`) либо вручную синхронизировать `/opt/fb-master` до публикации.
+4. Скрипт публикации:
+   - загружает в **`/opt/fb-master/static/releases/`** только новые
+     - **`FbMaster-<marketing>-mac-arm64.dmg`**
+     - **`FbMaster-<marketing>-mac-arm64-bundle.zip`**
+   - обновляет в **`/opt/fb-master/.env`**:
+     - **`FB_DESKTOP_LATEST_VERSION=<marketing>`**
+     - **`FB_DESKTOP_DOWNLOAD_DARWIN_ARM64=https://socmaster.pro/static/releases/FbMaster-<marketing>-mac-arm64.dmg`**
+     - **`FB_DESKTOP_DOWNLOAD_DARWIN_ARM64_BUNDLE=https://socmaster.pro/static/releases/FbMaster-<marketing>-mac-arm64-bundle.zip`**
+     - **`FB_DESKTOP_RELEASE_NOTES=...`**
+   - перезапускает **`fb-master`**;
+   - удаляет старые `FbMaster-*` релизы на сервере, оставляя только актуальные файлы и служебные артефакты.
+5. После публикации обязательно проверяются:
+   - **`curl -sS http://127.0.0.1:8000/api/public/desktop-update`** на сервере;
+   - **`curl -I -sS https://socmaster.pro/static/releases/FbMaster-<marketing>-mac-arm64.dmg`**;
+   - **`curl -I -sS https://socmaster.pro/static/releases/FbMaster-<marketing>-mac-arm64-bundle.zip`**.
+
+**Актуальная версия десктопа в документе:** package **`2.18.0`**, public release **`2.18`**.
+
+---
+
+## 3. Мессенджер: `/messenger2` vs `/messenger` (Messenger Old)
+
+| Маршрут | В обычном браузере | В Electron (UA с FBMasterDesktop) |
+|---------|-------------------|-------------------------------------|
+| **`/messenger2`** | Предупреждения про iframe, health, кнопка открыть Chromium | Полный UI + динамический `<webview>` Facebook |
+| **`/messenger`** | Messenger Old: чаты в UI, синхронизация через Playwright в БД | То же; пункт меню **скрыт** (`nav-item--sidebar-hidden`) |
+
+Логика: **`backend/routers/messenger2.py`**, шаблоны **`templates/messenger2/`**. Текущий FB-аккаунт для встроенного мессенджера — выбор в **`/fb-accounts`**.
+
+### 3.1. Актуальная двухпоточная модель работы
+
+С апреля 2026 проект переведён на логику **двух параллельных потоков**:
+
+- **Messenger 2** работает как отдельный пользовательский поток для ручной переписки.
+- **Автоматизация** (парсер, рассылка, режим агента, синхронизация Messenger Old, сценарии) работает во **втором изолированном Chromium-контексте**.
+
+Это сделано для того, чтобы при открытом **`/messenger2`** пользователь мог параллельно запускать:
+
+- парсер,
+- рассылку,
+- сценарии / режим агента,
+- автосинхронизацию мессенджера,
+- AI-действия.
+
+Технически это реализовано так:
+
+- ручной Messenger 2 живёт в отдельной Electron-session / webview;
+- фоновые Playwright-воркеры стартуют не из живого профиля Messenger 2, а из **временного persistent-контекста**, поднятого из сохранённой FB-сессии;
+- после завершения воркеров обновлённая сессия может сохраняться обратно в аккаунт.
+
+Ключевые файлы:
+
+- **`backend/services/warmup_worker.py`**
+- **`backend/services/parser_worker.py`**
+- **`backend/services/messenger_worker.py`**
+- **`backend/services/sequence_worker.py`**
+
+### 3.2. Важное ограничение
+
+Два потока = это **ручной Messenger 2 + одна фоновая автоматизация по аккаунту**. Это **не** означает, что все Playwright-воркеры по одному и тому же аккаунту можно без ограничений гонять одновременно друг поверх друга.
+
+### 3.3. Поведение окна Electron
+
+- Главное окно Electron и Messenger 2 были доработаны под старт в **maximized**-режиме.
+- Для Messenger 2 есть отдельная логика подготовки сессии, авто-обработки cookie/login popup и растяжения webview на рабочую область.
+- Если после правок меняется **`desktop/fb-master-desktop/main.js`** или код legacy frame, нужен **полный перезапуск Electron**, а не просто refresh страницы.
+
+---
+
+## 4. FastAPI: сборка приложения и middleware
+
+### 4.1. Статика и шаблоны
+
+- **`/static`** — `StaticFiles`; **`/static/releases/`** при **`FB_BLOCK_STATIC_RELEASES`** отдаёт 404 напрямую (раздача только через подписанный **`/download/release`**).
+- Jinja2: глобали **`action_type_labels`**, **`format_dt_madrid`**, **`access_key_expiry_expired`**, **`messenger_fb_account_label`**, **`is_platform_owner`**, **`static_v`** (mtime `main.css` для сброса кэша webview), **`show_logout_in_ui`**, **`fbm_desktop_app_version`** (строка из **`FB_DESKTOP_APP_VERSION`** при старте процесса; в десктопе задаётся лаунчером, на «голом» VPS обычно пусто).
+
+### 4.2. **`auth_guard`** (порядок проверок — важно для понимания «публичных» зон)
+
+Перед обычным доступом в кабинет выполняется цепочка; ниже пути, которые **пропускаются без входа пользователя** (или с особыми правилами):
+
+| Условие | Назначение |
+|---------|------------|
+| `GET /health` | Проверка живости (лаунчер Electron). |
+| **Web cabinet gate** | Если включён — секретный slug `/gate/...`; для десктопа возможен bypass по UA (`web_cabinet_gate`). |
+| `GET /download/release` | Выдача файла по подписанным query-параметрам. |
+| `path.startswith("/static")` | Статика; релизы могут блокироваться см. выше. |
+| `POST /api/public/desktop-license/activate` | Активация ключа с десктопа на VPS. |
+| `POST /api/public/client-presence` | Публичный сигнал присутствия desktop-клиента. |
+| `POST /api/public/promo-chat` | Публичный AI-чат на promo-страницах. |
+| **`GET /api/public/desktop-update`** | **Манифест обновлений Electron — без ключа и без сессии.** |
+| `GET /api/public/desktop-update-dev` | Dev-манифест desktop-обновлений. |
+| `POST /webhooks/nowpayments` | IPN NOWPayments. |
+| `path.startswith("/billing/nowpayments/")` | Страницы возврата, статус оплаты, polling. |
+| `GET /`, `GET /buy`, `GET /purchase`, `GET /promo`, `GET /promo2`, `GET /landing`, `GET /download/dev` | Публичные витрины, промо-лендинги и dev-download. |
+
+Далее: если **`FB_MASTER_ACCESS_KEY_REQUIRED`**, для всех остальных путей (кроме **`/auth/unlock`** и **`/auth/access-key/activate`**) проверяется **`session_access_valid`** (`access_keys.py`). Если доступа нет — редирект на **`/auth/unlock`**, при истёкшем сроке ключа — с **`?reason=expired`**.
+
+Если ключ не требуется или путь разрешён — далее логика **пользователя Supabase** (`user` в сессии), **`effective_organization_id`**, редирект на **`/auth/login`** при отсутствии пользователя.
+
+**SessionMiddleware** вешается с **`SECRET_KEY`**, `same_site=lax`, **`https_only=SESSION_COOKIE_SECURE`**.
+
+### 4.3. Lifespan (старт процесса)
+
+- Логирование, **`init_db`**, восстановление зависших задач (**`stale_job_recovery`**, **`automation_auto_resume`**).
+- Если не отключены воркеры Playwright: поток **sequence autotick**, **messenger inbox autosync**, **natural warmup scheduler**; иначе в лог пишется про **`FB_MASTER_DISABLE_PLAYWRIGHT_WORKERS`**.
+- **`try_autostart_messenger2_frame`**.
+
+На типичном **VPS только для сайта и лицензий** часто **`FB_MASTER_DISABLE_PLAYWRIGHT_WORKERS=1`** — фоновые Playwright-задачи на сервере не нужны.
+
+---
+
+## 5. Лицензия, ключ доступа, «защита»
+
+### 5.1. Смысл модели
+
+- Это **лицензирование по ключу + привязка к устройству + срок**, а не абсолютная DRM. Локальное приложение теоретически можно модифицировать при большой мотивации; для массового сегмента барьер — ключ на сервере, отпечаток устройства, истечение срока.
+
+### 5.2. Флаги и конфиг
+
+- **`FB_MASTER_ACCESS_KEY_REQUIRED`** — без валидной сессии ключа кабинет недоступен (редирект на **`/auth/unlock`**).
+- **`FB_MASTER_LICENSE_API_BASE`** — URL VPS для **`POST .../api/public/desktop-license/activate`** при вводе ключа в десктопе (локальный `auth` проксирует на прод).
+- **`FB_MASTER_OPERATOR_AFTER_ACCESS_KEY`** — после валидного ключа может автоматически создаваться локальный «оператор» для входа в UI без отдельного OAuth (см. **`local_operator_session`**).
+- **`FB_MASTER_HIDE_INFRA_SETTINGS`** — при **`1`/`true`**: на **`/system/settings`** скрыты блоки **Supabase Auth**, **Google OAuth и allowlist**, **Пути к данным**; в карточке **«Runtime…»** скрыты строки **«Пути из .env»** и **«OAuth из .env»**; **`save_settings_from_form`** не принимает эти поля с формы. Лаунчер десктопа выставляет по умолчанию; на VPS обычно не задают.
+- В **`local-backend-launcher.js`** для упакованного приложения по умолчанию включаются ключ, оператор, скрытие инфраструктурных настроек и **`FB_MASTER_HIDE_LOGOUT`**, если не переопределено env.
+
+### 5.3. Цепочка активации (десктоп)
+
+1. Пользователь вводит ключ на **`/auth/unlock`**.
+2. Если задан **`FB_MASTER_LICENSE_API_BASE`**, локальный бэкенд шлёт на VPS **`POST /api/public/desktop-license/activate`** с **`key`** и **`device_fingerprint`** (стабильный SHA и т.д. из **`main.js`** / `node-machine-id`).
+3. На VPS **`bind_access_key_to_device`** (`access_keys.py`): проверка хеша ключа, **не отозван**, **не истёк срок**, привязка **`device_fingerprint`** (один ключ — одно устройство после привязки).
+4. Успех → **`mirror_access_key_locally`** пишет зеркало в **локальную SQLite**; **`try_activate`** выставляет в сессии **`ak_id`** и **`ak_fp`**.
+
+### 5.4. Проверка каждого запроса при включённом ключе
+
+**`session_access_valid`**: есть `SESSION_KEY_ID` / `SESSION_KEY_FP`, запись **`AccessKey`** в БД, не revoked, **не истёк `expires_at`**, отпечаток совпадает с сохранённым в строке ключа.
+
+### 5.5. Срок ключа и продление
+
+- Истёк **`expires_at`** → доступ закрыт, снова **`/auth/unlock`**. Продление — новая оплата (NOWPayments) или ручная выдача ключа на VPS.
+- **Просроченный ключ не используется** для доступа к кабинету; см. ниже про обновления — манифест обновлений **ключом не защищён**.
+
+### 5.6. Публичные API без ключа (релевантно для продукта)
+
+- **`GET /api/public/desktop-update`** — только информация о версии и URL установщика (подписанные ссылки).
+- **`POST /api/public/desktop-license/activate`** — проверка ключа (нужен валидный ключ в теле запроса).
+
+---
+
+## 6. Обновления настольного приложения (централизованные)
+
+### 6.1. Источник правды — VPS
+
+Эндпоинт **`backend/routers/desktop_public.py`**: **`GET /api/public/desktop-update`**.
+
+Ответ при настроенном проде:
+
+- **`enabled: true`**, **`latest_version`** (строка semver из **`FB_DESKTOP_LATEST_VERSION`**),
+- **`urls`** — словарь платформа→URL (**`FB_DESKTOP_DOWNLOAD_DARWIN_ARM64`** и др. из **`config.py`**), для путей вида `/static/releases/FbMaster-*.dmg|zip` URL **подписываются** через **`release_download`** (HMAC, TTL **`FB_RELEASE_TTL_MANIFEST_SECONDS`**),
+- опционально **`min_version`**, **`release_notes`**.
+
+Если **`FB_DESKTOP_LATEST_VERSION`** пусто → **`enabled: false`** (клиент молча не предлагает обновление).
+
+### 6.2. Клиент Electron (`main.js`)
+
+- Через ~4 с после старта вызывается **`maybeCheckDesktopUpdate()`**.
+- **Критично:** манифест запрашивается не с локального uvicorn, а с **лицензионного хоста** — функция **`desktopUpdateManifestOrigin()`**:
+  1. `FB_MASTER_LICENSE_API_BASE`
+  2. иначе **`licenseApiBase`** из **`launch.json`**
+  3. иначе для упакованного приложения — origin **`PACKAGED_APP_BASE_URL`** / `https://socmaster.pro`
+
+Иначе локальный инстанс не знает **`FB_DESKTOP_*`** и всегда отдавал бы «обновления отключены».
+
+- Если origin манифеста — **localhost**, проверка отключена, пока не задано **`FB_MASTER_CHECK_LOCAL_UPDATES=1`** (чтобы не спамить в dev).
+- Сравнение версий: **`compareSemver`** (текущая из **`package.json`** десктопа vs **`latest_version`**).
+- **«Позже»** — snooze 24 ч, файл **`desktop-update-snooze.json`** в userData.
+- **Скачать** — `fetch` по подписанному URL, сохранение в **«Загрузки»**, на macOS открытие **.dmg** через **`shell.openPath`**.
+
+### 6.3. Связь с ключом
+
+- **Проверка обновлений и скачивание установщика по манифесту не требуют активной сессии ключа** (маршрут публичный). Истёкший ключ **не блокирует** запрос манифеста.
+- Работа **внутри** кабинета после входа по-прежнему требует валидный ключ, если включён **`FB_MASTER_ACCESS_KEY_REQUIRED`**.
+
+### 6.4. Чеклист на VPS для работы обновлений
+
+- Задать **`FB_DESKTOP_LATEST_VERSION`** (совпадает с версией в **`desktop/fb-master-desktop/package.json`** для ожидаемого UX).
+- Задать URL скачивания (**`FB_DESKTOP_DOWNLOAD_*`**) или положить файлы в **`static/releases/`** с именами под **`FB_DESKTOP_LATEST_VERSION`** (см. **`desktop_buy_page_download_urls`** / **`_buy_page_auto_dmg_url`** в **`config.py`**).
+
+---
+
+## 7. Витрина, оплата, файлы для скачивания
+
+### 7.1. Маршруты
+
+- **`GET /buy`** — `templates/buy.html`: материалы для macOS arm64, NOWPayments, отпечаток устройства (**`fbm-device-fingerprint.js`**).
+- **`GET /purchase`** — только оплата без блока «материалы».
+- **`POST /billing/nowpayments/create`** — инвойс, редирект в NOWPayments.
+- **`/billing/nowpayments/...`** — возврат, страница с polling **`/billing/nowpayments/status`**, выдача **plaintext ключа** и **`download_urls`** после оплаты.
+- **`POST /webhooks/nowpayments`** — IPN (подпись секретом).
+
+### 7.2. Подписанные ссылки на релизы
+
+- Модуль **`backend/services/release_download.py`**: HMAC от **`filename|exp`**, секрет **`SECRET_KEY`**; имя файла по regex **`FbMaster-....(dmg|zip)`**.
+- TTL: **`FB_RELEASE_TTL_PUBLIC_SECONDS`**, **`FB_RELEASE_TTL_PAID_SECONDS`**, **`FB_RELEASE_TTL_MANIFEST_SECONDS`**.
+- **`FB_BLOCK_STATIC_RELEASES`** + nginx — прямой доступ к **`/static/releases/*`** закрыт, остаётся только **`/download/release`**.
+
+### 7.3. Bundle для macOS
+
+- Скрипт **`scripts/zip-mac-arm64-bundle.sh`**: **DMG + `static/downloads/fb-master-macos-first-run-ru.html`** → zip в **`static/releases/`**.
+
+### 7.4. Политика «скачать до оплаты»
+
+Установщик с витрины может быть доступен до оплаты; **полноценная работа** приложения при включённом флаге — только с **ключом**.
+
+---
+
+## 8. Технологический стек бэк-офиса
+
+- FastAPI, Uvicorn, Jinja2, SQLAlchemy, SQLite или PostgreSQL (**`DATABASE_URL`**), cookie-сессии, Supabase OAuth.
+- Playwright (sync) для автоматизации на **машине, где крутится воркер** (у клиента — в десктопе; на VPS — только если включены воркеры).
+- Мультитенантность: **`Organization`**, **`organization_id`** на сущностях (**`tenancy.py`**).
+- AI-провайдеры: **OpenAI**, **Google Gemini**, **Ollama Local** (локальные модели через Ollama, например Gemma).
+
+### 8.1. Фоновые задачи
+
+- **`Job` / `JobEvent`**, слот **`playwright_resource.playwright_run_slot`**, лимит **`PLAYWRIGHT_MAX_CONCURRENT`**.
+- Legacy мессенджер: сериализация тяжёлого sync в **`messenger_worker`**.
+
+### 8.2. Конфиг (`backend/config.py`) — ориентиры
+
+Помимо уже названного: **`DATA_DIR`**, **`LOG_DIR`**, **`BROWSER_PROFILES_DIR`**, **`BASE_FB_DIR`**, **`APP_BASE_URL`**, **`OAUTH_REDIRECT_BASE`**, **`SEQUENCE_TIMEZONE`**, настройки NOWPayments (**`NOWPAYMENTS_*`**, тестовый тариф), маркетинговые URL (**`FB_MASTER_MARKETING_BUY_URL`** и т.д.).
+
+---
+
+## 9. Полная структура интерфейса FB Master (сайдбар, экраны, функции)
+
+Общий каркас: **`templates/base.html`** — фиксированный **сайдбар слева** (`aside.sidebar`), справа **`main-content`** с **`page-body`** и блоком контента страницы. Класс активного пункта: **`page_id`** в шаблоне. Внизу сайдбара: блок пользователя (аватар/имя/email из сессии Supabase), кнопка **смены темы** (`#theme-toggle`, светлая/тёмная), опционально **«Выйти»** (`show_logout_in_ui` / **`FB_MASTER_SHOW_LOGOUT_IN_UI`** / отмена скрытия через **`FB_MASTER_HIDE_LOGOUT`**). В шапке сайдбара под логотипом **FB Master** при работе в десктопе показывается **`v<версия>`** (`fbm_desktop_app_version`).
+
+Глобальный **модальный диалог подтверждения** (`#fb-confirm-modal`) — для опасных действий из **`static/js/app.js`**.
+
+### 9.0. Актуальная структура бокового меню (`templates/base.html`)
+
+#### Рабочие аккаунты
+
+- **`/fb-accounts`** — Аккаунты
+- **`/account-warming`** — Прогрев аккаунтов
+
+#### Данные
+
+- **`/donors`** — Доноры (скрытый sidebar-item)
+- **`/parser`** — Парсер
+- **`/import`** — Импорт базы
+- **`/people`** — База контактов
+
+#### Коммуникации
+
+- **`/templates`** — Шаблоны
+- **`/outreach`** — Рассылка
+- **`/outreach?focus=agent`** — Magic-агент (скрытый sidebar-item)
+- **`/scenarios`** — Режим агента
+- **`/messenger`** — Messenger Old (скрытый sidebar-item)
+- **`/messenger2`** — Мессенджер
+
+#### CRM
+
+- **`/crm/funnel`** — Воронка
+
+#### Система
+
+- **`/system/speed`** — Скорость и паузы
+- **`/system/logs`** — Журнал и отчёты
+- **`/system/settings`** — Настройки
+- **`/faq`** — FAQ
+- **`/admin/platform`** — Админ-панель (только для platform owner)
+
+### 9.1. Главная (дашборд) — `GET /`
+
+- **`page_id`**: `dashboard`.
+- Счётчики по организации: доноры, люди в базе, FB-аккаунты, список последних **задач** (**`Job`**).
+- Роутер: **`backend/routers/dashboard.py`**, шаблон **`templates/dashboard.html`**.
+
+### 9.2. Группа «Рабочие аккаунты»
+
+#### 9.2.1. Аккаунты — `/fb-accounts` (`page_id`: `fb_accounts`)
+
+- Список **Facebook-аккаунтов** организации: подпись, слот (**`active_slot`** 1…3 или **«Ожидание»** = `NULL`), бейджи сессии (**`session_ok`** и т.д.), прокси.
+- **«Добавить аккаунт»** (`POST /fb-accounts/create`): только **label** + каталог профиля **`fb_account_<id>`**. Поля **stealth** в БД пустые.
+- **Locale / timezone для Chromium** (Playwright):
+  - Если у аккаунта заданы **`stealth_locale`** или **`stealth_user_agent`** (после **импорта** с пресетом или ручной настройки) — используются они.
+  - Если **не заданы** (типично после «Добавить аккаунт») — берутся **системные** язык и часовой пояс (**`system_default_locale_bcp47`**, **`system_default_timezone_iana`** в **`fb_stealth_profile.py`**: `LANG`/`LC_*`, `TZ`, `datetime.now().astimezone().key`, fallback **`SEQUENCE_TIMEZONE`**). Пресет **«Турция»** в форме импорта на это **не влияет** (он задаёт **`DEFAULT_STEALTH_REGION`** только для ветки импорта).
+- **Импорт** (`POST /fb-accounts/import-automation`): пресет региона (**`stealth_region`**, по умолчанию turkey для купленных аккаунтов), кастомный locale/TZ, cookie-строка или TOTP-формат, опционально автологин.
+- **Резерв сессии в БД**: **`session_state_json`** / **`session_saved_at`** — снимок cookies Playwright; после сохранения вызывается **`_refresh_session_flags`** (валидация **`c_user`** и **`session_ok`**).
+- **Автослоты 1–3** (**`assign_first_free_active_slot_if_unslotted`** в **`fb_account_slots.py`**): если **`session_ok`** стал **True** и у аккаунта **ещё нет** слота, занимается **минимальный свободный** слот из 1…**`MAX_FB_ACTIVE_SLOTS`** (3). Если все три заняты — остаётся «Ожидание». Срабатывает в **`_refresh_session_flags`** (в т.ч. из **`persist_fb_session_snapshot`** после «Войти в Facebook» / автологина / импорта cookies) и в **`POST .../check-session`** при успехе. Уже назначенный слот автоматикой **не снимается**.
+- **Учётные данные FB**: логин, зашифрованный пароль и **TOTP** (**`fb_credentials_crypto`**, ключ **`SECRET_KEY`**).
+- Действия: **выпадающий список слота** (`POST /fb-accounts/{id}/active-slot` — вручную слот или «Ожидание»), **обновить поля**, **удалить**, **проверить сессию**, **тест логина/пароля**, **автовход**, **автовход по сохранённым**, **TOTP сейчас** (`GET .../totp-now`).
+- **Гео прокси**: `POST /fb-accounts/proxy-geo` — IP через прокси и рекомендация пресета.
+- **Playwright precheck** (**`playwright_chromium_precheck`** в **`fb_playwright.py`**): проверка наличия Chromium в **`PLAYWRIGHT_BROWSERS_PATH`** и тестовый **`launch(channel="chromium")`**. Ранее ошибочно читался **`browser.executable_path`** (у **`Browser`** его нет — только у **`BrowserType`**), из-за чего показывалось ложное сообщение про **`venv/bin/playwright`**; исправлено: успех = запуск без исключения, тексты для клиента без venv.
+- Роутер: **`backend/routers/fb_accounts.py`**.
+
+#### 9.2.2. Прогрев аккаунтов — `/account-warming` (`page_id`: `account_natural_warmup`)
+
+- **Мягкий многодневный прогрев** купленных/новых FB-профилей: статусы **`readiness_status`** — `cold` / `warming` / `ready`.
+- Запуск по форме: выбор аккаунта, длительность **1–7 дней**, пресеты сценариев дня (**`natural_warmup_presets`**, **`natural_warmup_scheduler`**).
+- Остановка прогрева, отметка **«готов к работе»**.
+- В фоне на старте приложения: тики планировщика (**`try_natural_warmup_scheduler_tick`** в lifespan), если не отключены воркеры.
+- Роутер: **`backend/routers/account_natural_warmup.py`**, шаблоны **`templates/account_natural_warmup/`**.
+
+### 9.3. Группа «Данные»
+
+#### 9.3.1. Доноры — `/donors` (`page_id`: `donors`) — пункт **скрыт** в CSS (`nav-item--sidebar-hidden`)
+
+- Сущность **Donor**: URL страницы FB (донор), имя, заметки.
+- Список, **создание/редактирование**, **массовое добавление** (`/donors/bulk`, `/donors/bulk-save`), **удаление**, **экспорт в CRM** (`export-crm`).
+- Роутер: **`backend/routers/donors.py`**, шаблоны **`templates/donors/`**.
+
+#### 9.3.2. Парсер — `/parser` (`page_id`: `parser`)
+
+- Обход **списка друзей** у выбранных **доноров** через Playwright → автоматическое создание/обновление записей **`Person`** (импорт в базу контактов).
+- Выбор **FB-аккаунта** из активных слотов, запуск **`POST /parser/run`**, прогресс **`GET /parser/progress`**, отмена **`POST /parser/cancel`**.
+- Один активный **воркер** парсера на процесс; состояние в **`Job`** с типом **`donor_friends_parse`**.
+- Поддерживаемые типы источников: **friends / followers / following / group members**.
+- Во время запуска можно сразу выбрать **языковой сегмент**, чтобы собирать только:
+  - всех,
+  - русскоговорящих,
+  - англоговорящих,
+  - иностранных (не RU),
+  - неизвестных.
+- Для этого на этапе парсинга используется быстрая классификация по имени и, если нужно, углублённый просмотр профиля/описания/первых постов.
+- Парсер умеет продолжать старый донорский список без потери прогресса и без «массового перепривязывания» старых людей к текущей партии, если включён языковой фильтр.
+- Логика точного подсчёта и завершения улучшена в **`friends_list_scrape.py`**:
+  - для **`/following`** считывается именно число **подписок**, а не подписчиков;
+  - для **`/followers`** — именно подписчики;
+  - для **`/friends`** — друзья;
+  - для **`/groups/.../members`** — участники.
+- При скролле новый код:
+  - пробует нажимать **`Посмотреть все / See all / View all`**,
+  - отслеживает реальное дно overflow-контейнера,
+  - завершает работу, когда новых карточек больше не появляется,
+  - не должен зависать на конце страницы после полной докрутки.
+- Роутер: **`backend/routers/parser.py`**, **`backend/services/parser_worker.py`**, UI **`templates/parser/`**.
+
+#### 9.3.3. Импорт базы — `/import` (`page_id`: `import`)
+
+- Загрузка **CSV / XLSX**: разбор колонок (URL профиля, имя, фамилия), нормализация URL (**`fb_url_normalize`**), создание **`ImportBatch`**, upsert **`Person`**, учёт пропусков в **`skip_details_json`** (лимит записей в логе).
+- Список партий импорта, **удаление партии** (с каскадной очисткой связанных данных по коду импорта).
+- Экспорт пропущенных строк, API для просмотра пропусков.
+- Роутер: **`backend/routers/import_base.py`**, шаблоны **`templates/import/`**.
+
+#### 9.3.4. База контактов — `/people` (`page_id`: `people`)
+
+- Таблица **`people`**: канонический URL, отображаемое имя, связь с донором и партией импорта, **CRM-стадия** (`crm_stage`), заметки CRM, флаг **ограниченного профиля FB** (`fb_profile_restricted`).
+- Поиск **`GET /people/api/search`**, удаление человека.
+- С апреля 2026 в базе есть **языковая сегментация** контактов.
+- Новые поля у `Person`:
+  - **`language_segment`**
+  - **`language_confidence`**
+  - **`language_checked_at`**
+- Поддерживаемые сегменты:
+  - **`ru`** — русскоговорящий
+  - **`en`** — англоговорящий
+  - **`foreign`** — иностранный (не RU)
+  - **`unknown`** — не определён
+- В интерфейсе доступны:
+  - отдельная колонка **`Язык`** с бейджем,
+  - быстрые фильтры по сегментам,
+  - запуск фоновой сегментации уже собранной базы,
+  - показ точности определения в процентах.
+- Фоновая сегментация запускается отдельной задачей **`people_language_segment`** и проходит по контактам через FB-аккаунт из активных слотов.
+- Роутер: **`backend/routers/people.py`**, шаблоны в **`templates/people/`**.
+
+### 9.4. Группа «Коммуникации»
+
+#### 9.4.1. Шаблоны — `/templates` (`page_id`: `templates`)
+
+- Текстовые **шаблоны сообщений** (**`Template`**: имя, тело, категория, режим вариантов `random`/`sequential`).
+- Создание/редактирование/удаление, сохранение.
+- **Нейровариации** (несколько формулировок через LLM): генерация и сохранение для шаблона (**Google / OpenAI** — ключи из настроек кабинета).
+- Роутер: **`backend/routers/message_templates.py`**, шаблоны **`templates/message_templates/`**.
+
+#### 9.4.2. Режим агента (сценарии по дням) — `/scenarios` (`page_id`: **`scenarios`** на страницах сценариев)
+
+- Пункт меню ведёт на **`/scenarios`** — **пошаговые цепочки** (**`SequenceCampaign`**, **`SequenceStep`**, **`SequenceEnrollment`**).
+- Типы шагов: лайк поста, комментарий, заявка в друзья, ЛС, а также **комбо** (лайк+комментарий, +заявка, +ЛС в одном шаге).
+- Настройки **ожидания между шагами**, **часовой пояс последовательности**, **окна отправки**, **throttle**-пресеты, фильтры людей (в т.ч. по донору/импорту/стадии CRM), **ротация аккаунтов**.
+- В фильтры аудитории добавлена и **языковая сегментация**: сценарии можно запускать отдельно по русскоязычной или англоязычной базе.
+- **Запись людей в сценарий** (enroll), старт/пауза/возобновление автоматизации, **полный автопилот**, **следующая порция**, сброс автоматизации, **прогон просроченных** (`run-due`), **autotick** (ручной тик для отладки), удаление кампании, сброс прогресса enrollment.
+- Фоновый **sequence worker** (**`sequence_worker.py`**, тип задачи **`sequence`**), **autotick** по расписанию в lifespan.
+- Роутер: **`backend/routers/scenarios.py`**, шаблоны **`templates/scenarios/`** (`list.html`, `campaign_form.html`, деталь и редактирование). На списке сценариев счётчик **legacy**-кампаний прогрева (**`WarmupCampaign`**) со ссылкой на **`/warmup`**.
+
+#### 9.4.3. Прогрев (люди) — `/warmup` (`page_id`: **`warmup`**) — **отдельный URL**; пункт «Режим агента» в меню ведёт на **`/scenarios`**, но подсветка активного пункта учитывает и **`warmup`** (см. **`base.html`**). Быстрый вход — со страницы списка сценариев, если есть legacy-прогревы.
+
+- Кампании **`WarmupCampaign`** и очередь **`WarmupQueue`**: мягкие действия (лайк/комментарий по шаблону) по списку **людей** с **ротацией FB-аккаунтов**, лимиты **actions_per_account**, **throttle**, опционально **бюджет времени**.
+- Сборка очереди, старт/пауза/удаление, retry ошибок.
+- Воркер: **`warmup_worker.py`**, тип **`warmup`**. Шаблоны: **`templates/warmup/`** (`list.html`, `campaign_form.html`, `detail.html`).
+
+#### 9.4.4. Magic-агент — `/outreach?focus=agent` — пункт **скрыт** (`nav-item--sidebar-hidden`, `page_id`: `outreach_magic`)
+
+- Подраздел **рассылки**: пакетная **генерация текстов** через AI (OpenAI / Gemini / Ollama), настройки промптов, обращений, моделей, лимиты батча (**`ai_agent_service`**).
+- API: сохранение настроек агента, **`POST .../batch-generate`**.
+
+#### 9.4.5. Рассылка — `/outreach` (`page_id`: `outreach` или `outreach_magic`)
+
+- Кампании **`OutreachCampaign`**: режимы **ЛС** (`dm`) и **комментирование** под постами.
+- Режимы текста: **шаблон**, **AI для ЛС**, **first_touch** (подбор первых касаний).
+- Для комментариев: шаблон или **AI-комментарий**.
+- Очередь **`OutreachQueue`**: пер-сообщение с привязкой к человеку и FB-аккаунту, опции «лайк перед сообщением», «заявка в друзья перед сообщением» (в конфиге кампании).
+- Сборка очереди, старт, пауза, удаление, повтор ошибок, **сброс флагов «кампания завершена»** для людей (точечно и массово).
+- API для сводок по донору и списков person_id при выборе аудитории.
+- В `Новой кампании рассылка` теперь встроена логика из agent mode для личных сообщений:
+  - обычный шаблон,
+  - **AI DM**,
+  - блок настроек промптов и моделей прямо в форме кампании,
+  - фильтрация аудитории по языковому сегменту.
+- Опция **First touch** в рассылке оставлена в коде, но скрыта в интерфейсе.
+- В списке кампаний добавлена отдельная кнопка **`+ Новая кампания комментинг`**.
+- Воркер: **`outreach_worker.py`**, тип **`outreach`**.
+- Роутер: **`backend/routers/outreach.py`**, шаблоны **`templates/outreach/`** (список, форма, деталь кампании, панель агента и т.д.).
+
+#### 9.4.6. Messenger Old — `/messenger` — пункт **скрыт** (`page_id`: `messenger`)
+
+- Встроенный в приложение **старый** мессенджер: список диалогов в UI, синхронизация с FB через **Playwright** в фоне, открытие треда, отправка, архивация, привязка к **CRM-стадии**, pull сообщений, очереди отправки.
+- Много **JSON API** под фронт (`/messenger/api/...`).
+- Роутер строится функцией **`build_messenger_router("/messenger", "messenger")`** в **`backend/routers/messenger.py`**, шаблоны **`templates/messenger/`**.
+
+#### 9.4.7. Мессенджер (новый) — `/messenger2` (`page_id`: `messenger2`)
+
+- В **Electron**: **`<webview>`** с живым facebook.com; в обычном браузере — заглушки и инструкции.
+- Открытие профиля человека в webview (`/messenger2/open-person/{id}`), **desktop session state** для preload, **CRM: смена стадии** из контекста треда, **sidecar health**, открытие Chromium наружу.
+- Messenger 2 — это основной UI ручной переписки, который должен работать **параллельно** с автоматизацией.
+- Для него есть собственная логика:
+  - подготовка отдельной desktop-session,
+  - автостарт sidecar / frame при необходимости,
+  - попытки убрать cookie/login popup,
+  - растяжение webview на всю рабочую область контейнера,
+  - запуск Electron-окон в maximized.
+- Роутер: **`backend/routers/messenger2.py`**, шаблоны **`templates/messenger2/`**.
+
+### 9.5. Группа «CRM»
+
+#### Воронка — `/crm/funnel` (`page_id`: `crm_funnel`)
+
+- Канбан по **стадиям** (**`CRMStage`**) и карточкам **людей** (`Person.crm_stage`).
+- Добавление/переименование/удаление/порядок стадий, перенос человека между стадиями, снятие с воронки, **экспорт CSV**.
+- Журнал активностей **`CRMActivity`** при действиях из мессенджеров и автоматизации.
+- Роутер: **`backend/routers/crm_funnel.py`**, шаблон **`templates/crm/funnel.html`**.
+
+### 9.6. Группа «Система»
+
+#### 9.6.1. Скорость и паузы — `/system/speed` (`page_id`: `system_speed`)
+
+- Глобальный **throttle**-пресет (медленно/норма/быстро и кастомные задержки), сброс.
+- **Часовой пояс сценариев** (настройка в **`Setting`**).
+- Интервал **опроса мессенджера** (poll).
+- Актуальные иконки режимов:
+  - **Улитка** — `🐌`
+  - **Медленно** — `🐢`
+  - **Средне** — `🏎`
+  - **Быстро** — `🚀`
+  - **Очень быстро** — `⚡️`
+- Роутер: **`backend/routers/system.py`**.
+
+#### 9.6.2. Журнал и отчёты — `/system/logs` (`page_id`: `system_logs`)
+
+- Вкладки: **задачи**, **ошибки**, **отчёты**; фильтры по периоду, типу задачи, статусу, сценарию, текстовому поиску.
+- Просмотр **`Job`** и **`JobEvent`**, выгрузка **CSV** (`jobs.csv`, `errors.csv`).
+- Метки типов действий см. **`ACTION_TYPE_LABELS`** в **`system.py`**.
+
+#### 9.6.3. Настройки — `/system/settings` (`page_id`: `system_settings`)
+
+- Ключи API (**OpenAI**, **Google Gemini**), **Chromium (headed)**, Messenger Desktop, автопродолжение рассылки/прогрева, блок **«Runtime и системная диагностика»** (частично) — через **`save_settings_from_form`** / **`build_settings_page_context`**.
+- При **`fb_master_hide_infra_settings()`** (**`FB_MASTER_HIDE_INFRA_SETTINGS`**, по умолчанию в **`local-backend-launcher.js`** для десктопа): не показываются верхние карточки статуса **Supabase** / **Google OAuth (прямой)**, серый вводный абзац, карточки **Supabase Auth**, **Google OAuth и allowlist**, **Пути к данным**; в диагностике скрыты **«Пути из .env»** и **«OAuth из .env»**; сохранение этих полей с формы отключено.
+- Шаблон **`templates/system/settings.html`**.
+
+#### 9.6.4. FAQ — `/faq` (`page_id`: `faq`)
+
+- Статическая справка. **`backend/routers/faq.py`**, шаблон **`templates/faq.html`**.
+
+#### 9.6.5. Админ-панель платформы — `/admin/platform` (только **`is_platform_owner`**)
+
+- Техинфо о сервере, флаги доступа, ссылки на **ключи доступа**.
+- **`/admin/platform/access-keys`**: создание и **отзыв** ключей (**`AccessKey`** на VPS).
+- Роутер: **`backend/routers/platform_admin.py`**.
+
+### 9.7. Разделы без пункта в сайдбаре (прямые URL)
+
+- **`/contacted`** — реестр **«Уже контактировали»** (**`ContactedPerson`**): пары человек + FB-аккаунт, чтобы не дублировать рассылку; поиск, пагинация, удаление записи.
+- **`/warmup`** — кампании **прогрева людей** (см. п. 9.4.3).
+- **`/ai-agent`** — **редирект 302** на **`/outreach?focus=agent`** (совместимость со старыми закладками).
+- **`/workspaces`** — launcher multi-workspace shell (активен при **`FB_MASTER_MULTI_WORKSPACE_ENABLED=1`**). Показывает карточки **Facebook Master** (READY) и **Reddit Master** (BETA), плюс ghost-карточки для будущих сетей (Twitter/X, LinkedIn). См. §9.10.
+- **`/workspaces/select/{module_id}`** — выбор workspace с записью в сессию и редиректом на его default_route. При флаге OFF — 404.
+
+### 9.8. Экраны вне `base.html` (отдельный layout)
+
+- **`/auth/unlock`** — ввод **ключа доступа** (премиум-тёмная вёрстка), NOWPayments-продление, отпечаток устройства, баннеры «срок ключа истёк» / подсказки для браузера.
+- **`/auth/login`**, **`/auth/google`**, callback **Supabase**, dev-login.
+- **`/buy`**, **`/purchase`**, страницы **`/billing/nowpayments/*`**, **`templates/buy.html`**, **`billing/`**.
+- **Web cabinet gate**: **`/gate/{slug}`** — форма секретного кода для доступа к кабинету с публичного сайта.
+- Некоторые страницы админки/скриптов в **`scripts/`** (если используются отдельно).
+
+### 9.9. Подключение роутеров в приложении
+
+Порядок **`include_router`** в **`backend/app_factory.py`**: `promo`, `promo_chat`, `web_cabinet_gate`, `auth`, `release_download`, `billing_nowpayments` (+ webhook), `dashboard`, `desktop_public`, `desktop_license_public`, `faq`, `donors`, `discovery`, `parser`, `people`, `import_base`, `fb_accounts`, `account_branding`, `account_natural_warmup`, `message_templates`, `warmup`, `scenarios`, `outreach`, `contacted`, `crm_funnel`, `messenger`, `messenger2`, `ai_agent` (редирект), `placeholders` (пустой роутер), `platform_admin`, `system`, `workspaces`. Далее — условно (при **`FB_MASTER_REDDIT_MODULE_ENABLED=1`**): `reddit.routers.accounts`, `settings`, `oauth_callback`, `subreddits`, `audience`, `activity`, `leads`, `templates`, `campaigns`, `conversations`, `comments`, `analytics`, `compliance`, `sequences`, `reddit.router` (placeholder для ещё не перенесённых разделов).
+
+### 9.10. Reddit Master — multi-workspace модуль
+
+Активен в desktop-сборке при **`FB_MASTER_REDDIT_MODULE_ENABLED=1`** (включено по умолчанию в **`local-backend-launcher.js`**). На сервере (**socmaster.pro**) — отключён, чтобы витрина оставалась чистой.
+
+#### Каркас и принципы
+
+- **`backend/core/modules/`** — `INetworkModule` ABC, `ModuleRegistry`, `NavigationManifest`/`CapabilityManifest`.
+- **`backend/core/workspace/`** — session helpers + launcher view builders.
+- **`backend/core/feature_flags.py`** — `multi_workspace_enabled()`, `reddit_module_enabled()`, `reddit_official_api_only()` (default `True`), `reddit_send_approval_mode()` (default `manual`), `launcher_is_default_entry()`.
+- **`backend/modules/facebook/`** — тонкая обёртка над существующим FB Master: `FacebookModule` с навигацией 1:1 текущего sidebar + `CapabilityManifest`. Никакого переезда кода из `backend/routers/` / `backend/services/`.
+- **`backend/modules/reddit/`** — полноценный модуль: `module.py`, `manifest.py`, `models.py` (19 таблиц с префиксом `reddit_*`), `config.py`, `services/*`, `routers/*`, `router.py` (placeholder-роутер для незакрытых разделов).
+- Общий layout: **`templates/_shell/base.html`** → наследуется `templates/base.html` (FB workspace, `data-workspace="facebook"`) и `templates/reddit/base.html` (`data-workspace="reddit"`). Темизация per-workspace через **`static/css/_workspace-tokens.css`** (мягкий Reddit-оранжевый `#ff7a3d` / dark `#ff8a54`).
+- Workspace switcher — **`templates/_shell/_workspace_switcher.html`**, JS — **`static/js/workspace-switcher.js`**.
+
+#### Sidebar Reddit Master (5 групп · 15 пунктов)
+
+Обзор: **`/reddit`** (Dashboard), **`/reddit/compliance`** (Compliance & Limits). Аккаунты: **`/reddit/accounts`**, **`/reddit/readiness`**. Исследование: **`/reddit/subreddits`**, **`/reddit/audience`**, **`/reddit/activity`**, **`/reddit/leads`**. Коммуникация: **`/reddit/templates`**, **`/reddit/campaigns`**, **`/reddit/sequences`**, **`/reddit/conversations`**, **`/reddit/comments`**. Система: **`/reddit/analytics`**, **`/reddit/settings`**.
+
+#### OAuth2 flow
+
+- Ввод `client_id`/`client_secret` в **`/reddit/settings`** (таблица `Setting`, ключи `reddit.oauth.*`). Redirect URI по умолчанию — **`http://127.0.0.1:8799/reddit/oauth/callback`**.
+- **`/reddit/accounts/connect`** → **`build_authorize_url`** → Reddit OAuth → **`/reddit/oauth/callback`** → **`exchange_code`** → `RedditAccount` (refresh-token шифруется через `backend/services/fb_credentials_crypto.py`).
+- Access-token не хранится в БД — `api_client` рефрешит по refresh-token и кеширует в transient-атрибуте.
+- Scope: `identity read mysubreddits history privatemessages submit edit vote save`.
+
+#### HTTP-взаимодействие с Reddit API
+
+- Без PRAW — через **`httpx`** (уже в `requirements.txt`). Модуль **`backend/modules/reddit/services/api_client.py`**: нормализация ошибок в `RedditApiError`, запись rate-limit headers в `RedditRateLimitState`.
+- Реализованные вызовы: `/api/v1/me` (readiness), `/subreddits/search`, `/subreddits/popular`, `/r/<name>/new` и `/r/<name>/comments` (audience), `/r/<sub>/comments/<id>/...` (комментаторы поста), `/user/<name>/about` + `/user/<name>/overview` (activity scanner), `/api/compose` (PM), `/api/comment` (публикация комментария).
+
+#### Compliance / Safety defaults
+
+- **`FB_MASTER_REDDIT_OFFICIAL_API_ONLY=1`** — никакой browser-automation.
+- Approval по умолчанию **`manual`** на уровне кампаний, отдельных drafts (DM/comment) и sequence runs.
+- Safety caps (per-day / per-hour) из `Setting` (`reddit.safety.*`), ручная настройка через **`/reddit/settings`**.
+- **`RedditActionAttempt`** + **`RedditComplianceEvent`** накапливают историю отправок с reason_code.
+- Compliance Center **`/reddit/compliance`** рендерит capability-матрицу 4 уровней (supported/partial/restricted/unsupported) + живые rate-limit'ы + последние события.
+
+#### Agent Mode (sequences)
+
+- Node-types: `wait`, `draft_dm`, `send_dm`, `draft_comment`, `publish_comment`, `check_reply`, `note`.
+- Runtime — **manual advance**: пользователь нажимает «Advance» на конкретном `SequenceRun`. Шаги `draft_*` создают pending-draft и run переходит в `awaiting_approval`; шаги `send_*` / `publish_*` срабатывают только если соответствующий draft в `approved`.
+- Safety caps по умолчанию: 20 действий/сутки, 5/час на аккаунт.
+
+#### Модели данных (`backend/modules/reddit/models.py`)
+
+`RedditAccount`, `RedditReadinessProbe`, `RedditSubreddit`, `RedditUserProfile`, `RedditPost`, `RedditComment`, `RedditRecentActivitySnapshot`, `RedditChatCapability`, `RedditLead`, `RedditTemplate`, `RedditCampaign`, `RedditCampaignQueue`, `RedditSequence`, `RedditSequenceRun`, `RedditConversation`, `RedditMessageDraft`, `RedditCommentDraft`, `RedditActionAttempt`, `RedditComplianceEvent`, `RedditRateLimitState`. Все таблицы входят в общий `Base.metadata` — `init_db()` импортирует модель и создаёт пустые таблицы даже при выключенном модуле (безопасный dormant-режим).
+
+#### Smoke-тест
+
+**`scripts/smoke_fb_master.py`** — 6 проверок: feature flags (все default OFF), registry до и после `create_app()`, парсинг шаблонов, наличие всех FB-URL и (при `FB_MASTER_REDDIT_MODULE_ENABLED=1`) всех Reddit-URL (≈60 роутов). Запуск: `cd "/Users/.../FB - Master" && .venv/bin/python scripts/smoke_fb_master.py`. Ожидаемый результат — `6/6 OK`.
+
+---
+
+## 10. Сводная таблица HTTP-маршрутов (основное)
+
+| Метод и путь | Назначение |
+|--------------|------------|
+| `GET /` | Дашборд |
+| `GET/POST /gate/{slug}` | Секретный вход в кабинет |
+| `GET /auth/unlock`, `POST /auth/access-key/activate` | Ключ доступа |
+| `GET /auth/login`, `/auth/google`, `/auth/callback`, Supabase-ветки | OAuth |
+| `GET /auth/logout` | Выход |
+| `GET /buy`, `GET /purchase` | Витрина и оплата |
+| `POST /billing/nowpayments/create`, `GET .../return`, `GET .../status` | NOWPayments |
+| `POST /webhooks/nowpayments` | IPN |
+| `GET /download/release` | Подписанная раздача файлов |
+| `GET /api/public/desktop-update` | Манифест обновлений Electron |
+| `POST /api/public/desktop-license/activate` | Активация ключа с устройства |
+| `GET /admin/platform`, access-keys CRUD | Владелец платформы |
+| `GET/POST /fb-accounts/...` | FB-аккаунты (см. роутер) |
+| `GET/POST /account-warming/...` | Прогрев аккаунтов |
+| `GET/POST /donors/...` | Доноры |
+| `GET/POST /parser/...` | Парсер друзей |
+| `GET/POST /import/...` | Импорт файлов |
+| `GET /people`, API поиск, `POST .../delete` | База контактов |
+| `GET/POST /templates/...` | Шаблоны |
+| `GET/POST /warmup/...` | Прогрев людей |
+| `GET/POST /scenarios/...` | Сценарии по дням |
+| `GET/POST /outreach/...` | Рассылка и AI-агент |
+| `GET /contacted`, `POST .../remove` | Уже контактировали |
+| `GET/POST /crm/funnel/...` | Воронка CRM |
+| `GET/POST /messenger/...`, много `/api/*` | Messenger Old |
+| `GET/POST /messenger2/...` | Мессенджер webview |
+| `GET /ai-agent` | Редирект на рассылку |
+| `GET/POST /system/speed|settings|logs|...` | Система |
+
+Полный перечень декораторов удобно смотреть поиском по репозиторию: шаблон **`@router.`** в каталоге **`backend/routers/`**.
+
+---
+
+## 11. Ключевые механики и сервисы (`backend/services/`)
+
+| Область | Файлы / смысл |
+|---------|----------------|
+| Парсер доноров | **`parser_worker.py`**, **`friends_list_scrape.py`** — friends/followers/following/members, завершение на дне списка, счётчики разделов, «Посмотреть все» |
+| Сценарии (sequence) | **`sequence_worker.py`**, **`sequence_campaigns.py`**, **`sequence_timezone.py`**, autotick в lifespan |
+| Рассылка | **`outreach_worker.py`**, **`outreach_actions.py`**, **`outreach_campaign_done.py`**, **`first_touch_templates.py`**, **`message_template_render.py`** |
+| AI-агент в рассылке | **`ai_agent_service.py`**, **`cabinet_settings.py`** (ключи LLM) |
+| Языковая сегментация базы | **`person_language.py`**, **`people_language_worker.py`** — RU / EN / FOREIGN / UNKNOWN, уверенность, фильтры, профили/посты |
+| Прогрев людей | **`warmup_worker.py`**, **`warmup_actions.py`** |
+| Прогрев аккаунтов (natural) | **`natural_warmup_scheduler.py`**, **`natural_warmup_presets.py`** |
+| Мессенджер Old | **`messenger_scrape.py`**, **`messenger_worker`** (сериализация), **`messenger_person_link.py`**, **`messenger_autosync_scheduler.py`** |
+| Messenger 2 / sidecar | **`messenger2_frame_sidecar.py`**, **`messenger_deep_link.py`** |
+| FB / Playwright | **`fb_playwright.py`** (окна входа, precheck, сессии), **`fb_stealth_engine.py`**, **`fb_stealth_profile.py`** (пресеты регионов, системный locale/TZ без пресета, опции launch), **`fb_account_slots.py`** (**`assign_active_slot`**, **`assign_first_free_active_slot_if_unslotted`**, **`MAX_FB_ACTIVE_SLOTS=3`**), **`active_fb_account.py`** |
+| CRM | **`crm_stages_registry.py`**, активности в моделях |
+| Лицензии / устройство | **`access_keys.py`**, **`desktop_device.py`**, **`desktop_client.py`** |
+| Оплата | **`nowpayments_billing.py`**, **`release_download.py`** |
+| Лимиты | **`throttle.py`**, **`FBAccountDayUsage`**, **`sending_window.py`** |
+| Надёжность | **`stale_job_recovery.py`**, **`job_logging.py`**, **`job_failure_diagnostics.py`** |
+| Мультитенантность | **`tenancy.py`** |
+| Автоматизация (общее) | **`automation_switch.py`**, **`electron_proxy.py`** (при необходимости) |
+
+---
+
+## 12. Модель данных (`backend/models.py`) — сущности
+
+- **`AdminUser`**, **`Organization`**, **`OrganizationMember`** — пользователи и организации.
+- **`AccessKey`** — ключи (хеш, подпись, срок, отзыв, привязка к **`device_fingerprint`**).
+- **`BillingRenewalOrder`** — заказы NOWPayments и выдача ключа после оплаты.
+- **`Donor`**, **`ImportBatch`**, **`Person`** — доноры, партии импорта, контакты (CRM-поля, `canonical_url`).
+- У `Person` дополнительно используются поля языковой сегментации:
+  - **`language_segment`**
+  - **`language_confidence`**
+  - **`language_checked_at`**
+- **`CRMStage`**, **`CRMActivity`** — стадии воронки и лог активности.
+- **`FBAccount`** — аккаунты FB, профили, прокси, stealth, слоты, сессия, автологин, **natural warmup JSON**.
+- **`Template`** — шаблоны сообщений.
+- **`ContactedPerson`** — учёт уже контактировавших с пары person+account.
+- **`FBAccountDayUsage`** — суточные счётчики действий по аккаунту.
+- **`Job`**, **`JobEvent`** — фоновые задачи и события.
+- **`OutreachCampaign`**, **`OutreachQueue`** — рассылка.
+- **`WarmupCampaign`**, **`WarmupQueue`** — прогрев людей.
+- **`SequenceCampaign`**, **`SequenceStep`**, **`SequenceEnrollment`** — сценарии по дням.
+- **`Conversation`**, сообщения (если используются мессенджером), **`AIAgentRun`** — прогоны AI.
+- **`Setting`** — ключ-значение настроек кабинета.
+
+### 12.1. Механика языковой сегментации: как именно система определяет RU / EN / FOREIGN
+
+Языковая сегментация построена как **гибридная эвристическая модель**, без внешнего LLM-вызова по умолчанию. Это сделано, чтобы сегментация была:
+
+- быстрой,
+- дешёвой,
+- воспроизводимой,
+- пригодной для запуска прямо во время парсинга.
+
+Сигналы, которые учитываются:
+
+1. **Имя / фамилия / display_name**
+   - кириллица,
+   - русские патронимические окончания,
+   - латиница,
+   - расширенная латиница,
+   - вьетнамские и другие диакритические признаки.
+2. **Описание профиля / intro**
+   - текст из верхней части профиля,
+   - ключевые RU / EN / non-EN стоп-слова.
+3. **Первые 3 поста**
+   - анализ текста постов,
+   - игнорирование мусора Facebook (`People you may know`, `See translation`, системные блоки).
+
+Логика принятия решения:
+
+- быстрый проход по имени → если уверенность высокая, профиль можно не открывать;
+- если для выбранного фильтра уверенность недостаточна, система открывает профиль человека и добирает контекст;
+- результат записывается в `Person.language_segment`, `Person.language_confidence`, `Person.language_checked_at`.
+
+Поддерживаемые пользовательские фильтры:
+
+- **`all`** — все языки;
+- **`ru`** — русскоговорящие;
+- **`en`** — англоговорящие;
+- **`non_ru`** — иностранные (англоговорящие + прочие non-RU);
+- **`unknown`** — не определено.
+
+Ключевые файлы:
+
+- **`backend/services/person_language.py`**
+- **`backend/services/people_language_worker.py`**
+- **`backend/database.py`** — миграция колонок `language_*`
+
+### 12.2. Механика парсера списков людей: как он считает и как должен завершаться
+
+Парсер Facebook-списков в проекте не должен опираться только на «общее число на странице». Реальная логика теперь такая:
+
+1. Определяется тип URL:
+   - **`/following`**
+   - **`/followers`**
+   - **`/friends`**
+   - **`/groups/.../members`**
+2. Со страницы берётся **релевантный счётчик именно этого режима**, а не первый попавшийся из шапки профиля.
+3. Далее система извлекает карточки людей, нормализует ссылки и дедуплицирует профили.
+4. При скролле она:
+   - ищет вложенный scroll-container;
+   - нажимает **`Посмотреть все / See all / View all`**, если такая кнопка есть;
+   - отслеживает, появляются ли новые карточки;
+   - если новых карточек больше нет и достигнут низ контейнера, **завершает работу**, а не висит бесконечно.
+
+Важно понимать:
+
+- число на странице Facebook — это **ожидаемый ориентир**, а не гарантия 1:1;
+- часть карточек Meta может не отрисовать, скрыть или грузить нестабильно;
+- задача парсера — собрать максимально полный список и корректно завершиться, а не бесконечно ждать недогруженные карточки.
+
+---
+
+## 13. Деплой на VPS и типичные сбои
+
+- Код в **`/opt/fb-master`** на сервере **`46.62.230.106`**, сервис **`fb-master`** (systemd), Uvicorn на **127.0.0.1:8000**, nginx TLS → прокси.
+- **`deploy/from-mac.sh`**: `rsync` + **`bootstrap-server.sh`**. **`.env` на сервере не перезаписывается.**
+- **Важно:** в `rsync` **исключать весь каталог `data/`** (не только `app.db`). Синхронизация `data/` с Mac с владельцем **501:staff** ломает права на **`data/logs/`** у пользователя **`fbmaster`** → **502 Bad Gateway** (uvicorn падает на **`PermissionError`** при открытии лога). После ошибки: **`chown -R fbmaster:fbmaster /opt/fb-master/data`**.
+- Nginx: при обновлении bootstrap может перезаписать конфиг — **certbot** при необходимости повторить.
+- Документация руками: **`deploy/YOU_DO_MANUALLY.md`**.
+- Для релизов desktop после загрузки новых файлов нужно чистить старые версии из:
+  - **`/opt/fb-master/static/releases`**
+- Базовая прод-проверка после деплоя:
+  - **`systemctl status fb-master --no-pager`**
+  - **`curl -sS http://127.0.0.1:8000/api/public/desktop-update`**
+  - **`curl -I -sS https://socmaster.pro/static/releases/FbMaster-<версия>-mac-arm64.dmg`**
+  - **`curl -I -sS https://socmaster.pro/static/releases/FbMaster-<версия>-mac-arm64-bundle.zip`**
+
+### 13.1. Типовые команды для поддержки и релизов
+
+#### Локально
+
+- Подготовить desktop bundle:
+  - **`bash scripts/prepare-desktop-backend-bundle.sh`**
+- Собрать macOS release:
+  - **`cd desktop/fb-master-desktop && npm run dist:mac:arm64`**
+- Собрать ZIP bundle:
+  - **`bash scripts/zip-mac-arm64-bundle.sh <версия>`**
+- Проверить backend локально:
+  - **`.venv/bin/python -c "from backend.app_factory import create_app; create_app(); print('ok')"`**
+
+#### На сервере
+
+- Подключиться:
+  - **`ssh root@46.62.230.106`**
+- Перейти в проект:
+  - **`cd /opt/fb-master`**
+- Перезапустить backend:
+  - **`systemctl restart fb-master`**
+- Посмотреть статус:
+  - **`systemctl status fb-master --no-pager`**
+- Проверить update manifest:
+  - **`curl -sS http://127.0.0.1:8000/api/public/desktop-update`**
+- Проверить наличие релизного файла:
+  - **`ls -lah /opt/fb-master/static/releases`**
+
+---
+
+## 14. Дерево проекта (логическое)
+
+```
+FB - Parser Friends/
+├── Checkpoint                 ← этот документ
+├── main.py                    ← бэк-офис Uvicorn
+├── app.py                     ← парсер друзей :8765
+├── requirements.txt
+├── deploy/                    ← from-mac.sh, bootstrap-server.sh, systemd, nginx examples
+├── scripts/
+│   ├── prepare-desktop-backend-bundle.sh  → resources-fb-master-backend (rsync backend/templates/static, launch.json)
+│   ├── ensure-macos-embedded-python.sh     → встроенный Python + pip + Chromium (только Darwin)
+│   └── zip-mac-arm64-bundle.sh            → zip для клиентов (DMG + HTML инструкция)
+├── .gitignore                 ← .env, .env.*, секреты; исключение .env.example; кэш embedded Python
+├── .cursorignore              ← те же секреты — реже в контекст IDE
+├── backend/                   ← app_factory, config, routers, services
+├── templates/                 ← buy.html, billing/, messenger2/, people/, parser/, outreach/, scenarios/, system/, base.html, …
+├── static/
+│   ├── releases/              ← DMG/ZIP (на проде + опционально block прямого доступа)
+│   ├── downloads/             ← HTML инструкций macOS
+│   └── js/css/…
+├── desktop/
+│   ├── fb-master-desktop/     ← Electron: main.js, preload.js, local-backend-launcher.js, package.json
+│   │   └── resources-fb-master-backend/  ← копия бэкенда для упаковки (venv не в git)
+│   └── messenger2-frame/      ← legacy
+├── data/                      ← локальная SQLite/логи (gitignore; не rsync на прод)
+├── browser_profiles/
+└── Base FB/
+```
+
+---
+
+## 15. UI- и webview-заметки
+
+- **`/messenger2` (Desktop)**: `fitM2()` от высоты окна; стили webview без **`display: block`**.
+- **`static_v`** в шаблонах — анти-кэш для CSS при правках.
+
+---
+
+## 16. Ограничения
+
+- Масштаб упирается в Playwright и политики Facebook.
+- Messenger Old — очереди и сериализация sync при нагрузке.
+- **`app.py`** и **`main.py`** — разные процессы.
+
+---
+
+## 17. История актуализации Checkpoint (кратко)
+
+- **20.04.2026 — Multi-workspace shell + Reddit Master.** Введены `backend/core/modules` (ABC + реестр) и `backend/modules/{facebook,reddit}/`. FB Master стал module-implementation без переезда кода. Reddit Master: 15 разделов, OAuth2 через Reddit API (`httpx`, без PRAW), 19 таблиц, review-first отправка DM/комментариев, agent mode с manual-advance. В desktop-сборке флаги `FB_MASTER_MULTI_WORKSPACE_ENABLED`, `FB_MASTER_REDDIT_MODULE_ENABLED`, `FB_MASTER_REDDIT_OFFICIAL_API_ONLY`, `FB_MASTER_REDDIT_SEND_APPROVAL=manual`, `FB_MASTER_LAUNCHER_DEFAULT` — включены автоматически в `local-backend-launcher.js`. На сервере (**socmaster.pro**) флаги не выставляются → витрина без изменений. Smoke-скрипт `scripts/smoke_fb_master.py` (6 проверок, green).
+- Прод: VPS (**socmaster.pro**), nginx, systemd, витрина **`/buy`**, NOWPayments, ключ + привязка к устройству, bundle zip для macOS, **`static/releases/`** + **`FB_DESKTOP_*`**.
+- Убраны кнопки Telegram с публичных шаблонов; переменная **`DEVELOPER_TELEGRAM_URL`** удалена из кода.
+- Исправлена проверка обновлений десктопа: манифест с **лицензионного хоста** (`desktopUpdateManifestOrigin` в **`main.js`**).
+- Деплой: **`rsync` исключает `data/`** целиком, задокументирован риск прав **501:staff** и 502.
+- Версия приложения в UI: **`FB_DESKTOP_APP_VERSION`** из лаунчера, глобал Jinja **`fbm_desktop_app_version`**, шаблоны **`base.html`**, **`auth/unlock.html`**.
+- **macOS-клиенты:** встроенный Python (**`ensure-macos-embedded-python.sh`**), отказ от Homebrew-**venv** в DMG; стабильный локальный uvicorn + Chromium.
+- **Безопасность репозитория:** расширен **`.gitignore`** (`.env.*`, ключи); добавлен **`.cursorignore`** для секретов; в **`.env.example`** предупреждение не коммитить `.env`.
+- **Playwright:** исправлен **`playwright_chromium_precheck`** (не использовать несуществующий **`browser.executable_path`**).
+- **Аккаунты:** при «Добавить аккаунт» — locale/TZ с **компьютера**, не пресет Турции из формы импорта; подсказки в **`templates/fb_accounts/list.html`**.
+- **Слоты:** после успешной сессии (**`session_ok`**) — автоматическое заполнение первого свободного слота 1–3 (**`assign_first_free_active_slot_if_unslotted`**).
+- Полностью переработан раздел **Messenger 2**: webview, отдельная сессия, sidecar, max-window, попытки обхода cookie/login popup, параллельная работа с автоматизацией.
+- Введена **двухпоточная модель**: ручной Messenger 2 отдельно, Playwright-автоматизация отдельно.
+- Добавлена **языковая сегментация базы**: RU / EN / FOREIGN / UNKNOWN в базе контактов, в парсере, в рассылке и в режиме агента.
+- Усилен парсер списков FB: точнее определяет счётчик конкретного раздела (`following/followers/friends/members`), умеет нажимать **`Посмотреть все`** и завершать работу на реальном конце списка без зависания.
+- Обновлены иконки раздела **«Скорость и паузы»**: `🏎 / 🚀 / ⚡️`.
+- Актуализирован релизный контур до версии **1.4.4** и прод-путей **`46.62.230.106:/opt/fb-master`**.
+- Полное обновление Checkpoint: **10.04.2026** (ориентир версии desktop — **1.4.4**).
+- **Настройки (десктоп):** **`FB_MASTER_HIDE_INFRA_SETTINGS`** + скрытие блоков Supabase / OAuth / путей в **`templates/system/settings.html`**; защита **`POST /system/settings/save`** в **`cabinet_settings.py`**.
+
+---
+
+## 18. Безопасность: секреты и `.env`
+
+- Файл **`.env`** в корне **не коммитить** — в нём **`SECRET_KEY`**, ключи API, OAuth, NOWPayments, строки БД.
+- В репозитории только **`.env.example`** (шаблон без реальных значений).
+- На VPS: **`chmod 600 /opt/fb-master/.env`**, не включать **`.env`** в **`rsync`** с разработческой машины (уже исключён в **`deploy/from-mac.sh`**).
+- Корневой **`.env` не попадает в DMG**: **`prepare-desktop-backend-bundle.sh`** не копирует его в **`resources-fb-master-backend`**; в упаковку идут только код, шаблоны, статика (без **`static/releases/`**), встроенный Python/Chromium.
+
+---
+
+## 19. Как поддерживать Checkpoint
+
+При изменениях обновляйте этот файл, если затронуты:
+
+1. **`backend/app_factory.py`** — middleware, новые публичные пути, порядок роутеров.
+2. **`backend/config.py`** — лицензии, релизы, NOWPayments.
+3. **`templates/base.html`** — любой пункт сайдбара, `page_id`, версия в шапке.
+4. **`desktop/fb-master-desktop/main.js`** — лаунчер, обновления, userData.
+5. **`local-backend-launcher.js`** (в т.ч. **`FB_MASTER_HIDE_INFRA_SETTINGS`**), **`launch.json`**, **`prepare-desktop-backend-bundle.sh`**.
+6. **`deploy/*`**, **`access_keys.py`**, **`desktop_public.py`**, **`desktop_license_public.py`**.
+7. Новые разделы кабинета — соответствующий **`backend/routers/*.py`** и **раздел 9** этого документа.
+8. Изменения **слотов / FB-аккаунтов / stealth / Playwright** — **`fb_account_slots.py`**, **`fb_stealth_profile.py`**, **`fb_playwright.py`**, **`fb_accounts.py`**, разделы **2.8–2.9**, **9.2.1**, **11**, **18**.
+9. Страница **«Система → Настройки»**, **`cabinet_settings.py`**, **`backend/config.py`** (`fb_master_hide_infra_settings`), **§5.2**, **§9.6.3**.
+
+---
+
+*Конец документа Checkpoint.*

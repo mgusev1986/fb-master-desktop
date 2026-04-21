@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% from "macros/hints.html" import mailing_warmup_placeholders %}
+{% block title %}Прогрев — SOCMASTER{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-actions">
+    <div>
+      <h1>{% if cabinet_client_mode(request) %}Лайки по списку людей{% else %}Прогрев по контактам{% endif %}</h1>
+      <p class="subtitle">{% if cabinet_client_mode(request) %}
+      Лайки (и при желании короткие комментарии) к постам на страницах людей из <strong>«Мои контакты»</strong> — без личных сообщений. Скорость задаётся в <a href="/system/speed">«Темп работы»</a> и в самой кампании. Мягкий многодневный прогрев самого аккаунта Facebook — в разделе <a href="/account-warming">«Прогрев профиля»</a>.
+      {% else %}
+      Лайки и опционально комментарии к постам на профилях из базы — без личных сообщений. Темп как в «Скорость и паузы» и в настройках кампании. Для многодневного «естественного» прогрева купленных аккаунтов см. раздел <a href="/account-warming">Прогрев аккаунтов</a> в меню Facebook.
+      {% endif %}</p>
+      {{ mailing_warmup_placeholders('subtitle') }}
+    </div>
+    <a href="/warmup/new" class="btn btn-primary"><i class="ti ti-plus"></i> Новая кампания</a>
+  </div>
+</div>
+
+{% if worker_busy %}
+<div class="card" style="margin-bottom:16px;border-color:var(--warning)">
+  <div class="card-body" style="font-size:var(--font-size-sm)">
+    <i class="ti ti-loader-2"></i>
+    Сейчас выполняется задача прогрева в фоне. Дождитесь окончания или поставьте кампанию на паузу на странице кампании.
+  </div>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-body">
+    {% if campaigns %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Название</th>
+            <th>Статус</th>
+            <th>Аккаунты / люди (настройка)</th>
+            <th>Обновлено</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in campaigns %}
+          <tr>
+            <td><strong>{{ c.name }}</strong></td>
+            <td>
+              {% if c.status == 'running' %}
+              <span class="badge badge-default">Выполняется</span>
+              {% elif c.status == 'paused' %}
+              <span class="badge badge-default">Пауза</span>
+              {% elif c.status == 'completed' %}
+              <span class="badge badge-success">Завершена</span>
+              {% elif c.status == 'ready' %}
+              <span class="badge badge-default">Готова к старту</span>
+              {% else %}
+              <span class="badge badge-default">Черновик</span>
+              {% endif %}
+            </td>
+            <td style="color:var(--text-secondary);font-size:var(--font-size-sm)">
+              {{ (c.fb_account_ids or [])|length }} акк. · {{ (c.person_ids or [])|length }} чел. · до {{ c.actions_per_account or 10 }} на акк.
+            </td>
+            <td style="color:var(--text-secondary);font-size:var(--font-size-sm)">
+              {{ c.updated_at.strftime('%d.%m.%Y %H:%M') if c.updated_at else '—' }}
+            </td>
+            <td>
+              <a href="/warmup/{{ c.id }}" class="btn btn-sm btn-secondary">Открыть</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p style="color:var(--text-secondary)">Кампаний пока нет. Создайте первую — выберите аккаунты Facebook, донора или список контактов, соберите очередь и запустите прогрев.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

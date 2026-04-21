@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Обновление — FB Master</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: clamp(1rem, 3vw, 1.75rem);
+      background: radial-gradient(ellipse 120% 80% at 50% -20%, rgba(180, 151, 90, 0.12), transparent 50%),
+        linear-gradient(165deg, #0c0d10 0%, #12141a 40%, #0a0b0e 100%);
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      color: #f5f5f4;
+      -webkit-font-smoothing: antialiased;
+    }
+    .fbm-card {
+      width: 100%;
+      max-width: 32rem;
+      background: linear-gradient(145deg, rgba(28, 30, 38, 0.97) 0%, rgba(18, 20, 26, 0.99) 100%);
+      border-radius: 24px;
+      padding: clamp(1.75rem, 4vw, 2.5rem);
+      border: 1px solid rgba(201, 169, 98, 0.22);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+        0 32px 64px -16px rgba(0, 0, 0, 0.55),
+        0 0 80px -30px rgba(180, 151, 90, 0.15);
+    }
+    .eyebrow {
+      font-size: 0.75rem;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: rgba(196, 165, 116, 0.85);
+      margin: 0 0 0.5rem;
+      font-weight: 600;
+    }
+    h1 {
+      font-size: clamp(1.35rem, 3.5vw, 1.75rem);
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      margin: 0 0 0.65rem;
+      line-height: 1.25;
+    }
+    .sub {
+      color: rgba(168, 162, 158, 0.92);
+      font-size: 0.95rem;
+      line-height: 1.55;
+      margin: 0 0 1.1rem;
+      white-space: pre-wrap;
+    }
+    .notes {
+      font-size: 0.88rem;
+      line-height: 1.5;
+      color: rgba(212, 212, 208, 0.88);
+      background: rgba(0, 0, 0, 0.28);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 14px;
+      padding: 1rem 1.15rem;
+      margin: 0 0 1.35rem;
+      white-space: pre-wrap;
+      max-height: 11rem;
+      overflow-y: auto;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 0.25rem;
+    }
+    .btn-primary {
+      flex: 1;
+      min-width: 10rem;
+      padding: 0.95rem 1.25rem;
+      border: none;
+      border-radius: 14px;
+      font-size: 0.98rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      color: #1a1410;
+      cursor: pointer;
+      background: linear-gradient(135deg, #e8d5a8 0%, #c9a962 45%, #a67c3d 100%);
+      box-shadow: 0 4px 20px rgba(201, 169, 98, 0.35), 0 1px 2px rgba(0, 0, 0, 0.2);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s;
+    }
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 28px rgba(201, 169, 98, 0.42);
+    }
+    .btn-primary:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .btn-secondary {
+      flex: 1;
+      min-width: 10rem;
+      padding: 0.95rem 1.25rem;
+      border-radius: 14px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: rgba(245, 245, 244, 0.92);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .btn-secondary:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(201, 169, 98, 0.28);
+    }
+    .btn-secondary:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    #phase-loading {
+      text-align: center;
+      padding: 0.5rem 0 0.25rem;
+    }
+    .spinner {
+      width: 44px;
+      height: 44px;
+      margin: 0 auto 1rem;
+      border: 3px solid rgba(201, 169, 98, 0.2);
+      border-top-color: #c9a962;
+      border-radius: 50%;
+      animation: spin 0.85s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    #loading-text {
+      margin: 0 0 1rem;
+      color: rgba(168, 162, 158, 0.95);
+      font-size: 0.95rem;
+    }
+    .progress-wrap {
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.4);
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      margin-bottom: 0.5rem;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #a67c3d, #e8d5a8);
+      transition: width 0.2s ease-out;
+    }
+    .progress-bar.indeterminate {
+      width: 35% !important;
+      animation: indet 1.2s ease-in-out infinite;
+    }
+    @keyframes indet {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(380%); }
+    }
+    #progress-pct {
+      margin: 0;
+      font-size: 0.85rem;
+      color: rgba(196, 165, 116, 0.9);
+      min-height: 1.25em;
+    }
+    .done-body {
+      font-size: 0.95rem;
+      line-height: 1.55;
+      color: rgba(212, 212, 208, 0.92);
+      margin: 0 0 1.35rem;
+      white-space: pre-wrap;
+    }
+    .err-body {
+      font-size: 0.92rem;
+      line-height: 1.5;
+      color: #fecaca;
+      background: rgba(127, 29, 29, 0.35);
+      border: 1px solid rgba(248, 113, 113, 0.25);
+      border-radius: 14px;
+      padding: 1rem 1.1rem;
+      margin: 0 0 1.25rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="fbm-card">
+    <p class="eyebrow">Обновление</p>
+    <h1 id="headline">Доступна новая версия приложения</h1>
+    <p id="subtitle" class="sub"></p>
+    <div id="notes-block" class="notes" hidden></div>
+
+    <div id="phase-prompt">
+      <div class="actions">
+        <button type="button" class="btn-primary" id="btn-download">Скачать</button>
+        <button type="button" class="btn-secondary" id="btn-secondary">Позже</button>
+      </div>
+    </div>
+
+    <div id="phase-loading" hidden>
+      <div class="spinner"></div>
+      <p id="loading-text">Идёт загрузка файла обновления…</p>
+      <div class="progress-wrap">
+        <div id="progress-bar" class="progress-bar"></div>
+      </div>
+      <p id="progress-pct"></p>
+    </div>
+
+    <div id="phase-done" hidden>
+      <p id="done-text" class="done-body"></p>
+      <div class="actions">
+        <button type="button" class="btn-primary" id="btn-done">Понятно</button>
+      </div>
+    </div>
+
+    <div id="phase-error" hidden>
+      <p id="error-text" class="err-body"></p>
+      <div class="actions">
+        <button type="button" class="btn-primary" id="btn-error-close">Закрыть</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const api = window.fbmUpdateDialog;
+      if (!api) return;
+
+      const el = (id) => document.getElementById(id);
+      const phasePrompt = el('phase-prompt');
+      const phaseLoading = el('phase-loading');
+      const phaseDone = el('phase-done');
+      const phaseError = el('phase-error');
+      const progressBar = el('progress-bar');
+      const progressPct = el('progress-pct');
+      const notesBlock = el('notes-block');
+
+      function showPhase(name) {
+        phasePrompt.hidden = name !== 'prompt';
+        phaseLoading.hidden = name !== 'loading';
+        phaseDone.hidden = name !== 'done';
+        phaseError.hidden = name !== 'error';
+      }
+
+      function setIndeterminate(on) {
+        progressBar.classList.toggle('indeterminate', on);
+        if (on) progressBar.style.width = '';
+      }
+
+      api.onInit((payload) => {
+        const belowMin = !!payload.belowMin;
+        el('headline').textContent = belowMin
+          ? 'Требуется обновление'
+          : 'Доступна новая версия приложения';
+        let sub =
+          'Установлена версия ' +
+          payload.current +
+          ', на сервере доступна ' +
+          payload.latest +
+          '.';
+        if (payload.belowMin && payload.minVersion) {
+          sub += '\n\nТребуется минимум: ' + payload.minVersion + '.';
+        }
+        el('subtitle').textContent = sub;
+        if (payload.notes) {
+          notesBlock.hidden = false;
+          notesBlock.textContent = payload.notes;
+        } else {
+          notesBlock.hidden = true;
+        }
+        el('btn-download').textContent = belowMin ? 'Скачать обновление' : 'Скачать';
+        el('btn-secondary').textContent = belowMin ? 'Закрыть' : 'Позже';
+        showPhase('prompt');
+      });
+
+      api.onProgress((p) => {
+        const pct = p && typeof p.percent === 'number' ? p.percent : null;
+        if (pct == null) {
+          setIndeterminate(true);
+          progressPct.textContent = 'Пожалуйста, подождите…';
+        } else {
+          setIndeterminate(false);
+          const v = Math.max(0, Math.min(100, pct));
+          progressBar.style.width = v + '%';
+          progressPct.textContent = v >= 100 ? 'Завершено' : 'Загружено: ' + v + '%';
+        }
+      });
+
+      api.onDone((p) => {
+        const artifact = (p && p.artifact) || 'other';
+        let msg =
+          'Файл сохранён в папку «Загрузки». Мы открыли папку с файлом в Finder — можете сразу перейти к установке.';
+        if (artifact === 'zip') {
+          msg =
+            'Архив с программой и инструкцией сохранён в папку «Загрузки». Распакуйте ZIP, откройте HTML-инструкцию внутри архива и перетащите FB Master в папку «Программы», затем запустите приложение оттуда.';
+        } else if (artifact === 'dmg') {
+          msg =
+            'Образ установщика сохранён в папку «Загрузки». Если образ не открылся автоматически, дважды нажмите на файл .dmg, перетащите FB Master в папку «Программы» и запустите оттуда.';
+        } else if (artifact === 'exe') {
+          msg =
+            'Установочный файл сохранён в папку «Загрузки». Запустите его и следуйте шагам мастера установки.';
+        }
+        el('done-text').textContent = msg;
+        showPhase('done');
+      });
+
+      api.onError((p) => {
+        const m = (p && p.message) || 'Не удалось скачать файл.';
+        el('error-text').textContent =
+          m +
+          '\n\nСсылка на загрузку открыта в браузере — при необходимости сохраните файл оттуда.';
+        showPhase('error');
+      });
+
+      el('btn-download').addEventListener('click', async () => {
+        el('btn-download').disabled = true;
+        el('btn-secondary').disabled = true;
+        showPhase('loading');
+        setIndeterminate(true);
+        progressPct.textContent = 'Подключение…';
+        try {
+          await api.download();
+        } catch (_e) {
+          el('btn-download').disabled = false;
+          el('btn-secondary').disabled = false;
+          showPhase('prompt');
+        }
+      });
+
+      el('btn-secondary').addEventListener('click', () => {
+        api.secondary();
+      });
+
+      el('btn-done').addEventListener('click', () => {
+        api.closeWindow();
+      });
+
+      el('btn-error-close').addEventListener('click', () => {
+        api.closeWindow();
+      });
+    })();
+  </script>
+</body>
+</html>

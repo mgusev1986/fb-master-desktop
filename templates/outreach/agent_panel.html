@@ -1,0 +1,351 @@
+{# Панель AI-агента на странице «Рассылка»; open_agent_panel — из роутера #}
+{% macro ai_provider_label(p) -%}
+{%- set s = (p or '')|string -%}
+{%- if s == 'gemini' -%}Gemini{%- elif s == 'openai' -%}OpenAI{%- else -%}{{ p }}{%- endif -%}
+{%- endmacro %}
+<div id="outreach-agent-wrap" class="outreach-agent-wrap" {% if not open_agent_panel %}hidden{% endif %}>
+<div id="outreach-agent" class="card outreach-agent-card" style="margin-bottom:16px;scroll-margin-top:72px">
+  <div class="card-body">
+    <h2 style="margin:0 0 6px;font-size:1.15rem;display:flex;align-items:center;gap:8px">
+      <i class="ti ti-robot"></i> Режим агента
+    </h2>
+    <p style="margin:0 0 10px;font-size:var(--font-size-xs);color:var(--text-secondary);display:flex;align-items:center;gap:6px">
+      <i class="ti ti-brain" style="font-size:15px;opacity:.8" aria-hidden="true"></i>
+      <span>Magic mode · нейросеть</span>
+    </p>
+    <p class="subtitle" style="margin:0 0 12px;font-size:var(--font-size-sm);color:var(--text-secondary)">
+      Генерация черновиков для контактов из «Базы контактов» (OpenAI или Gemini API, либо готовые тексты «первое касание»).
+      Запуск <strong>в этом же окне</strong> — дождитесь окончания, затем смотрите журнал ниже.
+      Паузы между запросами к ИИ — как «следующий контакт» в
+      <a href="/system/speed">Система → Скорость и паузы</a>
+      (<strong>{{ throttle_preset_label }}</strong>).
+    </p>
+
+    {% if not has_openai and not has_gemini and not is_platform_owner(user) %}
+    <div style="margin-bottom:12px;padding:12px;border:1px solid var(--error);border-radius:8px;font-size:var(--font-size-sm);color:var(--error)">
+      В <code>.env</code> не заданы <code>OPENAI_API_KEY</code> и <code>GOOGLE_API_KEY</code>. Для режима «Свой шаблон + ИИ» добавьте хотя бы один ключ. Режим «Первое касание (EN)» работает без ключей.
+    </div>
+    {% endif %}
+
+    {% if err %}
+    <div style="margin-bottom:12px;padding:12px;border:1px solid var(--error);border-radius:8px;font-size:var(--font-size-sm);color:var(--error)">
+      {% if err == 'bad_context' %}Некорректный тип задачи.{% endif %}
+      {% if err == 'no_openai' %}Для OpenAI нужен <code>OPENAI_API_KEY</code> в .env{% endif %}
+      {% if err == 'no_gemini' %}Для Gemini нужен <code>GOOGLE_API_KEY</code> в .env{% endif %}
+      {% if err == 'batch_empty' %}Заполните шаблон контекста.{% endif %}
+      {% if err == 'first_touch_dm_only' %}Первое касание доступно только в режиме «Переписка».{% endif %}
+      {% if err == 'no_people_batch' %}Нет контактов по выбранным условиям (донор или последние в базе).{% endif %}
+      {% if err == 'agent_outreach_busy' %}Сейчас выполняется рассылка. Дождитесь окончания или поставьте кампанию на паузу.{% endif %}
+      {% if err == 'agent_self_busy' %}Пакет агента уже выполняется (другое окно или вкладка).{% endif %}
+    </div>
+    {% endif %}
+
+    {% if agent_done and batch_contacts %}
+    <div style="margin-bottom:12px;padding:12px;border:1px solid var(--success);border-radius:8px;font-size:var(--font-size-sm)">
+      Готово: обработано <strong>{{ batch_contacts }}</strong> контактов
+      {% if batch_rows and batch_contacts and batch_rows|int > batch_contacts|int %}
+      → <strong>{{ batch_rows }}</strong> записей в журнале (несколько вариантов на человека)
+      {% elif batch_rows %}
+      → <strong>{{ batch_rows }}</strong> записей в журнале
+      {% endif %}.
+    </div>
+    {% endif %}
+
+    {% if saved_agent_settings %}
+    <div style="margin-bottom:12px;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:var(--font-size-sm)">
+      Настройки промптов и моделей сохранены.
+    </div>
+    {% endif %}
+
+    {% if highlight_run %}
+    <div class="card" style="margin-bottom:16px;border:2px solid var(--primary)">
+      <div class="card-body">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+          <div>
+            <strong>Запуск из журнала</strong>
+            · {{ ai_provider_label(highlight_run.provider) }} / <code>{{ highlight_run.model }}</code>
+            · {% if highlight_run.context_type == 'first_touch' %}первое касание (EN){% elif highlight_run.context_type == 'dm' %}переписка{% else %}комментарий{% endif %}
+            · {{ format_dt_madrid(highlight_run.created_at) }}
+            {% if highlight_run.person_id and person_labels.get(highlight_run.person_id) %}
+            · {{ person_labels.get(highlight_run.person_id) }}
+            {% endif %}
+            {% if highlight_run.outcome == 'success' %}
+            <span style="color:var(--success)">успех</span>
+            {% else %}
+            <span style="color:var(--error)">ошибка</span>
+            {% endif %}
+            {% if highlight_run.duration_ms %}· {{ highlight_run.duration_ms }} мс{% endif %}
+          </div>
+          {% if highlight_run.outcome == 'success' and highlight_run.output_preview %}
+          <button type="button" class="btn btn-sm btn-secondary" id="outreach-ai-copy-draft">Копировать черновик</button>
+          {% endif %}
+        </div>
+        {% if highlight_run.input_preview %}
+        <details style="margin-bottom:12px">
+          <summary style="cursor:pointer;font-size:var(--font-size-sm);color:var(--text-secondary)">Фрагмент входа</summary>
+          <pre style="white-space:pre-wrap;font-size:var(--font-size-sm);margin:8px 0 0;max-height:200px;overflow:auto">{{ highlight_run.input_preview }}</pre>
+        </details>
+        {% endif %}
+        {% if highlight_run.error %}
+        <pre style="white-space:pre-wrap;font-size:var(--font-size-sm);color:var(--error);margin:0 0 12px">{{ highlight_run.error }}</pre>
+        {% endif %}
+        {% if highlight_run.output_preview %}
+        <label class="form-label" style="margin-top:0">Черновик (проверьте и отредактируйте перед отправкой)</label>
+        <textarea id="outreach-ai-draft-text" class="form-textarea" rows="8" readonly style="font-size:var(--font-size-sm)">{{ highlight_run.output_preview }}</textarea>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <h3 style="margin:0 0 12px;font-size:1.05rem">Запуск агента</h3>
+    <p class="form-hint" style="margin-top:0">
+      Сколько человек обработать (до 200), донор или все последние контакты в базе.
+      В шаблоне используйте <code>{{ "{{full_name}}" }}</code> и <code>{{ "{{first_name}}" }}</code>.
+    </p>
+    <form method="post" action="/outreach/agent/batch-generate">
+      <div class="form-group">
+        <label class="form-label">Задача</label>
+        <div style="display:flex;flex-wrap:wrap;gap:16px">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="radio" name="context_type" value="dm" id="ctx_dm" checked/> Переписка (Messenger)
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="radio" name="context_type" value="comment" id="ctx_comment"/> Комментарий к посту
+          </label>
+        </div>
+      </div>
+      <div class="form-group" id="dm_mode_block">
+        <label class="form-label">Режим для переписки</label>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer">
+            <input type="radio" name="dm_mode" value="custom" id="dm_mode_custom" checked/>
+            <span><strong>Свой шаблон</strong> — один текст на всех с плейсхолдерами; черновик через ИИ (нужен API-ключ).</span>
+          </label>
+          <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer">
+            <input type="radio" name="dm_mode" value="first_touch" id="dm_mode_ft"/>
+            <span><strong>Первое касание (EN)</strong> — несколько готовых вариантов; подставляется <strong>имя</strong> (<code>{{ "{{first_name}}" }}</code>). Без ИИ и без API-ключа.</span>
+          </label>
+        </div>
+      </div>
+      <div class="form-group" id="variants_block" style="display:none">
+        <label class="form-label" for="variants_per_person">Сколько разных вариантов на одного человека</label>
+        <input id="variants_per_person" name="variants_per_person" type="number" class="form-input" min="1" max="10" value="3" style="max-width:120px"/>
+        <p class="form-hint">Случайный выбор из 10 базовых шаблонов.</p>
+      </div>
+      <div class="form-group" id="provider_block">
+        <label class="form-label" for="batch_provider">Провайдер (только для своего шаблона + ИИ)</label>
+        <select id="batch_provider" name="provider" class="form-input" style="max-width:280px">
+          <option value="">По умолчанию ({% if settings.default_provider == 'gemini' %}Gemini{% elif settings.default_provider == 'ollama' %}Gemini{% else %}OpenAI{% endif %})</option>
+          <option value="openai" {% if not has_openai %}disabled{% endif %}>OpenAI</option>
+          <option value="gemini" {% if not has_gemini %}disabled{% endif %}>Gemini</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="donor_id">Донор (фильтр «База контактов»)</label>
+        <select id="donor_id" name="donor_id" class="form-input" style="max-width:100%">
+          <option value="">Все контакты (последние по ID)</option>
+          {% for d in donors %}
+          <option value="{{ d.id }}">{{ d.name or d.url[:48] }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="batch_count">Сколько человек обработать</label>
+        <input id="batch_count" name="batch_count" type="number" class="form-input" min="1" max="200" value="10" style="max-width:140px"/>
+      </div>
+      <div class="form-group" id="batch_context_block">
+        <label class="form-label" for="batch_context">Шаблон контекста (свой режим, с плейсхолдерами)</label>
+        <textarea id="batch_context" name="batch_context" class="form-textarea" rows="8"
+                  placeholder="Напиши короткий ответ для {{ '{{full_name}}' }}. Контекст переписки: …"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary" id="batch_submit_btn" {% if worker_busy %}disabled{% endif %}>
+        <i class="ti ti-users-group"></i> Сгенерировать черновики
+      </button>
+      {% if worker_busy %}
+      <p class="form-hint" style="margin-top:8px">Кнопка недоступна, пока идёт рассылка.</p>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+{% set details_id = 'outreach-agent-settings' %}
+{% set return_to = '/outreach?focus=agent#outreach-agent-settings' %}
+{% set open_settings = saved_agent_settings %}
+<form id="outreach-agent-settings-form" method="post" action="/outreach/agent/settings" hidden aria-hidden="true">
+  <input type="hidden" name="return_to" value="{{ return_to }}"/>
+</form>
+{% include "outreach/_agent_settings_details.html" %}
+
+<div class="card" style="margin-bottom:16px">
+  <div class="card-body">
+    <h3 style="margin:0 0 16px;font-size:1.1rem">Журнал запусков агента</h3>
+    {% if runs %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Время</th>
+            <th>Тип</th>
+            <th>Контакт</th>
+            <th>Провайдер</th>
+            <th>Модель</th>
+            <th>Результат</th>
+            <th>Токены</th>
+            <th>мс</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in runs %}
+          <tr {% if highlight_run and r.id == highlight_run.id %}style="background:var(--bg-surface-hover)"{% endif %}>
+            <td><a href="/outreach?focus=agent&highlight={{ r.id }}" class="table-link">{{ format_dt_madrid(r.created_at) }}</a></td>
+            <td>{% if r.context_type == 'first_touch' %}1-й контакт{% elif r.context_type == 'dm' %}ЛС{% else %}Комм.{% endif %}</td>
+            <td style="font-size:var(--font-size-sm);max-width:140px;overflow:hidden;text-overflow:ellipsis" {% if r.person_id %}title="{{ person_labels.get(r.person_id, '') }}"{% endif %}>
+              {% if r.person_id %}{{ person_labels.get(r.person_id, '—') }}{% else %}—{% endif %}
+            </td>
+            <td>{{ ai_provider_label(r.provider) }}</td>
+            <td><code style="font-size:11px">{{ r.model[:28] }}{% if r.model|length > 28 %}…{% endif %}</code></td>
+            <td>
+              {% if r.outcome == 'success' %}
+              <span style="color:var(--success)">OK</span>
+              {% elif r.outcome == 'error' %}
+              <span style="color:var(--error)" title="{{ r.error or '' }}">ошибка</span>
+              {% else %}
+              —
+              {% endif %}
+            </td>
+            <td style="font-size:var(--font-size-sm);color:var(--text-secondary)">
+              {% if r.tokens_prompt is not none %}{{ r.tokens_prompt }}+{{ r.tokens_completion or 0 }}{% else %}—{% endif %}
+            </td>
+            <td>{{ r.duration_ms or '—' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="form-hint" style="margin-top:12px">Фрагменты запроса и ответа сохраняются в БД (ограничение по длине).</p>
+    {% else %}
+    <p style="color:var(--text-secondary);margin:0">Запусков ещё не было.</p>
+    {% endif %}
+  </div>
+</div>
+</div>
+
+<style>
+.outreach-agent-wrap:not([hidden]) {
+  animation: outreach-agent-in 0.28s ease-out;
+}
+@keyframes outreach-agent-in {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.outreach-agent-card {
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+  box-shadow: var(--shadow-lg);
+}
+</style>
+
+<script>
+(function () {
+  function syncAgentForm() {
+    var isDm = document.getElementById('ctx_dm') && document.getElementById('ctx_dm').checked;
+    var dmBlock = document.getElementById('dm_mode_block');
+    var ftOn = document.getElementById('dm_mode_ft') && document.getElementById('dm_mode_ft').checked;
+    var ta = document.getElementById('batch_context');
+    var provBlock = document.getElementById('provider_block');
+    var varBlock = document.getElementById('variants_block');
+    var btn = document.getElementById('batch_submit_btn');
+    if (dmBlock) dmBlock.style.display = isDm ? 'block' : 'none';
+    if (!isDm && document.getElementById('dm_mode_custom')) document.getElementById('dm_mode_custom').checked = true;
+    if (varBlock) varBlock.style.display = isDm && ftOn ? 'block' : 'none';
+    if (provBlock) provBlock.style.display = isDm && !ftOn ? 'block' : 'none';
+    if (ta) {
+      ta.required = isDm && !ftOn;
+    }
+    var needKey = isDm && !ftOn;
+    var hasKey = {{ (has_openai or has_gemini or is_platform_owner(user))|tojson }};
+    var workerBusy = {{ worker_busy|tojson }};
+    if (btn) btn.disabled = workerBusy || (needKey && !hasKey);
+  }
+  document.querySelectorAll('#outreach-agent input[name="context_type"]').forEach(function (el) {
+    el.addEventListener('change', syncAgentForm);
+  });
+  document.querySelectorAll('#outreach-agent input[name="dm_mode"]').forEach(function (el) {
+    el.addEventListener('change', syncAgentForm);
+  });
+  syncAgentForm();
+})();
+(function () {
+  var btn = document.getElementById('outreach-ai-copy-draft');
+  var ta = document.getElementById('outreach-ai-draft-text');
+  if (btn && ta) {
+    btn.addEventListener('click', function () {
+      var text = ta.value;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () {
+          btn.textContent = 'Скопировано';
+          setTimeout(function () { btn.textContent = 'Копировать черновик'; }, 2000);
+        });
+      } else {
+        ta.removeAttribute('readonly');
+        ta.select();
+        document.execCommand('copy');
+        ta.setAttribute('readonly', 'readonly');
+        btn.textContent = 'Скопировано';
+        setTimeout(function () { btn.textContent = 'Копировать черновик'; }, 2000);
+      }
+    });
+  }
+})();
+(function () {
+  var wrap = document.getElementById('outreach-agent-wrap');
+  var toggle = document.getElementById('outreach-agent-toggle');
+  var panel = document.getElementById('outreach-agent');
+  if (!wrap || !toggle) return;
+
+  var params = new URLSearchParams(location.search);
+  var serverOpen = {{ open_agent_panel|tojson }};
+
+  function applyToggleUi(open) {
+    wrap.hidden = !open;
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    toggle.classList.toggle('btn-primary', open);
+    toggle.classList.toggle('btn-secondary', !open);
+  }
+
+  function scrollToPanel() {
+    requestAnimationFrame(function () {
+      panel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
+  var hashWantsOpen = location.hash === '#outreach-agent';
+  if (hashWantsOpen && !serverOpen) {
+    applyToggleUi(true);
+  }
+
+  if (location.hash === '#outreach-agent' || params.get('focus') === 'agent' || serverOpen) {
+    scrollToPanel();
+  }
+
+  toggle.addEventListener('click', function () {
+    var next = wrap.hidden;
+    applyToggleUi(next);
+    try {
+      var base = location.pathname + location.search.split('#')[0];
+      if (next) {
+        history.replaceState(null, '', base + '#outreach-agent');
+        scrollToPanel();
+      } else {
+        history.replaceState(null, '', base);
+      }
+    } catch (e) {}
+  });
+
+  window.addEventListener('hashchange', function () {
+    if (location.hash === '#outreach-agent' && wrap.hidden) {
+      applyToggleUi(true);
+      scrollToPanel();
+    }
+  });
+})();
+</script>

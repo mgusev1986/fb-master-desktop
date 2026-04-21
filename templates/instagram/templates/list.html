@@ -1,0 +1,58 @@
+{% extends "instagram/base.html" %}
+{% block title %}Шаблоны · Instagram Master{% endblock %}
+{% block content %}
+<div class="ig-page">
+  <header class="ig-page__header">
+    <div class="ig-page__title-wrap">
+      <h1 class="ig-page__title">Шаблоны и AI <span class="ig-page__beta-pill">Beta</span></h1>
+      <p class="ig-page__subtitle">DM / comment / story-reply шаблоны с плейсхолдерами <code>{handle}</code>, <code>{full_name}</code>, <code>{first_name}</code>, <code>{bio}</code>.</p>
+    </div>
+  </header>
+
+  <section class="ig-card ig-card--accent">
+    <h2 class="ig-card__title"><i class="ti ti-plus"></i> Создать</h2>
+    <form method="post" action="/instagram/templates/create" style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <input type="text" name="name" required placeholder="Название" style="flex:2;min-width:200px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+        <select name="kind" style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
+          {% for k in kinds %}<option value="{{ k }}">{{ k }}</option>{% endfor %}
+        </select>
+        <input type="text" name="tone" placeholder="tone (casual/direct...)" style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+      </div>
+      <textarea name="body" rows="5" required placeholder="Hey @{handle}! Заметил твой профиль про {bio}..." style="padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"></textarea>
+      <button type="submit" class="ig-btn ig-btn--primary" style="align-self:flex-start;"><i class="ti ti-plus"></i> Создать</button>
+    </form>
+  </section>
+
+  <section>
+    <h2 class="ig-card__title" style="margin:8px 0 12px;">Шаблоны ({{ templates|length }})</h2>
+    {% if templates %}
+      <div class="ig-grid ig-grid--wide">
+        {% for t in templates %}
+        <article class="ig-card">
+          <header style="display:flex;justify-content:space-between;align-items:center;">
+            <h3 class="ig-card__title" style="font-size:15px;"><i class="ti ti-template"></i> {{ t.name }}</h3>
+            <span class="compliance-cell__level compliance-cell__level--supported" style="font-size:10px;">{{ t.kind }}</span>
+          </header>
+          <pre style="white-space:pre-wrap;font:400 13px/1.5 Inter;color:var(--text-secondary);background:color-mix(in srgb,#000 4%,transparent);padding:10px;border-radius:8px;margin:0;">{{ t.body }}</pre>
+          {% if t.tone %}<small style="color:var(--text-muted);">tone: {{ t.tone }}</small>{% endif %}
+          <details>
+            <summary style="cursor:pointer;color:var(--ws-accent);font:500 13px/1 Inter;"><i class="ti ti-sparkles"></i> AI</summary>
+            <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+              <form method="post" action="/instagram/templates/{{ t.id }}/ai" style="margin:0;display:inline-flex;gap:4px;align-items:center;"><input type="hidden" name="op" value="variations"/><input type="number" name="n" min="2" max="6" value="3" style="width:48px;padding:4px;border-radius:6px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font-size:12px;"/><button class="ig-btn" type="submit" style="font-size:12px;padding:4px 8px;"><i class="ti ti-arrows-shuffle"></i> Варианты</button></form>
+              <form method="post" action="/instagram/templates/{{ t.id }}/ai" style="margin:0;"><input type="hidden" name="op" value="shorten"/><button class="ig-btn" type="submit" style="font-size:12px;padding:4px 8px;"><i class="ti ti-text-decrease"></i> Сократить</button></form>
+              <form method="post" action="/instagram/templates/{{ t.id }}/ai" style="margin:0;"><input type="hidden" name="op" value="soften"/><button class="ig-btn" type="submit" style="font-size:12px;padding:4px 8px;"><i class="ti ti-leaf"></i> Soften</button></form>
+              <form method="post" action="/instagram/templates/{{ t.id }}/ai" style="margin:0;display:inline-flex;gap:4px;"><input type="hidden" name="op" value="rewrite"/><input type="text" name="intent" placeholder="warmer/casual" style="width:140px;padding:4px;border-radius:6px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font-size:12px;"/><button class="ig-btn" type="submit" style="font-size:12px;padding:4px 8px;"><i class="ti ti-edit"></i> Rewrite</button></form>
+            </div>
+            {% if t.body_variants %}<div style="margin-top:8px;display:flex;flex-direction:column;gap:6px;">{% for v in t.body_variants %}<pre style="margin:0;font:400 12px/1.4 Inter;color:var(--text-secondary);padding:6px;border:1px dashed var(--border);border-radius:6px;white-space:pre-wrap;">{{ v }}</pre>{% endfor %}</div>{% endif %}
+          </details>
+          <form method="post" action="/instagram/templates/{{ t.id }}/delete" style="margin:0;align-self:flex-end;" onsubmit="return confirm('Архивировать?');"><button type="submit" class="ig-btn" style="background:transparent;border-color:#c33;color:#c33;font-size:12px;padding:4px 10px;"><i class="ti ti-archive"></i> Архив</button></form>
+        </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="ig-placeholder"><div class="ig-placeholder__icon"><i class="ti ti-template"></i></div><p class="ig-placeholder__text">Шаблонов нет.</p></div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

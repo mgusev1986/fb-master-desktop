@@ -1,0 +1,137 @@
+{% extends "reddit/base.html" %}
+
+{% block title %}{{ campaign.name }} · Reddit Master{% endblock %}
+
+{% block content %}
+<div class="reddit-page">
+  <header class="reddit-page__header">
+    <div class="reddit-page__title-wrap">
+      <h1 class="reddit-page__title">{{ campaign.name }}</h1>
+      <p class="reddit-page__subtitle">
+        Режим <strong>{{ campaign.mode|ru_status }}</strong> · подтверждение: <strong>{{ campaign.approval_mode|ru_status }}</strong> · статус <strong>{{ campaign.status|ru_status }}</strong>
+        {% if template %} · шаблон <code>{{ template.name }}</code>{% endif %}
+      </p>
+    </div>
+    <a href="/reddit/campaigns" class="reddit-btn"><i class="ti ti-arrow-left"></i> К кампаниям</a>
+  </header>
+
+  {% if notice %}
+  <div class="reddit-card" style="border-color:#1b873f;color:#1b873f;background:color-mix(in srgb,#1b873f 6%,var(--bg-surface));">
+    <i class="ti ti-check"></i> {{ notice }}
+  </div>
+  {% endif %}
+
+  <div class="reddit-card" style="flex-direction:row;gap:12px;flex-wrap:wrap;align-items:center;">
+    {% for st in review_states %}
+    <a href="/reddit/campaigns/{{ campaign.id }}?state={{ st }}"
+       class="reddit-btn{% if state_filter == st %} reddit-btn--primary{% endif %}"
+       style="padding:6px 10px;">
+      {{ st }} · {{ counts[st] }}
+    </a>
+    {% endfor %}
+    <a href="/reddit/campaigns/{{ campaign.id }}?state=all" class="reddit-btn{% if state_filter == 'all' %} reddit-btn--primary{% endif %}" style="padding:6px 10px;">все</a>
+    <span style="flex:1;"></span>
+    <form method="post" action="/reddit/campaigns/{{ campaign.id }}/build-queue" style="display:flex;gap:8px;align-items:center;">
+      <input type="number" name="max_items" value="100" min="1" max="500"
+             style="width:80px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;"/>
+      <button type="submit" class="reddit-btn reddit-btn--primary"
+              onclick="return confirm('Построить очередь из лидов? (будут обработаны все лиды организации, без дубликатов)');">
+        <i class="ti ti-playlist-add"></i> Построить очередь
+      </button>
+    </form>
+  </div>
+
+  {% if queue %}
+  <form method="post" action="/reddit/campaigns/{{ campaign.id }}/bulk-approve" id="reddit-queue-form">
+    <input type="hidden" name="ids" id="reddit-queue-ids"/>
+
+    <div class="reddit-card" style="flex-direction:row;gap:10px;align-items:center;">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;">
+        <input type="checkbox" id="reddit-queue-select-all"/> выбрать всех на странице
+      </label>
+      <span style="flex:1;"></span>
+      <span id="reddit-queue-count" style="color:var(--text-muted);font-size:13px;">0 выбрано</span>
+      <button type="submit" class="reddit-btn reddit-btn--primary">Одобрить выбранные</button>
+    </div>
+
+    <div class="reddit-grid reddit-grid--wide" style="margin-top:12px;">
+      {% for q in queue %}
+      <article class="reddit-card">
+        <header style="display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" class="reddit-queue-row-checkbox" value="{{ q.id }}" {% if q.review_state != 'pending_review' %}disabled{% endif %}/>
+          <h3 class="reddit-card__title" style="margin:0;flex:1;">
+            <a href="https://www.reddit.com/user/{{ q.lead.username if q.lead else '' }}" target="_blank" rel="noreferrer noopener" style="color:var(--ws-accent);">u/{% if q.lead_id %}{{ q.lead.username if q.lead else q.lead_id }}{% else %}?{% endif %}</a>
+          </h3>
+          <span style="font:500 11px/1 Inter;padding:2px 8px;border-radius:999px;
+            background:{% if q.review_state == 'approved' %}color-mix(in srgb,#1b873f 14%,transparent);color:#1b873f
+                     {% elif q.review_state == 'sent' %}color-mix(in srgb,#1877f2 14%,transparent);color:#1877f2
+                     {% elif q.review_state == 'rejected' %}color-mix(in srgb,#c33 14%,transparent);color:#c33
+                     {% elif q.review_state == 'failed' %}color-mix(in srgb,#c33 14%,transparent);color:#c33
+                     {% else %}var(--ws-accent-soft);color:var(--ws-accent){% endif %};">
+            {{ q.review_state|ru_status }}
+          </span>
+        </header>
+
+        <details {% if q.review_state == 'pending_review' %}open{% endif %}>
+          <summary style="font:500 13px/1 Inter;color:var(--text-muted);cursor:pointer;">просмотр / редактирование</summary>
+          <form method="post" action="/reddit/campaigns/{{ campaign.id }}/item/{{ q.id }}/edit-body" style="margin-top:8px;">
+            <textarea name="body" rows="5" {% if q.review_state != 'pending_review' %}readonly{% endif %}
+                      style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font:400 13px/1.5 ui-monospace,monospace;">{{ q.payload_body }}</textarea>
+            {% if q.review_state == 'pending_review' %}
+            <button type="submit" class="reddit-btn" style="padding:4px 10px;margin-top:6px;font-size:12px;">Сохранить текст</button>
+            {% endif %}
+          </form>
+        </details>
+
+        {% if q.last_error %}
+        <div class="reddit-card__desc" style="color:#c33;font-size:12px;">
+          <i class="ti ti-alert-circle"></i> {{ q.last_error }}{% if q.reason_code %} ({{ q.reason_code }}){% endif %}
+        </div>
+        {% endif %}
+
+        {% if q.review_state == 'pending_review' %}
+        <footer style="display:flex;gap:6px;flex-wrap:wrap;">
+          <form method="post" action="/reddit/campaigns/{{ campaign.id }}/item/{{ q.id }}/approve" style="display:inline">
+            <button type="submit" class="reddit-btn reddit-btn--primary"><i class="ti ti-check"></i> Approve</button>
+          </form>
+          <form method="post" action="/reddit/campaigns/{{ campaign.id }}/item/{{ q.id }}/reject" style="display:inline">
+            <button type="submit" class="reddit-btn"><i class="ti ti-x"></i> Reject</button>
+          </form>
+          <form method="post" action="/reddit/campaigns/{{ campaign.id }}/item/{{ q.id }}/skip" style="display:inline">
+            <button type="submit" class="reddit-btn"><i class="ti ti-player-skip-forward"></i> Skip</button>
+          </form>
+        </footer>
+        {% endif %}
+      </article>
+      {% endfor %}
+    </div>
+  </form>
+
+  <script>
+  (function () {
+    var hidden = document.getElementById('reddit-queue-ids');
+    var all = document.getElementById('reddit-queue-select-all');
+    var boxes = Array.prototype.slice.call(document.querySelectorAll('.reddit-queue-row-checkbox:not([disabled])'));
+    var counter = document.getElementById('reddit-queue-count');
+    function sync() {
+      var selected = [];
+      boxes.forEach(function (b) { if (b.checked) selected.push(b.value); });
+      hidden.value = selected.join(',');
+      counter.textContent = selected.length + ' выбрано';
+    }
+    if (all) all.addEventListener('change', function () {
+      boxes.forEach(function (b) { b.checked = all.checked; });
+      sync();
+    });
+    boxes.forEach(function (b) { b.addEventListener('change', sync); });
+    sync();
+  })();
+  </script>
+  {% else %}
+  <div class="reddit-placeholder">
+    <div class="reddit-placeholder__icon"><i class="ti ti-playlist"></i></div>
+    <p class="reddit-placeholder__text">Очередь пуста. Нажмите «Построить очередь» — система применит шаблон ко всем лидам и создаст pending_review-элементы.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

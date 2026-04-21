@@ -1,0 +1,990 @@
+{% extends "base.html" %}
+{% from "macros/hints.html" import mailing_warmup_placeholders %}
+{% block title %}{{ campaign.name }} — Режим агента — SOCMASTER{% endblock %}
+
+{% block content %}
+{% set donor_ns = namespace(label='Не выбран') %}
+{% for d in donors %}
+  {% if pf.get('ui_donor_id') == d.id %}
+    {% set donor_ns.label = d.name or d.url[:60] %}
+  {% endif %}
+{% endfor %}
+
+<div class="page-header">
+  <div class="page-header-actions">
+    <div>
+      <h1>{{ campaign.name }}</h1>
+      <p class="subtitle">
+        {% if campaign.status == 'active' %}<span class="badge badge-success">Активен</span>{% elif campaign.status == 'paused' %}<span class="badge badge-warning">Пауза</span>{% else %}<span class="badge badge-default">Черновик</span>{% endif %}
+        · готово к шагу сейчас: <strong>{{ due_n }}</strong> <span style="font-weight:400;opacity:0.85">(в очереди и подошло время)</span>
+        · незавершённых контактов в текущей партии: <strong>{{ unfinished_enrollment_count }}</strong>
+      </p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <a href="/scenarios/{{ campaign.id }}/edit" class="btn btn-secondary"><i class="ti ti-edit"></i> Настройки</a>
+      <a href="/scenarios" class="btn btn-ghost">Все режимы</a>
+    </div>
+  </div>
+</div>
+
+{% if request.query_params.get('seeded') is not none %}
+<div class="card" style="margin-bottom:16px">
+  <div class="card-body" style="font-size:var(--font-size-sm)">
+    {% set seeded = request.query_params.get('seeded')|int %}
+    {% if seeded > 0 %}
+    В очередь режима добавлена новая партия: <strong>{{ seeded }}</strong> человек.
+    {% else %}
+    Новая партия не была добавлена. Скорее всего, источник уже исчерпан или текущая партия ещё не завершена.
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+{% if request.query_params.get('reset') %}
+<div class="card" style="margin-bottom:16px">
+  <div class="card-body" style="font-size:var(--font-size-sm)">
+    Очередь режима и состояние партий сброшены. Можно запускать заново с первой партии.
+  </div>
+</div>
+{% endif %}
+
+{% if request.query_params.get('enrolled') %}
+<div class="card" style="margin-bottom:16px">
+  <div class="card-body" style="font-size:var(--font-size-sm)">
+    Вручную зачислено: <strong>{{ request.query_params.get('enrolled') }}</strong> человек.
+  </div>
+</div>
+{% endif %}
+
+{% if request.query_params.get('full_autopilot') %}
+<div class="card" style="margin-bottom:16px;border-color:var(--success)">
+  <div class="card-body" style="font-size:var(--font-size-sm)">
+    <strong>Полный автопилот включён:</strong> в настройках режима включены автоматические партии, глобально включён автозапуск проверки (~15&nbsp;мин), статус режима — «Активен».
+    {% if request.query_params.get('seeded') is not none and (request.query_params.get('seeded')|int) > 0 %}
+    Добавлена первая партия: <strong>{{ request.query_params.get('seeded') }}</strong> чел.; при свободном воркере сразу начнутся шаги цепочки.
+    {% elif request.query_params.get('seeded') is not none %}
+    Первая партия не добавлена (источник пуст или партия ещё не завершена) — проверьте источник и очередь.
+    {% endif %}
+    После того как текущая партия полностью отработает по цепочке, следующая подтянется автоматически (с учётом интервала между партиями в настройках), без ожидания только таймера 15&nbsp;мин.
+  </div>
+</div>
+{% endif %}
+
+{% if request.query_params.get('paused') %}
+<div class="card" style="margin-bottom:16px;border-color:var(--warning)">
+  <div class="card-body" style="font-size:var(--font-size-sm)">
+    Режим переведён в <strong>паузу</strong>: текущая задача в браузере завершится и дальше не пойдёт; новые партии и шаги не запускаются, пока не нажмёте «Возобновить» или не выберите «Активен» в настройках.
+  </div>
+</div>
+{% endif %}
+
+{% if request.query_params.get('resumed') %}
+<div class="card" style="margin-bottom:16px;border-color:var(--success)">
+  <div class="card-body" style="font-size:var(--font-size-sm)">
+    Режим снова <strong>активен</strong>. При необходимости нажмите «Выполнить готовые шаги» или дождитесь автозапуска.
+  </div>
+</div>
+{% endif %}
+
+{% if request.query_params.get('err') %}
+<div class="card" style="margin-bottom:16px;border-color:var(--error)">
+  <div class="card-body" style="font-size:var(--font-size-sm);color:var(--error)">
+    {% set e = request.query_params.get('err') %}
+    {% if e == 'no_people' %}В источнике режима не найдено ни одного контакта (или сброшена партия импорта при сохранении настроек). Откройте «Настройки», заново выберите донор / партию импорта / всю базу и сохраните. Для кнопки «Загрузить всю базу» нужен непустой источник в настройках.{% endif %}
+    {% if e == 'paused' %}Режим на паузе. Нажмите «Возобновить» или включите статус «Активен» в настройках, затем повторите действие.{% endif %}
+    {% if e == 'not_active' %}Сначала переведите режим в статус «Активен» (или выйдите из паузы).{% endif %}
+    {% if e == 'nothing_due' %}Сейчас нет шагов, которые можно выполнить прямо сейчас. Проверьте интервалы и наличие контактов в источнике.{% endif %}
+    {% if e == 'blocked' %}Есть незавершённые контакты из текущей партии, но готовых шагов нет. Следующая партия не стартует, пока вы не завершите или не сбросите текущую.{% endif %}
+    {% if e == 'busy' %}Сейчас уже выполняется другая задача режима агента или конфликтующая автоматизация. Дождитесь окончания.{% endif %}
+    {% if e == 'account_busy' %}{{ request.query_params.get('why') or 'Один из выбранных аккаунтов уже занят другой автоматизацией.' }}{% endif %}
+    {% if e == 'step_save' %}Шаг не сохранился (ошибка базы или сети). Обновите страницу и попробуйте снова; если повторяется — смотрите лог сервера.{% endif %}
+  </div>
+</div>
+{% endif %}
+
+{% if not (campaign.fb_account_ids or []) %}
+<div class="card" style="margin-bottom:16px;border-color:var(--warning)">
+  <div class="card-body" style="font-size:var(--font-size-sm)">
+    У режима не выбрано ни одного Facebook-аккаунта. Сохраните хотя бы один аккаунт в настройках, иначе шаги не смогут выполняться. Счётчик «готово к шагу сейчас» останется 0, пока в очереди никого нет и не выбран аккаунт для работы.
+  </div>
+</div>
+{% endif %}
+
+{% if source_total_count > 0 and not enroll_rows and (campaign.fb_account_ids or []) %}
+<div class="card" style="margin-bottom:16px;background:var(--bg-surface-hover)">
+  <div class="card-body" style="font-size:var(--font-size-sm);color:var(--text-secondary)">
+    В источнике есть <strong>{{ source_total_count }}</strong> контакт(ов), но в очереди пока никого нет. Нажмите <strong>«Полный автопилот»</strong> или <strong>«Только первая партия»</strong> (блок «Автоматизация») или <strong>«Загрузить всю выбранную базу сразу»</strong> внизу страницы — тогда люди попадут в работу.
+  </div>
+</div>
+{% endif %}
+
+{% if unfinished_enrollment_count > 0 and cnt_en.get('failed', 0) > 0 and cnt_en.get('active', 0) == 0 %}
+<div class="card" style="margin-bottom:16px;border-color:var(--warning)">
+  <div class="card-body" style="font-size:var(--font-size-sm)">
+    В текущей партии есть остановленные контакты с ошибкой: <strong>{{ cnt_en.get('failed', 0) }}</strong>.
+    Следующая партия не начнётся, пока вы не сбросите их или не исправите причину ошибки.
+  </div>
+</div>
+{% endif %}
+
+<div class="card" style="margin-bottom:20px">
+  <div class="card-header">Сводка режима</div>
+  <div class="card-body" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px">
+    <span class="badge badge-default">Источник: {{ source_total_count }}</span>
+    <span class="badge badge-default">Осталось в источнике: {{ remaining_source_count }}</span>
+    <a href="/system/logs?tab=jobs&amp;job_type=sequence&amp;status=running&amp;scenario_id={{ campaign.id }}&amp;days=30" class="badge badge-default" title="Журнал: задачи сценария в работе">Активно сейчас: {{ cnt_en.get('active', 0) }}</a>
+    <a href="/system/logs?tab=errors&amp;job_type=sequence&amp;scenario_id={{ campaign.id }}&amp;days=30" class="badge badge-error" title="Журнал: падения и проблемные события этого режима">Ошибки: {{ cnt_en.get('failed', 0) }}</a>
+    <a href="/system/logs?tab=jobs&amp;job_type=sequence&amp;status=success&amp;scenario_id={{ campaign.id }}&amp;days=30" class="badge badge-success" title="Журнал: успешно завершённые задачи этого режима">Завершено: {{ cnt_en.get('completed', 0) }}</a>
+    <span class="badge badge-default">Готово к шагу сейчас: {{ due_n }}</span>
+  </div>
+  <div class="card-body" style="padding-top:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;font-size:var(--font-size-sm)">
+    <div>
+      <strong>Источник контактов</strong>
+      <p style="margin:8px 0 0;color:var(--text-secondary)">
+        Источник:
+        {% if pf.get('ui_import_batch_id') %}
+        партия импорта{% if import_batch_filename %} «{{ import_batch_filename }}»{% else %} #{{ pf.get('ui_import_batch_id') }}{% endif %}
+        {% elif pf.get('all_people') %}
+        вся «База контактов»
+        {% else %}
+        донор: {{ donor_ns.label }}
+        {% endif %}<br/>
+        Стадия CRM: {{ pf.get('crm_stage') or 'Все стадии' }}<br/>
+        Язык: {{ language_filter_label(pf.get('language_filter', 'all')) }}
+      </p>
+    </div>
+    <div>
+      <strong>Аккаунты и темп</strong>
+      <p style="margin:8px 0 0;color:var(--text-secondary)">
+        Аккаунтов: {{ (campaign.fb_account_ids or [])|length }}<br/>
+        Пресет: {{ preset_labels.get(pf.get('preset', 'slow'), pf.get('preset', 'slow')) }}<br/>
+        Бюджет времени: {{ pf.get('time_budget_seconds') or 'не задан' }}
+      </p>
+    </div>
+    <div>
+      <strong>Автоматизация</strong>
+      <p style="margin:8px 0 0;color:var(--text-secondary)">
+        {% if automation.enabled %}Включена{% else %}Выключена{% endif %}<br/>
+        Размер партии: {{ automation.batch_size }}<br/>
+        Интервал между партиями: {{ automation.batch_wait_value }} {% if automation.batch_wait_unit == 'minutes' %}мин.{% elif automation.batch_wait_unit == 'hours' %}час.{% else %}дн.{% endif %}
+      </p>
+    </div>
+    <div>
+      <strong>Последняя партия</strong>
+      <p style="margin:8px 0 0;color:var(--text-secondary)">
+        {% if automation.last_batch_at %}
+        {{ automation.last_batch_at.strftime('%d.%m.%Y %H:%M UTC') }}
+        {% else %}
+        Ещё не запускалась
+        {% endif %}
+      </p>
+    </div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:20px">
+  <div class="card-header">Автоматизация</div>
+  <div class="card-body" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+    {% if campaign.status == 'active' %}
+    <form method="post" action="/scenarios/{{ campaign.id }}/pause" data-confirm="Поставить режим на паузу? Текущая задача в браузере завершит текущий шаг и остановится; новые партии и шаги не пойдут, пока не возобновите.">
+      <button type="submit" class="btn btn-secondary" {% if sequence_busy %}disabled title="Дождитесь окончания текущей задачи"{% endif %}>
+        <i class="ti ti-player-pause"></i> Пауза
+      </button>
+    </form>
+    {% elif campaign.status == 'paused' %}
+    <form method="post" action="/scenarios/{{ campaign.id }}/resume">
+      <button type="submit" class="btn btn-primary">
+        <i class="ti ti-player-play"></i> Возобновить
+      </button>
+    </form>
+    {% endif %}
+
+    <form method="post" action="/scenarios/{{ campaign.id }}/full-autopilot/start" data-confirm="Включить полный автопилот? Будут включены авто-партии, автозапуск ~15 мин и статус «Активен», добавится первая партия при возможности.">
+      <button
+        type="submit"
+        class="btn btn-primary"
+        title="Авто-партии + автозапуск + активен + первая партия"
+        {% if not steps or not (campaign.fb_account_ids or []) or source_total_count == 0 or sequence_busy %}disabled{% endif %}
+      >
+        <i class="ti ti-rocket"></i> Полный автопилот
+      </button>
+    </form>
+
+    <form method="post" action="/scenarios/{{ campaign.id }}/automation/start">
+      <button
+        type="submit"
+        class="btn btn-secondary"
+        {% if campaign.status == 'paused' or not steps or not (campaign.fb_account_ids or []) or source_total_count == 0 or sequence_busy %}disabled{% endif %}
+      >
+        <i class="ti ti-inbox"></i> Только первая партия
+      </button>
+    </form>
+
+    <form method="post" action="/scenarios/{{ campaign.id }}/run-due">
+      <button
+        type="submit"
+        class="btn btn-secondary"
+        {% if campaign.status != 'active' or not steps or not (campaign.fb_account_ids or []) or sequence_busy %}disabled{% endif %}
+      >
+        <i class="ti ti-bolt"></i> Выполнить готовые шаги
+      </button>
+    </form>
+
+    <form method="post" action="/scenarios/{{ campaign.id }}/automation/next-batch">
+      <button
+        type="submit"
+        class="btn btn-secondary"
+        {% if campaign.status != 'active' or remaining_source_count == 0 or unfinished_enrollment_count > 0 or not steps or not (campaign.fb_account_ids or []) or sequence_busy %}disabled{% endif %}
+      >
+        <i class="ti ti-users-plus"></i> Следующая партия
+      </button>
+    </form>
+
+    <form method="post" action="/scenarios/{{ campaign.id }}/automation/reset" data-confirm="Сбросить текущие партии и начать режим заново?" data-confirm-variant="danger">
+      <button type="submit" class="btn btn-secondary" {% if sequence_busy %}disabled{% endif %}>
+        <i class="ti ti-refresh"></i> Сбросить партии
+      </button>
+    </form>
+
+    <form method="post" action="/scenarios/{{ campaign.id }}/autotick" style="display:flex;align-items:center;gap:10px">
+      <label class="form-check" style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0">
+        <input type="checkbox" name="sequence_autotick" value="1" {% if autotick %}checked{% endif %}/>
+        <span style="font-size:var(--font-size-sm)">Автозапуск проверки раз в ~15 мин.</span>
+      </label>
+      <button type="submit" class="btn btn-sm btn-secondary">Сохранить</button>
+    </form>
+  </div>
+  <div class="card-body" style="padding-top:0;font-size:var(--font-size-sm);color:var(--text-secondary)">
+    Режим работает последовательно: пока текущая партия не завершена, следующая не стартует.
+    Интервалы между шагами считаются от прошлого успешно выполненного шага, а интервал между партиями — от момента последней загрузки партии.
+    <strong>Пауза</strong> оставляет контакты в очереди, но останавливает выполнение и автоподгрузку партий, пока не нажмёте <strong>Возобновить</strong> (или «Полный автопилот» / статус в настройках).
+    <strong>Полный автопилот</strong> включает в настройках «автоматически брать новые партии», глобальный «Автозапуск ~15 мин», статус «Активен» и добавляет первую партию; после завершения партии по цепочке следующая подтягивается сразу (если прошёл интервал между партиями), без ожидания только срабатывания таймера 15 мин.
+    Кнопки «Только первая партия» и «Следующая партия» наполняют очередь вручную; шаги в браузере — «Выполнить готовые шаги» или автозапуск, если он включён.
+  </div>
+</div>
+
+<div class="card" id="scenario-chain" tabindex="-1" style="margin-bottom:20px;scroll-margin-top:1rem">
+  <div class="card-header">Цепочка действий</div>
+  <div class="card-body">
+    {% if steps %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Через</th>
+            <th>Действие</th>
+            <th>Шаблон / текст</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in steps %}
+	          {% set wait_value, wait_unit = step_wait_settings(s) %}
+	          {% set cfg = s.config if s.config is mapping else {} %}
+	          {% set template_row = template_map.get(cfg.get('template_id')) if cfg.get('template_id') else None %}
+	          {% set dm_template_row = template_map.get(cfg.get('dm_template_id')) if cfg.get('dm_template_id') else None %}
+	          {% set comment_mode = cfg.get('comment_post_mode', 'first') %}
+	          {% set comment_pool = cfg.get('comment_pool_size', 5) %}
+	          <tr>
+            <td>{{ s.step_index + 1 }}</td>
+            <td>{{ wait_value }} {% if wait_unit == 'hours' %}час.{% elif wait_unit == 'minutes' %}мин.{% else %}дн.{% endif %}</td>
+            <td>{{ step_labels.get(s.action_type, s.action_type) }}</td>
+            <td style="color:var(--text-secondary);font-size:var(--font-size-xs);max-width:340px">
+              {% if s.action_type == 'like_post' %}
+              <div style="line-height:1.45">
+                <strong>Лайк:</strong> только посты · {{ 'сверху по порядку' if cfg.get('post_like_mode', 'first') == 'first' else 'случайно в пуле' }} · верхних в пуле {{ cfg.get('post_pool_size', 5) }} · {{ cfg.get('like_count', 1) }} лайк(ов)
+                {% if cfg.get('post_skip_likes') %} · пропуск {{ cfg.get('post_skip_likes') }}{% endif %}
+              </div>
+	              {% elif s.action_type in ('like_and_comment', 'like_comment_friend_request', 'like_comment_friend_request_send_dm') %}
+	              <div style="line-height:1.45">
+	                <strong>Лайк:</strong> только посты · {{ 'сверху по порядку' if cfg.get('post_like_mode', 'first') == 'first' else 'случайно в пуле' }} · верхних в пуле {{ cfg.get('post_pool_size', 5) }} · {{ cfg.get('like_count', 1) }} лайк(ов)
+	                {% if cfg.get('post_skip_likes') %} · пропуск {{ cfg.get('post_skip_likes') }}{% endif %}
+	                <div style="margin-top:6px"><strong>Пост для комментария:</strong> {{ 'первый сверху' if comment_mode == 'first' else 'случайно среди верхних ' ~ comment_pool }}</div>
+	                {% if cfg.get('ai_comment') %}
+	                <div style="margin-top:6px"><strong>Комментарий (нейросеть)</strong> — по тексту выбранного поста в ленте.
+	                  {% set _hint = (cfg.get('ai_comment_hint') or '') %}
+	                  {% if _hint %}
+	                  <div style="margin-top:4px">Подсказка к стилю: {{ _hint[:180] }}{% if _hint|length > 180 %}…{% endif %}</div>
+                  {% endif %}
+                </div>
+                {% elif template_row %}
+                <div style="margin-top:6px"><strong>Комментарий:</strong> {{ template_row.name }} · {{ template_category_labels.get(template_row.category, template_row.category) }}</div>
+                {% elif cfg.get('message') %}
+                <div style="margin-top:6px"><strong>Комментарий:</strong> {{ cfg.get('message') }}</div>
+                {% endif %}
+                {% if s.action_type in ('like_comment_friend_request', 'like_comment_friend_request_send_dm') %}
+                <div style="margin-top:6px"><strong>Друзья:</strong> отправить заявку в друзья</div>
+                {% endif %}
+                {% if s.action_type == 'like_comment_friend_request_send_dm' %}
+                  {% if cfg.get('ai_dm') %}
+                  <div style="margin-top:6px"><strong>ЛС (нейросеть)</strong> — отдельный текст для личного сообщения.
+                    {% if cfg.get('ai_dm_example') %}
+                    <div style="margin-top:4px">Опора: поле «Опорный текст»{% set _dm_ex = (cfg.get('ai_dm_example') or '') %} — «{{ _dm_ex[:72] }}{% if _dm_ex|length > 72 %}…{% endif %}»</div>
+                    {% elif dm_template_row %}
+                    <div style="margin-top:4px">Опора: шаблон «{{ dm_template_row.name }}»</div>
+                    {% elif cfg.get('dm_message') %}
+                    <div style="margin-top:4px">Опора: отдельный текст ЛС в форме шага</div>
+                    {% endif %}
+                    {% set _dmh = (cfg.get('ai_dm_hint') or '') %}
+                    {% if _dmh %}
+                    <div style="margin-top:4px">Подсказка: {{ _dmh[:200] }}{% if _dmh|length > 200 %}…{% endif %}</div>
+                    {% endif %}
+                  </div>
+                  {% elif dm_template_row %}
+                  <div style="margin-top:6px"><strong>ЛС:</strong> {{ dm_template_row.name }} · {{ template_category_labels.get(dm_template_row.category, dm_template_row.category) }}</div>
+                  {% elif cfg.get('dm_message') %}
+                  <div style="margin-top:6px"><strong>ЛС:</strong> {{ cfg.get('dm_message') }}</div>
+                  {% endif %}
+	                {% endif %}
+	              </div>
+	              {% elif s.action_type == 'comment_post' and cfg.get('ai_comment') %}
+	              <div style="line-height:1.45">
+	                <div><strong>Пост для комментария:</strong> {{ 'первый сверху' if comment_mode == 'first' else 'случайно среди верхних ' ~ comment_pool }}</div>
+	                <div style="margin-top:6px"><strong>Комментарий (нейросеть)</strong> — текст подбирается по содержимому выбранного поста в ленте профиля.</div>
+	                {% set _hint = (cfg.get('ai_comment_hint') or '') %}
+	                {% if _hint %}
+	                <div style="margin-top:4px">Подсказка к стилю: {{ _hint[:220] }}{% if _hint|length > 220 %}…{% endif %}</div>
+	                {% endif %}
+	              </div>
+	              {% elif s.action_type == 'comment_post' %}
+	              <div style="line-height:1.45">
+	                <div><strong>Пост для комментария:</strong> {{ 'первый сверху' if comment_mode == 'first' else 'случайно среди верхних ' ~ comment_pool }}</div>
+	                {% if template_row %}
+	                <div style="margin-top:6px"><strong>{{ template_row.name }}</strong> · {{ template_category_labels.get(template_row.category, template_row.category) }}</div>
+	                {% elif cfg.get('message') %}
+	                <div style="margin-top:6px">{{ cfg.get('message') }}</div>
+	                {% endif %}
+	              </div>
+	              {% elif s.action_type == 'send_dm' and cfg.get('ai_dm') %}
+	              <div style="line-height:1.45">
+	                <strong>Личное сообщение (нейросеть)</strong> — каждый раз новый текст в заданном контексте.
+                {% if cfg.get('ai_dm_example') %}
+                <div style="margin-top:4px">Опора: пример в поле «Опорный текст»{% set _ex = (cfg.get('ai_dm_example') or '') %} — «{{ _ex[:72] }}{% if _ex|length > 72 %}…{% endif %}»</div>
+                {% elif template_row %}
+                <div style="margin-top:4px">Опора: шаблон «{{ template_row.name }}»</div>
+                {% elif cfg.get('message') %}
+                <div style="margin-top:4px">Опора: текст шага внизу формы</div>
+                {% endif %}
+                {% set _dh = (cfg.get('ai_dm_hint') or '') %}
+                {% if _dh %}
+                <div style="margin-top:4px">Подсказка: {{ _dh[:200] }}{% if _dh|length > 200 %}…{% endif %}</div>
+                {% endif %}
+                {% if cfg.get('ai_dm_use_profile_post', True) %}
+                <div style="margin-top:4px;opacity:0.9">+ контекст верхнего поста в ленте</div>
+                {% endif %}
+              </div>
+              {% elif template_row %}
+              <div><strong>{{ template_row.name }}</strong> · {{ template_category_labels.get(template_row.category, template_row.category) }}</div>
+              {% if cfg.get('message') %}
+              <div style="margin-top:4px">{{ cfg.get('message') }}</div>
+              {% endif %}
+              {% elif cfg.get('message') %}
+              <div>{{ cfg.get('message') }}</div>
+              {% else %}
+              —
+              {% endif %}
+            </td>
+            <td style="white-space:nowrap">
+              <div style="display:inline-flex;align-items:center;gap:2px">
+                <button type="button" class="btn btn-sm btn-ghost scenario-step-edit-btn" data-step-id="{{ s.id }}" title="Редактировать шаг">
+                  <i class="ti ti-pencil"></i>
+                </button>
+                <form method="post" action="/scenarios/{{ campaign.id }}/step/{{ s.id }}/delete" style="display:inline" data-confirm="Удалить этот шаг из цепочки?" data-confirm-title="Удаление шага" data-confirm-variant="danger">
+                  <button type="submit" class="btn btn-sm btn-ghost" style="color:var(--error)" title="Удалить шаг">
+                    <i class="ti ti-trash"></i>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p style="color:var(--text-secondary);margin-bottom:16px">
+      Пока шагов нет. Добавьте цепочку вроде: лайк → комментарий → друзья → личное сообщение.
+    </p>
+    {% endif %}
+
+    <div class="card scenario-step-add-card" style="background:var(--bg-surface-hover);margin-top:16px">
+      <div id="scenario-step-form-card-title" class="card-header" style="font-size:var(--font-size-sm)">Добавить шаг</div>
+      <div class="card-body">
+        <form
+          id="scenario-step-add-form"
+          method="post"
+          action="/scenarios/{{ campaign.id }}/step/add"
+          class="scenario-step-add-form"
+          data-add-action="/scenarios/{{ campaign.id }}/step/add"
+          data-campaign-id="{{ campaign.id }}"
+        >
+          <div class="scenario-step-add-form__grid">
+            <div class="form-group scenario-step-add-form__field">
+              <label class="form-label" for="scenario_action_type">Действие</label>
+              <select id="scenario_action_type" name="action_type" class="form-select">
+                {% for group_label, group_items in step_type_groups %}
+                <optgroup label="{{ group_label }}">
+                  {% for val, lab in group_items %}
+                  <option value="{{ val }}">{{ lab }}</option>
+                  {% endfor %}
+                </optgroup>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group scenario-step-add-form__field">
+              <label class="form-label" for="scenario_wait_value">Интервал до шага</label>
+              <input id="scenario_wait_value" name="wait_value" type="number" class="form-input" min="0" max="525600" value="0"/>
+            </div>
+            <div class="form-group scenario-step-add-form__field">
+              <label class="form-label" for="scenario_wait_unit">Единица</label>
+              <select id="scenario_wait_unit" name="wait_unit" class="form-select">
+                <option value="days">Дни</option>
+                <option value="hours">Часы</option>
+                <option value="minutes">Минуты</option>
+              </select>
+            </div>
+            <div id="scenario-template-field" class="form-group scenario-step-add-form__field">
+              <label id="scenario-template-label" class="form-label" for="scenario_template_id">Шаблон</label>
+              <select id="scenario_template_id" name="template_id" class="form-select">
+                <option value="">Без шаблона</option>
+                {% for category in ['comment', 'outreach', 'warmup'] %}
+                {% set cat_tpls = message_templates | selectattr('category', 'equalto', category) | list %}
+                {% if cat_tpls %}
+                <optgroup label="{{ template_category_labels.get(category, category) }}">
+                  {% for tpl in cat_tpls %}
+                  <option value="{{ tpl.id }}">{{ tpl.name }}</option>
+                  {% endfor %}
+                </optgroup>
+                {% endif %}
+                {% endfor %}
+              </select>
+              <p class="form-hint" style="margin-top:6px">Серые строки в списке — это только названия разделов (группы шаблонов), их нельзя выбрать. Нужно выбрать конкретный шаблон под разделом.</p>
+            </div>
+          </div>
+
+	          <div id="scenario-like-settings" class="scenario-like-settings" hidden>
+            <div class="scenario-like-settings__head">
+              <span class="scenario-like-settings__title"><i class="ti ti-thumb-up"></i> Лайки по постам</span>
+              <p class="form-hint" style="margin:6px 0 0">Только записи в ленте профиля (не комментарии). Кнопки «Нравится» считаются сверху вниз по странице.</p>
+            </div>
+            <div class="scenario-like-settings__fields">
+              <div class="form-group" style="margin:0">
+                <label class="form-label" for="post_like_mode">Порядок лайков по постам</label>
+                <select id="post_like_mode" name="post_like_mode" class="form-select">
+                  <option value="first">Сверху вниз по порядку</option>
+                  <option value="random">Случайно в пределах пула</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin:0">
+                <label class="form-label" for="post_pool_size">Верхних постов в пуле (1–10)</label>
+                <input id="post_pool_size" name="post_pool_size" type="number" class="form-input" min="1" max="10" value="5"/>
+                <p class="form-hint">Например, 5 = только среди лайков верхних пяти записей.</p>
+              </div>
+              <div class="form-group" style="margin:0">
+                <label class="form-label" for="like_count_post">Сколько лайков выполнить</label>
+                <input id="like_count_post" name="like_count_post" type="number" class="form-input" min="1" max="10" value="1"/>
+              </div>
+            </div>
+	          </div>
+
+	          <div id="scenario-comment-target-settings" class="scenario-like-settings" hidden>
+	            <div class="scenario-like-settings__head">
+	              <span class="scenario-like-settings__title"><i class="ti ti-message-circle"></i> Пост для комментария</span>
+	              <p class="form-hint" style="margin:6px 0 0">Можно комментировать первый верхний пост или брать случайный пост из небольшого пула верхних записей.</p>
+	            </div>
+	            <div class="scenario-like-settings__fields">
+	              <div class="form-group" style="margin:0">
+	                <label class="form-label" for="comment_post_mode">Как выбрать пост для комментария</label>
+	                <select id="comment_post_mode" name="comment_post_mode" class="form-select">
+	                  <option value="first">Первый сверху</option>
+	                  <option value="random">Случайно в пределах пула</option>
+	                </select>
+	              </div>
+	              <div id="scenario-comment-pool-field" class="form-group" style="margin:0">
+	                <label class="form-label" for="comment_pool_size">Верхних постов в пуле (1–10)</label>
+	                <input id="comment_pool_size" name="comment_pool_size" type="number" class="form-input" min="1" max="10" value="5"/>
+	                <p class="form-hint">Например, 5 = случайный комментарий только среди верхних пяти записей.</p>
+	              </div>
+	            </div>
+	          </div>
+
+	          <div id="scenario-ai-comment-settings" class="scenario-like-settings" hidden>
+	            <div class="scenario-like-settings__head">
+	              <span class="scenario-like-settings__title"><i class="ti ti-sparkles"></i> Комментарий через нейросеть</span>
+	              <p class="form-hint" style="margin:6px 0 0">Откроется профиль, снимется текст выбранного поста в ленте — модель сгенерирует короткий осмысленный комментарий под контекст. Используются те же ключи и модель, что и у ИИ-агента (настройки кабинета / .env).</p>
+	            </div>
+            <div class="scenario-like-settings__fields" style="display:flex;flex-direction:column;gap:12px">
+              <label class="form-check" style="margin:0">
+                <input type="checkbox" id="scenario_ai_comment" name="ai_comment" value="1"/>
+                <span>Генерировать комментарий нейросетью по тексту поста</span>
+              </label>
+              {% if not has_openai and not has_gemini and not is_platform_owner(user) %}
+              <p class="form-hint" style="margin:0;color:var(--error)">Нет доступа к нейросети: задайте OPENAI_API_KEY или GOOGLE_API_KEY в .env / настройках кабинета либо настройте локальную модель в разделе ИИ-агента.</p>
+              {% endif %}
+              <div class="form-group" style="margin:0">
+                <label class="form-label" for="scenario_ai_comment_hint">Доп. пожелания к тону (необязательно)</label>
+                <textarea id="scenario_ai_comment_hint" name="ai_comment_hint" class="form-input" rows="2" placeholder="Например: дружелюбно, без эмодзи, коротко" style="min-height:64px;resize:vertical"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div id="scenario-ai-dm-settings" class="scenario-like-settings" hidden>
+            <div class="scenario-like-settings__head">
+              <span class="scenario-like-settings__title"><i class="ti ti-sparkles"></i> Личное сообщение через нейросеть</span>
+              <p class="form-hint" style="margin:6px 0 0">Сначала задайте пример сообщения — модель будет каждый раз перефразировать его, сохраняя смысл. Тон и детали — полем «подсказка». Если пример пустой, можно взять шаблон из списка или текст внизу страницы. API-ключи — как у ИИ-агента.</p>
+            </div>
+            <div class="scenario-like-settings__fields" style="display:flex;flex-direction:column;gap:12px">
+              <label class="form-check" style="margin:0">
+                <input type="checkbox" id="scenario_ai_dm" name="ai_dm" value="1"/>
+                <span>Генерировать текст сообщения нейросетью</span>
+              </label>
+              {% if not has_openai and not has_gemini and not is_platform_owner(user) %}
+              <p class="form-hint" style="margin:0;color:var(--error)">Нет доступа к нейросети: задайте OPENAI_API_KEY или GOOGLE_API_KEY в .env / настройках кабинета либо настройте локальную модель в разделе ИИ-агента.</p>
+              {% endif %}
+              <label class="form-check" style="margin:0">
+                <input type="checkbox" id="scenario_ai_dm_use_post" name="ai_dm_use_profile_post" value="1" checked/>
+                <span>Учитывать верхний пост в ленте профиля (контекст)</span>
+              </label>
+              <div class="form-group" style="margin:0">
+                <label class="form-label" for="scenario_ai_dm_example">Опорный текст / пример сообщения</label>
+                <textarea id="scenario_ai_dm_example" name="ai_dm_example" class="form-input" rows="4" placeholder="Например: Привет, {{ '{{first_name}}' }}! Увидел твой пост про … Хотел написать и поздороваться." style="min-height:100px;resize:vertical"></textarea>
+                <p class="form-hint" style="margin-top:6px">Нейросеть использует это как основу: новые формулировки для каждого человека, тот же смысл. Доступны {{ '{{first_name}}' }}, {{ '{{full_name}}' }}.</p>
+                {{ mailing_warmup_placeholders('form-hint') }}
+              </div>
+              <div class="form-group" style="margin:0">
+                <label class="form-label" for="scenario_ai_dm_hint">Тон и пожелания (необязательно)</label>
+                <textarea id="scenario_ai_dm_hint" name="ai_dm_hint" class="form-input" rows="2" placeholder="Например: дружелюбно; варьируй первое предложение; в конце — открытый вопрос про интерес к идеям" style="min-height:64px;resize:vertical"></textarea>
+                <p class="form-hint" style="margin-top:6px">Здесь можно уточнить стиль и жёсткие требования (вариативность, длина, тема вопроса в конце). Базовые правила модели уже требуют вопрос в конце и отличие от шаблона.</p>
+              </div>
+            </div>
+          </div>
+
+          <p id="scenario-template-hint" class="form-hint scenario-step-add-form__hint-below">Для комментариев и обычного ЛС — шаблон из списка. Для ИИ-ЛС главная опора — поле «Опорный текст» в блоке выше; список шаблонов и поле внизу — если пример не заполняли.</p>
+
+          <div id="scenario-template-block" class="form-group scenario-step-add-form__full">
+            <label id="scenario-step-message-label" class="form-label" for="scenario_step_message">Текст шага, если нужен вручную</label>
+            <input
+              id="scenario_step_message"
+              name="step_message"
+              type="text"
+              class="form-input"
+              placeholder="Например, Привет, {{ '{{first_name}}' }}! Рад знакомству."
+              autocomplete="off"
+            />
+            {{ mailing_warmup_placeholders('form-hint') }}
+          </div>
+
+          <div id="scenario-dm-template-field" class="form-group scenario-step-add-form__field" hidden>
+            <label class="form-label" for="scenario_dm_template_id">Шаблон для личного сообщения</label>
+            <select id="scenario_dm_template_id" name="dm_template_id" class="form-select">
+              <option value="">Без шаблона</option>
+              {% for category in ['comment', 'outreach', 'warmup'] %}
+              {% set cat_tpls = message_templates | selectattr('category', 'equalto', category) | list %}
+              {% if cat_tpls %}
+              <optgroup label="{{ template_category_labels.get(category, category) }}">
+                {% for tpl in cat_tpls %}
+                <option value="{{ tpl.id }}">{{ tpl.name }}</option>
+                {% endfor %}
+              </optgroup>
+              {% endif %}
+              {% endfor %}
+            </select>
+          </div>
+
+          <div id="scenario-dm-message-block" class="form-group scenario-step-add-form__full" hidden>
+            <label class="form-label" for="scenario_dm_message">Текст личного сообщения</label>
+            <input
+              id="scenario_dm_message"
+              name="dm_message"
+              type="text"
+              class="form-input"
+              placeholder="Например, Привет, {{ '{{first_name}}' }}! Решил написать лично."
+              autocomplete="off"
+            />
+            {{ mailing_warmup_placeholders('form-hint') }}
+          </div>
+
+          <div class="scenario-step-add-form__actions" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+            <button type="submit" id="scenario-step-submit-btn" class="btn btn-primary"><i class="ti ti-plus"></i> Добавить шаг</button>
+            <button type="button" id="scenario-step-edit-cancel" class="btn btn-secondary" hidden>Отмена</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:20px">
+  <div class="card-header">Текущие контакты в работе</div>
+  <div class="card-body">
+    {% if enroll_rows %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Человек</th>
+            <th>Аккаунт</th>
+            <th>Текущий шаг</th>
+            <th>Статус</th>
+            <th>Ошибка</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in enroll_rows %}
+          {% set p = people.get(e.person_id) %}
+          <tr>
+            <td>
+              {% if p %}
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <a href="{{ p.canonical_url }}" target="_blank" class="table-link">{{ p.display_name or p.first_name or ('#' ~ p.id) }}</a>
+                <a href="/messenger2/open-person/{{ p.id }}" class="btn btn-sm btn-ghost"><i class="ti ti-message-circle"></i> Messenger</a>
+              </div>
+              {% else %}
+              #{{ e.person_id }}
+              {% endif %}
+            </td>
+            <td style="font-size:var(--font-size-xs)">
+              {{ accs.get(e.fb_account_id).label if e.fb_account_id and accs.get(e.fb_account_id) else '—' }}
+            </td>
+            <td style="font-size:var(--font-size-xs)">
+              {% if e.status == 'completed' %}
+              Завершено
+              {% elif steps and e.current_step_index < steps|length %}
+              {{ e.current_step_index + 1 }} · {{ step_labels.get(steps[e.current_step_index].action_type, steps[e.current_step_index].action_type) }}
+              {% else %}
+              —
+              {% endif %}
+            </td>
+            <td>
+              {% if e.status == 'completed' %}
+              <span class="badge badge-success">completed</span>
+              {% elif e.status == 'failed' %}
+              <span class="badge badge-default" style="border-color:var(--error);color:var(--error)">failed</span>
+              {% else %}
+              <span class="badge badge-default">{{ e.status }}</span>
+              {% endif %}
+            </td>
+            <td style="font-size:var(--font-size-xs);color:var(--text-secondary);max-width:220px">
+              {{ (e.error or '')[:120] }}{% if e.error and e.error|length > 120 %}…{% endif %}
+            </td>
+            <td>
+              <form method="post" action="/scenarios/{{ campaign.id }}/enrollment/{{ e.id }}/reset" data-confirm="Сбросить этого человека к первому шагу?" data-confirm-variant="danger">
+                <button type="submit" class="btn btn-sm btn-ghost">Сброс</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p style="color:var(--text-secondary)">
+      В работе пока никого нет. Сначала настройте шаги, затем добавьте первую партию в очередь.
+    </p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:20px">
+  <div class="card-header">Сервисные действия</div>
+  <div class="card-body" style="display:flex;flex-wrap:wrap;gap:10px">
+    <form method="post" action="/scenarios/{{ campaign.id }}/enroll">
+      <button type="submit" class="btn btn-secondary" {% if sequence_busy or campaign.status == 'paused' %}disabled{% endif %}{% if campaign.status == 'paused' %} title="Сначала возобновите режим"{% endif %}>
+        <i class="ti ti-users"></i> Загрузить всю выбранную базу сразу
+      </button>
+    </form>
+    <form method="post" action="/scenarios/{{ campaign.id }}/delete" data-confirm="Удалить режим агента и всю его очередь?" data-confirm-title="Удаление режима" data-confirm-variant="danger">
+      <button type="submit" class="btn btn-ghost" style="color:var(--error)" {% if sequence_busy %}disabled{% endif %}>
+        <i class="ti ti-trash"></i> Удалить режим
+      </button>
+    </form>
+  </div>
+  <div class="card-body" style="padding-top:0;font-size:var(--font-size-sm);color:var(--text-secondary)">
+    Кнопка «Загрузить всю выбранную базу сразу» нужна только для ручного режима. Для штатной работы лучше использовать партии через блок автоматизации выше.
+  </div>
+</div>
+<script>
+(function () {
+  var form = document.getElementById("scenario-step-add-form");
+  if (!form) return;
+  var stepsById = {};
+  try {
+    var rawSteps = {{ scenario_steps_editor_data | tojson }};
+    if (Array.isArray(rawSteps)) {
+      rawSteps.forEach(function (s) {
+        if (s && s.id != null) stepsById[String(s.id)] = s;
+      });
+    }
+  } catch (e) {
+    stepsById = {};
+  }
+  var addAction = form.getAttribute("data-add-action") || form.action;
+  var campaignId = form.getAttribute("data-campaign-id") || "";
+  var cardTitle = document.getElementById("scenario-step-form-card-title");
+  var submitBtn = document.getElementById("scenario-step-submit-btn");
+  var cancelEditBtn = document.getElementById("scenario-step-edit-cancel");
+  var templateLabel = document.getElementById("scenario-template-label");
+  var stepMessageLabel = document.getElementById("scenario-step-message-label");
+
+  function updateUrlForStep(stepId) {
+    return "/scenarios/" + campaignId + "/step/" + stepId + "/update";
+  }
+
+  function resetScenarioStepForm() {
+    form.action = addAction;
+    if (cardTitle) cardTitle.textContent = "Добавить шаг";
+    if (submitBtn) {
+      submitBtn.innerHTML = '<i class="ti ti-plus"></i> Добавить шаг';
+    }
+    if (cancelEditBtn) cancelEditBtn.hidden = true;
+    var actionSel0 = document.getElementById("scenario_action_type");
+    if (actionSel0) actionSel0.value = "like_post";
+    var wv = document.getElementById("scenario_wait_value");
+    if (wv) wv.value = "0";
+    var wu = document.getElementById("scenario_wait_unit");
+    if (wu) wu.value = "days";
+    var tid = document.getElementById("scenario_template_id");
+    if (tid) tid.value = "";
+    var sm = document.getElementById("scenario_step_message");
+    if (sm) sm.value = "";
+    var dmt = document.getElementById("scenario_dm_template_id");
+    if (dmt) dmt.value = "";
+    var dmm = document.getElementById("scenario_dm_message");
+    if (dmm) dmm.value = "";
+	    var plm = document.getElementById("post_like_mode");
+	    if (plm) plm.value = "first";
+	    var pps = document.getElementById("post_pool_size");
+	    if (pps) pps.value = "5";
+	    var lc = document.getElementById("like_count_post");
+	    if (lc) lc.value = "1";
+	    var cpm = document.getElementById("comment_post_mode");
+	    if (cpm) cpm.value = "first";
+	    var cps = document.getElementById("comment_pool_size");
+	    if (cps) cps.value = "5";
+	    var aic = document.getElementById("scenario_ai_comment");
+	    if (aic) aic.checked = false;
+    var aich = document.getElementById("scenario_ai_comment_hint");
+    if (aich) aich.value = "";
+    var aid = document.getElementById("scenario_ai_dm");
+    if (aid) aid.checked = false;
+    var aide = document.getElementById("scenario_ai_dm_example");
+    if (aide) aide.value = "";
+    var aidh = document.getElementById("scenario_ai_dm_hint");
+    if (aidh) aidh.value = "";
+    var aidp = document.getElementById("scenario_ai_dm_use_post");
+    if (aidp) aidp.checked = true;
+    syncActionUi();
+  }
+
+  function applyScenarioStepEdit(stepId) {
+    var step = stepsById[String(stepId)];
+    if (!step) return;
+    form.action = updateUrlForStep(stepId);
+    if (cardTitle) {
+      cardTitle.textContent = "Редактировать шаг №" + (step.order != null ? step.order : "");
+    }
+    if (submitBtn) {
+      submitBtn.innerHTML = '<i class="ti ti-device-floppy"></i> Сохранить шаг';
+    }
+    if (cancelEditBtn) cancelEditBtn.hidden = false;
+    var actionSel1 = document.getElementById("scenario_action_type");
+    if (actionSel1) actionSel1.value = step.action_type || "like_post";
+    var wv1 = document.getElementById("scenario_wait_value");
+    if (wv1) wv1.value = String(step.wait_value != null ? step.wait_value : 0);
+    var wu1 = document.getElementById("scenario_wait_unit");
+    if (wu1) wu1.value = step.wait_unit || "days";
+    var tid1 = document.getElementById("scenario_template_id");
+    if (tid1) {
+      tid1.value = step.template_id != null && step.template_id !== "" ? String(step.template_id) : "";
+    }
+    var sm1 = document.getElementById("scenario_step_message");
+    if (sm1) sm1.value = step.message || "";
+    var dmt1 = document.getElementById("scenario_dm_template_id");
+    if (dmt1) dmt1.value = step.dm_template_id != null && step.dm_template_id !== "" ? String(step.dm_template_id) : "";
+    var dmm1 = document.getElementById("scenario_dm_message");
+    if (dmm1) dmm1.value = step.dm_message || "";
+	    var plm1 = document.getElementById("post_like_mode");
+	    if (plm1) plm1.value = step.post_like_mode === "random" ? "random" : "first";
+	    var pps1 = document.getElementById("post_pool_size");
+	    if (pps1) pps1.value = String(step.post_pool_size != null ? step.post_pool_size : 5);
+	    var lc1 = document.getElementById("like_count_post");
+	    if (lc1) lc1.value = String(step.like_count != null ? step.like_count : 1);
+	    var cpm1 = document.getElementById("comment_post_mode");
+	    if (cpm1) cpm1.value = step.comment_post_mode === "random" ? "random" : "first";
+	    var cps1 = document.getElementById("comment_pool_size");
+	    if (cps1) cps1.value = String(step.comment_pool_size != null ? step.comment_pool_size : 5);
+	    var aic1 = document.getElementById("scenario_ai_comment");
+	    if (aic1) aic1.checked = !!step.ai_comment;
+    var aich1 = document.getElementById("scenario_ai_comment_hint");
+    if (aich1) aich1.value = step.ai_comment_hint || "";
+    var aid1 = document.getElementById("scenario_ai_dm");
+    if (aid1) aid1.checked = !!step.ai_dm;
+    var aide1 = document.getElementById("scenario_ai_dm_example");
+    if (aide1) aide1.value = step.ai_dm_example || "";
+    var aidh1 = document.getElementById("scenario_ai_dm_hint");
+    if (aidh1) aidh1.value = step.ai_dm_hint || "";
+    var aidp1 = document.getElementById("scenario_ai_dm_use_post");
+    if (aidp1) aidp1.checked = step.ai_dm_use_profile_post !== false;
+    syncActionUi();
+    var anchor = document.getElementById("scenario-chain");
+    if (anchor && typeof anchor.scrollIntoView === "function") {
+      anchor.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    try {
+      form.querySelector(".scenario-step-add-form__grid input, .scenario-step-add-form__grid select").focus();
+    } catch (e2) {}
+  }
+
+  document.querySelectorAll(".scenario-step-edit-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var sid = btn.getAttribute("data-step-id");
+      if (sid) applyScenarioStepEdit(sid);
+    });
+  });
+  if (cancelEditBtn) {
+    cancelEditBtn.addEventListener("click", function () {
+      resetScenarioStepForm();
+    });
+  }
+
+  var actionSel = document.getElementById("scenario_action_type");
+	  var likeBox = document.getElementById("scenario-like-settings");
+	  var commentTargetBox = document.getElementById("scenario-comment-target-settings");
+	  var commentModeSel = document.getElementById("comment_post_mode");
+	  var commentPoolField = document.getElementById("scenario-comment-pool-field");
+	  var commentPoolInput = document.getElementById("comment_pool_size");
+	  var aiBox = document.getElementById("scenario-ai-comment-settings");
+  var aiChk = document.getElementById("scenario_ai_comment");
+  var aiHint = document.getElementById("scenario_ai_comment_hint");
+  var aiDmBox = document.getElementById("scenario-ai-dm-settings");
+  var aiDmChk = document.getElementById("scenario_ai_dm");
+  var aiDmHint = document.getElementById("scenario_ai_dm_hint");
+  var aiDmExample = document.getElementById("scenario_ai_dm_example");
+  var aiDmUsePost = document.getElementById("scenario_ai_dm_use_post");
+  var templateField = document.getElementById("scenario-template-field");
+  var templateHint = document.getElementById("scenario-template-hint");
+  var templateBlock = document.getElementById("scenario-template-block");
+  var dmTemplateField = document.getElementById("scenario-dm-template-field");
+  var dmMessageBlock = document.getElementById("scenario-dm-message-block");
+
+  function actionHasLike(v) {
+    return v === "like_post" || v === "like_and_comment" || v === "like_comment_friend_request" || v === "like_comment_friend_request_send_dm";
+  }
+
+  function actionHasComment(v) {
+    return v === "comment_post" || v === "like_and_comment" || v === "like_comment_friend_request" || v === "like_comment_friend_request_send_dm";
+  }
+
+  function actionHasDm(v) {
+    return v === "send_dm" || v === "like_comment_friend_request_send_dm";
+  }
+
+  function actionHasSeparateDmConfig(v) {
+    return v === "like_comment_friend_request_send_dm";
+  }
+
+  function needsTemplate(v) {
+    if (actionHasComment(v)) return !(aiChk && aiChk.checked);
+    return v === "send_dm";
+  }
+
+	  function setDisabledIn(el, dis) {
+	    if (!el) return;
+	    el.querySelectorAll("input, select, textarea").forEach(function (x) {
+	      x.disabled = !!dis;
+	    });
+	  }
+
+	  function syncCommentTargetUi(showBox) {
+	    if (commentTargetBox) {
+	      commentTargetBox.hidden = !showBox;
+	      setDisabledIn(commentTargetBox, !showBox);
+	    }
+	    var randomMode = showBox && commentModeSel && commentModeSel.value === "random";
+	    if (commentPoolField) {
+	      commentPoolField.style.display = randomMode ? "" : "none";
+	    }
+	    if (commentPoolInput) {
+	      commentPoolInput.disabled = !randomMode;
+	    }
+	  }
+
+	  function syncActionUi() {
+	    var v = (actionSel && actionSel.value) || "";
+	    var showLikeSettings = actionHasLike(v);
+    if (likeBox) {
+      likeBox.hidden = !showLikeSettings;
+      setDisabledIn(likeBox, !showLikeSettings);
+    }
+	    var showAiComment = actionHasComment(v);
+	    syncCommentTargetUi(showAiComment);
+	    if (aiBox) {
+	      aiBox.hidden = !showAiComment;
+	      setDisabledIn(aiBox, !showAiComment);
+    }
+    if (aiHint) {
+      var aiOn = showAiComment && aiChk && aiChk.checked;
+      aiHint.disabled = !aiOn;
+    }
+    var showAiDm = actionHasDm(v);
+    if (aiDmBox) {
+      aiDmBox.hidden = !showAiDm;
+      setDisabledIn(aiDmBox, !showAiDm);
+    }
+    var aiDmOn = showAiDm && aiDmChk && aiDmChk.checked;
+    if (aiDmHint) aiDmHint.disabled = !aiDmOn;
+    if (aiDmExample) aiDmExample.disabled = !aiDmOn;
+    if (aiDmUsePost) aiDmUsePost.disabled = !aiDmOn;
+    var needTpl = needsTemplate(v);
+    var disp = needTpl ? "" : "none";
+    if (templateField) templateField.style.display = disp;
+    if (templateHint) templateHint.style.display = disp;
+    if (templateBlock) templateBlock.style.display = disp;
+    var tid = document.getElementById("scenario_template_id");
+    var sm = document.getElementById("scenario_step_message");
+    if (tid) tid.disabled = !needTpl;
+    if (sm) sm.disabled = !needTpl;
+    var showSeparateDm = actionHasSeparateDmConfig(v);
+    if (dmTemplateField) {
+      dmTemplateField.hidden = !showSeparateDm;
+      dmTemplateField.style.display = showSeparateDm ? "" : "none";
+      setDisabledIn(dmTemplateField, !showSeparateDm);
+    }
+    if (dmMessageBlock) {
+      dmMessageBlock.hidden = !showSeparateDm;
+      dmMessageBlock.style.display = showSeparateDm ? "" : "none";
+      setDisabledIn(dmMessageBlock, !showSeparateDm);
+    }
+    if (templateLabel) {
+      if (actionHasComment(v)) {
+        templateLabel.textContent = "Шаблон комментария";
+      } else if (v === "send_dm") {
+        templateLabel.textContent = "Шаблон сообщения";
+      } else {
+        templateLabel.textContent = "Шаблон";
+      }
+    }
+    if (stepMessageLabel) {
+      if (actionHasComment(v)) {
+        stepMessageLabel.textContent = "Текст комментария";
+      } else if (v === "send_dm") {
+        stepMessageLabel.textContent = "Текст сообщения";
+      } else {
+        stepMessageLabel.textContent = "Текст шага, если нужен вручную";
+      }
+    }
+  }
+
+	  if (actionSel) actionSel.addEventListener("change", syncActionUi);
+	  if (commentModeSel) commentModeSel.addEventListener("change", syncActionUi);
+	  if (aiChk) aiChk.addEventListener("change", syncActionUi);
+	  if (aiDmChk) aiDmChk.addEventListener("change", syncActionUi);
+  form.addEventListener("submit", function () {
+    syncActionUi();
+  });
+  syncActionUi();
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,191 @@
+/*
+ * Workspace accent tokens.
+ *
+ * Идея: тонкая тематическая надстройка над общими токенами из main.css.
+ * Каждый workspace переопределяет акцентные переменные; базовый layout,
+ * шрифты, fg/bg берутся из main.css без изменений.
+ *
+ * M1: файл подключён только в templates/_shell/base.html, которым пока
+ * никто не наследуется. FB Master и его темы не затронуты.
+ *
+ * Значения Reddit — мягкий оранжевый акцент, как и договорились
+ * (не копия сайта Reddit, а акцент в текущей design-system FB Master).
+ */
+
+:root {
+  /* "Core" / default accent — пока совпадает с текущей палитрой FB Master. */
+  --ws-accent:          var(--accent, #1877f2);
+  --ws-accent-soft:     color-mix(in srgb, var(--ws-accent) 18%, transparent);
+  --ws-accent-contrast: #ffffff;
+  --ws-header-tint:     color-mix(in srgb, var(--ws-accent) 8%, transparent);
+}
+
+/* Facebook workspace — сохраняем текущий внешний вид. */
+[data-workspace="facebook"] {
+  --ws-accent:          #1877f2; /* FB blue */
+  --ws-accent-soft:     color-mix(in srgb, #1877f2 18%, transparent);
+  --ws-accent-contrast: #ffffff;
+  --ws-header-tint:     color-mix(in srgb, #1877f2 6%, transparent);
+}
+
+/* Reddit workspace — мягкий оранжевый акцент. */
+[data-workspace="reddit"] {
+  --ws-accent:          #ff7a3d; /* soft reddit-orange, не агрессивный */
+  --ws-accent-soft:     color-mix(in srgb, #ff7a3d 16%, transparent);
+  --ws-accent-contrast: #ffffff;
+  --ws-header-tint:     color-mix(in srgb, #ff7a3d 7%, transparent);
+}
+
+/* Тёмная тема: чуть приглушаем accent, чтобы не резало глаз. */
+[data-theme="dark"][data-workspace="reddit"] {
+  --ws-accent:          #ff8a54;
+  --ws-accent-soft:     color-mix(in srgb, #ff8a54 14%, transparent);
+  --ws-header-tint:     color-mix(in srgb, #ff8a54 6%, transparent);
+}
+
+/* LinkedIn workspace — холодный профессиональный синий (LinkedIn-inspired). */
+[data-workspace="linkedin"] {
+  --ws-accent:          #0a66c2; /* LinkedIn brand blue */
+  --ws-accent-soft:     color-mix(in srgb, #0a66c2 14%, transparent);
+  --ws-accent-contrast: #ffffff;
+  --ws-header-tint:     color-mix(in srgb, #0a66c2 6%, transparent);
+}
+
+/* Тёмная тема: ярче, чтобы не сливался с фоном. */
+[data-theme="dark"][data-workspace="linkedin"] {
+  --ws-accent:          #4d9eea;
+  --ws-accent-soft:     color-mix(in srgb, #4d9eea 14%, transparent);
+  --ws-header-tint:     color-mix(in srgb, #4d9eea 6%, transparent);
+}
+
+/* Twitter / X workspace — небесно-голубой (X brand). */
+[data-workspace="twitter"] {
+  --ws-accent:          #1d9bf0; /* X brand blue */
+  --ws-accent-soft:     color-mix(in srgb, #1d9bf0 14%, transparent);
+  --ws-accent-contrast: #ffffff;
+  --ws-header-tint:     color-mix(in srgb, #1d9bf0 6%, transparent);
+}
+
+[data-theme="dark"][data-workspace="twitter"] {
+  --ws-accent:          #4cb5f7;
+  --ws-accent-soft:     color-mix(in srgb, #4cb5f7 14%, transparent);
+  --ws-header-tint:     color-mix(in srgb, #4cb5f7 6%, transparent);
+}
+
+/* Instagram workspace — pink (gradient-inspired solid). */
+[data-workspace="instagram"] {
+  --ws-accent:          #e1306c; /* IG pink-magenta */
+  --ws-accent-soft:     color-mix(in srgb, #e1306c 14%, transparent);
+  --ws-accent-contrast: #ffffff;
+  --ws-header-tint:     color-mix(in srgb, #e1306c 6%, transparent);
+}
+
+[data-theme="dark"][data-workspace="instagram"] {
+  --ws-accent:          #f06195;
+  --ws-accent-soft:     color-mix(in srgb, #f06195 14%, transparent);
+  --ws-header-tint:     color-mix(in srgb, #f06195 6%, transparent);
+}
+
+/*
+ * Workspace tabs — как вкладки в браузере. Рендерятся в шапке main-content
+ * (.fbm-ws-topbar) и показываются только при FB_MASTER_MULTI_WORKSPACE_ENABLED=1.
+ */
+.fbm-ws-tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  padding: 0 6px;
+  margin: 0;
+  list-style: none;
+  border-bottom: 1px solid var(--border, #e4e6eb);
+  background: transparent;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.fbm-ws-tabs::-webkit-scrollbar { display: none; }
+
+.fbm-ws-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  margin-bottom: -1px;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  color: var(--text-secondary, #606770);
+  text-decoration: none;
+  font: 500 13px/1.2 Inter, sans-serif;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.fbm-ws-tab:hover:not(.fbm-ws-tab--disabled):not(.fbm-ws-tab--active) {
+  background: color-mix(in srgb, var(--ws-accent) 8%, transparent);
+  color: var(--text-primary, #1c1e21);
+}
+
+.fbm-ws-tab--active {
+  background: var(--bg-surface, #fff);
+  color: var(--ws-accent);
+  border-color: var(--border, #e4e6eb);
+  font-weight: 600;
+  position: relative;
+}
+.fbm-ws-tab--active::after {
+  /* прячем стык с border-bottom контейнера */
+  content: "";
+  position: absolute;
+  left: 0; right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--bg-surface, #fff);
+}
+.fbm-ws-tab--active::before {
+  /* тонкий accent-плюсик сверху */
+  content: "";
+  position: absolute;
+  left: 10px; right: 10px;
+  top: 0;
+  height: 2px;
+  background: var(--ws-accent);
+  border-radius: 2px;
+}
+
+.fbm-ws-tab__icon {
+  font-size: 16px;
+}
+.fbm-ws-tab__label {
+  white-space: nowrap;
+}
+.fbm-ws-tab__badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--ws-accent-soft);
+  color: var(--ws-accent);
+  text-transform: uppercase;
+  letter-spacing: .02em;
+}
+.fbm-ws-tab__badge--muted {
+  background: color-mix(in srgb, var(--text-muted, #777) 14%, transparent);
+  color: var(--text-muted, #777);
+}
+
+.fbm-ws-tab--disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.fbm-ws-tab--all {
+  margin-left: auto;
+  color: var(--text-muted, #777);
+  font-weight: 400;
+  border-bottom: 1px dashed var(--border, #e4e6eb);
+  border-radius: 8px;
+}
+.fbm-ws-tab--all:hover {
+  color: var(--text-primary, #1c1e21);
+  background: color-mix(in srgb, var(--text-muted, #777) 8%, transparent);
+}

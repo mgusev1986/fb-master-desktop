@@ -1,0 +1,137 @@
+{% extends "reddit/base.html" %}
+
+{% block title %}Комментарии · Reddit Master{% endblock %}
+
+{% block content %}
+<div class="reddit-page">
+  <header class="reddit-page__header">
+    <div class="reddit-page__title-wrap">
+      <h1 class="reddit-page__title">Комментарии</h1>
+      <p class="reddit-page__subtitle">
+        Черновики комментариев с подтверждением перед публикацией. Каждый комментарий получает
+        toxicity-risk score и требует ручного одобрения перед отправкой через Reddit API.
+      </p>
+    </div>
+  </header>
+
+  {% if notice %}
+  <div class="reddit-card" style="border-color:{% if notice == 'published' or notice == 'created' %}#1b873f;color:#1b873f{% else %}#c33;color:#c33{% endif %};background:color-mix(in srgb, currentColor 6%, var(--bg-surface));">
+    <i class="ti ti-info-circle"></i> {{ notice }}
+  </div>
+  {% endif %}
+
+  <div class="reddit-card" style="flex-direction:row;gap:10px;align-items:center;flex-wrap:wrap;">
+    <a href="/reddit/comments" class="reddit-btn{% if not state %} reddit-btn--primary{% endif %}" style="padding:6px 10px;">все</a>
+    {% for s in review_states %}
+    <a href="/reddit/comments?state={{ s }}" class="reddit-btn{% if state == s %} reddit-btn--primary{% endif %}" style="padding:6px 10px;">{{ s|ru_status }}</a>
+    {% endfor %}
+  </div>
+
+  <form method="post" action="/reddit/comments/new" class="reddit-card" style="gap:12px;">
+    <h2 class="reddit-card__title">Новый комментарий-draft</h2>
+    <div style="display:grid;grid-template-columns:1fr 2fr;gap:12px;">
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font:600 12px/1 Inter;color:var(--text-muted)">от аккаунта</span>
+        <select name="account_id" required style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;">
+          {% for a in accounts %}
+          <option value="{{ a.id }}">u/{{ a.username_snapshot or a.label }}</option>
+          {% else %}
+          <option value="">— нет подключённых аккаунтов —</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font:600 12px/1 Inter;color:var(--text-muted)">target permalink (пост или комментарий)</span>
+        <input type="text" name="target_ref" required placeholder="/r/askreddit/comments/abc123/slug/ или /…/efg456"
+               style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;"/>
+      </label>
+    </div>
+    <label style="display:flex;flex-direction:column;gap:4px;">
+      <span style="font:600 12px/1 Inter;color:var(--text-muted)">текст</span>
+      <textarea name="body" rows="4" required
+                placeholder="Аккуратный, релевантный комментарий…"
+                style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-family:ui-monospace,monospace;"></textarea>
+    </label>
+    <div>
+      <button type="submit" class="reddit-btn reddit-btn--primary"><i class="ti ti-plus"></i> Создать draft</button>
+    </div>
+  </form>
+
+  {% if drafts %}
+  <section>
+    <h2 class="reddit-card__title" style="margin:16px 0 10px;">Drafts · {{ drafts|length }}</h2>
+    <div class="reddit-grid reddit-grid--wide">
+      {% for d in drafts %}
+      <article class="reddit-card">
+        <header style="display:flex;align-items:center;gap:8px;">
+          <span style="font:500 11px/1 Inter;padding:2px 8px;border-radius:999px;
+            background:{% if d.review_state == 'published' %}color-mix(in srgb,#1b873f 14%,transparent);color:#1b873f
+                     {% elif d.review_state == 'approved' %}color-mix(in srgb,#1877f2 14%,transparent);color:#1877f2
+                     {% elif d.review_state in ('failed','rejected') %}color-mix(in srgb,#c33 14%,transparent);color:#c33
+                     {% else %}var(--ws-accent-soft);color:var(--ws-accent){% endif %};">
+            {{ d.review_state|ru_status }}
+          </span>
+          <span style="font:500 11px/1 Inter;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,#777 14%,transparent);color:#555;">{{ d.target_kind|ru_status }}</span>
+          <span style="flex:1;"></span>
+          {% if d.toxicity_risk_score is not none %}
+          <span title="Toxicity risk (heuristic)" style="font:500 11px/1 Inter;padding:2px 8px;border-radius:999px;
+            background:{% if d.toxicity_risk_score > 0.6 %}color-mix(in srgb,#c33 14%,transparent);color:#c33
+                     {% elif d.toxicity_risk_score > 0.2 %}color-mix(in srgb,#b26a00 14%,transparent);color:#b26a00
+                     {% else %}color-mix(in srgb,#1b873f 14%,transparent);color:#1b873f{% endif %};">
+            риск {{ d.toxicity_risk_score }}
+          </span>
+          {% endif %}
+        </header>
+        <div class="reddit-card__desc" style="font-size:12px;">
+          <a href="https://www.reddit.com{{ d.target_ref if d.target_ref.startswith('/') else '' }}" target="_blank" rel="noreferrer noopener" style="color:var(--ws-accent);">{{ d.target_ref }}</a>
+        </div>
+        {% if d.review_state == 'pending_review' %}
+        <form method="post" action="/reddit/comments/{{ d.id }}/edit">
+          <textarea name="body" rows="3"
+                    style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--border);border-radius:10px;font-family:ui-monospace,monospace;">{{ d.body }}</textarea>
+          <button type="submit" class="reddit-btn" style="margin-top:6px;padding:4px 10px;font-size:12px;">Сохранить текст</button>
+        </form>
+        {% else %}
+        <pre style="white-space:pre-wrap;font:400 13px/1.5 ui-monospace,monospace;background:color-mix(in srgb,#000 4%,transparent);padding:10px;border-radius:8px;margin:0;">{{ d.body }}</pre>
+        {% endif %}
+        {% if d.last_error %}
+        <div class="reddit-card__desc" style="color:#c33;font-size:12px;">
+          <i class="ti ti-alert-circle"></i> {{ d.last_error }}{% if d.reason_code %} ({{ d.reason_code }}){% endif %}
+        </div>
+        {% endif %}
+        <footer style="display:flex;gap:6px;flex-wrap:wrap;">
+          {% if d.review_state == 'pending_review' %}
+          <form method="post" action="/reddit/comments/{{ d.id }}/approve" style="display:inline">
+            <button type="submit" class="reddit-btn reddit-btn--primary">Одобрить</button>
+          </form>
+          <form method="post" action="/reddit/comments/{{ d.id }}/reject" style="display:inline">
+            <button type="submit" class="reddit-btn">Отклонить</button>
+          </form>
+          {% elif d.review_state == 'approved' %}
+          <form method="post" action="/reddit/comments/{{ d.id }}/publish" style="display:inline">
+            <button type="submit" class="reddit-btn reddit-btn--primary"
+                    onclick="return confirm('Опубликовать комментарий на Reddit?');">
+              <i class="ti ti-send"></i> Publish
+            </button>
+          </form>
+          {% endif %}
+          <form method="post" action="/reddit/comments/{{ d.id }}/delete" style="display:inline"
+                onsubmit="return confirm('Удалить черновик?');">
+            <button type="submit" class="reddit-btn"><i class="ti ti-trash"></i></button>
+          </form>
+          {% if d.reddit_comment_id %}
+          <span style="font-size:12px;color:var(--text-muted);">id: {{ d.reddit_comment_id }}</span>
+          {% endif %}
+        </footer>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+  {% else %}
+  <div class="reddit-placeholder">
+    <div class="reddit-placeholder__icon"><i class="ti ti-messages"></i></div>
+    <p class="reddit-placeholder__text">Черновиков комментариев нет. Создайте первый выше.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

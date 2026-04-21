@@ -1,0 +1,236 @@
+{#
+  Facebook Master base template.
+
+  Наследуется от _shell/base.html (multi-workspace layout). Визуально
+  идентичен версии до M2: sidebar, preview-banner, modals, license
+  countdown — всё на месте. Workspace switcher появляется только при
+  FB_MASTER_MULTI_WORKSPACE_ENABLED=1 + available_workspaces в контексте.
+#}
+{% extends "_shell/base.html" %}
+
+{% block shell_workspace %}facebook{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/facebook.css') }}?v={{ static_v }}"/>
+{% endblock %}
+
+{% block shell_sidebar %}
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <span class="sidebar-logo__mark sidebar-logo__mark--facebook">SOC</span>MASTER
+    </div>
+    {% if fbm_desktop_app_version %}
+    <div class="sidebar-version-line" title="Версия программы">v{{ fbm_desktop_app_version }}</div>
+    {% endif %}
+  </div>
+
+  <nav class="sidebar-nav">
+
+    <div class="nav-group">
+      <div class="nav-group-label">Обзор</div>
+      <a href="/home" class="nav-item {{ 'active' if page_id == 'dashboard' }}">
+        <i class="ti ti-layout-dashboard"></i> Главная
+      </a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">Рабочие аккаунты</div>
+      <a href="/fb-accounts" class="nav-item {{ 'active' if page_id == 'fb_accounts' }}">
+        <i class="ti ti-brand-facebook"></i> Аккаунты
+      </a>
+      <a href="/account-branding" class="nav-item {{ 'active' if page_id == 'account_branding' }}">
+        <i class="ti ti-palette"></i> Оформление аккаунтов
+      </a>
+      <a href="/account-warming" class="nav-item {{ 'active' if page_id == 'account_natural_warmup' }}">
+        <i class="ti ti-flame"></i> Прогрев аккаунтов
+      </a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">Данные</div>
+      <a href="/donors" class="nav-item nav-item--sidebar-hidden {{ 'active' if page_id == 'donors' }}">
+        <i class="ti ti-users-group"></i> Доноры
+      </a>
+      <a href="/discovery" class="nav-item {{ 'active' if page_id == 'discovery' }}">
+        <i class="ti ti-radar-2"></i> Автопоиск
+      </a>
+      <a href="/parser" class="nav-item {{ 'active' if page_id == 'parser' }}">
+        <i class="ti ti-radar"></i> Парсер
+      </a>
+      <a href="/import" class="nav-item {{ 'active' if page_id == 'import' }}">
+        <i class="ti ti-file-import"></i> Импорт базы
+      </a>
+      <a href="/people" class="nav-item {{ 'active' if page_id == 'people' }}">
+        <i class="ti ti-address-book"></i> База контактов
+      </a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">Коммуникации</div>
+      <a href="/templates" class="nav-item {{ 'active' if page_id == 'templates' }}">
+        <i class="ti ti-template"></i> Шаблоны
+      </a>
+      <a href="/outreach" class="nav-item {{ 'active' if page_id in ('outreach', 'outreach_magic') }}">
+        <i class="ti ti-send"></i> Рассылка
+      </a>
+      <a href="/outreach?focus=agent" class="nav-item nav-item--sidebar-hidden {{ 'active' if page_id == 'outreach_magic' }}">
+        <i class="ti ti-sparkles"></i> Magic-агент
+      </a>
+      <a href="/scenarios" class="nav-item {{ 'active' if page_id in ('warmup', 'scenarios') }}">
+        <i class="ti ti-brain"></i> Режим агента
+      </a>
+      <a href="/messenger" class="nav-item nav-item--sidebar-hidden {{ 'active' if page_id == 'messenger' }}">
+        <i class="ti ti-message-circle"></i> Messenger Old
+      </a>
+      <a href="/messenger2" class="nav-item {{ 'active' if page_id == 'messenger2' }}">
+        <i class="ti ti-message-circle"></i> Мессенджер
+      </a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">CRM</div>
+      <a href="/crm/funnel" class="nav-item {{ 'active' if page_id == 'crm_funnel' }}">
+        <i class="ti ti-chart-funnel"></i> Воронка
+      </a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">Система</div>
+      <a href="/system/speed" class="nav-item {{ 'active' if page_id == 'system_speed' }}">
+        <i class="ti ti-gauge"></i> Скорость и паузы
+      </a>
+      <a href="/system/logs" class="nav-item {{ 'active' if page_id == 'system_logs' }}">
+        <i class="ti ti-report-analytics"></i> Журнал и отчёты
+      </a>
+      <a href="/system/settings" class="nav-item {{ 'active' if page_id == 'system_settings' }}">
+        <i class="ti ti-settings"></i> Настройки
+      </a>
+      <a href="/faq" class="nav-item {{ 'active' if page_id == 'faq' }}">
+        <i class="ti ti-help-circle"></i> FAQ
+      </a>
+      {% if is_platform_owner(user) and not preview_as_user_active(request) %}
+      <a href="/admin/platform" class="nav-item {{ 'active' if page_id == 'platform_admin' }}">
+        <i class="ti ti-layout-dashboard"></i> Админ-панель
+      </a>
+      {% endif %}
+    </div>
+
+  </nav>
+
+  <div class="sidebar-footer">
+    {# В режиме локального оператора (FB_MASTER_NO_AUTH) блок с именем, лицензией и ID не показываем — десктоп всегда «локальный». #}
+    {% if user and not fb_master_no_auth() %}
+    <div class="sidebar-user">
+      {% if user.picture %}
+      <img src="{{ user.picture }}" alt=""/>
+      {% else %}
+      <i class="ti ti-user-circle" style="font-size:32px;color:var(--text-sidebar)"></i>
+      {% endif %}
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name">{{ user.name or user.email }}</div>
+        {% set ak_license = fbm_sidebar_access_key_license(request) %}
+        {% if ak_license %}
+        <div class="sidebar-license-lines" role="status">
+          <div class="sidebar-license-line">Оплаченный период: <span class="sidebar-license-paid">{{ ak_license.paid_period_label }}</span></div>
+          {% if ak_license.forever %}
+          <div class="sidebar-license-line">Срок действия ключа не ограничен.</div>
+          {% elif ak_license.last_calendar_day %}
+          <div class="sidebar-license-line sidebar-license-line--accent">Последний день доступа, до {{ format_dt_madrid(ak_license.expires_at) }}</div>
+          {% else %}
+          <div class="sidebar-license-line" id="fbm-license-countdown" data-expires-at="{{ ak_license.expires_at_iso }}">
+            Осталось <span id="fbm-license-days">{{ ak_license.days_remaining }}</span> <span id="fbm-license-days-word">{{ ak_license.days_word }}</span>,
+            до {{ format_dt_madrid(ak_license.expires_at) }}
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+        <div class="sidebar-user-email" title="Уникальный ID этой копии программы">
+          <span class="settings-note" style="font-size:11px;opacity:.85">ID:</span>
+          <code style="font-size:11px;word-break:break-all">{{ fbm_client_installation_id() }}</code>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    <div class="sidebar-actions">
+      <button id="theme-toggle" class="btn-sidebar" title="Сменить тему">
+        <i id="theme-icon" class="ti ti-moon"></i>
+      </button>
+      {% if sidebar_show_logout(request, user) %}
+      <a href="/auth/logout" class="btn-sidebar">
+        <i class="ti ti-logout"></i> Выйти
+      </a>
+      {% endif %}
+    </div>
+  </div>
+</aside>
+{% endblock %}
+
+{% block shell_banners %}
+  {% if user and is_platform_owner(user) and preview_as_user_active(request) %}
+  <div class="fb-preview-as-user-banner" role="status">
+    <span><strong>Предпросмотр клиента:</strong> как у десктопа — без «Админ-панели», «Выйти» и служебных блоков в «Настройках».</span>
+    <form method="post" action="/admin/platform/preview-as-user">
+      <input type="hidden" name="enable" value="0"/>
+      <input type="hidden" name="next" value="{{ request.url.path }}"/>
+      <button type="submit" class="btn btn-secondary btn-sm">Выйти из предпросмотра</button>
+    </form>
+  </div>
+  {% endif %}
+{% endblock %}
+
+{% block shell_modals %}
+<div id="fb-confirm-modal" class="fb-confirm-modal" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="fb-confirm-modal-title">
+  <div class="fb-confirm-modal__backdrop" tabindex="-1" data-fb-confirm-dismiss></div>
+  <div class="fb-confirm-modal__panel">
+    <h2 id="fb-confirm-modal-title" class="fb-confirm-modal__title">Подтвердить действие</h2>
+    <p class="fb-confirm-modal__message" id="fb-confirm-modal-message"></p>
+    <div class="fb-confirm-modal__actions">
+      <button type="button" class="btn btn-secondary" data-fb-confirm-dismiss>Отмена</button>
+      <button type="button" class="btn btn-primary" id="fb-confirm-modal-ok">Подтвердить</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block shell_scripts %}
+<script>
+(function () {
+  var row = document.getElementById("fbm-license-countdown");
+  if (!row || !row.dataset.expiresAt) return;
+  function ruDaysWord(n) {
+    n = Math.abs(n | 0);
+    if (n % 10 === 1 && n % 100 !== 11) return "день";
+    if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 > 20)) return "дня";
+    return "дней";
+  }
+  function madridCalendarDaysLeft(iso) {
+    var exp = new Date(iso);
+    var now = new Date();
+    if (isNaN(exp.getTime()) || now >= exp) return 0;
+    var fmt = new Intl.DateTimeFormat("sv-SE", {
+      timeZone: "Europe/Madrid",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+    var d0 = fmt.format(now);
+    var d1 = fmt.format(exp);
+    var p0 = d0.split("-").map(Number);
+    var p1 = d1.split("-").map(Number);
+    var t0 = Date.UTC(p0[0], p0[1] - 1, p0[2]);
+    var t1 = Date.UTC(p1[0], p1[1] - 1, p1[2]);
+    return Math.max(0, Math.round((t1 - t0) / 86400000));
+  }
+  function tick() {
+    var n = madridCalendarDaysLeft(row.dataset.expiresAt);
+    var num = document.getElementById("fbm-license-days");
+    var w = document.getElementById("fbm-license-days-word");
+    if (num) num.textContent = String(n);
+    if (w) w.textContent = ruDaysWord(n);
+  }
+  tick();
+  setInterval(tick, 60000);
+})();
+</script>
+{% endblock %}

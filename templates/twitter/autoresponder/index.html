@@ -1,0 +1,148 @@
+{% extends "twitter/base.html" %}
+
+{% block title %}AI-автоответчик · Twitter Master{% endblock %}
+
+{% block content %}
+<div class="x-page">
+  <header class="x-page__header">
+    <div class="x-page__title-wrap">
+      <h1 class="x-page__title">AI-автоответчик <span class="x-page__beta-pill">Beta</span></h1>
+      <p class="x-page__subtitle">
+        Нейросеть ведёт DM-переписку до достижения цели сессии (созвон / отправка материалов /
+        квалификация). Approval modes: <strong>manual</strong> — каждый ответ через approve,
+        <strong>auto</strong> — отправляет сама.
+      </p>
+    </div>
+  </header>
+
+  {# ── PERSONAS ── #}
+  <section class="x-card x-card--accent">
+    <h2 class="x-card__title"><i class="ti ti-id"></i> Personas (кто отвечает)</h2>
+    <p class="x-card__desc" style="font-size:13px;">Persona = «характер» AI-ассистента: роль, компания, оффер, тон, материалы и forbidden-topics.</p>
+    <details>
+      <summary style="cursor:pointer;color:var(--ws-accent);font:500 13px/1 Inter;"><i class="ti ti-plus"></i> Создать persona</summary>
+      <form method="post" action="/twitter/autoresponder/personas/create" style="display:flex;flex-direction:column;gap:10px;margin-top:10px;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <input type="text" name="name" required placeholder="Имя (Иван — sales rep)" style="flex:2;min-width:200px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+          <input type="text" name="role" placeholder="Роль (Founder, Sales rep)" style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+          <input type="text" name="company" placeholder="Компания" style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+          <input type="text" name="tone" placeholder="tone (friendly/professional/casual/direct)" style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+        </div>
+        <textarea name="offer_summary" rows="3" placeholder="Краткий питч: что предлагаешь, кому подходит, главная ценность" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"></textarea>
+        <textarea name="knowledge_base" rows="4" placeholder="Что persona знает: FAQ про продукт, цены, кейсы, типичные возражения и ответы" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"></textarea>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <input type="url" name="cta_call_link" placeholder="ссылка на созвон (Calendly / Cal.com)" style="flex:1;min-width:240px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+          <input type="url" name="cta_info_link" placeholder="ссылка на info-pack / pdf" style="flex:1;min-width:240px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+        </div>
+        <textarea name="forbidden_topics" rows="2" placeholder="Темы, которые НЕ обсуждать (политика, конкуренты по имени, скидки и т.п.)" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"></textarea>
+        <button type="submit" class="x-btn x-btn--primary" style="align-self:flex-start;"><i class="ti ti-plus"></i> Создать persona</button>
+      </form>
+    </details>
+
+    {% if personas %}
+    <div class="x-grid" style="margin-top:8px;">
+      {% for p in personas %}
+      <article class="x-card" style="padding:14px 18px;">
+        <h3 class="x-card__title" style="font-size:14px;"><i class="ti ti-id"></i> {{ p.name }}</h3>
+        <small style="color:var(--text-muted);">{{ p.role or '' }}{% if p.company %} · {{ p.company }}{% endif %}{% if p.tone %} · {{ p.tone }}{% endif %}</small>
+        {% if p.offer_summary %}<p class="x-card__desc" style="font-size:12px;">{{ p.offer_summary[:160] }}{% if p.offer_summary|length > 160 %}…{% endif %}</p>{% endif %}
+        {% if p.cta_call_link %}<small style="color:var(--ws-accent);">📞 {{ p.cta_call_link[:50] }}</small>{% endif %}
+        {% if p.cta_info_link %}<small style="color:var(--ws-accent);">📄 {{ p.cta_info_link[:50] }}</small>{% endif %}
+        <form method="post" action="/twitter/autoresponder/personas/{{ p.id }}/archive" style="margin:0;align-self:flex-end;" onsubmit="return confirm('Архивировать persona {{ p.name }}?');">
+          <button type="submit" class="x-btn" style="background:transparent;border-color:#c33;color:#c33;font-size:12px;padding:4px 10px;"><i class="ti ti-archive"></i></button>
+        </form>
+      </article>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </section>
+
+  {# ── NEW SESSION ── #}
+  {% if accounts and leads and personas %}
+  <section class="x-card x-card--accent">
+    <h2 class="x-card__title"><i class="ti ti-plus"></i> Новая AI-сессия с lead'ом</h2>
+    <form method="post" action="/twitter/autoresponder/sessions/create" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <select name="account_id" required style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
+        <option value="">— аккаунт —</option>
+        {% for a in accounts %}<option value="{{ a.id }}">{{ a.label }} [{{ a.status }}]</option>{% endfor %}
+      </select>
+      <select name="lead_id" required style="flex:1;min-width:200px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
+        <option value="">— lead —</option>
+        {% for l in leads %}<option value="{{ l.id }}">@{{ l.handle }} · {{ l.full_name or '' }}</option>{% endfor %}
+      </select>
+      <select name="persona_id" required style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
+        <option value="">— persona —</option>
+        {% for p in personas %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}
+      </select>
+      <select name="goal" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
+        {% for g, desc in goal_descriptions.items() %}<option value="{{ g }}" title="{{ desc }}">{{ g }}</option>{% endfor %}
+      </select>
+      <select name="approval_mode" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
+        <option value="manual">manual approve</option>
+        <option value="auto">auto-send</option>
+      </select>
+      <button type="submit" class="x-btn x-btn--primary"><i class="ti ti-robot"></i> Запустить сессию</button>
+    </form>
+  </section>
+  {% else %}
+  <section class="x-banner">
+    <div class="x-banner__icon"><i class="ti ti-info-circle"></i></div>
+    <div class="x-banner__body"><h2 class="x-banner__title">Прежде чем запускать</h2><p class="x-banner__text">Нужны: минимум 1 <a href="/twitter/accounts">аккаунт</a>, 1 <a href="/twitter/leads">lead</a> и 1 persona (создайте выше).</p></div>
+  </section>
+  {% endif %}
+
+  {# ── SESSIONS LIST ── #}
+  <section>
+    <h2 class="x-card__title" style="margin:8px 0 12px;">AI-сессии ({{ sessions|length }})</h2>
+    {% if sessions %}
+      <div class="x-grid x-grid--wide">
+        {% for s in sessions %}
+        <article class="x-card">
+          <header style="display:flex;justify-content:space-between;align-items:center;">
+            <h3 class="x-card__title" style="font-size:14px;"><i class="ti ti-robot"></i> session #{{ s.id }} · goal={{ s.goal }}</h3>
+            <span class="compliance-cell__level
+              {% if s.state == 'goal_reached' %}compliance-cell__level--supported
+              {% elif s.state == 'active' %}compliance-cell__level--partial
+              {% else %}compliance-cell__level--restricted{% endif %}">{{ s.state }}</span>
+          </header>
+          <small style="color:var(--text-muted);">acc#{{ s.account_id }} · lead#{{ s.lead_id }} · persona#{{ s.persona_id }} · approval={{ s.approval_mode }}</small>
+          <small style="color:var(--text-muted);">in: {{ s.msg_count_in }} · out: {{ s.msg_count_out }}{% if s.final_outcome %} · outcome: <strong>{{ s.final_outcome }}</strong>{% endif %}</small>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            {% if s.state == 'active' %}
+            <form method="post" action="/twitter/autoresponder/sessions/{{ s.id }}/think-now" style="margin:0;" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i>…';">
+              <button class="x-btn" type="submit" style="font-size:12px;padding:4px 10px;"><i class="ti ti-bolt"></i> Думать сейчас</button>
+            </form>
+            <form method="post" action="/twitter/autoresponder/sessions/{{ s.id }}/state" style="margin:0;"><input type="hidden" name="state" value="paused"/><button class="x-btn" type="submit" style="font-size:12px;padding:4px 10px;"><i class="ti ti-player-pause"></i> Pause</button></form>
+            {% else %}
+            <form method="post" action="/twitter/autoresponder/sessions/{{ s.id }}/state" style="margin:0;"><input type="hidden" name="state" value="active"/><button class="x-btn" type="submit" style="font-size:12px;padding:4px 10px;"><i class="ti ti-player-play"></i> Resume</button></form>
+            {% endif %}
+            <form method="post" action="/twitter/autoresponder/sessions/{{ s.id }}/approval-mode" style="display:inline;">
+              <input type="hidden" name="approval_mode" value="{% if s.approval_mode == 'manual' %}auto{% else %}manual{% endif %}"/>
+              <button class="x-btn" type="submit" style="font-size:12px;padding:4px 10px;" title="Переключить approval mode">{% if s.approval_mode == 'manual' %}→ auto{% else %}→ manual{% endif %}</button>
+            </form>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="x-placeholder"><div class="x-placeholder__icon"><i class="ti ti-robot"></i></div><p class="x-placeholder__text">AI-сессий пока нет.</p></div>
+    {% endif %}
+  </section>
+
+  {# ── PENDING DRAFTS ── #}
+  {% set pending_drafts = [] %}
+  {% for s in sessions %}
+    {% for d in s.__class__.__mapper__.attrs.keys() %}{% endfor %}
+  {% endfor %}
+  <section>
+    <h2 class="x-card__title" style="margin:8px 0 12px;">Pending drafts (manual approval)</h2>
+    <p class="x-card__desc" style="font-size:13px;color:var(--text-muted);">Drafts накапливаются здесь, когда AI сгенерировал ответ, а approval_mode=manual. Approve & send отправит draft через dm_sender.</p>
+    <div id="drafts-list">
+    {% for s in sessions %}
+      {% for d in (s.__class__) %}{% endfor %}
+    {% endfor %}
+    </div>
+    <small style="color:var(--text-muted);">Для просмотра pending-drafts откройте <code>/twitter/conversations</code> — там показываются все out-сообщения с пометкой <code>ai_autoresponder</code> и история переписки.</small>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% from "macros/hints.html" import mailing_warmup_placeholders %}
+{% block title %}Рассылка — FB Master{% endblock %}
+
+{% block content %}
+{% set show_agent_toggle = false %}
+<div class="page-header">
+  <div class="page-header-actions">
+    <div>
+      <h1>Рассылка</h1>
+      <p class="subtitle">{% if cabinet_client_mode(request) %}
+      Отправка <strong>личных сообщений</strong> и <strong>комментариев</strong> под постами — по очереди, с ваших профилей Facebook и с разумными лимитами. Можно не писать тем, кому уже писали. Не запускайте одновременно с прогревом или сценариями по дням — дождитесь их окончания.
+      {% else %}
+      Кампании из аккаунтов Facebook: личные сообщения и комментинг по очереди, с лимитом на аккаунт. ЛС по-прежнему можно вести с опциональным пропуском «уже писали» (таблица «Уже контактировали»). Не параллелить с прогревом и сценариями.
+      {% endif %}</p>
+      {{ mailing_warmup_placeholders('subtitle') }}
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+      <a href="/outreach/new" class="btn btn-primary"><i class="ti ti-plus"></i> Новая кампания рассылка</a>
+      <a href="/outreach/new?kind=comment" class="btn btn-secondary"><i class="ti ti-plus"></i> Новая кампания комментинг</a>
+      {% if show_agent_toggle %}
+      <button type="button" id="outreach-agent-toggle" class="btn {% if open_agent_panel %}btn-primary{% else %}btn-secondary{% endif %}"
+              aria-controls="outreach-agent-wrap" aria-expanded="{{ 'true' if open_agent_panel else 'false' }}">
+        <i class="ti ti-robot"></i> Режим агента
+      </button>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% if outreach_running %}
+<div class="card" style="margin-bottom:16px;border-color:var(--warning)">
+  <div class="card-body" style="font-size:var(--font-size-sm)">
+    Выполняется рассылка. Дождитесь окончания или поставьте кампанию на паузу.
+  </div>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-body">
+    {% if campaigns %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Название</th>
+            <th>Статус</th>
+            <th>Шаблон</th>
+            <th>Аккаунты / люди</th>
+            <th>Обновлено</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in campaigns %}
+          {% set cfg = c.config if c.config is mapping else {} %}
+          {% set campaign_kind = cfg.get('campaign_kind', 'dm') %}
+          <tr>
+            <td>
+              <strong>{{ c.name }}</strong>
+              <div style="font-size:var(--font-size-xs);color:var(--text-secondary);margin-top:4px">
+                {{ 'Комментинг' if campaign_kind == 'comment' else 'Личные сообщения' }}
+              </div>
+            </td>
+            <td>
+              {% if c.status == 'running' %}
+              <span class="badge badge-default">Выполняется</span>
+              {% elif c.status == 'paused' %}
+              <span class="badge badge-default">Пауза</span>
+              {% elif c.status == 'completed' %}
+              <span class="badge badge-success">Завершена</span>
+              {% elif c.status == 'ready' %}
+              <span class="badge badge-default">Готова</span>
+              {% else %}
+              <span class="badge badge-default">Черновик</span>
+              {% endif %}
+            </td>
+            <td style="font-size:var(--font-size-sm);color:var(--text-secondary)">#{{ c.template_id or '—' }}</td>
+            <td style="font-size:var(--font-size-sm);color:var(--text-secondary)">
+              {{ (c.fb_account_ids or [])|length }} акк. · {{ (c.person_ids or [])|length }} чел. · до {{ c.messages_per_account or 20 }}/акк.
+              {% if campaign_kind == 'comment' %}
+              · комментарии
+              {% elif cfg.get('skip_contacted', true) %}
+              · пропуск «писали»
+              {% endif %}
+            </td>
+            <td style="color:var(--text-secondary);font-size:var(--font-size-sm)">{{ c.updated_at.strftime('%d.%m.%Y %H:%M') if c.updated_at else '—' }}</td>
+            <td><a href="/outreach/{{ c.id }}" class="btn btn-sm btn-secondary">Открыть</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p style="color:var(--text-secondary)">Кампаний нет. Создайте: выберите шаблон из «Шаблоны», аккаунты, аудиторию, соберите очередь и запустите.</p>
+    {% endif %}
+  </div>
+</div>
+
+{% include "outreach/agent_panel.html" %}
+{% endblock %}

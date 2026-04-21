@@ -1,0 +1,12 @@
+{
+  "name": "fb-master-messenger2-frame",
+  "version": "1.0.0",
+  "description": "Окно с боковой панелью аккаунтов и встроенным Messenger (Electron webview).",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^33.2.0"
+  }
+}

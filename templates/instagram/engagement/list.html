@@ -1,0 +1,62 @@
+{% extends "instagram/base.html" %}
+{% block title %}Engagement · Instagram Master{% endblock %}
+{% block content %}
+<div class="ig-page">
+  <header class="ig-page__header">
+    <div class="ig-page__title-wrap">
+      <h1 class="ig-page__title">Engagement (лайки/комменты/follow) <span class="ig-page__beta-pill">Beta</span></h1>
+      <p class="ig-page__subtitle">Массовый engagement по target audience с safety-капами.</p>
+    </div>
+  </header>
+
+  {% if accounts %}
+  <section class="ig-card ig-card--accent">
+    <h2 class="ig-card__title"><i class="ti ti-plus"></i> Новая engagement-задача</h2>
+    <form method="post" action="/instagram/engagement/create" style="display:flex;flex-direction:column;gap:10px;">
+      <input type="text" name="name" required placeholder="Название (Likes по hashtag photography)" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <select name="kind" required style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
+          <option value="like_post">like_post (нужны URL'ы постов)</option>
+          <option value="comment_post">comment_post (URL'ы постов + template)</option>
+          <option value="follow_user">follow_user (handles)</option>
+          <option value="story_like">story_like (handles)</option>
+        </select>
+        <select name="account_id" required style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
+          <option value="">— аккаунт —</option>{% for a in accounts %}<option value="{{ a.id }}">{{ a.label }} [{{ a.status }}]</option>{% endfor %}
+        </select>
+        <select name="template_id" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
+          <option value="">— шаблон (для comment) —</option>{% for t in templates %}<option value="{{ t.id }}">{{ t.name }} · {{ t.kind }}</option>{% endfor %}
+        </select>
+        <select name="segment_id" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
+          <option value="">— или сегмент —</option>{% for s in segments %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}
+        </select>
+        <input type="number" name="daily_cap" min="1" max="200" placeholder="cap/day" style="width:120px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+      </div>
+      <textarea name="targets_blob" rows="6" placeholder="Один target на строку — handle или URL поста" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 13px/1.4 ui-monospace,Menlo,monospace;"></textarea>
+      <button type="submit" class="ig-btn ig-btn--primary" style="align-self:flex-start;"><i class="ti ti-heart"></i> Создать задачу</button>
+    </form>
+  </section>
+  {% endif %}
+
+  <section>
+    <h2 class="ig-card__title" style="margin:8px 0 12px;">Задачи ({{ tasks|length }})</h2>
+    {% if tasks %}
+    <div class="ig-grid ig-grid--wide">
+      {% for t in tasks %}
+      <article class="ig-card">
+        <header style="display:flex;justify-content:space-between;align-items:center;">
+          <h3 class="ig-card__title" style="font-size:14px;"><i class="ti ti-heart"></i> {{ t.name }}</h3>
+          <span class="compliance-cell__level
+            {% if t.status == 'completed' %}compliance-cell__level--supported
+            {% elif t.status == 'active' %}compliance-cell__level--partial
+            {% else %}compliance-cell__level--unsupported{% endif %}">{{ t.status }}</span>
+        </header>
+        <small style="color:var(--text-muted);">kind: <strong>{{ t.kind }}</strong> · acc#{{ t.account_id }}{% if t.daily_cap %} · cap {{ t.daily_cap }}/d{% endif %}</small>
+        <a href="/instagram/engagement/{{ t.id }}" class="ig-btn" style="align-self:flex-start;"><i class="ti ti-eye"></i> Открыть</a>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}<div class="ig-placeholder"><div class="ig-placeholder__icon"><i class="ti ti-heart"></i></div><p class="ig-placeholder__text">Задач нет.</p></div>{% endif %}
+  </section>
+</div>
+{% endblock %}

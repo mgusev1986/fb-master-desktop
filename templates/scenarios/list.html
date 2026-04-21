@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% block title %}{% if cabinet_client_mode(request) %}Сценарии по дням — SOCMASTER{% else %}Режим агента — SOCMASTER{% endif %}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-actions">
+    <div>
+      <h1>{% if cabinet_client_mode(request) %}Сценарии по дням{% else %}Режим агента{% endif %}</h1>
+      <p class="subtitle">
+        {% if cabinet_client_mode(request) %}
+        Здесь настраиваются <strong>цепочки действий</strong> с людьми из вашего списка: например, лайк, комментарий, заявка в друзья, сообщение. Программа берёт людей <strong>небольшими группами</strong> и выполняет шаги по очереди — следующая группа начнётся, когда текущая дойдёт до конца.
+        {% else %}
+        Единый раздел для цепочек касаний: лайки, комментарии, добавление в друзья и сообщения в личку.
+        Система берёт контакты из выбранной базы партиями, ведёт их по шагам последовательно и не запускает
+        следующую партию, пока текущая не завершена.
+        {% endif %}
+      </p>
+    </div>
+    <a href="/scenarios/new" class="btn btn-primary"><i class="ti ti-plus"></i> {% if cabinet_client_mode(request) %}Новый сценарий{% else %}Новый режим{% endif %}</a>
+  </div>
+</div>
+
+{% if sequence_busy %}
+<div class="card" style="margin-bottom:16px;border-color:var(--warning)">
+  <div class="card-body" style="font-size:var(--font-size-sm)">
+    {% if cabinet_client_mode(request) %}Сейчас выполняется один из сценариев. Подождите окончания или поставьте на паузу — до этого часть действий будет недоступна.{% else %}Сейчас выполняется одна из цепочек режима агента. Пока воркер занят, изменения очередей и ручной запуск ограничены.{% endif %}
+  </div>
+</div>
+{% endif %}
+
+{% if legacy_warmups_count %}
+<div class="card" style="margin-bottom:16px">
+  <div class="card-body" style="font-size:var(--font-size-sm);color:var(--text-secondary)">
+    {% if cabinet_client_mode(request) %}
+    У вас есть <strong>{{ legacy_warmups_count }}</strong> старых кампаний прогрева по контактам — они по-прежнему открываются из меню (раздел «Прогрев по контактам»), а новые цепочки удобнее вести здесь.
+    {% else %}
+    Найдено старых кампаний из раздела прогрева: <strong>{{ legacy_warmups_count }}</strong>.
+    Они не потеряны и пока доступны по прямой ссылке <a href="/warmup">/warmup</a>, но новый рабочий раздел теперь один: <strong>Режим агента</strong>.
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<div class="card" style="margin-bottom:20px">
+  <div class="card-header">{% if cabinet_client_mode(request) %}Кратко о возможностях{% else %}Что уже умеет раздел{% endif %}</div>
+  <div class="card-body" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+    <div class="card" style="background:var(--bg-surface-hover)">
+      <div class="card-body">
+        <strong>{% if cabinet_client_mode(request) %}Шаги по очереди{% else %}Цепочка шагов{% endif %}</strong>
+        <p style="margin:8px 0 0;color:var(--text-secondary);font-size:var(--font-size-sm)">
+          {% if cabinet_client_mode(request) %}
+          Вы задаёте порядок: лайк, комментарий, заявка в друзья, личное сообщение и т.д.
+          {% else %}
+          Лайк, комментарий, заявка в друзья, сообщение в личку и другие шаги в нужной последовательности.
+          {% endif %}
+        </p>
+      </div>
+    </div>
+    <div class="card" style="background:var(--bg-surface-hover)">
+      <div class="card-body">
+        <strong>Шаблоны сообщений</strong>
+        <p style="margin:8px 0 0;color:var(--text-secondary);font-size:var(--font-size-sm)">
+          {% if cabinet_client_mode(request) %}
+          Тексты для комментариев и сообщений берите из раздела <a href="/templates">«Тексты сообщений»</a>.
+          {% else %}
+          Для комментариев и личных сообщений можно использовать шаблоны из раздела <a href="/templates">Шаблоны</a>.
+          {% endif %}
+        </p>
+      </div>
+    </div>
+    <div class="card" style="background:var(--bg-surface-hover)">
+      <div class="card-body">
+        <strong>{% if cabinet_client_mode(request) %}Небольшие группы{% else %}Партии контактов{% endif %}</strong>
+        <p style="margin:8px 0 0;color:var(--text-secondary);font-size:var(--font-size-sm)">
+          {% if cabinet_client_mode(request) %}
+          За раз обрабатывается ограниченное число людей из выбранного источника; следующая группа пойдёт, когда текущая завершится.
+          {% else %}
+          Берёт ограниченное число контактов из донора и не стартует следующую партию, пока предыдущая не закончена.
+          {% endif %}
+        </p>
+      </div>
+    </div>
+    <div class="card" style="background:var(--bg-surface-hover)">
+      <div class="card-body">
+        <strong>{% if cabinet_client_mode(request) %}Паузы между действиями{% else %}Гибкая частота{% endif %}</strong>
+        <p style="margin:8px 0 0;color:var(--text-secondary);font-size:var(--font-size-sm)">
+          {% if cabinet_client_mode(request) %}
+          Между шагами и между группами можно выставить интервалы в часах или днях — так безопаснее для аккаунта.
+          {% else %}
+          Интервалы между шагами и между партиями задаются в часах или днях.
+          {% endif %}
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    {% if campaigns %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Название</th>
+            <th>Статус</th>
+            <th>Аккаунты</th>
+            <th>Автоматизация</th>
+            <th>Обновлено</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in campaigns %}
+          {% set pf = c.person_filter if c.person_filter is mapping else {} %}
+          <tr>
+            <td>
+              <strong>{{ c.name }}</strong>
+              <div style="font-size:var(--font-size-xs);color:var(--text-secondary);margin-top:4px">
+                {% if pf.get('ui_import_batch_id') %}
+                Импорт #{{ pf.get('ui_import_batch_id') }}
+                {% elif pf.get('all_people') %}
+                Вся база
+                {% else %}
+                Донор: {% if pf.get('ui_donor_id') %}#{{ pf.get('ui_donor_id') }}{% else %}не выбран{% endif %}
+                {% endif %}
+                {% if pf.get('crm_stage') %}· CRM: {{ pf.get('crm_stage') }}{% endif %}
+                {% if pf.get('language_filter') and pf.get('language_filter') != 'all' %}
+                · Язык: {{ language_filter_label(pf.get('language_filter')) }}
+                {% endif %}
+              </div>
+            </td>
+            <td>
+              {% if c.status == 'active' %}
+              <span class="badge badge-success">Активен</span>
+              {% elif c.status == 'paused' %}
+              <span class="badge badge-warning">Пауза</span>
+              {% else %}
+              <span class="badge badge-default">Черновик</span>
+              {% endif %}
+            </td>
+            <td style="color:var(--text-secondary);font-size:var(--font-size-sm)">
+              {{ (c.fb_account_ids or [])|length }} акк.
+            </td>
+            <td style="color:var(--text-secondary);font-size:var(--font-size-sm)">
+              {% if pf.get('auto_batch_enabled') %}
+              Партиями по {{ pf.get('batch_size', 20) }} · ожидание {{ pf.get('batch_wait_value', 1) }} {% set _u = pf.get('batch_wait_unit', 'days') %}{% if _u == 'minutes' %}мин.{% elif _u == 'hours' %}час.{% else %}дн.{% endif %}
+              {% else %}
+              Выключена
+              {% endif %}
+            </td>
+            <td style="color:var(--text-secondary);font-size:var(--font-size-sm)">
+              {{ c.updated_at.strftime('%d.%m.%Y %H:%M') if c.updated_at else '—' }}
+            </td>
+            <td><a href="/scenarios/{{ c.id }}" class="btn btn-sm btn-secondary">Открыть</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p style="color:var(--text-secondary)">
+      Режимов агента пока нет. Создайте первый: выберите аккаунты, базу контактов, настройте партию и соберите цепочку шагов.
+    </p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

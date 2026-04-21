@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% from "macros/hints.html" import mailing_warmup_placeholders %}
+{% block title %}{% if cabinet_client_mode(request) %}Тексты сообщений — FB Master{% else %}Шаблоны — FB Master{% endif %}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-actions">
+    <div>
+      <h1>{% if cabinet_client_mode(request) %}Тексты для сообщений{% else %}Шаблоны сообщений{% endif %}</h1>
+      {{ mailing_warmup_placeholders('subtitle') }}
+    </div>
+    <a href="/templates/new" class="btn btn-primary">
+      <i class="ti ti-plus"></i> Новый шаблон
+    </a>
+  </div>
+</div>
+
+{% if flash %}
+<div class="card" style="margin-bottom:20px;border-color:{% if flash_type == 'ok' %}var(--success){% elif flash_type == 'error' %}var(--error){% else %}var(--border){% endif %}">
+  <div class="card-body" style="padding:14px 18px;font-size:var(--font-size-sm)">{{ flash }}</div>
+</div>
+{% endif %}
+
+<div class="card" style="margin-bottom:20px">
+  <div class="card-body">
+    <form method="get" class="toolbar" style="margin:0">
+      <div class="search-bar">
+        <i class="ti ti-search"></i>
+        <input type="text" name="q" value="{{ search }}" placeholder="Поиск по названию или тексту…" class="form-input"/>
+      </div>
+      <select name="category" class="form-select" style="max-width:220px" onchange="this.form.submit()">
+        <option value="">Все категории</option>
+        {% for val, label in categories %}
+        <option value="{{ val }}" {% if category_filter == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="btn btn-secondary btn-sm">Найти</button>
+    </form>
+  </div>
+</div>
+
+{% if items %}
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Название</th>
+          <th>Категория</th>
+          <th>Пример текста</th>
+          <th>Обновлён</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in items %}
+        <tr>
+          <td>
+            <strong>{{ t.name }}</strong>
+            {% set nv = count_template_variants(t.body) %}
+            {% if nv > 1 %}
+            <span class="badge badge-default" style="margin-left:6px;font-weight:500" title="В шаблоне несколько текстов; при рассылке выбирается один">{{ nv }} вариантов</span>
+            {% endif %}
+          </td>
+          <td>
+            <span class="badge badge-default">{{ category_labels.get(t.category, t.category) }}</span>
+          </td>
+          <td style="max-width:360px;color:var(--text-secondary);font-size:var(--font-size-sm)">
+            <span title="{{ t.body }}">{{ preview_sample(t.body)[:120] }}{% if t.body|length > 120 %}…{% endif %}</span>
+          </td>
+          <td style="white-space:nowrap;font-size:var(--font-size-sm)">{{ t.updated_at.strftime('%d.%m.%Y %H:%M') if t.updated_at else '—' }}</td>
+          <td>
+            <div class="table-actions">
+              {% if has_openai or has_gemini or is_platform_owner(user) %}
+              <button type="button" class="btn btn-sm btn-secondary tpl-neuro-open"
+                      title="Сгенерировать через ИИ несколько вариантов текста: плейсхолдеры ({{ '{{full_name}}' }}, {{ '{{first_name}}' }}) сохраняются. В открывшемся окне выберите формулировки и сохраните их в этот шаблон."
+                      data-template-id="{{ t.id }}" data-template-name="{{ t.name|e }}">
+                <i class="ti ti-sparkles"></i>
+              </button>
+              {% endif %}
+              <a href="/templates/{{ t.id }}/edit" class="btn btn-sm btn-secondary"
+                 title="Редактировать шаблон: название, категория и текст сообщения"><i class="ti ti-edit"></i></a>
+              <form method="post" action="/templates/{{ t.id }}/delete" style="display:inline"
+                    data-confirm="Удалить этот шаблон?" data-confirm-title="Удаление шаблона" data-confirm-variant="danger">
+                <input type="hidden" name="confirm" value="yes"/>
+                <button type="submit" class="btn btn-sm btn-ghost" style="color:var(--error)"><i class="ti ti-trash"></i></button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card">
+  <div class="card-body">
+    <div class="empty-state">
+      <div class="empty-state-icon"><i class="ti ti-template"></i></div>
+      <h3>Шаблонов пока нет</h3>
+      <p>Создайте первый текст для рассылки или комментариев: <code>{{ "{{full_name}}" }}</code> и <code>{{ "{{first_name}}" }}</code>.</p>
+      <a href="/templates/new" class="btn btn-primary"><i class="ti ti-plus"></i> Создать шаблон</a>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% if has_openai or has_gemini or is_platform_owner(user) %}
+{% include "macros/template_neuro_modal.html" %}
+{% endif %}
+{% endblock %}

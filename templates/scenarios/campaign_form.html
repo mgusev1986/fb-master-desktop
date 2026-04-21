@@ -1,0 +1,340 @@
+{% extends "base.html" %}
+{% block title %}
+{% if cabinet_client_mode(request) %}
+{{ 'Настройки сценария' if campaign else 'Новый сценарий' }} — SOCMASTER
+{% else %}
+{{ 'Настройки режима агента' if campaign else 'Режим агента' }} — SOCMASTER
+{% endif %}
+{% endblock %}
+
+{% block content %}
+{% set pf = campaign.person_filter if campaign and campaign.person_filter is mapping else {} %}
+{% set scfg = campaign.config if campaign and campaign.config is mapping else {} %}
+<div class="page-header">
+  <h1>{% if cabinet_client_mode(request) %}{{ 'Настройки сценария' if campaign else 'Новый сценарий' }}{% else %}{{ 'Настройки режима агента' if campaign else 'Режим агента' }}{% endif %}</h1>
+  <p class="subtitle">
+    {% if cabinet_client_mode(request) %}
+    Укажите, <strong>откуда брать людей</strong> (источник, загруженный файл или весь список «Мои контакты»). Сами люди появляются там после загрузки или поиска.
+    После сохранения откройте карточку сценария — там настраиваются шаги и очередь.
+    {% else %}
+    Здесь задаётся, <strong>откуда</strong> режим будет брать контакты (донор, файл импорта или вся «База контактов») — сами записи уже появляются там после импорта или парсинга.
+    Цепочку шагов и кнопки «добавить партию в очередь» настраиваете на <strong>карточке режима</strong> после сохранения.
+    {% endif %}
+  </p>
+</div>
+
+<div class="card" style="max-width:980px">
+  <div class="card-body">
+    <form id="scenario-campaign-form" method="post" action="{{ '/scenarios/' ~ campaign.id ~ '/edit' if campaign else '/scenarios/new' }}">
+      <div class="form-group">
+        <label class="form-label" for="name">Название</label>
+        <input
+          id="name"
+          name="name"
+          type="text"
+          class="form-input"
+          maxlength="255"
+          value="{{ campaign.name if campaign else '' }}"
+          placeholder="Например, Агент: лиды"
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="status">Статус</label>
+        <select id="status" name="status" class="form-select">
+          <option value="draft" {% if not campaign or campaign.status == 'draft' %}selected{% endif %}>Черновик</option>
+          <option value="active" {% if campaign and campaign.status == 'active' %}selected{% endif %}>Активен</option>
+          {% if campaign %}
+          <option value="paused" {% if campaign.status == 'paused' %}selected{% endif %}>Приостановлен</option>
+          {% endif %}
+        </select>
+        <p class="form-hint">Черновик — без автозапуска. Активен — партии и шаги по кнопкам/автопилоту. Приостановлен — очередь сохраняется, новые партии и выполнение шагов не стартуют (удобно с карточки режима: «Пауза» / «Возобновить»).</p>
+      </div>
+
+      <div class="card" style="margin:20px 0;background:var(--bg-surface-hover)">
+        <div class="card-header">1. Аккаунты, от лица которых работает система</div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            {% for a in accounts %}
+            <label class="form-check" style="display:flex;align-items:center;gap:8px;cursor:pointer">
+              <input
+                type="checkbox"
+                name="fb_account_id"
+                value="{{ a.id }}"
+                {% if campaign and a.id in (campaign.fb_account_ids or []) %}checked{% endif %}
+              />
+              <span>{{ a.label }}{% if a.active_slot %} — слот {{ a.active_slot }}{% else %} — ожидание{% endif %}</span>
+            </label>
+            {% else %}
+            <p style="color:var(--warning)">Нет аккаунтов. <a href="/fb-accounts">Добавьте Facebook-аккаунт</a>, иначе режим не сможет выполнять шаги.</p>
+            {% endfor %}
+          </div>
+          <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border-subtle)">
+            <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;cursor:pointer">
+              <input type="checkbox" name="account_rotation" value="1" style="margin-top:3px"
+                     {% if scfg.get('account_rotation') %}checked{% endif %}/>
+              <span><strong>Ротация аккаунтов</strong> — после суточного лимита шагов с одного аккаунта переключаться на следующий из пула (UTC-день).</span>
+            </label>
+            <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:12px;cursor:pointer">
+              <input type="checkbox" name="auto_slot_rotation" value="1" style="margin-top:3px"
+                     {% if scfg.get('auto_slot_rotation') %}checked{% endif %}/>
+              <span><strong>Автосмена слотов</strong> — при необходимости забрать слот у другого аккаунта из <em>этого пула</em> (меняет слоты кабинета).</span>
+            </label>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label" for="sequence_actions_per_account">Суточный лимит шагов на один аккаунт (при ротации)</label>
+              <input id="sequence_actions_per_account" name="sequence_actions_per_account" type="number" class="form-input" min="1" max="500"
+                     value="{{ scfg.get('sequence_actions_per_account', 50) }}"/>
+            </div>
+          </div>
+          <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border-subtle)">
+            <div style="font-weight:600;margin-bottom:8px">Время выполнения шагов</div>
+            <p class="form-hint" style="margin-top:0;margin-bottom:10px">
+              Тот же часовой пояс, что у сценариев по дням: <a href="/system/speed" target="_blank" rel="noopener">Система → Скорость и паузы</a>.
+            </p>
+            <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:12px;cursor:pointer">
+              <input type="checkbox" name="send_window_24h" value="1" style="margin-top:3px"
+                     {% if scfg.get('send_window_24h') %}checked{% endif %}/>
+              <span><strong>Круглосуточно</strong> — выполнять шаги и ночью.</span>
+            </label>
+            <p class="form-hint" style="margin-bottom:10px">
+              Если не отмечено: по умолчанию только <strong>8:00–22:00</strong> локально; ночью воркер ждёт, зачисления не теряются.
+            </p>
+            <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">
+              <div class="form-group" style="margin-bottom:0">
+                <label class="form-label" for="send_window_start_hour">С часа (0–23)</label>
+                <input id="send_window_start_hour" name="send_window_start_hour" type="number" class="form-input" min="0" max="23" style="max-width:120px"
+                       value="{{ scfg.get('send_window_start_hour', 8) }}"/>
+              </div>
+              <div class="form-group" style="margin-bottom:0">
+                <label class="form-label" for="send_window_end_hour">До часа (0–23), не включая</label>
+                <input id="send_window_end_hour" name="send_window_end_hour" type="number" class="form-input" min="0" max="23" style="max-width:120px"
+                       value="{{ scfg.get('send_window_end_hour', 22) }}"/>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin:20px 0;background:var(--bg-surface-hover)">
+        <div class="card-header">2. База контактов для работы</div>
+        <div class="card-body">
+          <div class="form-group" style="margin:0 0 16px">
+            <span class="form-label">Источник</span>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
+              <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;margin:0">
+                <input type="radio" name="person_source" value="donor" {% if not pf.get('all_people') and not pf.get('ui_import_batch_id') %}checked{% endif %}/>
+                <span><strong>Донор</strong> — только люди, привязанные к выбранному донору (как раньше).</span>
+              </label>
+              <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;margin:0">
+                <input type="radio" name="person_source" value="import_batch" {% if pf.get('ui_import_batch_id') %}checked{% endif %}/>
+                <span><strong>Партия импорта</strong> — контакты, созданные при загрузке конкретного файла в разделе <a href="/import">«Импорт базы»</a> (CSV/XLSX).</span>
+              </label>
+              <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;margin:0">
+                <input type="radio" name="person_source" value="all" {% if pf.get('all_people') %}checked{% endif %}/>
+                <span><strong>Вся база</strong> — все записи в разделе «База контактов» (по возрастанию ID), с учётом фильтра по стадии CRM ниже.</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="card-body" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;padding-top:0">
+          <div class="form-group" style="margin:0">
+            <label class="form-label" for="donor_id">Донор</label>
+            <select id="donor_id" name="donor_id" class="form-select">
+              <option value="">—</option>
+              {% for d in donors %}
+              <option value="{{ d.id }}" {% if pf.get('ui_donor_id') == d.id %}selected{% endif %}>{{ d.name or d.url[:60] }}</option>
+              {% endfor %}
+            </select>
+            <p class="form-hint" id="donor_id_hint">При источнике «Донор» очередь наполняется контактами этого донора по порядку. При других источниках поле не используется.</p>
+          </div>
+
+          <div class="form-group" style="margin:0">
+            <label class="form-label" for="import_batch_id">Партия импорта (файл)</label>
+            <select id="import_batch_id" name="import_batch_id" class="form-select">
+              <option value="">—</option>
+              {% for b in import_batches %}
+              <option value="{{ b.id }}" {% if pf.get('ui_import_batch_id') == b.id %}selected{% endif %}>{{ b.filename }}{% if b.created_at %} · {{ b.created_at.strftime('%d.%m.%Y %H:%M') }}{% endif %}</option>
+              {% endfor %}
+            </select>
+            <p class="form-hint" id="import_batch_hint">Выберите строку из истории ручного импорта. Партии парсера друзей (parser:…) здесь не показываются.</p>
+            {% if not import_batches %}
+            <p class="form-hint" style="color:var(--warning);margin-top:6px">Пока нет загрузок CSV/XLSX. Сначала импортируйте файл в «Импорт базы».</p>
+            {% endif %}
+          </div>
+
+          <div class="form-group" style="margin:0">
+            <label class="form-label" for="crm_stage">Фильтр по стадии CRM</label>
+            <select id="crm_stage" name="crm_stage" class="form-select">
+              <option value="">Все стадии</option>
+              {% for slug, label in crm_stages %}
+              <option value="{{ slug }}" {% if pf.get('crm_stage') == slug %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+            <p class="form-hint" id="crm_stage_hint">Опционально: для донора, партии импорта или всей базы — только люди на выбранной стадии CRM.</p>
+          </div>
+
+          <div class="form-group" style="margin:0">
+            <label class="form-label" for="language_filter">Фильтр по языку</label>
+            <select id="language_filter" name="language_filter" class="form-select">
+              {% for key, label in language_filter_labels.items() %}
+              {% if key != 'unknown' %}
+              <option value="{{ key }}" {% if pf.get('language_filter', 'all') == key %}selected{% endif %}>{{ label }}</option>
+              {% endif %}
+              {% endfor %}
+            </select>
+            <p class="form-hint" style="margin-bottom:0">Можно ограничить сценарий только русскоязычными, англоязычными или иностранными контактами.</p>
+          </div>
+        </div>
+      </div>
+      <script>
+      (function () {
+        var radios = document.querySelectorAll('input[name="person_source"]');
+        var sel = document.getElementById('donor_id');
+        var ib = document.getElementById('import_batch_id');
+        var hint = document.getElementById('donor_id_hint');
+        var ibHint = document.getElementById('import_batch_hint');
+        function sync() {
+          var all = document.querySelector('input[name="person_source"][value="all"]');
+          var imp = document.querySelector('input[name="person_source"][value="import_batch"]');
+          var useAll = all && all.checked;
+          var useImp = imp && imp.checked;
+          if (sel) {
+            sel.disabled = useAll || useImp;
+            sel.style.opacity = (useAll || useImp) ? '0.55' : '';
+          }
+          if (ib) {
+            ib.disabled = !useImp;
+            ib.style.opacity = useImp ? '' : '0.55';
+          }
+          if (hint) {
+            hint.textContent = useAll
+              ? 'Источник «Вся база»: донор не учитывается.'
+              : useImp
+                ? 'Источник «Партия импорта»: донор не учитывается.'
+                : 'При источнике «Донор» очередь наполняется контактами этого донора по порядку. При других источниках поле не используется.';
+          }
+          if (ibHint) {
+            ibHint.textContent = useImp
+              ? 'Берутся только люди с import_batch_id этой партии (те, что появились при этой загрузке файла).'
+              : 'Выберите источник «Партия импорта», чтобы активировать список файлов.';
+          }
+        }
+        radios.forEach(function (r) { r.addEventListener('change', sync); });
+        sync();
+      })();
+      </script>
+
+      <div class="card" style="margin:20px 0;background:var(--bg-surface-hover)">
+        <div class="card-header">3. Автоматизация партий</div>
+        <div class="card-body" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px">
+          <div class="form-group" style="margin:0">
+            <label class="form-check" style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:32px">
+              <input type="checkbox" name="auto_batch_enabled" value="1" {% if pf.get('auto_batch_enabled') %}checked{% endif %}/>
+              <span>Автоматически брать новые партии контактов</span>
+            </label>
+            <p class="form-hint">Если включено, после полного завершения текущей партии по цепочке система сама возьмёт следующую из источника (с учётом интервала ниже). На карточке режима можно включить «Полный автопилот» — это опция плюс автозапуск воркера.</p>
+          </div>
+
+          <div class="form-group" style="margin:0">
+            <label class="form-label" for="batch_size">Размер партии</label>
+            <input
+              id="batch_size"
+              name="batch_size"
+              type="number"
+              class="form-input"
+              min="1"
+              max="1000"
+              value="{{ pf.get('batch_size', 20) }}"
+            />
+            <p class="form-hint">Например, 20 контактов в одной партии.</p>
+          </div>
+
+          {% set bwu = pf.get('batch_wait_unit', 'days') %}
+          {% set bw_def = 30 if bwu == 'minutes' else (24 if bwu == 'hours' else 1) %}
+          {% set bw_max = 525600 if bwu == 'minutes' else (8760 if bwu == 'hours' else 3650) %}
+          <div class="form-group" style="margin:0">
+            <label class="form-label" for="batch_wait_value">Интервал до следующей партии</label>
+            <div style="display:flex;gap:10px">
+              <input
+                id="batch_wait_value"
+                name="batch_wait_value"
+                type="number"
+                class="form-input"
+                min="0"
+                max="{{ bw_max }}"
+                value="{{ pf.get('batch_wait_value', bw_def) }}"
+              />
+              <select id="batch_wait_unit" name="batch_wait_unit" class="form-select" style="max-width:140px">
+                <option value="days" {% if bwu != 'hours' and bwu != 'minutes' %}selected{% endif %}>Дни</option>
+                <option value="hours" {% if bwu == 'hours' %}selected{% endif %}>Часы</option>
+                <option value="minutes" {% if bwu == 'minutes' %}selected{% endif %}>Минуты</option>
+              </select>
+            </div>
+            <p class="form-hint">Через сколько после завершения текущей партии можно брать следующую.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin:20px 0;background:var(--bg-surface-hover)">
+        <div class="card-header">4. Общий темп выполнения</div>
+        <div class="card-body" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px">
+          <div class="form-group" style="margin:0">
+            <label class="form-label" for="preset">Пресет темпа</label>
+            <select id="preset" name="preset" class="form-select">
+              {% for key, label in preset_labels.items() %}
+              <option value="{{ key }}" {% if pf.get('preset', 'slow') == key %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group" style="margin:0">
+            <label class="form-label" for="time_budget_seconds">Бюджет времени на действие, сек. (опционально)</label>
+            <input
+              id="time_budget_seconds"
+              name="time_budget_seconds"
+              type="text"
+              class="form-input"
+              value="{{ pf.get('time_budget_seconds', '') }}"
+              placeholder="Пусто — только пресет"
+            />
+            <p class="form-hint">Можно ограничить время на одно действие, чтобы система не торопилась слишком сильно.</p>
+          </div>
+        </div>
+      </div>
+
+      <p class="form-hint" style="margin-top:20px;margin-bottom:12px;max-width:720px">
+        <strong>Дальше:</strong> нажмите «Сохранить» → откроется или обновится карточка режима. Там нажмите
+        <strong>«Добавить первую партию в очередь»</strong> (заберёт до N человек из выбранного источника по размеру партии и подготовит очередь) или
+        <strong>«Загрузить всю выбранную базу сразу»</strong> внизу страницы — только так люди попадут в <em>очередь</em> этого режима.
+        Черновик можно оставить: первую партию в очередь всё равно можно добавить вручную; статус «Активен» нужен для автотика и удобства.
+      </p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px">
+        <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy"></i> Сохранить</button>
+        <a href="{{ '/scenarios/' ~ campaign.id if campaign else '/scenarios' }}" class="btn btn-secondary">Назад</a>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+(function () {
+  var form = document.getElementById("scenario-campaign-form");
+  if (!form) return;
+  form.addEventListener("submit", function () {
+    form.querySelectorAll("input[name], select[name], textarea[name]").forEach(function (el) {
+      if (el.disabled && el.name) el.disabled = false;
+    });
+  });
+  var unitSel = document.getElementById("batch_wait_unit");
+  var valInp = document.getElementById("batch_wait_value");
+  function syncBatchWaitMax() {
+    if (!unitSel || !valInp) return;
+    var u = unitSel.value;
+    valInp.max = u === "minutes" ? "525600" : u === "hours" ? "8760" : "3650";
+  }
+  if (unitSel && valInp) {
+    unitSel.addEventListener("change", syncBatchWaitMax);
+    syncBatchWaitMax();
+  }
+})();
+</script>
+{% endblock %}

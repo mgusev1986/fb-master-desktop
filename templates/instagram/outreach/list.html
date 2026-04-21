@@ -1,0 +1,76 @@
+{% extends "instagram/base.html" %}
+{% block title %}Direct рассылка · Instagram Master{% endblock %}
+{% block content %}
+<div class="ig-page">
+  <header class="ig-page__header">
+    <div class="ig-page__title-wrap">
+      <h1 class="ig-page__title">Direct рассылка <span class="ig-page__beta-pill">Beta</span></h1>
+      <p class="ig-page__subtitle">DM-кампании. Default approval = manual. AI-autoresponder опционально.</p>
+    </div>
+  </header>
+
+  {% if accounts and templates %}
+  <section class="ig-card ig-card--accent">
+    <h2 class="ig-card__title"><i class="ti ti-plus"></i> Новая кампания</h2>
+    <form method="post" action="/instagram/outreach/create" style="display:flex;flex-direction:column;gap:10px;">
+      <input type="text" name="name" required placeholder="Название" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <select name="account_id" required style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
+          <option value="">— аккаунт —</option>{% for a in accounts %}<option value="{{ a.id }}">{{ a.label }} [{{ a.status }}]</option>{% endfor %}
+        </select>
+        <select name="template_id" required style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
+          <option value="">— шаблон —</option>{% for t in templates %}<option value="{{ t.id }}">{{ t.name }} · {{ t.kind }}</option>{% endfor %}
+        </select>
+        <select name="mode" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
+          <option value="dm">DM</option><option value="comment">Comment к посту</option><option value="story_reply">Story reply</option>
+        </select>
+        <select name="approval_mode" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
+          <option value="manual">manual approve</option><option value="semi">semi (batch)</option>
+        </select>
+        <input type="number" name="daily_cap" min="1" max="100" placeholder="cap/day" style="width:120px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+      </div>
+      <details style="border:1px dashed var(--border);border-radius:10px;padding:8px 12px;">
+        <summary style="cursor:pointer;font:500 13px/1 Inter;color:var(--ws-accent);"><i class="ti ti-robot"></i> AI-автоответчик (опционально)</summary>
+        <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px;">
+          <label style="font:400 13px/1 Inter;"><input type="checkbox" name="autoresponder_enabled" value="on"/> Включить AI-автоответчик при первом ответе</label>
+          <div style="display:flex;gap:8px;">
+            <select name="autoresponder_persona_id" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
+              <option value="">— persona —</option>{% for p in (personas or []) %}<option value="{{ p.id }}">{{ p.name }} · {{ p.role or '' }}</option>{% endfor %}
+            </select>
+            <select name="autoresponder_goal" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
+              <option value="">— цель —</option>
+              <option value="book_call">book_call</option><option value="share_info">share_info</option>
+              <option value="qualify_lead">qualify_lead</option><option value="nurture">nurture</option>
+            </select>
+          </div>
+        </div>
+      </details>
+      <button type="submit" class="ig-btn ig-btn--primary" style="align-self:flex-start;"><i class="ti ti-send"></i> Создать кампанию</button>
+    </form>
+  </section>
+  {% else %}
+  <section class="ig-banner"><div class="ig-banner__icon"><i class="ti ti-info-circle"></i></div><div class="ig-banner__body"><h2 class="ig-banner__title">Сначала</h2><p class="ig-banner__text">Подключите минимум один <a href="/instagram/accounts">аккаунт</a> и создайте <a href="/instagram/templates">шаблон</a>.</p></div></section>
+  {% endif %}
+
+  <section>
+    <h2 class="ig-card__title" style="margin:8px 0 12px;">Кампании ({{ campaigns|length }})</h2>
+    {% if campaigns %}
+      <div class="ig-grid ig-grid--wide">
+        {% for c in campaigns %}
+        <article class="ig-card">
+          <header style="display:flex;justify-content:space-between;align-items:center;">
+            <h3 class="ig-card__title" style="font-size:15px;"><i class="ti ti-send"></i> {{ c.name }}</h3>
+            <span class="compliance-cell__level
+              {% if c.status == 'active' %}compliance-cell__level--supported
+              {% elif c.status == 'draft' %}compliance-cell__level--partial
+              {% else %}compliance-cell__level--unsupported{% endif %}">{{ c.status }}</span>
+          </header>
+          <p class="ig-card__desc" style="font-size:13px;">режим: <strong>{{ c.mode }}</strong> · approval: <strong>{{ c.approval_mode }}</strong>{% if c.daily_cap %} · cap: <strong>{{ c.daily_cap }}/d</strong>{% endif %}{% if c.autoresponder_enabled %} · 🤖 AI-{{ c.autoresponder_goal or 'auto' }}{% endif %}</p>
+          <a href="/instagram/outreach/{{ c.id }}" class="ig-btn" style="align-self:flex-start;"><i class="ti ti-eye"></i> Открыть</a>
+        </article>
+        {% endfor %}
+      </div>
+    {% else %}<div class="ig-placeholder"><div class="ig-placeholder__icon"><i class="ti ti-send"></i></div><p class="ig-placeholder__text">Кампаний нет.</p></div>{% endif %}
+  </section>
+</div>
+{% endblock %}

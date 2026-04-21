@@ -1,0 +1,11 @@
+{
+  "messengerUrl": "https://www.facebook.com/messages/e2ee/t",
+  "chromeExecutable": "",
+  "accounts": [
+    {
+      "id": "main",
+      "label": "Основной профиль",
+      "chromeUserDataDir": "/ПОЛНЫЙ/ПУТЬ/к/browser_profiles/fb_account_1"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{#
+  Универсальный sidebar для workspace: рендерит навигацию из
+  `NavigationManifest` активного модуля.
+  M1: файл-заготовка, не используется. Активируется в M2+, когда
+  FB sidebar и Reddit sidebar начнут рендериться из манифестов,
+  а не из хардкоженного HTML в templates/base.html.
+
+  Ожидаемые переменные в контексте (M2+):
+    - workspace_nav: NavigationManifest view
+        .module_id, .groups: [{label, items: [{id,label,href,icon,hidden,badge}]}]
+    - page_id: id активного пункта
+#}
+{% if workspace_nav %}
+<aside class="sidebar" data-workspace="{{ workspace_nav.module_id }}">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      {% block sidebar_logo %}<span>FB</span> Master{% endblock %}
+    </div>
+    {% if fbm_desktop_app_version %}
+    <div class="sidebar-version-line" title="Версия программы">v{{ fbm_desktop_app_version }}</div>
+    {% endif %}
+  </div>
+
+  <nav class="sidebar-nav">
+    {% for group in workspace_nav.groups %}
+    <div class="nav-group">
+      {% if group.label %}<div class="nav-group-label">{{ group.label }}</div>{% endif %}
+      {% for item in group.items %}
+      <a href="{{ item.href }}"
+         class="nav-item{% if item.hidden %} nav-item--sidebar-hidden{% endif %}{% if page_id == item.id %} active{% endif %}">
+        <i class="ti ti-{{ item.icon }}"></i>
+        <span>{{ item.label }}</span>
+        {% if item.badge %}<span class="nav-item__badge">{{ item.badge }}</span>{% endif %}
+      </a>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </nav>
+
+  {% block sidebar_footer %}{% endblock %}
+</aside>
+{% endif %}

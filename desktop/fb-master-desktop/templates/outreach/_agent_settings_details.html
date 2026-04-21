@@ -1,0 +1,47 @@
+{# Поля привязаны к отдельной форме через form="…", чтобы не вкладывать <form> в форму кампании (иначе браузер закрывает внешнюю форму и «Сохранить» рассылку перестаёт работать). Родительский шаблон должен объявить <form id="…" hidden> с return_to. #}
+{% set _as_fid = agent_settings_form_id|default('outreach-agent-settings-form') %}
+{% if settings.default_provider == 'ollama' %}
+{% set _eff_def_provider = 'gemini' %}
+{% else %}
+{% set _eff_def_provider = settings.default_provider %}
+{% endif %}
+<details id="{{ details_id|default('outreach-agent-settings') }}" class="card" style="margin-bottom:16px" {% if open_settings %}open{% endif %}>
+  <summary class="card-body" style="cursor:pointer;font-weight:600;list-style-position:outside">
+    Настройки промптов и моделей
+  </summary>
+  <div class="card-body" style="border-top:1px solid var(--border)">
+      <div class="form-group">
+        <label class="form-label" for="default_provider">Провайдер по умолчанию</label>
+        <select form="{{ _as_fid }}" id="default_provider" name="default_provider" class="form-input" style="max-width:280px">
+          <option value="openai" {% if _eff_def_provider == 'openai' %}selected{% endif %}>OpenAI</option>
+          <option value="gemini" {% if _eff_def_provider == 'gemini' %}selected{% endif %}>Gemini</option>
+        </select>
+        <p class="form-hint">Используются API-ключи из <a href="/system/settings">Система → Настройки</a> (или переменные <code>OPENAI_API_KEY</code> / <code>GOOGLE_API_KEY</code> в <code>.env</code>).</p>
+      </div>
+      <input type="hidden" form="{{ _as_fid }}" name="model_openai" value="{{ settings.model_openai|e }}"/>
+      <input type="hidden" form="{{ _as_fid }}" name="model_gemini" value="{{ settings.model_gemini|e }}"/>
+      <div class="form-group">
+        <label class="form-label" for="prompt_dm">Системный промпт: переписка</label>
+        <textarea form="{{ _as_fid }}" id="prompt_dm" name="prompt_dm" class="form-textarea" rows="6">{{ settings.prompt_dm }}</textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="prompt_comment">Системный промпт: комментарии</label>
+        <textarea form="{{ _as_fid }}" id="prompt_comment" name="prompt_comment" class="form-textarea" rows="6">{{ settings.prompt_comment }}</textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="addressing_dm">Обращение по имени — переписка</label>
+        <textarea form="{{ _as_fid }}" id="addressing_dm" name="addressing_dm" class="form-textarea" rows="5">{{ settings.addressing_dm }}</textarea>
+        <p class="form-hint">
+          Дополняет промпт для ЛС: скобки <code>(имя: …)</code>, блок <code>[Контакт в базе: …]</code>, подстановка <code>{{ "{{full_name}}" }}</code> в шаблоне.
+        </p>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="addressing_comment">Обращение по имени — комментарии</label>
+        <textarea form="{{ _as_fid }}" id="addressing_comment" name="addressing_comment" class="form-textarea" rows="5">{{ settings.addressing_comment }}</textarea>
+        <p class="form-hint">То же для режима комментария к посту.</p>
+      </div>
+      <button type="submit" form="{{ _as_fid }}" class="btn btn-primary">
+        <i class="ti ti-device-floppy"></i> Сохранить настройки
+      </button>
+  </div>
+</details>

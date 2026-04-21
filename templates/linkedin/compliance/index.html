@@ -1,0 +1,85 @@
+{% extends "linkedin/base.html" %}
+
+{% block title %}Правила и лимиты · LinkedIn Master{% endblock %}
+
+{% block content %}
+<div class="li-page">
+  <header class="li-page__header">
+    <div class="li-page__title-wrap">
+      <h1 class="li-page__title">
+        Правила и лимиты
+        <span class="li-page__beta-pill">Beta</span>
+      </h1>
+      <p class="li-page__subtitle">
+        Честный список того, что LinkedIn API реально позволяет, что доступно частично, что только
+        в режиме manual review и что запрещено платформой. Параметры безопасности по умолчанию:
+        режим подтверждения — <strong>{{ approval_mode }}</strong>,
+        invitations — <strong>{{ daily_invites_cap }}/сутки</strong> и
+        <strong>{{ weekly_invites_cap }}/неделя</strong>,
+        messages — <strong>{{ daily_messages_cap }}/сутки</strong>.
+      </p>
+    </div>
+    <a href="/linkedin/settings" class="li-btn"><i class="ti ti-settings"></i> Настройки</a>
+  </header>
+
+  <section class="li-banner li-banner--beta">
+    <div class="li-banner__icon"><i class="ti ti-flask-2"></i></div>
+    <div class="li-banner__body">
+      <h2 class="li-banner__title">Beta — известные ограничения</h2>
+      <ul class="li-banner__list">
+        {% for line in known_limitations %}
+        <li>{{ line }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="li-card__title" style="margin:0 0 12px;">Что умеет модуль</h2>
+    <div class="compliance-grid">
+      {% for level, label, tone in [
+        ('supported', 'Поддерживается', 'supported'),
+        ('partial', 'Частично', 'partial'),
+        ('restricted', 'Только с подтверждением', 'restricted'),
+        ('unsupported', 'Недоступно', 'unsupported')
+      ] %}
+      {% for c in capabilities[level] %}
+      <div class="compliance-cell">
+        <span class="compliance-cell__level compliance-cell__level--{{ tone }}">{{ label }}</span>
+        <h3 class="compliance-cell__label">{{ c.label }}</h3>
+        {% if c.notes %}<p class="compliance-cell__notes">{{ c.notes }}</p>{% endif %}
+      </div>
+      {% endfor %}
+      {% endfor %}
+    </div>
+  </section>
+
+  <section>
+    <h2 class="li-card__title" style="margin:24px 0 12px;">Safety caps по умолчанию</h2>
+    <div class="li-grid">
+      <article class="li-card">
+        <h3 class="li-card__title"><i class="ti ti-user-plus"></i> Invitations</h3>
+        <p class="li-card__desc">
+          Не более <strong>{{ daily_invites_cap }}</strong> в сутки и
+          <strong>{{ weekly_invites_cap }}</strong> в неделю на аккаунт.
+          Лимиты выровнены с soft-limit'ами LinkedIn (~100/неделю).
+        </p>
+      </article>
+      <article class="li-card">
+        <h3 class="li-card__title"><i class="ti ti-message-2"></i> Messages</h3>
+        <p class="li-card__desc">
+          Не более <strong>{{ daily_messages_cap }}</strong> сообщений в сутки на аккаунт.
+          Только тем, кто уже в connections (1st degree). InMail — отдельный manual flow.
+        </p>
+      </article>
+      <article class="li-card">
+        <h3 class="li-card__title"><i class="ti ti-hand-stop"></i> Approval mode</h3>
+        <p class="li-card__desc">
+          Текущий режим: <strong>{{ approval_mode }}</strong>. По умолчанию — <code>manual</code>:
+          каждое отправляемое invitation / message / comment требует явного подтверждения оператора.
+        </p>
+      </article>
+    </div>
+  </section>
+</div>
+{% endblock %}

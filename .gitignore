@@ -1,0 +1,115 @@
+# =============================================================================
+# SOCMASTER / FB Master — исходники продукта
+# =============================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+
+# Секреты и локальные .env
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+id_rsa
+id_ed25519
+*_token.txt
+secrets/
+
+# Python
+.venv/
+venv/
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+# Node
+**/node_modules/
+.npm
+.yarn/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Claude Code
+.claude/worktrees/
+.claude/settings.local.json
+
+# Локальные кэши
+.cache/
+
+# Браузер-профили (локальное состояние Playwright/Chromium)
+browser_profile/
+browser_profiles/
+chrome_cdp_user_data/
+chrome_cdp_last.log
+
+# Экспортированные данные и CSV
+*.csv
+data/
+Base FB/
+
+# SQLite (локальная БД)
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+
+# Бэкапы
+backups/
+
+# Electron apps
+desktop/messenger2-frame/node_modules/
+desktop/messenger2-frame/.electron-app-data/
+desktop/fb-master-desktop/node_modules/
+desktop/fb-master-desktop/.electron-app-data/
+desktop/fb-master-desktop/dist/
+
+# Вложенный Python-бэкенд (генерируется scripts/prepare-desktop-backend-bundle.sh)
+desktop/fb-master-desktop/resources-fb-master-backend/*
+!desktop/fb-master-desktop/resources-fb-master-backend/.gitkeep
+
+# Кэш скачанного переносимого Python для сборки
+.cache/fbm-embedded-python-macos/
+.cache/fbm-embedded-python-windows/
+
+# Готовые релизы (артефакты билдов)
+static/releases/
+
+# Тяжёлые бинарники/медиа
+*.dmg
+*.exe
+*.msi
+*.zip
+*.tar.gz
+*.7z
+*.wav
+*.mp3
+*.mp4
+*.avi
+*.mov
+*.bin
+*.weights
+*.pt
+*.pth
+*.onnx
+*.ckpt
+*.h5
+
+# Логи
+*.log

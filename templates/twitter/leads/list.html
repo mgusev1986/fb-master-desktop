@@ -1,0 +1,112 @@
+{% extends "twitter/base.html" %}
+
+{% set is_audience_page = page_id == "twitter_audience" %}
+{% block title %}{{ page_title or ("Поиск аудитории" if is_audience_page else "Лиды") }} · Twitter Master{% endblock %}
+
+{% block content %}
+<div class="x-page">
+  <header class="x-page__header">
+    <div class="x-page__title-wrap">
+      <h1 class="x-page__title">{{ page_title or ("Поиск аудитории" if is_audience_page else "Лиды") }} <span class="x-page__beta-pill">Beta</span></h1>
+      <p class="x-page__subtitle">{{ page_subtitle or "Хранилище X-handles для outreach. Поиск через X Search или ручной импорт." }}</p>
+    </div>
+  </header>
+
+  <section class="x-card x-card--accent">
+    <h2 class="x-card__title"><i class="ti ti-search"></i> Поиск через X Search (Playwright)</h2>
+    <p class="x-card__desc" style="font-size:13px;">Открывает <code>/search?q=&f=user</code> или <code>&f=live</code> под выбранным аккаунтом и сохраняет handles как leads.</p>
+    <form method="post" action="/twitter/leads/audience-search" style="display:flex;flex-direction:column;gap:8px;"
+          onsubmit="this.querySelector('button.search-go').disabled=true; this.querySelector('button.search-go').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Ищу…';">
+      <input type="hidden" name="return_to" value="{{ '/twitter/audience' if is_audience_page else '/twitter/leads' }}"/>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <select name="account_id" required style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
+          <option value="">— аккаунт —</option>
+          {% for a in (account_options or []) %}<option value="{{ a.id }}">{{ a.label }} [{{ a.status }}]</option>{% endfor %}
+        </select>
+        <input type="text" name="keywords" required placeholder="founder fintech berlin" style="flex:2;min-width:240px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+        <select name="search_kind" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
+          <option value="users">users</option><option value="tweets">tweets</option>
+        </select>
+        <input type="number" name="max_results" min="5" max="50" value="15" style="width:80px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+        <button type="submit" class="x-btn x-btn--primary search-go"><i class="ti ti-search"></i> Найти</button>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <select name="segment_id" style="flex:1;min-width:200px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font-size:12px;">
+          <option value="">— или сохранённый сегмент —</option>
+          {% for s in (segments or []) %}<option value="{{ s.id }}">{{ s.name }} ({{ s.last_run_count or 0 }} рез.)</option>{% endfor %}
+        </select>
+        <label style="font:400 12px/1 Inter;color:var(--text-secondary);display:inline-flex;align-items:center;gap:4px;">
+          <input type="checkbox" name="save_as_segment" value="on"/> сохранить как сегмент:
+          <input type="text" name="save_segment_name" placeholder="название" style="padding:4px;border-radius:6px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font-size:12px;width:160px;"/>
+        </label>
+      </div>
+    </form>
+  </section>
+
+  <div class="x-grid">
+    <section class="x-card">
+      <h2 class="x-card__title"><i class="ti ti-plus"></i> Добавить вручную</h2>
+      <form method="post" action="/twitter/leads/create" style="display:flex;flex-direction:column;gap:8px;">
+        <input type="text" name="handle" required placeholder="@username или username" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+        <input type="text" name="full_name" placeholder="Имя Фамилия" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+        <textarea name="bio" rows="2" placeholder="bio" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"></textarea>
+        <input type="text" name="location" placeholder="локация" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+        <button type="submit" class="x-btn x-btn--primary" style="align-self:flex-start;"><i class="ti ti-plus"></i> Добавить</button>
+      </form>
+    </section>
+
+    <section class="x-card">
+      <h2 class="x-card__title"><i class="ti ti-upload"></i> Bulk-import handles</h2>
+      <p class="x-card__desc" style="font-size:13px;">Каждая строка — handle, @handle или URL.</p>
+      <form method="post" action="/twitter/leads/bulk-import" style="display:flex;flex-direction:column;gap:8px;">
+        <textarea name="handles_blob" rows="6" placeholder="elonmusk&#10;@sama&#10;https://x.com/jack" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 13px/1.4 ui-monospace,Menlo,monospace;"></textarea>
+        <button type="submit" class="x-btn" style="align-self:flex-start;">Импорт</button>
+      </form>
+    </section>
+  </div>
+
+  {% if segments %}
+  <section class="x-card">
+    <h2 class="x-card__title"><i class="ti ti-bookmark"></i> Сохранённые сегменты ({{ segments|length }})</h2>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+      {% for s in segments %}
+      <div style="display:flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--border);border-radius:999px;background:color-mix(in srgb,var(--ws-accent) 4%,transparent);">
+        <strong style="font:500 13px/1 Inter,sans-serif;">{{ s.name }}</strong>
+        <small style="color:var(--text-muted,#888);">{{ s.keywords[:60] }}{% if s.keywords|length > 60 %}…{% endif %} · {{ s.search_kind }}</small>
+        {% if s.last_run_count %}<span style="font-size:11px;color:var(--ws-accent);">{{ s.last_run_count }}</span>{% endif %}
+        <form method="post" action="/twitter/leads/segments/{{ s.id }}/archive" style="margin:0;" onsubmit="return confirm('Архивировать сегмент?');">
+          <button class="x-btn" style="background:transparent;border:none;color:#c33;font-size:11px;padding:0 4px;" type="submit">×</button>
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <section>
+    <h2 class="x-card__title" style="margin:8px 0 12px;">Лиды ({{ leads|length }})</h2>
+    {% if leads %}
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;">
+        <thead><tr style="border-bottom:1px solid var(--border);font:600 12px/1 Inter;color:var(--text-muted);text-transform:uppercase;">
+          <th style="text-align:left;padding:10px;">Handle</th><th style="text-align:left;padding:10px;">Bio</th><th style="text-align:left;padding:10px;">Источник</th><th style="text-align:left;padding:10px;">Стадия</th><th></th>
+        </tr></thead>
+        <tbody>
+          {% for l in leads %}
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:10px;"><a href="{{ l.profile_url }}" target="_blank" rel="noopener" style="color:var(--ws-accent);text-decoration:none;">@{{ l.handle }}</a>{% if l.full_name %}<br><small style="color:var(--text-muted);">{{ l.full_name }}</small>{% endif %}</td>
+            <td style="padding:10px;color:var(--text-secondary);font-size:13px;">{{ (l.bio or '')[:120] }}</td>
+            <td style="padding:10px;color:var(--text-muted);font-size:12px;">{{ l.source_kind }}</td>
+            <td style="padding:10px;font-size:12px;">{{ l.outreach_stage }}</td>
+            <td style="padding:10px;text-align:right;"><form method="post" action="/twitter/leads/{{ l.id }}/delete" style="display:inline;" onsubmit="return confirm('Удалить лид?');"><button type="submit" class="x-btn" style="background:transparent;border-color:#c33;color:#c33;font-size:12px;padding:4px 8px;"><i class="ti ti-trash"></i></button></form></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="x-placeholder"><div class="x-placeholder__icon"><i class="ti ti-address-book"></i></div><p class="x-placeholder__text">Лидов пока нет.</p></div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

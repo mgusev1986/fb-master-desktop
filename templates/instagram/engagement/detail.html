@@ -1,0 +1,43 @@
+{% extends "instagram/base.html" %}
+{% block title %}{{ task.name }} · Engagement · Instagram Master{% endblock %}
+{% block content %}
+<div class="ig-page">
+  <header class="ig-page__header">
+    <div class="ig-page__title-wrap"><h1 class="ig-page__title">{{ task.name }} <span class="ig-page__beta-pill">Beta</span></h1><p class="ig-page__subtitle">kind <strong>{{ task.kind }}</strong>, status <strong>{{ task.status }}</strong>{% if task.daily_cap %}, cap {{ task.daily_cap }}/d{% endif %}.</p></div>
+    <a href="/instagram/engagement" class="ig-btn"><i class="ti ti-arrow-left"></i> К списку</a>
+  </header>
+
+  <section class="ig-card">
+    <h2 class="ig-card__title"><i class="ti ti-bolt"></i> Управление</h2>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <form method="post" action="/instagram/engagement/{{ task.id }}/run-once" style="display:flex;gap:6px;align-items:center;" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i>…';">
+        <input type="number" name="max_items" min="1" max="30" value="5" style="width:70px;padding:6px;border-radius:6px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+        <label style="font:400 12px/1 Inter;color:var(--text-secondary);"><input type="checkbox" name="headless" value="on" checked/> headless</label>
+        <button type="submit" class="ig-btn ig-btn--primary"><i class="ti ti-bolt"></i> Запустить N items</button>
+      </form>
+      <form method="post" action="/instagram/engagement/{{ task.id }}/status" style="display:inline;"><input type="hidden" name="status" value="{% if task.status == 'active' %}paused{% else %}active{% endif %}"/><button class="ig-btn" type="submit">{% if task.status == 'active' %}<i class="ti ti-player-pause"></i> Пауза{% else %}<i class="ti ti-player-play"></i> Активировать{% endif %}</button></form>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="ig-card__title" style="margin:8px 0 12px;">Очередь · {{ summary.total }} <small style="color:var(--text-muted);font-weight:400;">pending {{ summary.pending }} · done {{ summary.done }} · failed {{ summary.failed }} · skipped {{ summary.skipped }}</small></h2>
+    {% if items %}
+    <table style="width:100%;border-collapse:collapse;background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;">
+      <thead><tr style="border-bottom:1px solid var(--border);font:600 12px/1 Inter;color:var(--text-muted);text-transform:uppercase;"><th style="text-align:left;padding:10px;">Target</th><th style="text-align:left;padding:10px;">Тип</th><th style="text-align:left;padding:10px;">Статус</th><th style="text-align:left;padding:10px;">Попыток</th></tr></thead>
+      <tbody>{% for it in items %}
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:10px;font:400 13px/1.4 Inter;">{% if it.target_kind == 'post' %}<a href="{{ it.target_ref }}" target="_blank" style="color:var(--ws-accent);">{{ it.target_ref[:60] }}…</a>{% else %}@{{ it.target_ref }}{% endif %}{% if it.last_error %}<br><small style="color:#c33;">⚠ {{ it.last_error[:80] }}</small>{% endif %}</td>
+          <td style="padding:10px;font-size:12px;color:var(--text-muted);">{{ it.target_kind }}</td>
+          <td style="padding:10px;"><span class="compliance-cell__level
+            {% if it.review_state == 'done' %}compliance-cell__level--supported
+            {% elif it.review_state == 'pending' %}compliance-cell__level--partial
+            {% elif it.review_state == 'failed' %}compliance-cell__level--restricted
+            {% else %}compliance-cell__level--unsupported{% endif %}">{{ it.review_state }}</span></td>
+          <td style="padding:10px;font-size:12px;color:var(--text-muted);">{{ it.attempts }}</td>
+        </tr>
+      {% endfor %}</tbody>
+    </table>
+    {% else %}<div class="ig-placeholder"><div class="ig-placeholder__icon"><i class="ti ti-list"></i></div><p class="ig-placeholder__text">Очередь пуста.</p></div>{% endif %}
+  </section>
+</div>
+{% endblock %}

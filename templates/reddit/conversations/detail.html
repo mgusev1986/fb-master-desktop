@@ -1,0 +1,99 @@
+{% extends "reddit/base.html" %}
+
+{% block title %}Диалог · u/{{ conversation.counterpart_username }}{% endblock %}
+
+{% block content %}
+<div class="reddit-page">
+  <header class="reddit-page__header">
+    <div class="reddit-page__title-wrap">
+      <h1 class="reddit-page__title">
+        <a href="https://www.reddit.com/user/{{ conversation.counterpart_username }}" target="_blank" rel="noreferrer noopener" style="color:var(--text-primary);text-decoration:none;">u/{{ conversation.counterpart_username }}</a>
+      </h1>
+      <p class="reddit-page__subtitle">
+        {{ conversation.subject or '— без темы —' }} · last message: {{ format_dt_madrid(conversation.last_message_at) }} · state: {{ conversation.state }}
+      </p>
+    </div>
+    <a href="/reddit/conversations" class="reddit-btn"><i class="ti ti-arrow-left"></i> К диалогам</a>
+  </header>
+
+  {% if notice %}
+  <div class="reddit-card" style="border-color:{% if notice == 'sent' %}#1b873f;color:#1b873f{% else %}#c33;color:#c33{% endif %};background:color-mix(in srgb, currentColor 6%, var(--bg-surface));">
+    {% if notice == 'sent' %}<i class="ti ti-check"></i> Сообщение отправлено.
+    {% else %}<i class="ti ti-alert-triangle"></i> {{ notice }}{% endif %}
+  </div>
+  {% endif %}
+
+  <section>
+    <h2 class="reddit-card__title" style="margin:0 0 10px;">Черновики и отправленные</h2>
+    {% if drafts %}
+    <div class="reddit-grid reddit-grid--wide">
+      {% for d in drafts %}
+      <article class="reddit-card">
+        <header style="display:flex;align-items:center;gap:8px;">
+          <span style="font:600 11px/1 Inter;padding:2px 8px;border-radius:999px;
+            background:{% if d.review_state == 'sent' %}color-mix(in srgb,#1877f2 14%,transparent);color:#1877f2
+                     {% elif d.review_state == 'approved' %}color-mix(in srgb,#1b873f 14%,transparent);color:#1b873f
+                     {% elif d.review_state in ('failed', 'rejected') %}color-mix(in srgb,#c33 14%,transparent);color:#c33
+                     {% else %}var(--ws-accent-soft);color:var(--ws-accent){% endif %};">
+            {{ d.review_state|ru_status }}
+          </span>
+          <span style="flex:1;"></span>
+          <span style="font:400 12px/1 Inter;color:var(--text-muted);">{{ format_dt_madrid(d.sent_at or d.reviewed_at or d.created_at) }}</span>
+        </header>
+        {% if d.review_state == 'pending_review' %}
+        <form method="post" action="/reddit/conversations/{{ conversation.id }}/draft/{{ d.id }}/edit">
+          <textarea name="body" rows="6"
+                    style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--border);border-radius:10px;font-family:ui-monospace,monospace;">{{ d.body }}</textarea>
+          <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
+            <button type="submit" class="reddit-btn">Сохранить текст</button>
+          </div>
+        </form>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <form method="post" action="/reddit/conversations/{{ conversation.id }}/draft/{{ d.id }}/approve" style="display:inline">
+            <button type="submit" class="reddit-btn reddit-btn--primary"><i class="ti ti-check"></i> Approve</button>
+          </form>
+          <form method="post" action="/reddit/conversations/{{ conversation.id }}/draft/{{ d.id }}/reject" style="display:inline">
+            <button type="submit" class="reddit-btn"><i class="ti ti-x"></i> Reject</button>
+          </form>
+        </div>
+        {% elif d.review_state == 'approved' %}
+        <pre style="white-space:pre-wrap;font:400 13px/1.5 ui-monospace,monospace;background:color-mix(in srgb,#000 4%,transparent);padding:10px;border-radius:8px;margin:0;">{{ d.body }}</pre>
+        <form method="post" action="/reddit/conversations/{{ conversation.id }}/draft/{{ d.id }}/send" style="display:inline">
+          <button type="submit" class="reddit-btn reddit-btn--primary"
+                  onclick="return confirm('Отправить сообщение u/{{ conversation.counterpart_username }}?');">
+            <i class="ti ti-send"></i> Отправить через Reddit
+          </button>
+        </form>
+        {% else %}
+        <pre style="white-space:pre-wrap;font:400 13px/1.5 ui-monospace,monospace;background:color-mix(in srgb,#000 4%,transparent);padding:10px;border-radius:8px;margin:0;">{{ d.body }}</pre>
+        {% if d.last_error %}
+        <div class="reddit-card__desc" style="color:#c33;font-size:12px;">
+          <i class="ti ti-alert-circle"></i> {{ d.last_error }}{% if d.reason_code %} ({{ d.reason_code }}){% endif %}
+        </div>
+        {% endif %}
+        {% endif %}
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="reddit-placeholder">
+      <div class="reddit-placeholder__icon"><i class="ti ti-message"></i></div>
+      <p class="reddit-placeholder__text">Сообщений пока нет.</p>
+    </div>
+    {% endif %}
+  </section>
+
+  <form method="post" action="/reddit/conversations/compose" class="reddit-card" style="gap:12px;">
+    <input type="hidden" name="account_id" value="{{ conversation.account_id }}"/>
+    <input type="hidden" name="to" value="{{ conversation.counterpart_username }}"/>
+    <input type="hidden" name="subject" value="{{ conversation.subject or '' }}"/>
+    <h3 class="reddit-card__title" style="margin:0;">Добавить draft в этот тред</h3>
+    <textarea name="body" rows="5" required
+              placeholder="Новое сообщение…"
+              style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-family:ui-monospace,monospace;"></textarea>
+    <div>
+      <button type="submit" class="reddit-btn reddit-btn--primary"><i class="ti ti-plus"></i> Создать draft</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

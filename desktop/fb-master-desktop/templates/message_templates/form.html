@@ -1,0 +1,318 @@
+{% extends "base.html" %}
+{% from "macros/hints.html" import mailing_warmup_placeholders %}
+{% block title %}{{ 'Редактировать шаблон' if row else 'Новый шаблон' }} — FB Master{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>{{ 'Редактировать шаблон' if row else 'Новый шаблон' }}</h1>
+  {{ mailing_warmup_placeholders('subtitle') }}
+</div>
+
+<style>
+  .tpl-variants-editor { display: flex; flex-direction: column; gap: 14px; margin-bottom: 10px; }
+  .tpl-variant-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--bg-surface);
+    box-shadow: 0 1px 0 rgba(0,0,0,.12);
+  }
+  .tpl-variant-card__head {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    flex-wrap: wrap;
+    padding: 10px 14px;
+    background: var(--bg-surface-hover);
+    border-bottom: 1px solid var(--border);
+  }
+  .tpl-variant-card__title {
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: .02em;
+    text-transform: uppercase;
+  }
+  .tpl-variant-card__actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tpl-variant-card textarea.tpl-variant-textarea {
+    display: block; width: 100%; min-height: 130px; max-height: 420px;
+    border: none; padding: 14px 16px; margin: 0;
+    background: transparent; resize: vertical; font-family: inherit; font-size: var(--font-size-sm);
+    line-height: 1.5; color: var(--text-primary);
+  }
+  .tpl-variant-card textarea.tpl-variant-textarea:focus { outline: none; box-shadow: inset 0 0 0 2px var(--primary, #3b82f6); }
+  .tpl-variants-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 4px; }
+</style>
+
+<div class="card" style="max-width:860px">
+  <div class="card-body">
+    <form method="post" action="/templates/save">
+      {% if row %}
+      <input type="hidden" name="template_id" value="{{ row.id }}"/>
+      {% endif %}
+
+      <div class="form-group">
+        <label class="form-label" for="name">Название</label>
+        <input id="name" name="name" type="text" class="form-input" required maxlength="255"
+               value="{{ row.name if row else '' }}" placeholder="Кратко, для списка"/>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="category">Категория</label>
+        <select id="category" name="category" class="form-select">
+          {% for val, label in categories %}
+          <option value="{{ val }}" {% if row and row.category == val %}selected{% elif not row and val == 'outreach' %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Текст сообщения</label>
+        <p class="form-hint" style="margin-top:0;margin-bottom:12px">
+          Каждый блок — отдельный вариант. При рассылке контакту уходит <strong>один</strong> вариант (случайно или по очереди — см. ниже). Маркеры <code>{{ "{{first_name}}" }}</code> / <code>{{ "{{full_name}}" }}</code> вставляйте в активное поле кнопками под редактором.
+          <strong>Пакет из буфера:</strong> можно вставить сразу несколько готовых текстов подряд, разделяя их <strong>пустой строкой</strong> — при сохранении они станут отдельными вариантами. Слово <code>NAME</code> как отдельное слово (латиницей) будет заменено на <code>{{ "{{first_name}}" }}</code>.
+          {% if row %}
+          Сейчас вариантов в шаблоне: <strong>{{ variants_for_editor|length }}</strong>
+          (логически после сохранения пустые блоки не учитываются).
+          {% endif %}
+        </p>
+        <script type="application/json" id="tpl-variants-initial">{{ variants_for_editor|tojson }}</script>
+        <div id="tpl-variants-editor" class="tpl-variants-editor" aria-label="Варианты текста"></div>
+        <textarea id="body" name="body" class="form-textarea" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" tabindex="-1" aria-hidden="true"></textarea>
+        <div class="tpl-variants-toolbar">
+          <button type="button" class="btn btn-sm btn-secondary" id="tpl-add-variant">
+            <i class="ti ti-plus"></i> Добавить вариант
+          </button>
+        </div>
+        <details class="card" style="margin-top:14px;background:var(--bg-surface-hover)">
+          <summary class="card-body" style="padding:10px 14px;cursor:pointer;font-weight:600">Импорт пакета (несколько сообщений через пустую строку)</summary>
+          <div class="card-body" style="padding-top:0">
+            <label class="form-label" for="tpl-package-paste">Вставьте весь пакет сюда</label>
+            <textarea id="tpl-package-paste" class="form-textarea" rows="10" style="min-height:180px;font-size:var(--font-size-sm)"
+              placeholder="NAME, hey! …&#10;&#10;Hi NAME, …&#10;&#10;Hey NAME, …"></textarea>
+            <p class="form-hint" style="margin:8px 0 10px">Между сообщениями — пустая строка. Кнопка ниже разнесёт текст по карточкам вариантов (можно сразу нажать «Сохранить» без кнопки — пакет разберётся и на сервере).</p>
+            <button type="button" class="btn btn-sm btn-secondary" id="tpl-package-parse">
+              <i class="ti ti-files"></i> Разнести по вариантам
+            </button>
+          </div>
+        </details>
+        <p class="form-hint" style="margin-top:14px;margin-bottom:8px">
+          Вставить маркер в активное поле варианта:
+        </p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:6px">
+          <button type="button" class="btn btn-sm btn-secondary tpl-insert-marker" data-marker="{{ '{{first_name}}' }}"
+                  title="Вставить в активный вариант" aria-label="Вставить {{ '{{first_name}}' }}">
+            <code style="font-family:ui-monospace,monospace;font-size:12px">{{ "{{first_name}}" }}</code>
+          </button>
+          <span class="form-hint" style="margin:0">— только имя</span>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+          <button type="button" class="btn btn-sm btn-secondary tpl-insert-marker" data-marker="{{ '{{full_name}}' }}"
+                  title="Вставить в активный вариант" aria-label="Вставить {{ '{{full_name}}' }}">
+            <code style="font-family:ui-monospace,monospace;font-size:12px">{{ "{{full_name}}" }}</code>
+          </button>
+          <span class="form-hint" style="margin:0">— имя и фамилия целиком</span>
+        </div>
+      </div>
+
+      {% if row %}
+      <div class="form-group">
+        <label class="form-label" for="variant_pick_mode">Как выбирать вариант при рассылке</label>
+        <select id="variant_pick_mode" name="variant_pick_mode" class="form-select" style="max-width:420px">
+          <option value="random" {% if (row.variant_pick_mode or 'random') != 'sequential' %}selected{% endif %}>Случайно — каждому контакту свой случайный текст</option>
+          <option value="sequential" {% if row.variant_pick_mode == 'sequential' %}selected{% endif %}>По очереди — 1-й, 2-й, 3-й… затем снова с начала</option>
+        </select>
+      </div>
+      {% else %}
+      <input type="hidden" name="variant_pick_mode" value="random"/>
+      {% endif %}
+
+      {% if row %}
+      <div class="card" style="background:var(--bg-surface-hover);margin-bottom:16px">
+        <div class="card-body" style="padding:14px 16px">
+          <div style="font-size:var(--font-size-xs);font-weight:600;color:var(--text-secondary);margin-bottom:6px">Пример с подстановкой</div>
+          <div id="preview-text" style="font-size:var(--font-size-sm);white-space:pre-wrap">{{ preview_sample(row.body) }}</div>
+        </div>
+      </div>
+      {% endif %}
+
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;align-items:center">
+        <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy"></i> Сохранить</button>
+        <a href="/templates" class="btn btn-secondary">К списку</a>
+        {% if row and (has_openai or has_gemini or is_platform_owner(user)) %}
+        <button type="button" class="btn btn-secondary tpl-neuro-open" data-template-id="{{ row.id }}" data-template-name="{{ row.name|e }}"
+                title="Сгенерировать через ИИ несколько вариантов текста: плейсхолдеры ({{ '{{full_name}}' }}, {{ '{{first_name}}' }}) сохраняются. В открывшемся окне выберите формулировки и сохраните их в этот шаблон.">
+          <i class="ti ti-sparkles"></i> Нейро-варианты
+        </button>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+(function () {
+  var JOIN = '\n<<<TPL_VARIANT>>>\n';
+
+  function splitPackagePaste(raw) {
+    var t = String(raw || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+    if (!t) return [];
+    return t.split(/\n(?:\s*\n)+/).map(function (s) { return s.trim(); }).filter(Boolean).map(function (s) {
+      return s.replace(/\bNAME\b/g, '{{first_name}}');
+    });
+  }
+
+  function maybeExpandSingleCardPackage() {
+    var texts = gatherTexts();
+    if (texts.length !== 1) return;
+    var parts = splitPackagePaste(texts[0]);
+    if (parts.length >= 2) {
+      buildFromList(parts);
+    }
+  }
+
+  var root = document.getElementById('tpl-variants-editor');
+  var bodyHidden = document.getElementById('body');
+  var form = root && root.closest('form');
+  var initialEl = document.getElementById('tpl-variants-initial');
+  if (!root || !bodyHidden || !form) return;
+
+  var lastFocusedTa = null;
+
+  function readInitial() {
+    try {
+      var raw = initialEl ? JSON.parse(initialEl.textContent || '[]') : [];
+      if (Array.isArray(raw) && raw.length) return raw.map(function (x) { return String(x); });
+    } catch (e) {}
+    return [''];
+  }
+
+  function gatherTexts() {
+    return Array.prototype.map.call(root.querySelectorAll('.tpl-variant-textarea'), function (el) {
+      return el.value || '';
+    });
+  }
+
+  function nonEmptyJoined(texts) {
+    var clean = texts.map(function (s) { return String(s).trim(); }).filter(Boolean);
+    return clean.join(JOIN);
+  }
+
+  function syncHidden() {
+    bodyHidden.value = nonEmptyJoined(gatherTexts());
+  }
+
+  function renumber() {
+    var cards = root.querySelectorAll('.tpl-variant-card');
+    cards.forEach(function (card, i) {
+      var t = card.querySelector('.tpl-variant-card__title');
+      if (t) t.textContent = 'Вариант ' + (i + 1);
+      var rm = card.querySelector('.tpl-remove-variant');
+      if (rm) rm.disabled = cards.length <= 1;
+    });
+  }
+
+  function removeCard(card) {
+    if (root.querySelectorAll('.tpl-variant-card').length <= 1) return;
+    card.remove();
+    renumber();
+    syncHidden();
+  }
+
+  function addCard(value) {
+    var card = document.createElement('div');
+    card.className = 'tpl-variant-card';
+    card.innerHTML =
+      '<div class="tpl-variant-card__head">' +
+        '<span class="tpl-variant-card__title"></span>' +
+        '<div class="tpl-variant-card__actions">' +
+          '<button type="button" class="btn btn-sm btn-ghost tpl-remove-variant" title="Удалить вариант">Удалить</button>' +
+        '</div>' +
+      '</div>' +
+      '<textarea class="tpl-variant-textarea" placeholder="Текст этого варианта…"></textarea>';
+    var ta = card.querySelector('.tpl-variant-textarea');
+    ta.value = value != null ? value : '';
+    ta.addEventListener('focus', function () { lastFocusedTa = ta; });
+    ta.addEventListener('input', syncHidden);
+    card.querySelector('.tpl-remove-variant').addEventListener('click', function () {
+      removeCard(card);
+    });
+    root.appendChild(card);
+    renumber();
+  }
+
+  function buildFromList(list) {
+    root.innerHTML = '';
+    (list && list.length ? list : ['']).forEach(function (v) { addCard(v); });
+    syncHidden();
+  }
+
+  root.addEventListener('focusin', function (e) {
+    if (e.target && e.target.classList && e.target.classList.contains('tpl-variant-textarea')) {
+      lastFocusedTa = e.target;
+    }
+  });
+
+  var addBtn = document.getElementById('tpl-add-variant');
+  if (addBtn) {
+    addBtn.addEventListener('click', function () {
+      addCard('');
+      var last = root.querySelector('.tpl-variant-card:last-child .tpl-variant-textarea');
+      if (last) { last.focus(); lastFocusedTa = last; }
+      syncHidden();
+    });
+  }
+
+  document.querySelectorAll('.tpl-insert-marker').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      var marker = btn.getAttribute('data-marker') || '';
+      if (!marker) return;
+      var ta = lastFocusedTa || root.querySelector('.tpl-variant-textarea');
+      if (!ta) return;
+      var start = ta.selectionStart;
+      var end = ta.selectionEnd;
+      if (start == null || end == null) start = end = (ta.value || '').length;
+      var val = ta.value;
+      ta.value = val.slice(0, start) + marker + val.slice(end);
+      var pos = start + marker.length;
+      ta.focus();
+      ta.setSelectionRange(pos, pos);
+      syncHidden();
+    });
+  });
+
+  var pkgParse = document.getElementById('tpl-package-parse');
+  var pkgPaste = document.getElementById('tpl-package-paste');
+  if (pkgParse && pkgPaste) {
+    pkgParse.addEventListener('click', function () {
+      var parts = splitPackagePaste(pkgPaste.value);
+      if (!parts.length) {
+        alert('Вставьте текст: одно или несколько сообщений.');
+        pkgPaste.focus();
+        return;
+      }
+      buildFromList(parts);
+      pkgPaste.value = '';
+      syncHidden();
+      var first = root.querySelector('.tpl-variant-textarea');
+      if (first) { first.focus(); lastFocusedTa = first; }
+    });
+  }
+
+  form.addEventListener('submit', function (e) {
+    maybeExpandSingleCardPackage();
+    syncHidden();
+    var joined = nonEmptyJoined(gatherTexts());
+    if (!joined.trim()) {
+      e.preventDefault();
+      alert('Заполните хотя бы один вариант текста.');
+      var first = root.querySelector('.tpl-variant-textarea');
+      if (first) first.focus();
+    }
+  });
+
+  buildFromList(readInitial());
+})();
+</script>
+{% if has_openai or has_gemini or is_platform_owner(user) %}
+{% include "macros/template_neuro_modal.html" %}
+{% endif %}
+{% endblock %}

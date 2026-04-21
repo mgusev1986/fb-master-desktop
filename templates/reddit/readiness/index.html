@@ -1,0 +1,76 @@
+{% extends "reddit/base.html" %}
+
+{% block title %}Готовность · Reddit Master{% endblock %}
+
+{% block content %}
+<div class="reddit-page">
+  <header class="reddit-page__header">
+    <div class="reddit-page__title-wrap">
+      <h1 class="reddit-page__title">Готовность аккаунтов</h1>
+      <p class="reddit-page__subtitle">
+        Зрелость каждого подключённого аккаунта: возраст, карма, подтверждение email, возможность чата и ЛС.
+        Никаких обещаний обхода лимитов — только честный чеклист и рекомендации.
+      </p>
+    </div>
+    <a href="/reddit/accounts" class="reddit-btn"><i class="ti ti-brand-reddit"></i> К аккаунтам</a>
+  </header>
+
+  {% if reports %}
+  <div class="reddit-grid reddit-grid--wide">
+    {% for r in reports %}
+    <article class="reddit-card {% if r.ok %}reddit-card--accent{% endif %}">
+      <header style="display:flex;align-items:center;gap:8px;">
+        <h3 class="reddit-card__title" style="margin:0;flex:1;">
+          u/{{ r.account.username_snapshot or r.account.label }}
+        </h3>
+        <span style="font:500 11px/1 Inter;padding:2px 8px;border-radius:999px;
+          background:{% if r.ok %}color-mix(in srgb,#1b873f 14%,transparent);color:#1b873f
+                   {% else %}color-mix(in srgb,#b26a00 14%,transparent);color:#b26a00{% endif %};">
+          {{ 'Готов' if r.ok else 'Требует внимания' }}
+        </span>
+      </header>
+
+      {% if r.checks %}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font:400 13px/1.4 Inter;">
+        {% for name, status in r.checks.items() %}
+        <div>
+          <i class="ti ti-{% if status == 'ok' %}check{% elif status == 'warn' %}alert-triangle{% else %}x{% endif %}"
+             style="color:{% if status == 'ok' %}#1b873f{% elif status == 'warn' %}#b26a00{% else %}#c33{% endif %};"></i>
+          {{ name|ru_status }}: <strong>{{ status|ru_status }}</strong>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if r.warnings %}
+      <div style="font:400 13px/1.4 Inter;color:#b26a00;">
+        <i class="ti ti-alert-triangle"></i>
+        {% for w in r.warnings %}{{ w }}{% if not loop.last %} · {% endif %}{% endfor %}
+      </div>
+      {% endif %}
+
+      {% if r.note %}
+      <div style="font:400 13px/1.4 Inter;color:var(--text-muted);">{{ r.note }}</div>
+      {% endif %}
+
+      <div style="font:400 12px/1.4 Inter;color:var(--text-muted);">
+        последняя проверка: {{ format_dt_madrid(r.performed_at) }}
+      </div>
+
+      <footer style="display:flex;gap:6px;">
+        <form method="post" action="/reddit/readiness/{{ r.account.id }}/probe" style="display:inline">
+          <button type="submit" class="reddit-btn reddit-btn--primary"><i class="ti ti-refresh"></i> Проверить снова</button>
+        </form>
+      </footer>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="reddit-placeholder">
+    <div class="reddit-placeholder__icon"><i class="ti ti-checks"></i></div>
+    <p class="reddit-placeholder__text">Нет подключённых аккаунтов — добавьте первый, чтобы запустить проверку готовности.</p>
+    <a href="/reddit/accounts" class="reddit-btn reddit-btn--primary"><i class="ti ti-plug"></i> К аккаунтам</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

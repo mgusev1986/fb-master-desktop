@@ -1,0 +1,100 @@
+{% extends "reddit/base.html" %}
+
+{% block title %}Reddit Master · Обзор{% endblock %}
+
+{% block content %}
+<div class="reddit-page">
+  <header class="reddit-page__header">
+    <div class="reddit-page__title-wrap">
+      <h1 class="reddit-page__title">Reddit Master</h1>
+      <p class="reddit-page__subtitle">
+        Работа с Reddit: аккаунты через официальный OAuth, поиск сабреддитов
+        и аудитории, недавняя видимая активность, очереди сообщений с ручной проверкой,
+        и безопасный Agent Mode. Все рассылки по умолчанию требуют ручного подтверждения.
+      </p>
+    </div>
+    <span class="reddit-page__status">
+      <span class="reddit-page__status-dot"></span>
+      Beta
+    </span>
+  </header>
+
+  <section class="reddit-grid reddit-grid--wide">
+    <article class="reddit-card reddit-card--accent">
+      <h2 class="reddit-card__title"><i class="ti ti-brand-reddit"></i> Шаг 1 — подключить аккаунт</h2>
+      <p class="reddit-card__desc">
+        Подключение через OAuth2. Ключи приложения (client_id / client_secret) вводятся
+        на странице «Настройки». Без подключенного аккаунта чтение и отправка недоступны.
+      </p>
+      <div>
+        <a href="/reddit/accounts" class="reddit-btn reddit-btn--primary">
+          <i class="ti ti-plug"></i> Перейти к аккаунтам
+        </a>
+      </div>
+    </article>
+
+    <article class="reddit-card">
+      <h2 class="reddit-card__title"><i class="ti ti-checks"></i> Шаг 2 — Готовность (Readiness)</h2>
+      <p class="reddit-card__desc">
+        Прозрачная сводка: возраст аккаунта, карма, подтверждённый email, возможность чата и ЛС.
+        Никаких обещаний обхода лимитов — только честный чеклист.
+      </p>
+      <div><a href="/reddit/readiness" class="reddit-btn">Открыть Readiness</a></div>
+    </article>
+
+    <article class="reddit-card">
+      <h2 class="reddit-card__title"><i class="ti ti-radar-2"></i> Шаг 3 — Найти сабреддиты</h2>
+      <p class="reddit-card__desc">
+        Поиск по ключевым словам, темам, похожим сабреддитам, активности.
+        Метрики: подписчики, постов за 24 ч, оценки пригодности и риска.
+      </p>
+      <div><a href="/reddit/subreddits" class="reddit-btn">К поиску сабреддитов</a></div>
+    </article>
+
+    <article class="reddit-card">
+      <h2 class="reddit-card__title"><i class="ti ti-users-group"></i> Шаг 4 — Собрать аудиторию</h2>
+      <p class="reddit-card__desc">
+        По авторам постов/комментариев, по мета-темам, по подобранным ветвям.
+        Для каждого профиля — недавняя видимая активность (без статус «онлайн»а).
+      </p>
+      <div><a href="/reddit/audience" class="reddit-btn">Поиск аудитории</a></div>
+    </article>
+
+    <article class="reddit-card">
+      <h2 class="reddit-card__title"><i class="ti ti-template"></i> Шаг 5 — Шаблоны и AI</h2>
+      <p class="reddit-card__desc">
+        ЛС, приветствия в чате, комментарии, повторные касания. AI-вариации, пресеты тона,
+        детектор запрещённых фраз, анти-дубли. Предпросмотр перед отправкой.
+      </p>
+      <div><a href="/reddit/templates" class="reddit-btn">Шаблоны</a></div>
+    </article>
+
+    <article class="reddit-card">
+      <h2 class="reddit-card__title"><i class="ti ti-send"></i> Шаг 6 — Кампании и очереди</h2>
+      <p class="reddit-card__desc">
+        Кампании ЛС / комментариев. Подтверждение перед отправкой по умолчанию. Лимиты по аккаунту,
+        окна отправки, паузы, детекция restricted-sending.
+      </p>
+      <div><a href="/reddit/campaigns" class="reddit-btn">Кампании</a></div>
+    </article>
+
+    <article class="reddit-card">
+      <h2 class="reddit-card__title"><i class="ti ti-brain"></i> Режим агента (сценарии)</h2>
+      <p class="reddit-card__desc">
+        Конструктор сценариев: наблюдаем → оцениваем → готовим черновик → подтверждаем вручную → публикуем →
+        ждём → ловим ответ. Ручное подтверждение для всех шагов отправки включено по умолчанию.
+      </p>
+      <div><a href="/reddit/sequences" class="reddit-btn">Сценарии</a></div>
+    </article>
+
+    <article class="reddit-card">
+      <h2 class="reddit-card__title"><i class="ti ti-shield-check"></i> Правила и лимиты</h2>
+      <p class="reddit-card__desc">
+        Честный список поддерживаемых, ограниченных и недоступных действий Reddit.
+        Счётчики лимитов по аккаунту, предупреждения и жёсткий стоп при небезопасных настройках.
+      </p>
+      <div><a href="/reddit/compliance" class="reddit-btn">Открыть</a></div>
+    </article>
+  </section>
+</div>
+{% endblock %}

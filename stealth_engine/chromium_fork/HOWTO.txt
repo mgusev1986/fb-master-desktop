@@ -1,0 +1,34 @@
+FB Master — каркас «форка Chromium» уровня коммерческого антидетекта
+====================================================================
+
+Что УЖЕ есть в репозитории (Stealth Shell):
+  • stealth_engine/fingerprint.inject.js — JS-слой: webdriver, WebGL vendor/renderer,
+    canvas-шум (детерминированный по seed), RTCPeerConnection, connection mock, navigator.*.
+  • backend/services/fb_stealth_engine.py — сборка параметров + флаги процесса (в т.ч. WebRTC policy).
+  • Playwright подставляет скрипт через add_init_script (все окна контекста).
+
+Чего НЕТ без сборки своего Chromium (как у AdsPower / Multilogin):
+  • Нативный Canvas/WebGL (readback в C++, не через JS).
+  • TLS / JA3 / HTTP/2 fingerprint на уровне сетевого стека.
+  • Подмена списка шрифтов на уровне Skia/PDF.
+  • Полный контроль WebRTC на уровне движка.
+
+Как развивать настоящий форк (кратко):
+  1) Установить depot_tools и вытянуть Chromium:
+       https://www.chromium.org/developers/how-tos/get-the-code/
+  2) Каталог patches/ рядом с этим файлом — сюда складывать git format-patch от src/...
+     Типичные точки (имена меняются от ветки к ветке):
+       third_party/blink/renderer/modules/canvas/     — 2D canvas
+       third_party/blink/renderer/modules/webgl/      — WebGL getParameter
+       third_party/webrtc/                              — ICE / candidates
+       net/socket/ssl_client_socket_impl.cc             — TLS (осторожно: безопасность)
+  3) Сборка: gn gen out/Release && autoninja -C out/Release chrome
+  4) Подключать бинарь к FB Master через CDP:
+       FB_CDP_ENDPOINT=http://127.0.0.1:9222
+     или поле CDP у аккаунта; запуск с --remote-debugging-port и своим --user-data-dir.
+
+Риски: лицензии (BSD Chromium + прочие), объём диска (~100 GB исходников), часы CPU на сборку,
+       необходимость перебазировать патчи на каждый major Chrome.
+
+Рекомендация: для продакшена часто дешевле интегрировать готовый антидетект по CDP, а этот каталог
+использовать как рабочее место для собственных патчей, если команда готова сопровождать форк.

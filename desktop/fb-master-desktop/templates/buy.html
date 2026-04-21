@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>FB Master — доступ</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='css/main.css') }}"/>
+  <style>
+    .fbm-premium-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: clamp(1rem, 3vw, 2rem);
+      background: radial-gradient(ellipse 120% 80% at 50% -20%, rgba(180, 151, 90, 0.12), transparent 50%),
+        linear-gradient(165deg, #0c0d10 0%, #12141a 40%, #0a0b0e 100%);
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    .fbm-premium-card {
+      max-width: min(44rem, 94vw);
+      width: 100%;
+      background: linear-gradient(145deg, rgba(28, 30, 38, 0.97) 0%, rgba(18, 20, 26, 0.99) 100%);
+      border-radius: 24px;
+      padding: clamp(2.25rem, 5vw, 3.25rem);
+      border: 1px solid rgba(201, 169, 98, 0.22);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+        0 32px 64px -16px rgba(0, 0, 0, 0.55),
+        0 0 80px -30px rgba(180, 151, 90, 0.15);
+    }
+    .fbm-premium-eyebrow {
+      font-size: 0.75rem;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: rgba(196, 165, 116, 0.85);
+      margin: 0 0 0.6rem;
+      font-weight: 600;
+    }
+    .fbm-premium-card h1 {
+      font-size: clamp(1.6rem, 4.2vw, 2.05rem);
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      color: #f5f5f4;
+      margin: 0 0 1.5rem;
+      line-height: 1.2;
+    }
+    .fbm-premium-section-label {
+      font-size: 0.78rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(168, 162, 158, 0.9);
+      margin: 0 0 0.85rem;
+      font-weight: 600;
+    }
+    .fbm-premium-dl { list-style: none; padding: 0; margin: 0 0 1.75rem; }
+    .fbm-premium-dl li { margin: 0.65rem 0; }
+    .fbm-premium-dl a {
+      color: #e7d5b0;
+      font-weight: 500;
+      font-size: 1.02rem;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(231, 213, 176, 0.35);
+      padding-bottom: 2px;
+      transition: color 0.15s ease, border-color 0.15s ease;
+    }
+    .fbm-premium-dl a:hover { color: #f5edd8; border-bottom-color: rgba(245, 237, 216, 0.6); }
+    .fbm-premium-note { color: rgba(168, 162, 158, 0.85); font-size: 0.92rem; margin: 0 0 1rem; line-height: 1.5; }
+    .fbm-premium-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(201, 169, 98, 0.25), transparent);
+      margin: 1.5rem 0;
+      border: none;
+    }
+    .fbm-premium-form .form-label { color: rgba(212, 212, 208, 0.9); font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; }
+    .fbm-premium-form .form-input {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #f5f5f4;
+      border-radius: 12px;
+      font-size: 1rem;
+      padding: 0.65rem 0.85rem;
+      min-height: 3rem;
+    }
+    .fbm-premium-form .form-input:focus {
+      border-color: rgba(201, 169, 98, 0.45);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(201, 169, 98, 0.12);
+    }
+    .fbm-premium-submit {
+      width: 100%;
+      margin-top: 0.35rem;
+      padding: 1rem 1.5rem;
+      border: none;
+      border-radius: 14px;
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: #1a1410 !important;
+      cursor: pointer;
+      background: linear-gradient(135deg, #e8d5a8 0%, #c9a962 45%, #a67c3d 100%);
+      box-shadow: 0 4px 20px rgba(201, 169, 98, 0.35), 0 1px 2px rgba(0, 0, 0, 0.2);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .fbm-premium-submit:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 28px rgba(201, 169, 98, 0.42);
+    }
+    .fbm-premium-submit:disabled { opacity: 0.55; cursor: not-allowed; }
+    .fbm-premium-link-muted {
+      display: inline-block;
+      margin-top: 1.25rem;
+      font-size: 0.8rem;
+      color: rgba(168, 162, 158, 0.95);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(168, 162, 158, 0.35);
+    }
+    .fbm-premium-link-muted:hover { color: #d6d3d1; }
+    .buy-error {
+      background: rgba(127, 29, 29, 0.35);
+      color: #fecaca;
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      margin-bottom: 1rem;
+      border: 1px solid rgba(248, 113, 113, 0.25);
+    }
+  </style>
+</head>
+<body>
+<div class="fbm-premium-page">
+  <div class="fbm-premium-card">
+    <p class="fbm-premium-eyebrow">FB Master</p>
+    <h1>Скачивание и доступ</h1>
+
+    {% if buy_error %}
+    <div class="buy-error">{{ buy_error }}</div>
+    {% endif %}
+
+    {% if download_urls %}
+    <p class="fbm-premium-section-label">Материалы</p>
+    <ul class="fbm-premium-dl">
+      {% if download_urls.get('darwin_arm64_bundle') %}
+      <li><a href="{{ download_urls['darwin_arm64_bundle'] }}" rel="noopener">macOS — архив установки</a></li>
+      {% endif %}
+      {% if download_urls.get('darwin_arm64') and not download_urls.get('darwin_arm64_bundle') %}
+      <li><a href="{{ download_urls['darwin_arm64'] }}" rel="noopener">macOS — установщик</a></li>
+      {% endif %}
+    </ul>
+    {% else %}
+    <p class="fbm-premium-note">Ссылки на файлы временно недоступны.</p>
+    {% endif %}
+
+    {% if nowpayments_enabled %}
+    <hr class="fbm-premium-divider"/>
+    <p class="fbm-premium-section-label">Доступ</p>
+    <p class="fbm-premium-note" style="margin-bottom:1rem">Криптовалюта. После оплаты — ключ на экране.</p>
+    <form method="post" action="/billing/nowpayments/create" class="settings-form fbm-premium-form" style="margin:0">
+      <input type="hidden" name="billing_source" value="buy"/>
+      <input type="hidden" name="duration" value="365"/>
+      <p class="fbm-premium-note" style="margin-bottom:1rem">Подписка на 1 год — <strong>{{ np_price_365 }} USD</strong></p>
+      <input type="hidden" name="device_id" id="buy_device_id" value=""/>
+      <button type="submit" class="fbm-premium-submit" id="buy-np-submit" disabled>Оплатить</button>
+    </form>
+    {% else %}
+    <p class="fbm-premium-note" style="margin-top:1rem;color:rgba(251,191,36,0.9)">Оплата на сайте скоро будет доступна.</p>
+    {% endif %}
+
+    {% if access_key_required %}
+    <a class="fbm-premium-link-muted" href="/auth/unlock">Уже есть ключ</a>
+    {% endif %}
+  </div>
+</div>
+<script src="{{ url_for('static', path='js/fbm-device-fingerprint.js') }}"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  var el = document.getElementById("buy_device_id");
+  var btn = document.getElementById("buy-np-submit");
+  if (typeof fbmEnsureDeviceId !== "function") {
+    if (btn) btn.disabled = false;
+    return;
+  }
+  fbmEnsureDeviceId().then(function (id) {
+    if (el) el.value = id;
+    if (btn) btn.disabled = false;
+  }).catch(function () {
+    if (btn) btn.disabled = false;
+  });
+});
+</script>
+</body>
+</html>

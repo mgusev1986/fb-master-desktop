@@ -1,0 +1,157 @@
+{% extends "linkedin/base.html" %}
+
+{% block title %}{{ campaign.name }} · LinkedIn Master{% endblock %}
+
+{% block content %}
+<div class="li-page">
+  <header class="li-page__header">
+    <div class="li-page__title-wrap">
+      <h1 class="li-page__title">{{ campaign.name }} <span class="li-page__beta-pill">Beta</span></h1>
+      <p class="li-page__subtitle">
+        Режим <strong>{{ campaign.mode }}</strong>, approval <strong>{{ campaign.approval_mode }}</strong>,
+        статус <strong>{{ campaign.status }}</strong>.
+        {% if campaign.daily_cap %}Дневной кап: <strong>{{ campaign.daily_cap }}</strong>.{% endif %}
+      </p>
+    </div>
+    <a href="/linkedin/outreach" class="li-btn"><i class="ti ti-arrow-left"></i> К списку</a>
+  </header>
+
+  <section class="li-banner">
+    <div class="li-banner__icon"><i class="ti ti-bolt"></i></div>
+    <div class="li-banner__body">
+      <h2 class="li-banner__title">Реальная отправка через Playwright runtime</h2>
+      <p class="li-banner__text">
+        Approved-items обрабатываются runtime'ом: открывает LinkedIn под профилем аккаунта, ищет кнопку Message / Connect, вводит текст по символам, отправляет. Можно запустить вручную (кнопка ниже) или включить кампанию в <strong>active</strong> — и фоновой worker обработает её сам каждые ~3 минуты.
+      </p>
+    </div>
+  </section>
+
+  <section class="li-card li-card--accent">
+    <h2 class="li-card__title"><i class="ti ti-bolt"></i> Управление рассылкой</h2>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+      <form method="post" action="/linkedin/outreach/{{ campaign.id }}/run-once" style="display:flex;gap:6px;align-items:center;"
+            onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Отправляю…';">
+        <input type="number" name="max_items" min="1" max="20" value="3"
+               style="width:70px;padding:6px;border-radius:6px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);"/>
+        <label style="font:400 12px/1 Inter,sans-serif;color:var(--text-secondary,#606770);">
+          <input type="checkbox" name="headless" value="on" checked/> headless
+        </label>
+        <button type="submit" class="li-btn li-btn--primary" title="Обработать N approved items прямо сейчас">
+          <i class="ti ti-send"></i> Запустить отправку
+        </button>
+      </form>
+      <form method="post" action="/linkedin/outreach/{{ campaign.id }}/status" style="display:inline;">
+        <input type="hidden" name="status" value="{% if campaign.status == 'active' %}paused{% else %}active{% endif %}"/>
+        <button type="submit" class="li-btn">
+          {% if campaign.status == 'active' %}
+            <i class="ti ti-player-pause"></i> Пауза (выкл фонового воркера)
+          {% else %}
+            <i class="ti ti-player-play"></i> Активировать (фоновой воркер)
+          {% endif %}
+        </button>
+      </form>
+    </div>
+    <small style="color:var(--text-muted,#888);">
+      Reason codes: <code>daily_cap_reached</code> / <code>not_first_degree</code> → skipped, <code>login_required</code> / <code>account_restricted</code> → failed + остановка обработки этим аккаунтом.
+    </small>
+  </section>
+
+  <section class="li-card li-card--accent">
+    <h2 class="li-card__title"><i class="ti ti-list-check"></i> Собрать очередь по лидам</h2>
+    {% if leads %}
+    <form method="post" action="/linkedin/outreach/{{ campaign.id }}/build-queue">
+      <div style="max-height:280px;overflow:auto;border:1px solid var(--border,#e4e6eb);border-radius:8px;padding:8px;">
+        {% for l in leads %}
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 4px;border-bottom:1px solid color-mix(in srgb,var(--border,#e4e6eb) 50%,transparent);">
+          <input type="checkbox" name="lead_ids" value="{{ l.id }}"/>
+          <span style="font:500 13px/1 Inter,sans-serif;">{{ l.full_name or l.public_identifier or l.profile_url }}</span>
+          <small style="color:var(--text-muted,#888);">{{ l.company or '' }} {% if l.headline %}· {{ l.headline }}{% endif %}</small>
+          <span style="margin-left:auto;color:var(--text-muted,#888);font-size:11px;">{{ l.outreach_stage }}</span>
+        </label>
+        {% endfor %}
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
+        <button type="submit" class="li-btn li-btn--primary"><i class="ti ti-list-check"></i> Поставить в очередь</button>
+      </div>
+    </form>
+    {% else %}
+    <p class="li-card__desc">Нет лидов. Сначала <a href="/linkedin/leads">импортируйте</a>.</p>
+    {% endif %}
+  </section>
+
+  <section>
+    <h2 class="li-card__title" style="margin:8px 0 12px;">
+      Очередь · {{ summary.total }} элементов
+      <small style="color:var(--text-muted,#888);font-weight:400;font-size:12px;">
+        pending {{ summary.pending_review }} · approved {{ summary.approved }} · sent {{ summary.sent }} · failed {{ summary.failed }} · skipped {{ summary.skipped }}
+      </small>
+    </h2>
+    {% if items %}
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;background:var(--bg-surface,#fff);border:1px solid var(--border,#e4e6eb);border-radius:12px;">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border);font:600 12px/1 Inter;color:var(--text-muted);text-transform:uppercase;">
+            <th style="text-align:left;padding:10px;">Лид</th>
+            <th style="text-align:left;padding:10px;">Превью</th>
+            <th style="text-align:left;padding:10px;">Статус</th>
+            <th style="text-align:right;padding:10px;">Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for it in items %}
+          <tr style="border-bottom:1px solid var(--border);vertical-align:top;">
+            <td style="padding:10px;">
+              {% set l = lead_map.get(it.lead_id) %}
+              {% if l %}
+                <a href="{{ l.profile_url }}" target="_blank" rel="noopener" style="color:var(--ws-accent);text-decoration:none;">
+                  {{ l.full_name or l.public_identifier or l.profile_url }}
+                </a><br>
+                <small style="color:var(--text-muted,#888);">{{ l.company or '' }}</small>
+              {% else %}
+                lead#{{ it.lead_id }}
+              {% endif %}
+            </td>
+            <td style="padding:10px;font:400 13px/1.4 Inter,sans-serif;color:var(--text-secondary,#606770);max-width:420px;">
+              {{ it.draft_body[:240] }}{% if it.draft_body|length > 240 %}…{% endif %}
+              {% if it.last_error %}<br><small style="color:#c33;">⚠ {{ it.last_error }}</small>{% endif %}
+            </td>
+            <td style="padding:10px;">
+              <span class="compliance-cell__level
+                {% if it.review_state == 'sent' %}compliance-cell__level--supported
+                {% elif it.review_state in ['approved','pending_review'] %}compliance-cell__level--partial
+                {% elif it.review_state == 'failed' %}compliance-cell__level--restricted
+                {% else %}compliance-cell__level--unsupported{% endif %}">
+                {{ it.review_state }}
+              </span>
+            </td>
+            <td style="padding:10px;text-align:right;">
+              {% if it.review_state == 'pending_review' %}
+                <form method="post" action="/linkedin/outreach/{{ campaign.id }}/queue/{{ it.id }}/state" style="display:inline;">
+                  <input type="hidden" name="state" value="approved"/>
+                  <button type="submit" class="li-btn" style="font-size:12px;padding:4px 8px;">approve</button>
+                </form>
+                <form method="post" action="/linkedin/outreach/{{ campaign.id }}/queue/{{ it.id }}/state" style="display:inline;">
+                  <input type="hidden" name="state" value="rejected"/>
+                  <button type="submit" class="li-btn" style="background:transparent;border-color:#c33;color:#c33;font-size:12px;padding:4px 8px;">reject</button>
+                </form>
+              {% elif it.review_state == 'approved' %}
+                <form method="post" action="/linkedin/outreach/{{ campaign.id }}/queue/{{ it.id }}/state" style="display:inline;">
+                  <input type="hidden" name="state" value="sent"/>
+                  <button type="submit" class="li-btn li-btn--primary" style="font-size:12px;padding:4px 8px;" title="Пометить как отправленное (manual mode)">mark sent</button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="li-placeholder">
+      <div class="li-placeholder__icon"><i class="ti ti-list"></i></div>
+      <p class="li-placeholder__text">Очередь пуста. Отметьте лидов выше и нажмите «Поставить в очередь».</p>
+    </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

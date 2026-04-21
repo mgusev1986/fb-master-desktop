@@ -1,0 +1,655 @@
+{% extends "base.html" %}
+{% block title %}Настройки — SOCMASTER{% endblock %}
+
+{% block head %}
+<style>
+  .settings-banner {
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    margin-bottom: 18px;
+    font-size: var(--font-size-sm);
+    border: 1px solid rgba(5, 150, 105, 0.25);
+    background: var(--success-bg);
+    color: var(--success);
+  }
+  .settings-top-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+  .settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+  }
+  .settings-status-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0 0;
+  }
+  .settings-note {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+  .settings-subgrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 18px;
+  }
+  .settings-field {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    background: var(--bg-surface);
+  }
+  .settings-field h3 {
+    margin: 0 0 6px;
+    font-size: 1rem;
+  }
+  .settings-field p {
+    margin: 0 0 12px;
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    line-height: 1.5;
+  }
+  .settings-inline-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+    cursor: pointer;
+  }
+  .settings-kv-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+  }
+  .settings-kv {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    background: var(--bg-surface);
+  }
+  .settings-kv-label {
+    margin: 0 0 6px;
+    color: var(--text-secondary);
+    font-size: var(--font-size-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+  }
+  .settings-kv-value {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    line-height: 1.5;
+    word-break: break-word;
+  }
+  .settings-mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 8px;
+    background: var(--bg-surface-hover);
+  }
+  .settings-footer-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-start;
+  }
+  .settings-field-save {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-top: 14px;
+  }
+  .settings-field-save .btn { flex-shrink: 0; }
+  @media (max-width: 900px) {
+    .settings-top-actions {
+      justify-content: flex-start;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-actions" style="width:100%;align-items:flex-start;gap:16px">
+    <div>
+      <h1>Настройки</h1>
+      <p class="subtitle">{% if settings_hide_infra %}Ключи для ИИ и параметры приложения.{% else %}Ключи для ИИ, вход в аккаунт и прочие параметры.{% endif %}</p>
+    </div>
+    <div class="settings-top-actions">
+      <a href="/system/speed" class="btn btn-secondary btn-sm"><i class="ti ti-gauge"></i> Скорость и паузы</a>
+      {% if not settings_hide_infra %}
+      <a href="/auth/login" class="btn btn-secondary btn-sm"><i class="ti ti-login"></i> Проверить login</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% if saved %}
+<div class="settings-banner" role="status">Сохранено.</div>
+{% endif %}
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-label">OpenAI</div>
+    <div class="stat-value">{{ 'OK' if has_openai_effective else '—' }}</div>
+    <div class="settings-status-row">
+      {% if has_openai_effective %}<span class="badge badge-success">готово</span>
+      {% else %}<span class="badge badge-error">нужен ключ</span>{% endif %}
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Google AI</div>
+    <div class="stat-value">
+      {% if has_google_llm_effective %}
+        {% if google_llm_health_known %}
+          {% if google_llm_keys_ok > 0 %}OK{% else %}!{% endif %}
+        {% else %}?{% endif %}
+      {% else %}—{% endif %}
+    </div>
+    <div class="settings-status-row">
+      {% if has_google_llm_effective %}
+        {% if google_llm_health_known %}
+        <span class="badge badge-success" title="Результат последней проверки при сохранении ключей (listModels)">рабочих: {{ google_llm_keys_ok }}</span>
+        {% if google_llm_keys_bad > 0 %}
+        <span class="badge badge-error" title="Ключ отклонён (403/401), неверный формат или нет сети">битых: {{ google_llm_keys_bad }}</span>
+        {% endif %}
+        {% if google_llm_keys_ok > 0 %}<span class="badge badge-success">готово</span>
+        {% else %}<span class="badge badge-error">нет рабочих ключей</span>{% endif %}
+        {% else %}
+        <span class="badge badge-default" title="Запросы к Google не выполняются при открытии страницы. Нажмите «Сохранить» у блока Google AI — один раз проверим каждый ключ и покажем счётчики.">диагностика после «Сохранить»</span>
+        {% endif %}
+      {% else %}<span class="badge badge-error">нужен ключ</span>{% endif %}
+    </div>
+  </div>
+  {% if not settings_hide_infra %}
+  <div class="stat-card">
+    <div class="stat-label">Supabase Auth</div>
+    <div class="stat-value">{{ 'OK' if supabase_auth_ready else '—' }}</div>
+    <div class="settings-status-row">
+      {% if supabase_auth_ready %}<span class="badge badge-success">вход настроен</span>
+      {% else %}<span class="badge badge-error">нужны данные</span>{% endif %}
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Google OAuth (прямой)</div>
+    <div class="stat-value">{{ 'READY' if google_oauth_ready_effective else '—' }}</div>
+    <div class="settings-status-row">
+      {% if google_oauth_ready_effective %}<span class="badge badge-success">вход готов</span>
+      {% else %}<span class="badge badge-error">не настроен</span>{% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<form method="post" action="/system/settings/save" class="settings-form">
+  <div class="card">
+    <div class="card-header">{% if settings_hide_infra %}Ключи для ИИ (ChatGPT и Gemini){% else %}Ключи для нейросетей{% endif %}</div>
+    <div class="card-body">
+      <p class="settings-note" style="margin-bottom:16px">
+        {% if settings_hide_infra %}
+        Вставьте ключ от сервиса и нажмите <strong>Сохранить</strong>. Ключ хранится только на вашем компьютере.
+        Если ключ уже введён, в поле видны точки вместо букв — это нормально. Чтобы заменить ключ, нажмите в поле, вставьте новый и снова <strong>Сохранить</strong>.
+        Для <strong>Gemini</strong> можно указать <strong>несколько ключей</strong> (по одному на строку): при лимите квоты одного ключа запросы автоматически перейдут на следующий.
+        {% else %}
+        Вставьте ключ и нажмите <strong>Сохранить</strong>. Если ключ уже сохранён, в поле отображаются точки — сам секрет не передаётся в браузер.
+        Чтобы сменить ключ, кликните в поле (оно очистится), вставьте новый и снова нажмите <strong>Сохранить</strong>.
+        Для <strong>Gemini</strong> допускается <strong>несколько API-ключей</strong> — каждый с новой строки; при исчерпании квоты одного ключа система переключится на следующий.
+        {% endif %}
+      </p>
+      <div class="settings-subgrid">
+        <section class="settings-field">
+          <h3>OpenAI</h3>
+          <p class="settings-note" style="margin-bottom:10px">{% if settings_hide_infra %}Нужен для возможностей на базе ChatGPT.{% else %}Для функций на базе ChatGPT.{% endif %}</p>
+          <input type="password" name="openai_api_key" class="form-input js-settings-masked-secret" autocomplete="new-password" placeholder="{% if has_openai_effective %}Кликните и введите новый ключ{% else %}Вставьте ключ сюда{% endif %}"{% if has_openai_effective %} data-key-mask-present="1"{% endif %}/>
+          <div class="settings-field-save">
+            <button type="submit" name="save_partial" value="openai" class="btn btn-primary"><i class="ti ti-device-floppy"></i> Сохранить</button>
+            {% if openai_cabinet %}
+            <button type="submit" name="save_partial" value="clear_openai" class="btn btn-secondary btn-sm" onclick="return confirm('Удалить ключ OpenAI из программы?');">Удалить ключ</button>
+            {% endif %}
+          </div>
+          <div class="settings-status-row">
+            {% if has_openai_effective %}<span class="badge badge-success">ключ сохранён, можно пользоваться</span>
+            {% else %}<span class="badge badge-default">ключ ещё не введён</span>{% endif %}
+          </div>
+        </section>
+
+        <section class="settings-field">
+          <h3>Google AI (Gemini)</h3>
+          <p class="settings-note" style="margin-bottom:10px">{% if settings_hide_infra %}Нужен для возможностей на базе Gemini.{% else %}Для функций на базе Gemini.{% endif %} Можно ввести <strong>несколько ключей</strong> — по одному на строку; при ошибке квоты или лимита используется следующий.</p>
+          <textarea name="google_llm_api_key" class="form-textarea js-settings-masked-secret" rows="{% if has_google_llm_effective %}{{ [google_llm_key_count, 4]|max }}{% else %}4{% endif %}" autocomplete="off" spellcheck="false" placeholder="{% if has_google_llm_effective %}Кликните и вставьте ключи (каждый с новой строки){% else %}Первый ключ&#10;Второй ключ (необязательно){% endif %}"{% if has_google_llm_effective %} data-key-mask-present="1" data-mask-line-count="{{ google_llm_key_count }}"{% endif %} style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px"></textarea>
+          <div class="settings-field-save">
+            <button type="submit" name="save_partial" value="google_llm" class="btn btn-primary"><i class="ti ti-device-floppy"></i> Сохранить</button>
+            {% if google_llm_cabinet %}
+            <button type="submit" name="save_partial" value="clear_google_llm" class="btn btn-secondary btn-sm" onclick="return confirm('Удалить все ключи Google AI из программы?');">Удалить ключи</button>
+            {% endif %}
+          </div>
+          <div class="settings-status-row">
+            {% if has_google_llm_effective %}
+              {% if google_llm_key_count > 1 %}<span class="badge badge-success">сохранено ключей: {{ google_llm_key_count }}, ротация при квоте</span>
+              {% else %}<span class="badge badge-success">ключ сохранён, можно пользоваться</span>{% endif %}
+            {% else %}<span class="badge badge-default">ключ ещё не введён</span>{% endif %}
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  {% if not settings_hide_infra %}
+  <div class="card">
+    <div class="card-body">
+      <p class="settings-note" style="margin:0">Ниже — вход в аккаунт, папки и сервисные опции. Если вы только подключаете нейросети, этот блок можно не трогать.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">Supabase Auth (рекомендуемый вход)</div>
+    <div class="card-body">
+      <p class="settings-note" style="margin-bottom:16px">
+        <strong>Основной способ входа</strong> — Google через Supabase (на экране входа одна кнопка «Войти через Google»).
+        Project URL и <strong>anon public</strong> key: Supabase → Settings → API.
+        Включите провайдер Google в Authentication → Providers; в Google Cloud в Authorized redirect URIs вставьте Callback URL из этого провайдера (копирование из Supabase).
+        Здесь же в Supabase → Authentication → URL Configuration добавьте Redirect URL с путём
+        <span class="settings-mono">/auth/supabase/callback</span> для хоста, с которого открываете SOCMASTER (локально и прод).
+        Сервисный JWT в кабинет не вводится — проверка сессии через <span class="settings-mono">/auth/v1/user</span>.
+      </p>
+      <div class="settings-subgrid">
+        <section class="settings-field">
+          <h3>Supabase URL</h3>
+          <p>Например <span class="settings-mono">https://xxxxx.supabase.co</span></p>
+          <input type="text" name="supabase_url" value="{{ supabase_url_input }}" class="form-input" placeholder="Оставьте пустым, чтобы не менять источник"/>
+          <label class="settings-inline-check"><input type="checkbox" name="clear_supabase_url" value="1"/> Очистить override URL</label>
+          <div class="settings-status-row">
+            {% if supabase_auth_ready %}<span class="badge badge-success">готово к входу</span>{% else %}<span class="badge badge-error">нужны URL и anon key</span>{% endif %}
+            {% if supabase_url_cabinet %}<span class="badge badge-default">URL из кабинета</span>
+            {% elif env_supabase_url %}<span class="badge badge-success">URL из .env</span>
+            {% else %}<span class="badge badge-error">URL не задан</span>{% endif %}
+          </div>
+          <p class="form-hint" style="margin-top:10px">Эффективный URL: <span class="settings-mono">{{ supabase_url_effective or '—' }}</span></p>
+        </section>
+        <section class="settings-field">
+          <h3>Supabase anon key</h3>
+          <p>Публичный ключ (часто <span class="settings-mono">eyJ...</span>).</p>
+          <input type="password" name="supabase_anon_key" class="form-input js-settings-masked-secret" autocomplete="new-password" placeholder="{% if supabase_auth_ready %}Кликните и введите новый ключ{% else %}Новый anon key, если меняете{% endif %}"{% if supabase_auth_ready %} data-key-mask-present="1"{% endif %}/>
+          <label class="settings-inline-check"><input type="checkbox" name="clear_supabase_anon_key" value="1"/> Очистить override anon key</label>
+          <div class="settings-status-row">
+            {% if supabase_anon_cabinet %}<span class="badge badge-default">ключ из кабинета</span>
+            {% elif env_supabase_anon %}<span class="badge badge-success">ключ из .env</span>
+            {% else %}<span class="badge badge-error">ключ не задан</span>{% endif %}
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">Google OAuth и allowlist (опционально)</div>
+    <div class="card-body">
+      <p class="settings-note" style="margin-bottom:16px">
+        Нужно только если <strong>не</strong> используете Supabase Auth. При заполненном Supabase URL и anon key прямой OAuth на экране входа скрыт.
+      </p>
+      <div class="settings-subgrid">
+        <section class="settings-field">
+          <h3>OAuth client</h3>
+          <p>При необходимости укажите свои Google OAuth Client ID и Secret здесь.</p>
+          <label class="form-label">Google Client ID</label>
+          <input type="text" name="google_oauth_client_id" value="{{ google_oauth_client_id_input }}" class="form-input" placeholder="Оставьте пустым, если текущий источник менять не нужно"/>
+          <label class="settings-inline-check"><input type="checkbox" name="clear_google_oauth_id" value="1"/> Очистить override Client ID</label>
+          <label class="form-label" style="margin-top:14px">Google Client Secret</label>
+          <input type="password" name="google_oauth_client_secret" class="form-input js-settings-masked-secret" autocomplete="new-password" placeholder="{% if google_oauth_ready_effective %}Кликните и введите новый secret{% else %}Новый client secret{% endif %}"{% if google_oauth_ready_effective %} data-key-mask-present="1"{% endif %}/>
+          <label class="settings-inline-check"><input type="checkbox" name="clear_google_oauth_secret" value="1"/> Очистить override Client Secret</label>
+          <div class="settings-status-row">
+            {% if google_oauth_ready_effective %}<span class="badge badge-success">Google login готов</span>{% else %}<span class="badge badge-error">Нужны и ID, и Secret</span>{% endif %}
+            {% if google_oauth_id_cabinet or google_oauth_secret_cabinet %}<span class="badge badge-default">есть override</span>
+            {% elif env_google_oauth and env_google_oauth_secret %}<span class="badge badge-success">используется .env</span>
+            {% else %}<span class="badge badge-error">в .env тоже не хватает данных</span>{% endif %}
+          </div>
+        </section>
+
+        <section class="settings-field">
+          <h3>Allowlist email и redirect</h3>
+          <p>Допускает в кабинет только перечисленные почты Google. Redirect base нужен для домена за reverse proxy.</p>
+          <label class="form-label">Allowed Google emails</label>
+          <textarea name="allowed_google_emails" class="form-textarea" placeholder="email1@example.com, email2@example.com">{{ allowlist_textarea }}</textarea>
+          <label class="settings-inline-check"><input type="checkbox" name="clear_allowed_emails" value="1"/> Очистить override allowlist</label>
+          <label class="form-label" style="margin-top:14px">OAuth redirect base</label>
+          <input type="text" name="oauth_redirect_base" value="{{ oauth_redirect_input }}" class="form-input" placeholder="Например: https://your-domain.com"/>
+          <label class="settings-inline-check"><input type="checkbox" name="clear_oauth_redirect_base" value="1"/> Очистить override redirect base</label>
+          <div class="settings-status-row">
+            {% if effective_allowlist_count %}<span class="badge badge-success">в allowlist: {{ effective_allowlist_count }}</span>{% else %}<span class="badge badge-warning">allowlist пустой</span>{% endif %}
+            {% if oauth_redirect_cabinet %}<span class="badge badge-default">redirect из кабинета</span>
+            {% elif env_oauth_redirect %}<span class="badge badge-success">redirect из .env</span>
+            {% else %}<span class="badge badge-warning">redirect берётся из Host запроса</span>{% endif %}
+          </div>
+          <p class="form-hint" style="margin-top:12px">Эффективный callback: <span class="settings-mono">{{ oauth_callback_preview }}</span></p>
+          <p class="form-hint">Эффективный allowlist: {{ effective_allowlist_preview or 'не задан, вход разрешён любой почте Google' }}</p>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">Пути к данным</div>
+    <div class="card-body">
+      <div class="settings-subgrid">
+        <section class="settings-field">
+          <h3>Профили браузера</h3>
+          <p>Папка Chromium/Playwright-профилей Facebook-аккаунтов.</p>
+          <input type="text" name="path_browser_profiles" value="{{ path_browser_profiles_input }}" class="form-input" placeholder="Относительный или абсолютный путь"/>
+          <label class="settings-inline-check"><input type="checkbox" name="clear_path_browser_profiles" value="1"/> Очистить override пути профилей</label>
+          <div class="settings-status-row">
+            {% if browser_profiles_exists %}<span class="badge badge-success">путь существует</span>{% else %}<span class="badge badge-warning">будет создан при сохранении</span>{% endif %}
+            {% if path_browser_profiles_cabinet %}<span class="badge badge-default">override из кабинета</span>
+            {% else %}<span class="badge badge-success">по умолчанию из .env</span>{% endif %}
+          </div>
+          <p class="form-hint" style="margin-top:12px">Эффективный путь: <span class="settings-mono">{{ browser_profiles_resolved }}</span></p>
+        </section>
+
+        <section class="settings-field">
+          <h3>Base FB</h3>
+          <p>Каталог выгрузок друзей/Excel и вспомогательных файлов Facebook-базы.</p>
+          <input type="text" name="path_base_fb" value="{{ path_base_fb_input }}" class="form-input" placeholder="Относительный или абсолютный путь"/>
+          <label class="settings-inline-check"><input type="checkbox" name="clear_path_base_fb" value="1"/> Очистить override пути Base FB</label>
+          <div class="settings-status-row">
+            {% if base_fb_exists %}<span class="badge badge-success">путь существует</span>{% else %}<span class="badge badge-warning">будет создан при сохранении</span>{% endif %}
+            {% if path_base_fb_cabinet %}<span class="badge badge-default">override из кабинета</span>
+            {% else %}<span class="badge badge-success">по умолчанию из .env</span>{% endif %}
+          </div>
+          <p class="form-hint" style="margin-top:12px">Эффективный путь: <span class="settings-mono">{{ base_fb_resolved }}</span></p>
+        </section>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <div class="card-header">{% if settings_hide_infra %}Окно браузера{% else %}Chromium при автоматизации{% endif %}</div>
+    <div class="card-body">
+      <div class="settings-subgrid">
+        <section class="settings-field">
+          <h3>{% if settings_hide_infra %}Показывать окно или нет{% else %}Видимое окно{% endif %}</h3>
+          {% if settings_hide_infra %}
+          <p>
+            Обычно парсер, прогрев, рассылка и похожие действия выполняются <strong>в фоне</strong> — отдельное окно браузера не открывается. Так удобнее и меньше отвлекает.
+            Включите галочку ниже, если хотите <strong>видеть</strong> браузер во время этих задач — например, чтобы понять, что именно делает программа.
+            Обновление списка чатов в мессенджере по-прежнему идёт без показа окна.
+          </p>
+          <label class="settings-inline-check" style="font-size:var(--font-size-sm);cursor:pointer">
+            <input type="checkbox" name="playwright_show_browser" value="1" {% if cabinet_playwright_show_browser %}checked{% endif %}/>
+            Показывать окно браузера при автоматических задачах
+          </label>
+          <div class="settings-status-row" style="margin-top:12px">
+            {% if cabinet_playwright_show_browser %}
+            <span class="badge badge-default">сейчас окно показывается</span>
+            {% else %}
+            <span class="badge badge-success">сейчас окно скрыто (обычный режим)</span>
+            {% endif %}
+          </div>
+          {% else %}
+          <p>
+            По умолчанию парсер, прогрев, цепочки, рассылка и отправка в мессенджере запускают Chromium
+            <strong>в фоне</strong> (без окна), как задано в <span class="settings-mono">WARMUP_HEADLESS</span> в <span class="settings-mono">.env</span>.
+            Включите переключатель ниже, чтобы <strong>всегда видеть</strong> окно браузера при этих задачах (удобно для отладки).
+            Фоновый авто-синк списка чатов мессенджера по-прежнему остаётся без окна.
+          </p>
+          <label class="settings-inline-check" style="font-size:var(--font-size-sm);cursor:pointer">
+            <input type="checkbox" name="playwright_show_browser" value="1" {% if cabinet_playwright_show_browser %}checked{% endif %}/>
+            Показывать окно Chromium (headed)
+          </label>
+          <div class="settings-status-row" style="margin-top:12px">
+            {% if cabinet_playwright_show_browser %}
+            <span class="badge badge-default">override из кабинета: окно видно</span>
+            {% else %}
+            <span class="badge badge-success">как в .env (обычно headless)</span>
+            {% endif %}
+          </div>
+          {% endif %}
+
+          <hr style="margin:16px 0;border:none;border-top:1px solid var(--border)"/>
+
+          <h3 style="margin:0 0 6px;font-size:var(--font-size-md)">Встроенный логин в Facebook <span class="badge badge-warning" style="font-size:10px;padding:1px 5px">beta</span></h3>
+          <p style="font-size:var(--font-size-sm);color:var(--text-secondary);margin:0 0 8px">
+            Когда включено — кнопка «Войти в Facebook» открывает логин в webview внутри SOCMASTER (а не в отдельном окне Chromium).
+            После такого логина встроенный Messenger <strong>не спрашивает PIN сквозного шифрования второй раз</strong> — ключи E2EE живут в том же Chromium-контексте.
+            Старый режим (отдельное окно через Playwright) остаётся доступен рядом кнопкой «В отдельном окне».
+          </p>
+          <label class="settings-inline-check" style="font-size:var(--font-size-sm);cursor:pointer">
+            <input type="checkbox" name="embedded_login_enabled" value="1" {% if cabinet_embedded_login_enabled %}checked{% endif %}/>
+            Использовать встроенный логин (beta)
+          </label>
+          <div class="settings-status-row" style="margin-top:12px">
+            {% if cabinet_embedded_login_enabled %}
+            <span class="badge badge-default">включено — кнопка ведёт на встроенный webview</span>
+            {% else %}
+            <span class="badge badge-success">выключено — старое Playwright-окно входа</span>
+            {% endif %}
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">{% if settings_hide_infra %}Мессенджер{% else %}Messenger в SOCMASTER Desktop{% endif %}</div>
+    <div class="card-body">
+      <div class="settings-subgrid">
+        <section class="settings-field">
+          <h3>{% if settings_hide_infra %}Имя контакта в базе{% else %}Имя контакта из открытого чата{% endif %}</h3>
+          {% if settings_hide_infra %}
+          <p>
+            Если включено, при открытии чата во встроенном мессенджере имя в разделе <strong>«База контактов»</strong> подставляется таким, как в заголовке переписки в Facebook — чтобы совпадало с тем, что вы видите на экране.
+            Выключите, если сами правите имена в CRM и не хотите, чтобы их меняло имя из мессенджера.
+          </p>
+          {% else %}
+          <p>
+            Если включено, при открытии переписки во встроенном Messenger (Desktop) сервер периодически
+            подставляет в <strong>«Базу контактов»</strong> актуальное имя из заголовка чата
+            (<span class="settings-mono">Person.display_name</span>), чтобы CRM совпадала с тем, что видно в интерфейсе Facebook.
+            Выключите, если намеренно правите имя в CRM и не хотите, чтобы его перезаписывало имя из Messenger.
+          </p>
+          {% endif %}
+          <label class="settings-inline-check" style="font-size:var(--font-size-sm);cursor:pointer">
+            <input type="checkbox" name="messenger_sync_display_name_from_messenger" value="1" {% if cabinet_messenger_sync_display_name %}checked{% endif %}/>
+            Обновлять имя контакта из Messenger при открытии чата
+          </label>
+          <div class="settings-status-row" style="margin-top:12px">
+            {% if cabinet_messenger_sync_display_name %}
+            <span class="badge badge-success">включено</span>
+            {% else %}
+            <span class="badge badge-default">выключено</span>
+            {% endif %}
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">{% if settings_hide_infra %}После перезапуска программы{% else %}Автоматизация после перезапуска{% endif %}</div>
+    <div class="card-body">
+      <div class="settings-subgrid">
+        <section class="settings-field">
+          <h3>Рассылка и прогрев</h3>
+          {% if settings_hide_infra %}
+          <p>
+            Очередь рассылки и прогрева сохраняется в программе. После закрытия и снова открытия SOCMASTER незавершённые задачи могут остановиться.
+            Если галочка ниже <strong>включена</strong>, программа сама продолжит рассылку и прогрев с того же места, без кнопки «Продолжить».
+            Сценарии по дням подключаются сами; список чатов в мессенджере при необходимости обновите вручную.
+          </p>
+          <label class="settings-inline-check" style="font-size:var(--font-size-sm);cursor:pointer">
+            <input type="checkbox" name="automation_auto_resume_after_restart" value="1" {% if cabinet_automation_auto_resume %}checked{% endif %}/>
+            Сам продолжать рассылку и прогрев после перезапуска программы
+          </label>
+          <div class="settings-status-row" style="margin-top:12px">
+            {% if cabinet_automation_auto_resume %}
+            <span class="badge badge-success">включено — продолжит сама</span>
+            {% else %}
+            <span class="badge badge-default">выключено — продолжить нужно вручную</span>
+            {% endif %}
+          </div>
+          {% else %}
+          <p>
+            Очередь контактов и необработанные шаги хранятся в базе. После обновления или перезапуска сервера
+            прерванные задачи помечаются как остановленные; при <strong>включённой</strong> опции ниже сервер снова
+            запустит рассылку (комментинг / ЛС) и прогрев с того же места в очереди, без ручного «Продолжить».
+            Сценарии по дням подхватываются фоновым тиком; синхронизацию списка чатов мессенджера при необходимости запустите вручную.
+          </p>
+          <label class="settings-inline-check" style="font-size:var(--font-size-sm);cursor:pointer">
+            <input type="checkbox" name="automation_auto_resume_after_restart" value="1" {% if cabinet_automation_auto_resume %}checked{% endif %}/>
+            Автоматически продолжать рассылку и прогрев после перезапуска сервера
+          </label>
+          <div class="settings-status-row" style="margin-top:12px">
+            {% if cabinet_automation_auto_resume %}
+            <span class="badge badge-success">включено</span>
+            {% else %}
+            <span class="badge badge-default">выключено — только вручную «Продолжить»</span>
+            {% endif %}
+          </div>
+          {% endif %}
+        </section>
+      </div>
+    </div>
+  </div>
+
+  {% if not settings_hide_infra %}
+  <div class="card">
+    <div class="card-header">Runtime и системная диагностика</div>
+    <div class="card-body">
+      <div class="settings-kv-grid">
+        <div class="settings-kv">
+          <p class="settings-kv-label">APP_BASE_URL</p>
+          <p class="settings-kv-value"><span class="settings-mono">{{ runtime_app_base_url }}</span></p>
+        </div>
+        <div class="settings-kv">
+          <p class="settings-kv-label">Host / Port</p>
+          <p class="settings-kv-value"><span class="settings-mono">{{ runtime_bo_host }}:{{ runtime_bo_port }}</span></p>
+        </div>
+        <div class="settings-kv">
+          <p class="settings-kv-label">DATA_DIR</p>
+          <p class="settings-kv-value"><span class="settings-mono">{{ runtime_data_dir }}</span></p>
+        </div>
+        <div class="settings-kv">
+          <p class="settings-kv-label">DB_PATH</p>
+          <p class="settings-kv-value"><span class="settings-mono">{{ runtime_db_path }}</span></p>
+        </div>
+        <div class="settings-kv">
+          <p class="settings-kv-label">LOG_DIR</p>
+          <p class="settings-kv-value"><span class="settings-mono">{{ runtime_log_dir }}</span></p>
+        </div>
+        <div class="settings-kv">
+          <p class="settings-kv-label">LOG_LEVEL / retention</p>
+          <p class="settings-kv-value">{{ runtime_log_level }} · {{ runtime_log_retention_days }} дн.</p>
+        </div>
+        <div class="settings-kv">
+          <p class="settings-kv-label">LOCAL_SIMULATE_PRODUCTION</p>
+          <p class="settings-kv-value">{% if runtime_local_simulate_production %}<span class="badge badge-warning">как на сервере</span>{% else %}<span class="badge badge-default">обычная локалка</span>{% endif %}</p>
+        </div>
+        <div class="settings-kv">
+          <p class="settings-kv-label">SESSION_COOKIE_SECURE</p>
+          <p class="settings-kv-value">{% if runtime_session_cookie_secure %}<span class="badge badge-success">HTTPS cookie</span>{% else %}<span class="badge badge-default">HTTP OK</span>{% endif %}</p>
+        </div>
+        <div class="settings-kv">
+          <p class="settings-kv-label">Chrome cookies (эффективно)</p>
+          <p class="settings-kv-value">{% if runtime_fb_local_chrome_cookies %}<span class="badge badge-success">вкл</span>{% else %}<span class="badge badge-default">выкл</span>{% endif %}
+            <span style="opacity:.75">(.env: {% if runtime_fb_local_chrome_cookies_env %}on{% else %}off{% endif %})</span></p>
+        </div>
+        <div class="settings-kv">
+          <p class="settings-kv-label">Headless (эффективно)</p>
+          <p class="settings-kv-value">{% if runtime_warmup_headless %}<span class="badge badge-default">headless</span>{% else %}<span class="badge badge-success">окно</span>{% endif %}
+            <span style="opacity:.75">(.env: {% if runtime_warmup_headless_env %}on{% else %}off{% endif %}{% if cabinet_playwright_show_browser %}; кабинет: окно{% endif %})</span></p>
+        </div>
+        <div class="settings-kv">
+          <p class="settings-kv-label">Messenger E2EE</p>
+          <p class="settings-kv-value">
+            ждать {{ runtime_messenger_e2ee_wait_seconds }} сек ·
+            {% if runtime_messenger_e2ee_pin_configured %}<span class="badge badge-success">PIN задан</span>{% else %}<span class="badge badge-default">PIN не задан</span>{% endif %}
+          </p>
+        </div>
+        <div class="settings-kv">
+          <p class="settings-kv-label">SEQUENCE_TIMEZONE (.env)</p>
+          <p class="settings-kv-value"><span class="settings-mono">{{ runtime_sequence_timezone_env }}</span></p>
+        </div>
+        <div class="settings-kv">
+          <p class="settings-kv-label">Пути из .env</p>
+          <p class="settings-kv-value">
+            Профили: <span class="settings-mono">{{ env_browser_profiles }}</span><br/>
+            Base FB: <span class="settings-mono">{{ env_base_fb }}</span>
+          </p>
+        </div>
+        <div class="settings-kv">
+          <p class="settings-kv-label">OAuth из .env</p>
+          <p class="settings-kv-value">
+            {% if env_google_oauth and env_google_oauth_secret %}<span class="badge badge-success">ID + Secret есть</span>{% else %}<span class="badge badge-warning">неполный .env</span>{% endif %}<br/>
+            Redirect: <span class="settings-mono">{{ env_oauth_redirect or 'по Host запроса' }}</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="settings-footer-actions">
+    <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy"></i> Сохранить настройки</button>
+    <a href="/system/settings" class="btn btn-secondary">Обновить экран</a>
+  </div>
+</form>
+<script>
+(function () {
+  var MASK_LINE = "\u2022".repeat(28);
+  function maskPlaceholder(el) {
+    var raw = el.getAttribute("data-mask-line-count");
+    if (raw != null && raw !== "") {
+      var n = parseInt(raw, 10);
+      if (n > 1 && !isNaN(n)) {
+        var lines = [];
+        for (var i = 0; i < n; i++) lines.push(MASK_LINE);
+        return lines.join("\n");
+      }
+    }
+    return MASK_LINE;
+  }
+  function init(input) {
+    if (!input || input.getAttribute("data-key-mask-present") !== "1") return;
+    var display = maskPlaceholder(input);
+    input.value = display;
+    input.setAttribute("data-mask-token", display);
+    input.addEventListener("focus", function clearMaskOnce() {
+      if (input.value === input.getAttribute("data-mask-token")) {
+        input.value = "";
+      }
+      input.removeAttribute("data-mask-token");
+      input.removeEventListener("focus", clearMaskOnce);
+    });
+  }
+  document.querySelectorAll("input.js-settings-masked-secret[data-key-mask-present='1'], textarea.js-settings-masked-secret[data-key-mask-present='1']").forEach(init);
+  var form = document.querySelector("form.settings-form");
+  if (form) {
+    form.addEventListener("submit", function () {
+      document.querySelectorAll("input.js-settings-masked-secret, textarea.js-settings-masked-secret").forEach(function (el) {
+        var tok = el.getAttribute("data-mask-token");
+        if (tok && el.value === tok) {
+          el.value = "";
+        }
+      });
+    });
+  }
+})();
+</script>
+{% endblock %}

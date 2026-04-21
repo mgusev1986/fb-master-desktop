@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>FB Master — установка на macOS</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; max-width: 40rem; margin: 2rem auto; padding: 0 1.25rem; line-height: 1.55; color: #0f172a; }
+    h1 { font-size: 1.25rem; margin-top: 0; }
+    code { background: #f1f5f9; padding: 0.12rem 0.4rem; border-radius: 4px; font-size: 0.9em; }
+    .box { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 1rem 1.1rem; margin: 1rem 0; }
+    ul { padding-left: 1.2rem; }
+    li { margin: 0.4rem 0; }
+  </style>
+</head>
+<body>
+  <h1>FB Master — установка на macOS</h1>
+  <p>Если macOS блокирует запуск или пишет, что приложение «повреждено», чаще всего это защита Gatekeeper: система не доверяет <strong>неподписанной</strong> сборке (типично до настройки подписи Apple Developer и нотаризации).</p>
+
+  <div class="box">
+    <p><strong>Шаг 1.</strong> Перетащите <code>FB Master.app</code> в папку «Программы».</p>
+    <p><strong>Шаг 2.</strong> Откройте «Терминал» и выполните:</p>
+    <p><code>xattr -cr "/Applications/FB Master.app"</code></p>
+    <p><strong>Шаг 3.</strong> Запустите приложение снова.</p>
+  </div>
+
+  <p><strong>Дополнительно (без терминала):</strong> правый клик по FB Master → <strong>Открыть</strong> → в диалоге подтвердить открытие. Либо <strong>Системные настройки</strong> / <strong>Системные параметры</strong> → <strong>Конфиденциальность и безопасность</strong> → после попытки запуска — <strong>«Всё равно открыть»</strong>.</p>
+
+  <p><strong>Важно:</strong> скачивайте версию под свой Mac — <strong>Apple Silicon</strong> (M1–M4) или <strong>Intel</strong> — с страницы покупки; несовпадение архитектуры даёт ошибку «не поддерживается этим Mac».</p>
+
+  <p><strong>Публичный релиз без предупреждений:</strong> нужны подпись <em>Developer ID Application</em> и нотаризация в Apple (настраивает разработчик при сборке установщика).</p>
+</body>
+</html>

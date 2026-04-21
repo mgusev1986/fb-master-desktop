@@ -1,0 +1,163 @@
+{% extends "linkedin/base.html" %}
+
+{% block title %}LinkedIn-аккаунты · LinkedIn Master{% endblock %}
+
+{% block content %}
+<div class="li-page">
+  <header class="li-page__header">
+    <div class="li-page__title-wrap">
+      <h1 class="li-page__title">
+        LinkedIn-аккаунты
+        <span class="li-page__beta-pill">Beta</span>
+      </h1>
+      <p class="li-page__subtitle">
+        Подключение через browser-профиль (как Facebook Master): импорт купленных аккаунтов с cookies,
+        привязка прокси, изоляция сессий. LinkedIn видит сессию как обычный браузерный логин.
+      </p>
+    </div>
+    <div class="li-stats">
+      <span class="li-stats__pill"><strong>{{ summary.total }}</strong> всего</span>
+      <span class="li-stats__pill li-stats__pill--ok"><strong>{{ summary.connected }}</strong> подключено</span>
+      <span class="li-stats__pill li-stats__pill--warn"><strong>{{ summary.needs_attention or 0 }}</strong> внимание</span>
+    </div>
+  </header>
+
+  {% if notice == 'imported' %}
+  <div class="li-banner">
+    <div class="li-banner__icon"><i class="ti ti-check"></i></div>
+    <div class="li-banner__body">
+      <h2 class="li-banner__title">Импорт завершён</h2>
+      <p class="li-banner__text">
+        Добавлено: <strong>{{ imported }}</strong>. Ошибок: <strong>{{ errors_count }}</strong>.
+        {% if (errors_count|int) > 0 %}Часть строк не распарсилась — проверьте формат или наличие <code>li_at</code> в cookies.{% endif %}
+      </p>
+    </div>
+  </div>
+  {% endif %}
+
+  <section class="li-card li-card--accent">
+    <h2 class="li-card__title"><i class="ti ti-upload"></i> Импорт купленных аккаунтов</h2>
+    <p class="li-card__desc">
+      Поддерживаемые форматы (одна строка = один аккаунт):
+    </p>
+    <ul style="margin:0;padding-left:20px;color:var(--text-secondary,#606770);font:400 13px/1.6 Inter,sans-serif;">
+      <li><strong>JSON-объект</strong>: <code>{"label":"...","cookies":[...],"proxy_url":"http://user:pass@host:port","user_agent":"...","li_login_email":"...","li_login_password":"..."}</code></li>
+      <li><strong>Массив cookies</strong>: <code>[{"name":"li_at","value":"AQED...","domain":".linkedin.com","path":"/"}, ...]</code></li>
+      <li><strong>TSV</strong>: <code>label&lt;TAB&gt;cookies_json&lt;TAB&gt;proxy_url</code></li>
+    </ul>
+    <p class="li-card__desc" style="margin-top:8px;color:var(--text-muted,#888);font-size:12px;">
+      Обязательная cookie — <code>li_at</code>. Желательны также <code>JSESSIONID</code> и <code>li_rm</code>.
+    </p>
+    <form method="post" action="/linkedin/accounts/import" style="display:flex;flex-direction:column;gap:10px;">
+      <textarea name="blob" rows="8" placeholder='{"label":"my-account","cookies":[{"name":"li_at","value":"AQED..."}],"proxy_url":"http://user:pass@1.2.3.4:8080"}'
+                style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);font:400 13px/1.4 ui-monospace,Menlo,monospace;resize:vertical;"></textarea>
+      <div style="display:flex;justify-content:flex-end;gap:8px;">
+        <button type="submit" class="li-btn li-btn--primary">
+          <i class="ti ti-upload"></i> Импортировать
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <section>
+    <h2 class="li-card__title" style="margin:8px 0 12px;">Подключённые аккаунты</h2>
+    {% if accounts %}
+      <div class="li-grid li-grid--wide">
+        {% for a in accounts %}
+        <article class="li-card">
+          <header style="display:flex;align-items:flex-start;gap:10px;justify-content:space-between;">
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <h3 class="li-card__title" style="font-size:15px;">
+                <i class="ti ti-brand-linkedin"></i> {{ a.label }}
+              </h3>
+              {% if a.full_name or a.public_identifier %}
+              <span style="color:var(--text-secondary,#606770);font:400 12px/1.4 Inter,sans-serif;">
+                {{ a.full_name or '' }}{% if a.public_identifier %} · in/{{ a.public_identifier }}{% endif %}
+              </span>
+              {% endif %}
+            </div>
+            <span class="compliance-cell__level
+              {% if a.status == 'connected' %}compliance-cell__level--supported
+              {% elif a.status == 'restricted' %}compliance-cell__level--restricted
+              {% elif a.status == 'disabled' %}compliance-cell__level--unsupported
+              {% else %}compliance-cell__level--partial{% endif %}">
+              {{ a.status }}
+            </span>
+          </header>
+          <p class="li-card__desc" style="font-size:13px;">
+            cookies: <strong>{{ (a.cookies_json or [])|length }}</strong>
+            {% if a.cookies_imported_at %} · импорт: {{ a.cookies_imported_at.strftime('%d.%m.%Y %H:%M') }}{% endif %}
+          </p>
+          {% if a.login_blocked_reason %}
+          <p style="margin:0;padding:8px 10px;border-radius:8px;background:color-mix(in srgb,#c33 12%,transparent);color:#c33;font:400 12px/1.4 Inter,sans-serif;">
+            <i class="ti ti-alert-triangle"></i> {{ a.login_blocked_reason }}
+          </p>
+          {% endif %}
+          <details>
+            <summary style="cursor:pointer;color:var(--ws-accent);font:500 13px/1 Inter,sans-serif;">Прокси</summary>
+            <form method="post" action="/linkedin/accounts/{{ a.id }}/proxy" style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">
+              <input type="text" name="proxy_url" value="{{ a.proxy_url or '' }}" placeholder="http://host:port или socks5://host:port"
+                     style="padding:8px;border-radius:8px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);font:400 12px/1 Inter,sans-serif;"/>
+              <div style="display:flex;gap:6px;">
+                <input type="text" name="proxy_username" value="{{ a.proxy_username or '' }}" placeholder="user"
+                       style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);font:400 12px/1 Inter,sans-serif;"/>
+                <input type="password" name="proxy_password" value="{{ a.proxy_password or '' }}" placeholder="pass"
+                       style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);font:400 12px/1 Inter,sans-serif;"/>
+              </div>
+              <label style="font:400 12px/1.2 Inter,sans-serif;color:var(--text-secondary,#606770);">
+                <input type="checkbox" name="proxy_enabled" value="on" {% if a.proxy_enabled %}checked{% endif %}/> использовать прокси
+              </label>
+              <button type="submit" class="li-btn" style="font-size:12px;padding:6px 10px;align-self:flex-start;">Сохранить прокси</button>
+            </form>
+          </details>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <form method="post" action="/linkedin/accounts/{{ a.id }}/probe" style="margin:0;"
+                  onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Проверяю…';">
+              <button type="submit" class="li-btn" style="font-size:12px;padding:6px 10px;" title="Открыть LinkedIn /feed/ через Playwright и проверить, что cookies живые">
+                <i class="ti ti-refresh"></i> Проверить
+              </button>
+            </form>
+            <form method="post" action="/linkedin/accounts/{{ a.id }}/inbox-sync" style="margin:0;"
+                  onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Sync…';">
+              <button type="submit" class="li-btn" style="font-size:12px;padding:6px 10px;" title="Синхронизировать /messaging/ — забрать новые входящие в Inbox">
+                <i class="ti ti-mail-down"></i> Sync inbox
+              </button>
+            </form>
+            <form method="post" action="/linkedin/accounts/{{ a.id }}/delete" style="margin:0;"
+                  onsubmit="return confirm('Удалить аккаунт {{ a.label }}? Profile-каталог на диске не удаляется.');">
+              <button type="submit" class="li-btn" style="background:transparent;border-color:#c33;color:#c33;font-size:12px;padding:6px 10px;">
+                <i class="ti ti-trash"></i> Удалить
+              </button>
+            </form>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="li-placeholder">
+        <div class="li-placeholder__icon"><i class="ti ti-brand-linkedin"></i></div>
+        <h2 class="li-placeholder__title">Аккаунтов пока нет</h2>
+        <p class="li-placeholder__text">
+          Импортируйте купленные LinkedIn-аккаунты выше через JSON / cookies-array / TSV.
+          Каждому аккаунту автоматически создаётся отдельный browser-профиль и можно привязать свой прокси.
+        </p>
+      </div>
+    {% endif %}
+  </section>
+</div>
+
+<style>
+.li-stats { display:inline-flex; gap:6px; flex-wrap:wrap; }
+.li-stats__pill {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--bg-surface,#fff);
+  border: 1px solid var(--border,#e4e6eb);
+  color: var(--text-secondary,#606770);
+  font: 500 12px/1 Inter, sans-serif;
+}
+.li-stats__pill strong { color: var(--text-primary); margin-right:4px; }
+.li-stats__pill--ok strong { color: #1b873f; }
+.li-stats__pill--warn strong { color: #b26a00; }
+</style>
+{% endblock %}

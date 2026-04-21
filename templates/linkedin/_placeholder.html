@@ -1,0 +1,48 @@
+{% extends "linkedin/base.html" %}
+
+{% block title %}{{ page_title }} · LinkedIn Master{% endblock %}
+
+{% block content %}
+<div class="li-page">
+  <header class="li-page__header">
+    <div class="li-page__title-wrap">
+      <h1 class="li-page__title">
+        {{ page_title }}
+        <span class="li-page__beta-pill">Beta</span>
+      </h1>
+      {% if page_subtitle %}
+      <p class="li-page__subtitle">{{ page_subtitle }}</p>
+      {% endif %}
+    </div>
+    <span class="li-page__status">
+      <span class="li-page__status-dot"></span>
+      В разработке · Beta
+    </span>
+  </header>
+
+  <div class="li-placeholder">
+    <div class="li-placeholder__icon">
+      <i class="ti ti-{{ page_icon or 'tools' }}"></i>
+    </div>
+    <h2 class="li-placeholder__title">Раздел подключается</h2>
+    <p class="li-placeholder__text">
+      {{ placeholder_text or 'Скелет раздела готов. Функциональность подключается в следующем релизе LinkedIn Master Beta.' }}
+    </p>
+    {% if placeholder_next_steps %}
+    <ul class="li-placeholder__list">
+      {% for step in placeholder_next_steps %}
+      <li>{{ step }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    <div class="li-placeholder__actions">
+      <a href="/linkedin" class="li-btn li-btn--ghost">
+        <i class="ti ti-arrow-left"></i> К обзору LinkedIn Master
+      </a>
+      <a href="/linkedin/compliance" class="li-btn">
+        <i class="ti ti-shield-check"></i> Правила и лимиты
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

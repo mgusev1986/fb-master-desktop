@@ -1,0 +1,74 @@
+{
+  "name": "fb-master-desktop",
+  "version": "2.28.0",
+  "description": "SOCMASTER: полный back-office в Electron + встроенный Messenger (webview).",
+  "main": "main.js",
+  "author": "Socmaster",
+  "scripts": {
+    "start": "electron .",
+    "dist:mac": "bash ../../scripts/verify-desktop-chromium.sh && electron-builder --mac",
+    "dist:mac:arm64": "bash ../../scripts/verify-desktop-chromium.sh && electron-builder --mac --arm64",
+    "dist:mac:x64": "bash ../../scripts/verify-desktop-chromium.sh && electron-builder --mac --x64",
+    "dist:win": "bash ../../scripts/verify-desktop-chromium.sh && electron-builder --win",
+    "dist": "bash ../../scripts/verify-desktop-chromium.sh && electron-builder --mac --win"
+  },
+  "build": {
+    "appId": "pro.socmaster.fbmaster",
+    "productName": "SOCMASTER",
+    "directories": {
+      "output": "dist"
+    },
+    "artifactName": "SOCMASTER-${version}-${os}-${arch}.${ext}",
+    "files": [
+      "main.js",
+      "preload.js",
+      "local-backend-launcher.js",
+      "update-dialog.html",
+      "update-dialog-preload.js",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "resources-fb-master-backend",
+        "to": "fb-master-backend",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "afterSign": "scripts/notarize.cjs",
+    "mac": {
+      "category": "public.app-category.business",
+      "target": [
+        "dmg"
+      ],
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false
+    }
+  },
+  "dependencies": {
+    "node-machine-id": "^1.1.12"
+  },
+  "devDependencies": {
+    "@electron/notarize": "^2.5.0",
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  }
+}

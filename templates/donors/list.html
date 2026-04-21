@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Доноры — SOCMASTER{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-actions">
+    <div>
+      <h1>Доноры</h1>
+      <p class="subtitle">Страницы Facebook: друзья, подписчики, подписки или <strong>участники группы</strong> (ссылка …/groups/…/members)</p>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+      <a href="/parser" class="btn btn-secondary">
+        <i class="ti ti-radar"></i> Парсер — собрать друзей в базу
+      </a>
+      <a href="/donors/bulk" class="btn btn-secondary">
+        <i class="ti ti-list-details"></i> Массово
+      </a>
+      <a href="/donors/new" class="btn btn-primary">
+        <i class="ti ti-plus"></i> Добавить донора
+      </a>
+    </div>
+  </div>
+</div>
+
+{% if request.query_params.get('bulk_added') is not none %}
+<div class="card" style="margin-bottom:16px">
+  <div class="card-body" style="font-size:var(--font-size-sm)">
+    Массовое добавление:
+    добавлено <strong>{{ request.query_params.get('bulk_added') }}</strong>,
+    пропущено дубликатов <strong>{{ request.query_params.get('bulk_dup', '0') }}</strong>,
+    {% set bad = request.query_params.get('bulk_bad', '0') %}
+    {% if bad != '0' %}
+    не распознано строк <strong>{{ bad }}</strong>,
+    {% endif %}
+    всего обработано строк со ссылками <strong>{{ request.query_params.get('bulk_total', '0') }}</strong>.
+  </div>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-body">
+    <div class="toolbar">
+      <form method="get" class="search-bar">
+        <i class="ti ti-search"></i>
+        <input type="text" name="q" value="{{ search }}" placeholder="Поиск по URL или имени…" class="form-input"/>
+      </form>
+    </div>
+
+    {% if donors %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Имя</th>
+            <th>URL</th>
+            <th>Заметки</th>
+            <th>Добавлен</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in donors %}
+          <tr>
+            <td><strong>{{ d.name or '—' }}</strong></td>
+            <td>
+              <a href="{{ d.url }}" target="_blank" class="table-link" title="{{ d.url }}">
+                {{ d.url[:60] }}{% if d.url|length > 60 %}…{% endif %}
+              </a>
+            </td>
+            <td style="color:var(--text-secondary)">{{ (d.notes or '')[:40] }}{% if d.notes and d.notes|length > 40 %}…{% endif %}</td>
+            <td>{{ d.created_at.strftime('%d.%m.%Y') if d.created_at else '—' }}</td>
+            <td>
+              <div class="table-actions">
+                <a href="/donors/{{ d.id }}/export-crm" class="btn btn-sm btn-secondary" title="Ссылка, имя, фамилия, ID — для рассылки">
+                  <i class="ti ti-download"></i>
+                </a>
+                <a href="/donors/{{ d.id }}/edit" class="btn btn-sm btn-secondary">
+                  <i class="ti ti-edit"></i>
+                </a>
+                <form method="post" action="/donors/{{ d.id }}/delete" data-confirm="Удалить донора?" data-confirm-title="Удаление донора" data-confirm-variant="danger">
+                  <button type="submit" class="btn btn-sm btn-ghost" style="color:var(--error)">
+                    <i class="ti ti-trash"></i>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-state-icon"><i class="ti ti-users-group"></i></div>
+      <h3>Доноров пока нет</h3>
+      <p>Добавьте ссылку на страницу Facebook — система соберёт список друзей этого человека.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">
+        <a href="/donors/new" class="btn btn-primary">
+          <i class="ti ti-plus"></i> Добавить первого донора
+        </a>
+        <a href="/donors/bulk" class="btn btn-secondary">
+          <i class="ti ti-list-details"></i> Массово
+        </a>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

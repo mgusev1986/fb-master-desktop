@@ -1,0 +1,19 @@
+{% extends "reddit/base.html" %}
+
+{% block title %}Ошибка OAuth · Reddit Master{% endblock %}
+
+{% block content %}
+<div class="reddit-page">
+  <div class="reddit-placeholder" style="border-color:#c33;background:color-mix(in srgb, #c33 4%, transparent);">
+    <div class="reddit-placeholder__icon" style="background:color-mix(in srgb, #c33 14%, transparent);color:#c33;">
+      <i class="ti ti-alert-triangle"></i>
+    </div>
+    <h2 class="reddit-placeholder__title">OAuth не удался</h2>
+    <p class="reddit-placeholder__text">{{ message }}</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
+      <a href="/reddit/settings" class="reddit-btn"><i class="ti ti-settings"></i> Проверить настройки</a>
+      <a href="/reddit/accounts" class="reddit-btn reddit-btn--primary"><i class="ti ti-plug"></i> Попробовать снова</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,184 @@
+{% extends "reddit/base.html" %}
+
+{% block title %}Поиск аудитории · Reddit Master{% endblock %}
+
+{% block content %}
+<div class="reddit-page">
+  <header class="reddit-page__header">
+    <div class="reddit-page__title-wrap">
+      <h1 class="reddit-page__title">Поиск аудитории</h1>
+      <p class="reddit-page__subtitle">
+        Соберите пользователей из постов сабреддита, комментаторов конкретного поста или любого релевантного треда.
+        Найденных можно массово добавить в «Лиды».
+      </p>
+    </div>
+  </header>
+
+  {% if not has_account and not browser_accounts %}
+  <div class="reddit-card reddit-card--accent">
+    <h2 class="reddit-card__title"><i class="ti ti-alert-triangle"></i> Нужен подключенный Reddit-аккаунт</h2>
+    <div><a href="/reddit/accounts" class="reddit-btn reddit-btn--primary">К аккаунтам</a></div>
+  </div>
+  {% endif %}
+
+  {% if browser_accounts %}
+  <section class="reddit-card reddit-card--accent">
+    <h2 class="reddit-card__title"><i class="ti ti-search"></i> Поиск через браузер (Playwright, browser-mode аккаунты)</h2>
+    <p class="reddit-card__desc">Открывает Reddit под выбранным аккаунтом и парсит первые N результатов в leads с дедупликацией по username.</p>
+
+    <form method="post" action="/reddit/audience/scan-subreddit-browser" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px;"
+          onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Сканирую…';">
+      <select name="account_id" required style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);">
+        <option value="">— browser-mode аккаунт —</option>
+        {% for a in browser_accounts %}<option value="{{ a.id }}">{{ a.label }} [{{ a.status }}]</option>{% endfor %}
+      </select>
+      <input type="text" name="subreddit" required placeholder="askreddit" style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);"/>
+      <select name="sort" style="padding:8px;border-radius:8px;border:1px solid var(--border);">
+        <option value="new">new</option><option value="hot">hot</option><option value="top">top</option><option value="rising">rising</option>
+      </select>
+      <input type="number" name="limit" min="5" max="100" value="25" style="width:80px;padding:8px;border-radius:8px;border:1px solid var(--border);"/>
+      <button type="submit" class="reddit-btn reddit-btn--primary"><i class="ti ti-radar-2"></i> Сканировать сабреддит</button>
+    </form>
+
+    <form method="post" action="/reddit/audience/search-users-browser" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"
+          onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Ищу…';">
+      <select name="account_id" required style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);">
+        <option value="">— browser-mode аккаунт —</option>
+        {% for a in browser_accounts %}<option value="{{ a.id }}">{{ a.label }} [{{ a.status }}]</option>{% endfor %}
+      </select>
+      <input type="text" name="keywords" required placeholder="kw для поиска users" style="flex:2;min-width:240px;padding:8px;border-radius:8px;border:1px solid var(--border);"/>
+      <input type="number" name="limit" min="5" max="100" value="25" style="width:80px;padding:8px;border-radius:8px;border:1px solid var(--border);"/>
+      <button type="submit" class="reddit-btn"><i class="ti ti-search"></i> Найти users</button>
+    </form>
+
+    {% if notice and notice.startswith('scan_ok') or notice and notice.startswith('search_ok') %}
+    <small style="color:#1b873f;">{{ notice }}</small>
+    {% elif notice and (notice.startswith('scan_failed') or notice.startswith('search_failed') or notice.endswith('_exception')) %}
+    <small style="color:#c33;">{{ notice }}</small>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  <form method="get" action="/reddit/audience" class="reddit-card" style="gap:14px;">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <label style="display:flex;align-items:center;gap:6px;">
+        <input type="radio" name="source" value="by_subreddit" {% if source == 'by_subreddit' %}checked{% endif %}/>
+        По сабреддиту (авторы постов)
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;">
+        <input type="radio" name="source" value="by_subreddit_comments" {% if source == 'by_subreddit_comments' %}checked{% endif %}/>
+        По сабреддиту (комментаторы)
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;">
+        <input type="radio" name="source" value="by_post_permalink" {% if source == 'by_post_permalink' %}checked{% endif %}/>
+        По permalink поста
+      </label>
+    </div>
+
+    <div style="display:grid;grid-template-columns:2fr 2fr 1fr auto;gap:10px;">
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font:600 12px/1 Inter;color:var(--text-muted)">subreddit (без r/)</span>
+        <input type="text" name="subreddit" value="{{ subreddit }}" placeholder="askreddit"
+               style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;"/>
+      </label>
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font:600 12px/1 Inter;color:var(--text-muted)">permalink поста</span>
+        <input type="text" name="permalink" value="{{ permalink }}" placeholder="/r/askreddit/comments/abc/..."
+               style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;"/>
+      </label>
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font:600 12px/1 Inter;color:var(--text-muted)">limit</span>
+        <input type="number" name="limit" min="5" max="100" value="{{ limit }}"
+               style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;"/>
+      </label>
+      <button type="submit" class="reddit-btn reddit-btn--primary" style="align-self:end;">
+        <i class="ti ti-search"></i> Искать
+      </button>
+    </div>
+  </form>
+
+  {% if error %}
+  <div class="reddit-card" style="border-color:#c33;color:#c33;background:color-mix(in srgb,#c33 6%,var(--bg-surface));">
+    <i class="ti ti-alert-triangle"></i> {{ error }}
+  </div>
+  {% endif %}
+
+  {% if cards %}
+  <form method="post" action="/reddit/audience/ingest">
+    <input type="hidden" name="source" value="{{ source }}"/>
+    <input type="hidden" name="source_ref" value="{% if source == 'by_post_permalink' %}{{ permalink }}{% else %}r/{{ subreddit }}{% endif %}"/>
+    <input type="hidden" name="owner_account_id" value="{{ account_id or '' }}"/>
+
+    <div class="reddit-card" style="padding:14px 18px;flex-direction:row;align-items:center;gap:12px;justify-content:space-between;">
+      <div style="font:500 14px/1.2 Inter;color:var(--text-primary);">
+        Найдено: {{ cards|length }}
+      </div>
+      <div style="display:flex;gap:8px;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-muted);">
+          <input type="checkbox" id="reddit-audience-select-all" checked/> выбрать всех
+        </label>
+        <button type="submit" class="reddit-btn reddit-btn--primary"><i class="ti ti-plus"></i> Добавить в лиды</button>
+      </div>
+    </div>
+
+    <textarea name="usernames" id="reddit-audience-usernames" style="display:none;"></textarea>
+
+    <table style="width:100%;border-collapse:collapse;margin-top:12px;">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border);font:600 12px/1.4 Inter;color:var(--text-muted);text-transform:uppercase;">
+          <th style="text-align:left;padding:10px;">
+            <input type="checkbox" id="reddit-audience-head-checkbox" checked/>
+          </th>
+          <th style="text-align:left;padding:10px;">User</th>
+          <th style="text-align:left;padding:10px;">Subreddit</th>
+          <th style="text-align:left;padding:10px;">Excerpt</th>
+          <th style="text-align:left;padding:10px;">Karma</th>
+          <th style="text-align:left;padding:10px;">Age</th>
+          <th style="text-align:left;padding:10px;">When</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for c in cards %}
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:10px;"><input type="checkbox" class="reddit-audience-checkbox" data-username="{{ c.username }}" checked/></td>
+          <td style="padding:10px;">
+            <a href="https://www.reddit.com/user/{{ c.username }}" target="_blank" rel="noreferrer noopener" style="color:var(--ws-accent);">u/{{ c.username }}</a>
+            {% if c.already_lead %}<span style="font-size:11px;padding:1px 6px;border-radius:999px;background:color-mix(in srgb,#1b873f 14%,transparent);color:#1b873f;">в лидах</span>{% endif %}
+          </td>
+          <td style="padding:10px;">{{ c.subreddit or '—' }}</td>
+          <td style="padding:10px;max-width:380px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ c.title_excerpt or '—' }}</td>
+          <td style="padding:10px;">{{ c.karma_total if c.karma_total is not none else '—' }}</td>
+          <td style="padding:10px;">{{ c.account_age_days if c.account_age_days is not none else '—' }}</td>
+          <td style="padding:10px;white-space:nowrap;">{{ format_dt_madrid(c.activity_at) }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </form>
+
+  <script>
+  (function () {
+    var textarea = document.getElementById('reddit-audience-usernames');
+    var boxes = document.querySelectorAll('.reddit-audience-checkbox');
+    var head = document.getElementById('reddit-audience-head-checkbox');
+    var all = document.getElementById('reddit-audience-select-all');
+    function sync() {
+      var names = [];
+      boxes.forEach(function (b) { if (b.checked) names.push(b.dataset.username); });
+      textarea.value = names.join("\n");
+    }
+    function setAll(v) { boxes.forEach(function (b) { b.checked = v; }); sync(); }
+    boxes.forEach(function (b) { b.addEventListener('change', sync); });
+    if (head) head.addEventListener('change', function () { setAll(head.checked); });
+    if (all)  all.addEventListener('change',  function () { setAll(all.checked); });
+    sync();
+  })();
+  </script>
+  {% elif has_account and (subreddit or permalink) and not error %}
+  <div class="reddit-placeholder">
+    <div class="reddit-placeholder__icon"><i class="ti ti-user-search"></i></div>
+    <p class="reddit-placeholder__text">Пользователей не найдено. Попробуйте другой источник или увеличьте limit.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

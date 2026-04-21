@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SOCMASTER — премиум-настольное приложение уровня Apple. AI-автоматизация Facebook: парсер, Messenger, CRM, сценарии и прогрев аккаунтов. Для тех, кто строит серьёзный бизнес.">
+    <title>SOCMASTER • Премиум-автоматизация Facebook</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=SF+Pro+Display:wght@400;500;600&display=swap');
+        
+        :root {
+            --gold: #f5d06e;
+        }
+        
+        * {
+            transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 200ms;
+        }
+        
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .heading-font {
+            font-family: 'SF Pro Display', system-ui, sans-serif;
+            font-weight: 600;
+            letter-spacing: -0.04em;
+        }
+
+        .hero-bg {
+            background: radial-gradient(circle at 40% 30%, #111111 0%, #0a0a0a 50%, #000000 100%);
+        }
+        
+        .navbar {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        
+        .gold-text {
+            background: linear-gradient(90deg, #f5d06e, #e8b93d);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .feature-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(245, 208, 110, 0.15);
+            box-shadow: 0 0 0 1px rgba(245, 208, 110, 0.1);
+        }
+        
+        .feature-card:hover {
+            border-color: #f5d06e;
+            box-shadow: 0 25px 50px -12px rgba(245, 208, 110, 0.25);
+            transform: translateY(-3px);
+        }
+        
+        .app-mockup {
+            animation: premium-float 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            box-shadow: 
+                0 0 80px -20px rgb(245 208 110),
+                0 35px 60px -15px rgb(0 0 0);
+        }
+        
+        @keyframes premium-float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-25px) rotate(2deg); }
+        }
+        
+        .section-header {
+            position: relative;
+        }
+        
+        .section-header::after {
+            content: '';
+            position: absolute;
+            bottom: -12px;
+            left: 0;
+            width: 48px;
+            height: 2px;
+            background: linear-gradient(to right, #f5d06e, transparent);
+        }
+        
+        .luxury-button {
+            background: linear-gradient(90deg, #f5d06e, #e8b93d);
+            color: #111111;
+            font-weight: 600;
+            box-shadow: 0 10px 30px -10px #f5d06e;
+            letter-spacing: -0.02em;
+        }
+        
+        .luxury-button:hover {
+            box-shadow: 0 20px 40px -10px #f5d06e;
+            transform: scale(1.04);
+        }
+        
+        .glass {
+            background: rgba(255,255,255,0.06);
+            backdrop-filter: blur(16px);
+        }
+        
+        .mobile-menu-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(20px);
+            z-index: 40;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .mobile-menu-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .mobile-menu {
+            position: fixed;
+            top: 0; right: -100%;
+            bottom: 0; width: 80%; max-width: 320px;
+            background: #111;
+            border-left: 1px solid rgba(255,255,255,0.1);
+            z-index: 50;
+            transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            padding: 80px 30px 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .mobile-menu.active {
+            right: 0;
+        }
+
+        .mobile-menu a {
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: rgba(255,255,255,0.9);
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+    </style>
+</head>
+<body class="bg-black text-white overflow-x-hidden">
+    <!-- NAVBAR — Apple-style minimal -->
+    <nav class="navbar fixed top-0 left-0 right-0 z-50 bg-black/80 border-b border-white/10 py-4">
+        <div class="max-w-screen-2xl mx-auto px-10 flex items-center justify-between">
+            <div class="flex items-center gap-x-3">
+                <div class="w-8 h-8 bg-gradient-to-br from-[#f5d06e] to-[#e8b93d] rounded-2xl flex items-center justify-center text-black text-2xl shadow-inner">𝕗</div>
+                <span class="heading-font text-3xl tracking-[-1px]">SOCMASTER</span>
+            </div>
+            
+            <div class="hidden md:flex items-center gap-x-10 text-sm font-medium text-white/90">
+                <a href="#features" class="hover:text-[#f5d06e]">Возможности</a>
+                <a href="#ai" class="hover:text-[#f5d06e]">Искусственный интеллект</a>
+                <a href="#business" class="hover:text-[#f5d06e]">Для бизнеса</a>
+                <a href="#desktop" class="hover:text-[#f5d06e]">Приложение</a>
+                <a href="#messenger" class="hover:text-[#f5d06e]">Messenger</a>
+            </div>
+            
+            <div class="flex items-center gap-x-4">
+                <a href="/buy" class="luxury-button px-8 py-3.5 text-sm rounded-3xl flex items-center gap-x-2 hidden md:flex">
+                    <i class="fa-solid fa-key"></i>
+                    Купить лицензию
+                </a>
+                
+                <a href="/buy" class="flex items-center gap-x-2 px-6 py-3 text-sm font-medium border border-white/20 hover:border-[#f5d06e] rounded-3xl transition-colors hidden md:flex">
+                    <i class="fa-solid fa-arrow-down-to-line"></i>
+                    Скачать
+                </a>
+                
+                <button onclick="toggleMobileMenu()" class="md:hidden text-3xl text-white/80 hover:text-white transition-colors relative z-[60]">
+                    <i class="fa-solid fa-bars" id="mobile-menu-icon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu-overlay" id="mobile-menu-overlay" onclick="toggleMobileMenu()"></div>
+    <div class="mobile-menu" id="mobile-menu">
+        <a href="#features" onclick="toggleMobileMenu()">Возможности</a>
+        <a href="#ai" onclick="toggleMobileMenu()">Искусственный интеллект</a>
+        <a href="#business" onclick="toggleMobileMenu()">Для бизнеса</a>
+        <a href="#desktop" onclick="toggleMobileMenu()">Приложение</a>
+        <a href="#messenger" onclick="toggleMobileMenu()">Messenger</a>
+        <a href="/buy" class="text-[#f5d06e] mt-4" style="border:none" onclick="toggleMobileMenu()">
+            <i class="fa-solid fa-key mr-2"></i>Купить лицензию
+        </a>
+    </div>
+
+    <!-- HERO — ultra-premium -->
+    <header class="hero-bg min-h-screen pt-24 flex items-center relative">
+        <div class="max-w-screen-2xl mx-auto px-10 grid md:grid-cols-12 gap-16 items-center">
+            <div class="md:col-span-7 z-10">
+                <div class="inline-flex items-center gap-x-3 px-6 py-2 bg-white/10 backdrop-blur-2xl rounded-3xl border border-white/10 text-xs tracking-widest font-medium mb-8">
+                    <span class="w-2 h-2 bg-[#f5d06e] rounded-full animate-pulse"></span>
+                    PREMIUM • AI POWERED • 2026
+                </div>
+                
+                <h1 class="heading-font text-6xl md:text-8xl leading-[1.05] tracking-[-3px] max-w-2xl">
+                    Ваш Facebook.<br>
+                    На уровне <span class="gold-text">Apple</span>.
+                </h1>
+                
+                <p class="text-2xl md:text-3xl text-white/80 mt-6 max-w-xl">
+                    Премиум-настольное приложение с искусственным интеллектом. 
+                    Автоматизация, которая строит бизнес, а не просто рассылает сообщения.
+                </p>
+                
+                <div class="mt-12 flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                    <a href="/buy" 
+                       class="luxury-button text-xl md:text-2xl px-14 py-6 md:py-7 rounded-3xl flex items-center justify-center gap-x-4 shadow-2xl w-full sm:w-auto">
+                        Получить доступ
+                        <i class="fa-solid fa-arrow-right text-xl"></i>
+                    </a>
+                    
+                    <div class="text-white/60 text-sm max-w-[180px] leading-tight flex-shrink-0">
+                        Уже более 340 предпринимателей масштабируют свой бизнес в Facebook с SOCMASTER
+                    </div>
+                </div>
+                
+                <div class="mt-16 grid grid-cols-2 lg:flex items-center gap-6 text-sm text-white/60">
+                    <div class="flex items-center gap-x-2">
+                        <i class="fa-solid fa-shield-halved text-[#f5d06e]"></i>
+                        Полная приватность
+                    </div>
+                    <div class="flex items-center gap-x-2">
+                        <i class="fa-solid fa-robot text-[#f5d06e]"></i>
+                        Встроенный ИИ
+                    </div>
+                    <div class="flex items-center gap-x-2">
+                        <i class="fa-solid fa-laptop text-[#f5d06e]"></i>
+                        Работает локально
+                    </div>
+                    <div class="flex items-center gap-x-2">
+                        <i class="fa-solid fa-sync text-[#f5d06e]"></i>
+                        Автообновления
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Ultra-premium mockup -->
+            <div class="md:col-span-5 relative z-10 w-full">
+                <div class="app-mockup relative mx-auto w-full max-w-[460px] bg-gradient-to-br from-[#1a1a1a] to-black border border-[#f5d06e]/20 rounded-[2.75rem] p-4 shadow-2xl">
+                    <div class="bg-[#111] rounded-3xl overflow-hidden">
+                        <!-- Top bar -->
+                        <div class="h-12 bg-gradient-to-r from-black to-[#111] flex items-center px-6 text-xs text-white/70">
+                            <div class="flex-1 flex items-center gap-x-2">
+                                <div class="text-[#f5d06e]">SOCMASTER</div>
+                                <div class="text-[10px] px-3 py-px bg-white/10 rounded-3xl">v1.5.2</div>
+                            </div>
+                            <div class="flex items-center gap-x-6 text-xs">
+                                <div class="flex items-center text-emerald-400"><span class="relative flex h-2 w-2 mr-1"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400"></span></span>ONLINE</div>
+                                Messenger
+                            </div>
+                        </div>
+                        
+                        <!-- Fake screen -->
+                        <div class="h-96 bg-[#0a0a0a] relative flex items-center justify-center overflow-hidden">
+                            <div class="text-center px-10 w-full relative z-10">
+                                <div class="text-7xl md:text-8xl mb-8">📈</div>
+                                <div class="text-4xl md:text-5xl font-semibold tracking-[-1px] text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">+12 847 лидов</div>
+                                <div class="text-[#f5d06e] text-xl md:text-2xl mt-1">за последние 30 дней</div>
+                                
+                                <div class="mt-12 grid grid-cols-3 gap-3 md:gap-4 text-center text-[10px] md:text-xs">
+                                    <div class="bg-white/5 rounded-3xl py-4 md:py-5 flex flex-col justify-center border border-white/5 hover:border-white/20 transition-colors"><span>Парсер</span><span class="text-2xl md:text-4xl font-semibold text-white mt-1">2 391</span></div>
+                                    <div class="bg-white/5 rounded-3xl py-4 md:py-5 flex flex-col justify-center border border-white/5 hover:border-white/20 transition-colors"><span>AI-рассылка</span><span class="text-2xl md:text-4xl font-semibold text-white mt-1">641</span></div>
+                                    <div class="bg-white/5 rounded-3xl py-4 md:py-5 flex flex-col justify-center border border-white/5 hover:border-white/20 transition-colors"><span>CRM-воронка</span><span class="text-2xl md:text-4xl font-semibold text-white mt-1">28</span></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Subtle tech glow -->
+                            <div class="absolute inset-0 bg-gradient-to-t from-[#f5d06e]/10 to-transparent pointer-events-none"></div>
+                            
+                            <!-- Floating AI badge -->
+                            <div class="absolute top-6 right-6 glass px-4 md:px-5 py-2 rounded-3xl text-[10px] md:text-xs flex items-center gap-x-2 text-[#f5d06e] border border-[#f5d06e]/30 shadow-lg backdrop-blur-md">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                AI-агент активен
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- TRUST BAR -->
+    <div class="border-b border-white/10 bg-black py-8 relative z-20">
+        <div class="max-w-screen-2xl mx-auto px-10 flex flex-wrap justify-center items-center gap-x-8 lg:gap-x-12 gap-y-6 text-sm text-white/60">
+            <div class="flex items-center gap-x-3"><i class="fa-brands fa-apple text-3xl"></i> macOS arm64</div>
+            <div class="flex items-center gap-x-3"><i class="fa-brands fa-windows text-2xl"></i> Windows Ready</div>
+            <div class="text-[#f5d06e] flex items-center gap-2"><i class="fa-solid fa-lock"></i>Защита уровня enterprise</div>
+            <div class="flex items-center gap-2"><i class="fa-brands fa-python"></i>Python 3.12 Core</div>
+            <div class="flex items-center gap-2"><i class="fa-solid fa-brain"></i>OpenAI • Gemini</div>
+        </div>
+    </div>
+
+    <!-- FOR BUSINESS -->
+    <section id="business" class="max-w-screen-2xl mx-auto px-10 py-24 md:py-32">
+        <div class="text-center mb-16">
+            <span class="text-[#f5d06e] text-xs tracking-[2px] font-medium uppercase">Для тех, кто строит бизнес</span>
+            <h2 class="heading-font text-4xl md:text-6xl mt-4">SOCMASTER создан для тех,<br class="hidden md:block">кто думает по-крупному</h2>
+        </div>
+        
+        <div class="grid md:grid-cols-3 gap-8">
+            <div class="feature-card p-10 rounded-3xl relative overflow-hidden group">
+                <div class="absolute inset-0 bg-gradient-to-br from-[#f5d06e]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div class="text-7xl mb-8 relative z-10 drop-shadow-lg">🧲</div>
+                <h3 class="text-2xl md:text-3xl font-semibold relative z-10 text-white/90 group-hover:text-white">MLM и сети</h3>
+                <p class="text-white/60 mt-6 text-lg relative z-10 leading-relaxed">Тёплые контакты, персонализированные приглашения, AI-рассылки и автоматический прогрев. Сотни новых партнёров каждый месяц.</p>
+            </div>
+            <div class="feature-card p-10 rounded-3xl relative overflow-hidden group">
+                <div class="absolute inset-0 bg-gradient-to-br from-[#f5d06e]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div class="text-7xl mb-8 relative z-10 drop-shadow-lg">💼</div>
+                <h3 class="text-2xl md:text-3xl font-semibold relative z-10 text-white/90 group-hover:text-white">Малый и средний бизнес</h3>
+                <p class="text-white/60 mt-6 text-lg relative z-10 leading-relaxed">Лидогенерация из групп. Комментарии под постами конкурентов, CRM-воронка и Messenger — всё в одном приложении.</p>
+            </div>
+            <div class="feature-card p-10 rounded-3xl relative overflow-hidden group">
+                <div class="absolute inset-0 bg-gradient-to-br from-[#f5d06e]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div class="text-7xl mb-8 relative z-10 drop-shadow-lg">🏢</div>
+                <h3 class="text-2xl md:text-3xl font-semibold relative z-10 text-white/90 group-hover:text-white">Крупный бизнес</h3>
+                <p class="text-white/60 mt-6 text-lg relative z-10 leading-relaxed">Масштабные сценарии, языковая сегментация аудитории, ротация аккаунтов и абсолютный контроль над потоком трафика.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI SECTION -->
+    <section id="ai" class="bg-gradient-to-b from-[#0a0a0a] to-[#111111] py-24 md:py-32 border-t border-white/5">
+        <div class="max-w-screen-2xl mx-auto px-10">
+            <div class="flex flex-col lg:flex-row gap-16 items-center">
+                <div class="lg:w-5/12">
+                    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#f5d06e]/10 border border-[#f5d06e]/20 text-[#f5d06e] text-xs font-semibold tracking-wider mb-6">
+                        <i class="fa-solid fa-bolt"></i> ИИ В КАЖДОМ ДЕЙСТВИИ
+                    </div>
+                    <h2 class="heading-font text-5xl md:text-6xl leading-[1.1] tracking-tight">Искусственный интеллект,<br>понимающий бизнес</h2>
+                    <p class="text-xl md:text-2xl text-white/70 mt-8 leading-relaxed font-light">Нейро-вариации текстов, first-touch, умный подбор аудитории, языковая сегментация и автоматические сценарии по дням.</p>
+                    <div class="mt-12 flex flex-wrap gap-4">
+                        <div class="glass px-6 py-3 rounded-2xl text-sm flex items-center gap-x-3 border border-white/10 hover:border-[#f5d06e]/50 hover:bg-white/10 cursor-default transition-all"><i class="fa-solid fa-microchip text-[#f5d06e]"></i> OpenAI</div>
+                        <div class="glass px-6 py-3 rounded-2xl text-sm flex items-center gap-x-3 border border-white/10 hover:border-[#f5d06e]/50 hover:bg-white/10 cursor-default transition-all"><i class="fa-brands fa-google text-[#f5d06e]"></i> Google Gemini</div>
+                        <div class="glass px-6 py-3 rounded-2xl text-sm flex items-center gap-x-3 border border-white/10 hover:border-[#f5d06e]/50 hover:bg-white/10 cursor-default transition-all"><i class="fa-solid fa-diagram-project text-[#f5d06e]"></i> Сценарии и очереди</div>
+                    </div>
+                </div>
+                <div class="lg:w-7/12 w-full">
+                    <div class="bg-gradient-to-br from-white/5 to-white/0 border border-white/10 rounded-[2.5rem] p-2 md:p-4 shadow-2xl relative">
+                        <div class="absolute inset-0 bg-gradient-to-r from-[#f5d06e]/10 to-transparent blur-3xl opacity-30 rounded-full"></div>
+                        <div class="aspect-[16/10] bg-black rounded-[2rem] flex flex-col items-center justify-center relative overflow-hidden border border-white/5 shadow-inner">
+                            <div class="text-8xl md:text-9xl mb-8 filter drop-shadow-[0_0_30px_rgba(245,208,110,0.5)]">🧠✨</div>
+                            <div class="absolute bottom-6 md:bottom-10 left-6 md:left-10 right-6 md:right-10 text-center">
+                                <div class="inline-block px-6 py-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-white text-sm md:text-base font-medium shadow-lg">
+                                    AI-агент формирует уникальные first-touch предложения
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features" class="max-w-screen-2xl mx-auto px-10 py-24 md:py-32">
+        <h2 class="heading-font text-5xl md:text-6xl text-center mb-20">Каждый инструмент —<br class="md:hidden"> на уровне люкс</h2>
+        
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            <div class="feature-card rounded-[2rem] p-8 md:p-10 group">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center text-3xl mb-8 group-hover:scale-110 transition-transform">🔍</div>
+                <h3 class="text-2xl font-semibold tracking-tight text-white/90 group-hover:text-white">Парсер с ИИ</h3>
+                <p class="mt-4 text-white/60 leading-relaxed">Друзья, подписчики, аудитория групп. Автоматическая языковая сегментация RU/EN/FOREIGN прямо во время сбора.</p>
+            </div>
+            <div class="feature-card rounded-[2rem] p-8 md:p-10 group">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center text-3xl mb-8 group-hover:scale-110 transition-transform">📨</div>
+                <h3 class="text-2xl font-semibold tracking-tight text-white/90 group-hover:text-white">Умные рассылки</h3>
+                <p class="mt-4 text-white/60 leading-relaxed">Персонализированные сообщения, first-touch и нейро-вариации. Комментарии под постами с ротацией аккаунтов.</p>
+            </div>
+            <div class="feature-card rounded-[2rem] p-8 md:p-10 group">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center text-3xl mb-8 group-hover:scale-110 transition-transform">📊</div>
+                <h3 class="text-2xl font-semibold tracking-tight text-white/90 group-hover:text-white">CRM-воронка</h3>
+                <p class="mt-4 text-white/60 leading-relaxed">Канбан-стадии, автоматические активности профилей, полная история переписок и аналитика в реальном времени.</p>
+            </div>
+            <div class="feature-card rounded-[2rem] p-8 md:p-10 group">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center text-3xl mb-8 group-hover:scale-110 transition-transform">📅</div>
+                <h3 class="text-2xl font-semibold tracking-tight text-white/90 group-hover:text-white">Сценарии + агент</h3>
+                <p class="mt-4 text-white/60 leading-relaxed">Комбо-действия (лайк, комментарий, заявка). Полный автопилот с мягким throttle и учетом часовых поясов клиента.</p>
+            </div>
+            <div class="feature-card rounded-[2rem] p-8 md:p-10 group">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center text-3xl mb-8 group-hover:scale-110 transition-transform">🔥</div>
+                <h3 class="text-2xl font-semibold tracking-tight text-white/90 group-hover:text-white">Прогрев (Warmup)</h3>
+                <p class="mt-4 text-white/60 leading-relaxed">Натуральный daily warmup с алгоритмами поведения живого человека. Автопросмотры ленты, Reels и длительные сессии.</p>
+            </div>
+            <div class="feature-card rounded-[2rem] p-8 md:p-10 group">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center text-3xl mb-8 group-hover:scale-110 transition-transform">💬</div>
+                <h3 class="text-2xl font-semibold tracking-tight text-white/90 group-hover:text-white">Интеграция Messenger</h3>
+                <p class="mt-4 text-white/60 leading-relaxed">Живой интерфейс Facebook Messenger прямо внутри приложения. Работает параллельно с фоновой автоматизацией.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- DESKTOP APP PREMIUM -->
+    <section id="desktop" class="py-24 md:py-32 border-t border-b border-white/5 bg-gradient-to-b from-black to-[#0a0a0a]">
+        <div class="max-w-screen-2xl mx-auto px-10 grid md:grid-cols-12 gap-16 items-center">
+            <div class="md:col-span-6 lg:col-span-5 relative z-10 order-2 md:order-1 mt-10 md:mt-0">
+                <div class="inline-block px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/70 text-xs font-semibold tracking-widest mb-6 uppercase">
+                    Настольное приложение
+                </div>
+                <h2 class="heading-font text-5xl md:text-6xl mt-4 leading-[1.1] tracking-tight">Элегантность Apple.<br>Мощь для бизнеса.</h2>
+                <p class="mt-8 text-xl text-white/60 leading-relaxed font-light">Встроенный Chromium и Python 3.12. Никаких облаков для ваших данных — полная приватность. Работает локально, обновляется автоматически.</p>
+                
+                <div class="mt-12 md:mt-16 space-y-6 md:space-y-8">
+                    <div class="flex items-center gap-5 p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors"><div class="w-12 h-12 flex items-center justify-center rounded-full bg-[#f5d06e]/10"><i class="fa-solid fa-check text-xl text-[#f5d06e]"></i></div><div class="text-lg font-medium text-white/90">macOS arm64 & Windows Native</div></div>
+                    <div class="flex items-center gap-5 p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors"><div class="w-12 h-12 flex items-center justify-center rounded-full bg-[#f5d06e]/10"><i class="fa-solid fa-check text-xl text-[#f5d06e]"></i></div><div class="text-lg font-medium text-white/90">Playwright Automation Core</div></div>
+                    <div class="flex items-center gap-5 p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors"><div class="w-12 h-12 flex items-center justify-center rounded-full bg-[#f5d06e]/10"><i class="fa-solid fa-check text-xl text-[#f5d06e]"></i></div><div class="text-lg font-medium text-white/90">Hardware-level Лицензия</div></div>
+                </div>
+            </div>
+            
+            <div class="md:col-span-6 lg:col-span-7 order-1 md:order-2">
+                <div class="app-mockup bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a] border border-[#f5d06e]/20 rounded-[3rem] shadow-2xl p-4 md:p-6 mx-auto w-full max-w-2xl relative">
+                    <div class="absolute -inset-10 bg-gradient-to-tr from-[#f5d06e]/10 via-transparent to-transparent opacity-50 blur-3xl -z-10 rounded-full pointer-events-none"></div>
+                    <div class="rounded-3xl overflow-hidden bg-black ring-1 ring-white/10 shadow-inner h-[300px] md:h-[400px] flex flex-col">
+                        <div class="px-6 py-4 text-xs flex justify-between items-center bg-[#0a0a0a] border-b border-white/10 m-2 rounded-2xl">
+                            <span class="font-medium text-white/80">💻 SOCMASTER Desktop Environment</span>
+                            <span class="text-[#f5d06e] flex items-center gap-2"><div class="w-2 h-2 bg-[#f5d06e] rounded-full animate-pulse"></div> Localhost:8000</span>
+                        </div>
+                        <div class="flex-1 flex flex-col items-center justify-center text-center p-8">
+                            <div class="text-6xl mb-6 filter drop-shadow-md">⚙️</div>
+                            <div class="text-2xl font-medium text-white/90 mb-2">Основное окно управления</div>
+                            <div class="text-white/40 text-sm">Панель администратора и статистика</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MESSENGER -->
+    <section id="messenger" class="py-24 md:py-32 bg-black relative overflow-hidden">
+        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#1a1a1a] via-black to-black opacity-80 pointer-events-none"></div>
+        <div class="max-w-screen-2xl mx-auto px-10 text-center relative z-10">
+            <span class="text-[#f5d06e] text-xs font-bold tracking-[3px] uppercase mb-4 block">Коммуникации</span>
+            <h2 class="heading-font text-5xl md:text-7xl">Messenger — вы внутри Facebook</h2>
+            <p class="mt-6 md:mt-8 text-xl md:text-3xl text-white/60 max-w-3xl mx-auto font-light leading-relaxed">Отдельная рабочая сессия. Функционирует параллельно с ботами автоматизации. Идеальная отзывчивость.</p>
+            
+            <div class="mt-20 mx-auto max-w-4xl bg-[#0a0a0a] rounded-[3rem] border border-[#f5d06e]/20 p-4 md:p-8 shadow-2xl relative group">
+                <div class="absolute inset-0 bg-gradient-to-t from-[#f5d06e]/5 to-transparent rounded-[3rem] opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
+                <div class="aspect-[21/9] bg-black rounded-[2rem] flex flex-col items-center justify-center text-[#f5d06e] border border-white/5 relative overflow-hidden">
+                    <div class="text-7xl md:text-9xl mb-6 transform group-hover:scale-110 transition-transform duration-700">💬</div>
+                    <div class="text-white/40 font-medium tracking-wide">Direct Messenger Interface</div>
+                </div>
+            </div>
+            <div class="mt-16 pt-16 border-t border-white/10 flex justify-center">
+                 <a href="/buy" class="text-white/80 hover:text-[#f5d06e] hover:-translate-y-1 transition-all inline-flex items-center gap-2 font-medium text-lg border-b border-transparent hover:border-[#f5d06e] pb-1">
+                     Узнать больше о функционале <i class="fa-solid fa-arrow-right text-sm"></i>
+                 </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- FINAL CTA -->
+    <div class="py-24 md:py-40 text-center bg-gradient-to-b from-[#111] to-[#0a0a0a] border-t border-white/5">
+        <div class="max-w-screen-xl mx-auto px-10">
+            <h2 class="heading-font text-5xl md:text-7xl leading-[1.1] max-w-4xl mx-auto">Превратите Facebook в<br class="hidden md:block"> мощнейший канал продаж</h2>
+            <p class="text-xl md:text-3xl text-white/60 mt-8 font-light">Доступ к премиум-лицензии и инструментам уже вас ждёт.</p>
+            <p class="text-lg md:text-xl text-[#f5d06e]/90 mt-4 font-medium">Один тариф: {{ np_price_365 }} USD в год</p>
+            
+            <a href="/buy" 
+               class="luxury-button mt-16 inline-flex text-xl md:text-3xl px-12 md:px-20 py-6 md:py-8 rounded-full items-center gap-x-5 font-semibold group shadow-[0_15px_40px_-10px_rgba(245,208,110,0.4)]">
+                Купить SOCMASTER
+                <i class="fa-solid fa-arrow-right group-hover:translate-x-2 transition-transform duration-300"></i>
+            </a>
+            
+            <div class="mt-8 flex flex-wrap justify-center items-center gap-x-6 gap-y-3 text-sm font-medium text-white/40">
+                <span class="flex items-center gap-1.5"><i class="fa-solid fa-shield-check"></i> Защищенная оплата</span>
+                <span class="hidden sm:block text-white/20">•</span>
+                <span class="flex items-center gap-1.5"><i class="fa-solid fa-rotate"></i> Бесплатные обновления</span>
+                <span class="hidden sm:block text-white/20">•</span>
+                <span class="flex items-center gap-1.5"><i class="fa-regular fa-life-ring"></i> Премиум-поддержка</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="bg-black border-t border-white/10 py-16">
+        <div class="max-w-screen-2xl mx-auto px-10">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-y-8">
+                <div class="flex items-center gap-x-4">
+                    <div class="w-10 h-10 bg-gradient-to-br from-white/10 to-transparent border border-white/20 rounded-xl flex items-center justify-center text-white text-xl">𝕗</div>
+                    <span class="heading-font text-2xl font-semibold text-white/90">SOCMASTER</span>
+                </div>
+                
+                <div class="text-white/40 text-sm font-medium">
+                    © 2026 • Премиум инструмент для профессионалов
+                </div>
+                
+                <div class="flex gap-x-8 text-sm font-medium">
+                    <a href="/home" class="text-white/50 hover:text-white transition-colors">Главная (Кабинет)</a>
+                    <a href="/buy" class="text-[#f5d06e] hover:text-white transition-colors">Купить</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const overlay = document.getElementById('mobile-menu-overlay');
+            const icon = document.getElementById('mobile-menu-icon');
+            
+            menu.classList.toggle('active');
+            overlay.classList.toggle('active');
+            
+            if (menu.classList.contains('active')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-xmark');
+            } else {
+                icon.classList.add('fa-bars');
+                icon.classList.remove('fa-xmark');
+            }
+        }
+    </script>
+</body>
+</html>

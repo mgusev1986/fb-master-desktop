@@ -1,0 +1,91 @@
+{% extends "launcher/base.html" %}
+
+{% block title %}Рабочие пространства · SOCMASTER{% endblock %}
+
+{% block content %}
+<div class="fbm-launcher">
+  <header class="fbm-launcher__header">
+    <div class="fbm-launcher__logo">
+      <span class="fbm-launcher__logo-mark">SOC</span>
+      <span class="fbm-launcher__logo-text">MASTER</span>
+      {% if fbm_desktop_app_version %}
+      <span class="fbm-launcher__logo-version" title="Версия программы">v{{ fbm_desktop_app_version }}</span>
+      {% endif %}
+    </div>
+    <div class="fbm-launcher__header-spacer"></div>
+    <button id="theme-toggle" class="fbm-launcher__theme" title="Сменить тему">
+      <i id="theme-icon" class="ti ti-moon"></i>
+    </button>
+  </header>
+
+  <section class="fbm-launcher__hero">
+    <h1 class="fbm-launcher__title">Выберите рабочее пространство</h1>
+    <p class="fbm-launcher__subtitle">Каждая соцсеть — свой модуль со своим набором аккаунтов, очередей и правил безопасности.</p>
+  </section>
+
+  <section class="fbm-launcher__grid">
+    {% for card in launcher_view.cards %}
+    <article class="fbm-card fbm-card--{{ card.status }} {% if card.id == launcher_view.current_workspace_id %}fbm-card--current{% endif %}"
+             data-workspace="{{ card.id }}">
+      <header class="fbm-card__header">
+        <div class="fbm-card__icon" data-workspace="{{ card.id }}">
+          <i class="ti ti-{{ card.icon }}"></i>
+        </div>
+        <div class="fbm-card__head-meta">
+          <h2 class="fbm-card__title">{{ card.display_name }}</h2>
+          <div class="fbm-card__status fbm-card__status--{{ card.status_tone }}">
+            <span class="fbm-card__status-dot"></span>
+            {{ card.status_label }}
+            {% if card.status_badge %}<span class="fbm-card__status-badge">{{ card.status_badge }}</span>{% endif %}
+          </div>
+        </div>
+      </header>
+
+      <p class="fbm-card__desc">{{ card.short_description }}</p>
+
+      {% if card.status_description %}
+      <p class="fbm-card__note">{{ card.status_description }}</p>
+      {% endif %}
+
+      <div class="fbm-card__actions">
+        {% if card.openable %}
+          <a href="/workspaces/select/{{ card.id }}" class="fbm-btn fbm-btn--primary">
+            <i class="ti ti-arrow-right"></i> Открыть
+          </a>
+        {% else %}
+          <button type="button" class="fbm-btn fbm-btn--disabled" disabled title="{{ card.status_description }}">
+            <i class="ti ti-lock"></i> Недоступно
+          </button>
+        {% endif %}
+      </div>
+    </article>
+    {% endfor %}
+
+    {# Все 5 модулей (Facebook / Reddit / LinkedIn / Twitter / Instagram) теперь
+       зарегистрированы как реальные карточки — отрисовываются через
+       launcher_view.cards выше. Telegram Master — ghost (план на будущее). #}
+    <article class="fbm-card fbm-card--ghost" aria-disabled="true">
+      <header class="fbm-card__header">
+        <div class="fbm-card__icon fbm-card__icon--ghost">
+          <i class="ti ti-brand-telegram"></i>
+        </div>
+        <div class="fbm-card__head-meta">
+          <h2 class="fbm-card__title">Telegram Master</h2>
+          <div class="fbm-card__status fbm-card__status--muted">
+            <span class="fbm-card__status-dot"></span>
+            План
+          </div>
+        </div>
+      </header>
+      <p class="fbm-card__desc">Аккаунты, парсинг чатов и каналов, рассылка в личку, AI-помощник и outreach для Telegram — в плане на будущие релизы.</p>
+    </article>
+  </section>
+
+  <footer class="fbm-launcher__footer">
+    <p>
+      Настройки, лицензия и обновления доступны внутри любого workspace — слева в сайдбаре
+      «Система». Переключиться между пространствами можно в любой момент из панели в верхней части экрана.
+    </p>
+  </footer>
+</div>
+{% endblock %}

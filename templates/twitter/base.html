@@ -1,0 +1,63 @@
+{#
+  Twitter / X Master base template.
+  Sidebar — fbm_workspace_nav("twitter"). Accent — холодный голубой #1d9bf0 (X brand).
+#}
+{% extends "_shell/base.html" %}
+
+{% block shell_workspace %}twitter{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/twitter.css') }}?v={{ static_v }}"/>
+{% endblock %}
+
+{% block shell_sidebar %}
+{% set _x_nav = fbm_workspace_nav("twitter") %}
+<aside class="sidebar" data-workspace="twitter">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <span class="sidebar-logo__mark sidebar-logo__mark--twitter">SOC</span>MASTER
+    </div>
+    {% if fbm_desktop_app_version %}
+    <div class="sidebar-version-line" title="Версия программы">v{{ fbm_desktop_app_version }}</div>
+    {% endif %}
+    <div class="sidebar-beta-line" title="Twitter / X Master в режиме Beta">
+      <i class="ti ti-flask-2"></i> Twitter / X Master · Beta
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    {% if _x_nav %}
+      {% for group in _x_nav.groups %}
+      <div class="nav-group">
+        <div class="nav-group-label">{{ group.label }}</div>
+        {% for item in group.items %}
+        <a href="{{ item.href }}"
+           class="nav-item{% if item.hidden %} nav-item--sidebar-hidden{% endif %}{% if page_id == item.id %} active{% endif %}">
+          <i class="ti ti-{{ item.icon }}"></i>
+          <span>{{ item.label }}</span>
+          {% if item.badge %}<span class="nav-item__badge">{{ item.badge }}</span>{% endif %}
+        </a>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    {% endif %}
+
+    <div class="nav-group">
+      <div class="nav-group-label">Навигация</div>
+      <a href="/workspaces" class="nav-item"><i class="ti ti-layout-grid"></i> Все пространства</a>
+      <a href="/" class="nav-item"><i class="ti ti-brand-facebook"></i> Facebook Master</a>
+      <a href="/reddit" class="nav-item"><i class="ti ti-brand-reddit"></i> Reddit Master</a>
+      <a href="/linkedin" class="nav-item"><i class="ti ti-brand-linkedin"></i> LinkedIn Master</a>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-actions">
+      <button id="theme-toggle" class="btn-sidebar" title="Сменить тему"><i id="theme-icon" class="ti ti-moon"></i></button>
+      {% if sidebar_show_logout(request, user) %}
+      <a href="/auth/logout" class="btn-sidebar"><i class="ti ti-logout"></i> Выйти</a>
+      {% endif %}
+    </div>
+  </div>
+</aside>
+{% endblock %}

@@ -1,0 +1,35 @@
+{#
+  Workspace tabs — как вкладки в браузере.
+  Рендерится в шапке main-content через _shell/base.html.
+  Ожидает в контексте переменные `available_workspaces` и `current_workspace_id`.
+#}
+{% if available_workspaces and current_workspace_id %}
+<nav class="fbm-ws-tabs" role="tablist" aria-label="Рабочие пространства">
+  {% for ws in available_workspaces %}
+    {% if ws.openable %}
+      <a class="fbm-ws-tab {% if ws.id == current_workspace_id %}fbm-ws-tab--active{% endif %}"
+         href="/workspaces/select/{{ ws.id }}"
+         data-workspace="{{ ws.id }}"
+         role="tab"
+         aria-selected="{{ 'true' if ws.id == current_workspace_id else 'false' }}"
+         title="Переключиться на {{ ws.display_name }}">
+        <i class="ti ti-{{ ws.icon }} fbm-ws-tab__icon"></i>
+        <span class="fbm-ws-tab__label">{{ ws.display_name }}</span>
+        {% if ws.status_badge %}<span class="fbm-ws-tab__badge">{{ ws.status_badge }}</span>{% endif %}
+      </a>
+    {% else %}
+      <span class="fbm-ws-tab fbm-ws-tab--disabled"
+            data-workspace="{{ ws.id }}"
+            title="{{ ws.status_description }}">
+        <i class="ti ti-{{ ws.icon }} fbm-ws-tab__icon"></i>
+        <span class="fbm-ws-tab__label">{{ ws.display_name }}</span>
+        <span class="fbm-ws-tab__badge fbm-ws-tab__badge--muted">{{ ws.status_label }}</span>
+      </span>
+    {% endif %}
+  {% endfor %}
+  <a class="fbm-ws-tab fbm-ws-tab--all" href="/workspaces" title="Все рабочие пространства">
+    <i class="ti ti-layout-grid"></i>
+    <span class="fbm-ws-tab__label">Все</span>
+  </a>
+</nav>
+{% endif %}

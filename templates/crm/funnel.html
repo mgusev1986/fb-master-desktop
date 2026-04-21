@@ -1,0 +1,1330 @@
+{% extends "base.html" %}
+{% block title %}{% if cabinet_client_mode(request) %}Воронка продаж — SOCMASTER{% else %}Воронка — SOCMASTER{% endif %}{% endblock %}
+{% block body_class %}funnel-page{% endblock %}
+
+{% block head %}
+<style>
+  /* На этой странице main не ограничен 1200px — канбан использует всю ширину окна */
+  body.funnel-page .page-body {
+    max-width: none;
+    width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
+  }
+  body.funnel-page .card,
+  body.funnel-page .card-body {
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
+  /* Шапка воронки: без выталкивания кнопок за край экрана */
+  body.funnel-page .page-header-actions {
+    justify-content: flex-start;
+    align-items: flex-start;
+  }
+  @media (min-width: 768px) {
+    body.funnel-page .page-header-actions {
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+  }
+  .funnel-toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 16px; }
+  .funnel-toolbar .search-bar { flex: 1; min-width: 200px; max-width: 420px; }
+  .funnel-view-switch { display: flex; gap: 6px; flex-wrap: wrap; }
+  .funnel-toolbar .funnel-view-switch {
+    flex-basis: 100%;
+    margin-left: 0;
+    justify-content: flex-start;
+  }
+  @media (min-width: 960px) {
+    .funnel-toolbar .funnel-view-switch {
+      flex-basis: auto;
+      margin-left: auto;
+      justify-content: flex-end;
+    }
+  }
+  /* Доска: адаптивная сетка без горизонтального скролла; стадии переносятся по рядам */
+  .funnel-board-hint {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+    margin: 0 0 10px;
+    line-height: 1.45;
+  }
+  .funnel-board-hint i {
+    flex-shrink: 0;
+    opacity: 0.85;
+    margin-top: 2px;
+  }
+  /* Все стадии — кнопки; клик подсвечивает колонку и при необходимости прокручивает страницу к нужному ряду */
+  .funnel-stage-rail {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 14px;
+    padding: 10px 12px;
+    background: var(--bg-surface-hover);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+  .funnel-stage-rail__title {
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    color: var(--text-secondary);
+    width: 100%;
+    margin: 0 0 2px;
+  }
+  .funnel-stage-rail__subtitle {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    opacity: 0.92;
+    width: 100%;
+    margin: 0 0 6px;
+    line-height: 1.35;
+  }
+  .funnel-stage-rail__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 11px;
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+    color: var(--text-primary);
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+  }
+  .funnel-stage-rail__chip:hover {
+    border-color: var(--accent);
+    background: var(--accent-light);
+  }
+  .funnel-stage-rail__chip:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--accent-light);
+  }
+  .funnel-stage-rail__chip--custom {
+    border-style: dashed;
+  }
+  .funnel-stage-rail__chip--custom::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+    opacity: 0.9;
+  }
+  .funnel-stage-rail__chip--other {
+    border-color: var(--warning);
+    color: var(--warning);
+  }
+  .funnel-stage-rail__count {
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+  @keyframes funnel-col-flash {
+    0%, 100% { box-shadow: none; border-color: var(--border); }
+    40% { box-shadow: 0 0 0 3px var(--accent-light); border-color: var(--accent); }
+  }
+  .funnel-col.funnel-col--flash {
+    animation: funnel-col-flash 0.9s ease;
+  }
+  .funnel-board {
+    --funnel-col-max-h: clamp(280px, calc(100vh - 420px), 430px);
+    display: grid;
+    grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+    align-items: start;
+    gap: 12px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 4px 0 20px;
+    margin: 0;
+    overflow: visible;
+  }
+  .funnel-board-rest {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    align-items: start;
+    gap: 12px;
+    min-width: 0;
+  }
+  .funnel-col {
+    --funnel-col-current-max-h: var(--funnel-col-max-h);
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    align-self: start;
+    scroll-margin-top: 16px;
+    scroll-margin-bottom: 12px;
+    background: var(--bg-surface-hover);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .funnel-col--primary {
+    --funnel-col-current-max-h: clamp(760px, calc(100vh - 220px), 1120px);
+  }
+  .funnel-col-header {
+    padding: 12px 14px; font-weight: 600; font-size: var(--font-size-sm);
+    border-bottom: 1px solid var(--border); flex-shrink: 0;
+    display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  }
+  .funnel-col-header-inner { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+  .funnel-col-header-icon {
+    flex-shrink: 0; font-size: 1.1rem; color: var(--accent); opacity: 0.95;
+  }
+  .funnel-col-count { font-weight: 500; color: var(--text-secondary); font-size: var(--font-size-xs); }
+  .funnel-cards {
+    padding: 8px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 88px;
+    max-height: calc(var(--funnel-col-current-max-h) - 54px);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  @media (max-width: 1500px) {
+    .funnel-board-rest {
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+  }
+  @media (max-width: 1180px) {
+    .funnel-board {
+      grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
+    }
+    .funnel-board-rest {
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+  }
+  @media (max-width: 900px) {
+    .funnel-board {
+      grid-template-columns: 1fr;
+    }
+    .funnel-board-rest {
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+  }
+  .funnel-cards.funnel-drag-over { outline: 2px dashed var(--accent); outline-offset: -4px; border-radius: var(--radius-sm); }
+  .funnel-card {
+    background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 8px 10px; cursor: grab; box-shadow: var(--shadow-sm);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .funnel-card:active { cursor: grabbing; }
+  .funnel-card.dragging { opacity: 0.55; }
+  .funnel-card-head {
+    margin-bottom: 4px;
+  }
+  .funnel-card-title {
+    font-weight: 600; font-size: var(--font-size-sm); margin: 0; line-height: 1.28; word-break: break-word;
+  }
+  .funnel-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+    align-items: stretch;
+  }
+  .funnel-card-actions .funnel-card-messenger-btn {
+    flex: 1 1 140px;
+    margin-top: 0;
+    min-width: 0;
+    width: auto;
+  }
+  .funnel-card-cut {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+  }
+  .funnel-card-messenger-btn {
+    width: 100%;
+    margin-top: 8px;
+    box-sizing: border-box;
+    justify-content: center;
+    gap: 6px;
+    display: inline-flex;
+    align-items: center;
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .funnel-card-messenger-btn--search {
+    border-style: dashed;
+  }
+  .funnel-card-messenger-btn--blocked {
+    opacity: 0.55;
+    cursor: not-allowed;
+    pointer-events: none;
+    user-select: none;
+  }
+  .funnel-card-meta { font-size: var(--font-size-xs); color: var(--text-secondary); line-height: 1.3; }
+  .funnel-card-meta a { color: var(--accent); word-break: break-all; }
+  .funnel-overflow { font-size: var(--font-size-xs); color: var(--warning); padding: 0 10px 10px; }
+  .funnel-tabs-bar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .funnel-tabs-panel { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-surface); padding: 12px; }
+  .funnel-tabs-panel .funnel-cards { max-height: calc(100vh - 280px); }
+  .funnel-other-group { margin-bottom: 14px; }
+  .funnel-other-group h4 { margin: 0 0 8px; font-size: var(--font-size-sm); color: var(--text-secondary); }
+  .funnel-msg { font-size: var(--font-size-sm); color: var(--error); margin-top: 8px; display: none; }
+  .funnel-msg.visible { display: block; }
+  .funnel-stages-banner { padding: 10px 14px; border-radius: var(--radius); margin-bottom: 16px; font-size: var(--font-size-sm); }
+  .funnel-stages-banner.notice { background: var(--success-bg); color: var(--success); border: 1px solid rgba(5, 150, 105, 0.25); }
+  .funnel-stages-banner.error { background: var(--error-bg); color: var(--error); border: 1px solid rgba(220, 38, 38, 0.25); }
+  .funnel-stages-details {
+    margin-bottom: 20px;
+    border-radius: var(--radius-lg);
+  }
+  .funnel-stages-details > summary.funnel-stages-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    width: 100%;
+    box-sizing: border-box;
+    cursor: pointer;
+    padding: 12px 18px;
+    font-weight: 600;
+    font-size: var(--font-size-sm);
+    list-style: none;
+    user-select: none;
+    color: var(--text-primary);
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
+  }
+  .funnel-stages-details > summary.funnel-stages-toggle::-webkit-details-marker { display: none; }
+  .funnel-stages-details > summary.funnel-stages-toggle:hover {
+    background: var(--bg-surface-hover);
+    border-color: var(--accent);
+    box-shadow: var(--shadow);
+    color: var(--text-primary);
+  }
+  .funnel-stages-details > summary.funnel-stages-toggle:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-light);
+  }
+  .funnel-stages-details > summary.funnel-stages-toggle:active {
+    transform: scale(0.997);
+  }
+  .funnel-stages-toggle__main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    text-align: left;
+  }
+  .funnel-stages-toggle__main > i {
+    flex-shrink: 0;
+    font-size: 1.25rem;
+    color: var(--accent);
+    opacity: 0.95;
+  }
+  .funnel-stages-toggle__chev {
+    flex-shrink: 0;
+    font-size: 1.15rem;
+    color: var(--text-secondary);
+    transition: transform 0.2s ease, color 0.15s ease;
+  }
+  .funnel-stages-details > summary.funnel-stages-toggle:hover .funnel-stages-toggle__chev {
+    color: var(--accent);
+  }
+  .funnel-stages-details[open] > summary.funnel-stages-toggle .funnel-stages-toggle__chev {
+    transform: rotate(180deg);
+    color: var(--accent);
+  }
+  .funnel-stages-details[open] {
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    background: var(--bg-surface);
+  }
+  .funnel-stages-details[open] > summary.funnel-stages-toggle {
+    border-radius: 0;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    box-shadow: none;
+    background: var(--accent-light);
+    transform: none;
+  }
+  .funnel-stages-details[open] > summary.funnel-stages-toggle:hover {
+    background: var(--accent-light);
+    filter: brightness(1.03);
+  }
+  .funnel-stages-inner { padding: 16px; }
+  .funnel-stages-table { width: 100%; border-collapse: collapse; font-size: var(--font-size-sm); margin-bottom: 16px; }
+  .funnel-stages-table th, .funnel-stages-table td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .funnel-stages-table th { color: var(--text-secondary); font-weight: 500; }
+  .funnel-stage-rename { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .funnel-stage-rename .form-input { min-width: 160px; flex: 1; max-width: 280px; }
+  .funnel-add-stage { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-top: 8px; padding-top: 16px; border-top: 1px solid var(--border); }
+  .funnel-add-stage .form-input { min-width: 180px; }
+  .funnel-stage-move-btns { display: flex; gap: 4px; flex-wrap: wrap; }
+  #funnel-stage-delete-overlay {
+    display: none; position: fixed; inset: 0; z-index: 2400;
+    background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(6px);
+    align-items: center; justify-content: center; padding: 20px;
+  }
+  #funnel-stage-delete-overlay[aria-hidden="false"] { display: flex; }
+  .funnel-stage-delete-dialog {
+    background: var(--bg-surface); border-radius: var(--radius-lg); max-width: 460px; width: 100%;
+    border: 1px solid var(--border); box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+    overflow: hidden; animation: funnel-modal-in 0.2s ease-out;
+  }
+  @keyframes funnel-modal-in {
+    from { opacity: 0; transform: scale(0.96) translateY(8px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .funnel-stage-delete-dialog__head {
+    padding: 20px 22px 16px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; gap: 14px;
+  }
+  .funnel-stage-delete-dialog__icon {
+    flex-shrink: 0; width: 44px; height: 44px; border-radius: 12px;
+    background: linear-gradient(145deg, rgba(239, 68, 68, 0.22), rgba(239, 68, 68, 0.08));
+    color: var(--error); display: flex; align-items: center; justify-content: center; font-size: 1.35rem;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+  }
+  .funnel-stage-delete-dialog__title { margin: 0; font-size: 1.12rem; font-weight: 600; letter-spacing: -0.02em; }
+  .funnel-stage-delete-dialog__text {
+    margin: 10px 0 0; font-size: var(--font-size-sm); line-height: 1.55; color: var(--text-secondary);
+  }
+  .funnel-stage-delete-dialog__slug {
+    margin-top: 12px; padding: 8px 10px; border-radius: var(--radius-sm);
+    background: var(--bg-surface-hover); font-family: ui-monospace, monospace; font-size: var(--font-size-xs);
+    color: var(--text-secondary); word-break: break-all;
+  }
+  .funnel-stage-delete-dialog__foot {
+    padding: 16px 22px 20px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end;
+    background: var(--bg-surface-hover); border-top: 1px solid var(--border);
+  }
+  .funnel-card-followup {
+    margin-top: 8px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-surface);
+    border: 1px dashed var(--border);
+    font-size: var(--font-size-xs);
+  }
+  .funnel-card-followup-head {
+    display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin-bottom: 6px;
+  }
+  .funnel-card-followup-title { font-weight: 600; color: var(--text-secondary); }
+  .funnel-card-followup-when { font-variant-numeric: tabular-nums; }
+  .funnel-card-followup-st {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--text-secondary); padding: 2px 6px; border-radius: 4px; background: var(--bg-surface-hover);
+  }
+  .funnel-card-followup-err { margin: 0 0 6px; color: var(--error); font-size: 11px; line-height: 1.35; }
+  .funnel-fu-lbl { margin: 4px 0 2px !important; font-size: 11px !important; }
+  .funnel-fu-ta { font-size: var(--font-size-xs) !important; min-height: 48px; resize: vertical; }
+  .funnel-fu-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; align-items: center; }
+  .funnel-fu-row .form-input { flex: 1; min-width: 140px; max-width: 220px; }
+  #funnel-followup-overlay {
+    display: none; position: fixed; inset: 0; z-index: 2350;
+    background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(6px);
+    align-items: center; justify-content: center; padding: 20px;
+  }
+  #funnel-followup-overlay[aria-hidden="false"] { display: flex; }
+  .funnel-followup-dialog {
+    background: var(--bg-surface); border-radius: var(--radius-lg); max-width: 480px; width: 100%;
+    border: 1px solid var(--border); box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .funnel-followup-dialog__head { padding: 18px 20px 12px; border-bottom: 1px solid var(--border); }
+  .funnel-followup-dialog__title { margin: 0; font-size: 1.05rem; font-weight: 600; }
+  .funnel-followup-dialog__body { padding: 16px 20px; }
+  .funnel-followup-dialog__foot {
+    padding: 14px 20px 18px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end;
+    background: var(--bg-surface-hover); border-top: 1px solid var(--border);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+{% macro funnel_messenger_btn(p) -%}
+{% set messenger_url = messenger_open_url_by_person_id.get(p.id) %}
+{% set has_thread = p.id in messenger_thread_person_ids %}
+{% if messenger_url %}
+{% if messenger_outreach_blocked %}
+<span class="btn btn-secondary btn-sm funnel-card-messenger-btn funnel-card-messenger-btn--blocked{% if not has_thread %} funnel-card-messenger-btn--search{% endif %}"
+      role="button"
+      aria-disabled="true"
+      title="Мессенджер временно недоступен: для выбранного Facebook-аккаунта идёт рассылка (общий профиль занят). Дождитесь окончания задания или переключите активный аккаунт в Мессенджере."
+      onclick="event.stopPropagation()">
+  <i class="ti ti-message-circle" aria-hidden="true"></i>
+  Мессенджер
+</span>
+{% else %}
+<a href="{{ messenger_url }}"
+   class="btn btn-secondary btn-sm funnel-card-messenger-btn{% if not has_thread %} funnel-card-messenger-btn--search{% endif %}"
+   title="{% if has_thread %}Открыть переписку с этим контактом в Мессенджере{% else %}Открыть Мессенджер с поиском по контакту; диалог появится после синхронизации списка чатов{% endif %}"
+   onclick="event.stopPropagation()">
+  <i class="ti ti-message-circle" aria-hidden="true"></i>
+  Мессенджер
+</a>
+{% endif %}
+{% endif %}
+{%- endmacro %}
+
+{% macro funnel_followup_card(p) -%}
+{% if (p.crm_stage or '') == 'follow_up_later' %}
+<div class="funnel-card-followup" data-person-id="{{ p.id }}">
+  <div class="funnel-card-followup-head">
+    <span class="funnel-card-followup-title">AI в Messenger</span>
+    {% if p.messenger_followup_at %}
+    <span class="funnel-card-followup-when" title="Europe/Madrid">{{ format_dt_madrid(p.messenger_followup_at) }}</span>
+    {% endif %}
+    {% if p.messenger_followup_status %}
+    <span class="funnel-card-followup-st">{{ p.messenger_followup_status }}</span>
+    {% endif %}
+  </div>
+  {% if p.messenger_followup_last_error %}
+  <p class="funnel-card-followup-err" title="{{ p.messenger_followup_last_error|e }}">{{ p.messenger_followup_last_error[:120] }}{% if (p.messenger_followup_last_error|length) > 120 %}…{% endif %}</p>
+  {% endif %}
+  <label class="form-label funnel-fu-lbl" for="funnel-fu-ta-{{ p.id }}">Задание для нейросети</label>
+  <textarea id="funnel-fu-ta-{{ p.id }}" class="form-input funnel-fu-ta" rows="2" maxlength="4000" data-person-id="{{ p.id }}" placeholder="Например: напомни, что мы договорились сегодня списаться…">{{ (p.messenger_followup_prompt or '')|e }}</textarea>
+  <div class="funnel-fu-row">
+    <select class="form-input funnel-fu-preset" data-person-id="{{ p.id }}" aria-label="Когда отправить">
+      <option value="" disabled selected hidden>Выберите срок</option>
+      <option value="24h">Через 24 ч</option>
+      <option value="7d">Через 7 дней</option>
+      <option value="30d">Через 30 дней</option>
+      <option value="none">Снять напоминание</option>
+    </select>
+    <button type="button" class="btn btn-sm btn-primary funnel-fu-save" data-person-id="{{ p.id }}">Сохранить</button>
+  </div>
+</div>
+{% endif %}
+{%- endmacro %}
+
+{% macro funnel_card_actions(p) -%}
+<div class="funnel-card-actions">
+  {{ funnel_messenger_btn(p) }}
+  <button type="button" class="btn btn-sm btn-secondary funnel-card-cut"
+          data-person-id="{{ p.id }}"
+          data-person-name="{{ (p.display_name or 'Без имени')|e }}"
+          title="Убрать с доски воронки — очистить стадию CRM (контакт останется в «Базе контактов»; стадию можно снова задать в мессенджере)"
+          onclick="event.stopPropagation()">
+    <i class="ti ti-cut" aria-hidden="true"></i>
+    Вырезать
+  </button>
+</div>
+{%- endmacro %}
+
+<div class="page-header">
+  <div class="page-header-actions" style="width:100%;flex-wrap:wrap;gap:12px">
+    <div>
+      <h1>{% if cabinet_client_mode(request) %}Воронка продаж{% else %}Воронка{% endif %}</h1>
+      <p class="subtitle">{% if cabinet_client_mode(request) %}
+      Люди из контактов на доске по этапам (новый, в работе, сделка и т.д.). Перетащите карточку в другой столбец или пользуйтесь вкладками сверху.
+      {% else %}
+      Стадии контактов и фильтры — перетащите карточку в другую колонку или откройте вкладки
+      {% endif %}</p>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+      <a class="btn btn-secondary btn-sm" href="/crm/funnel/export.csv?q={{ search_q|urlencode }}{% if donor_id %}&amp;donor_id={{ donor_id }}{% endif %}">
+        <i class="ti ti-file-download"></i> Экспорт CSV
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    {% if stages_notice %}
+    <div class="funnel-stages-banner notice" role="status">{{ stages_notice }}</div>
+    {% endif %}
+    {% if stages_error %}
+    <div class="funnel-stages-banner error" role="alert">{{ stages_error }}</div>
+    {% endif %}
+
+    <details class="funnel-stages-details" id="funnel-stages" {% if stages_error %}open{% endif %}>
+      <summary class="funnel-stages-toggle" title="Открыть настройки стадий воронки">
+        <span class="funnel-stages-toggle__main">
+          <i class="ti ti-adjustments-horizontal" aria-hidden="true"></i>
+          <span>Настройки стадий воронки — порядок колонок, названия, новые шаги</span>
+        </span>
+        <i class="ti ti-chevron-down funnel-stages-toggle__chev" aria-hidden="true"></i>
+      </summary>
+      <div class="funnel-stages-inner">
+        <p class="form-hint" style="margin:0 0 12px">Меняйте порядок кнопками «Вверх/Вниз», подпись — полем и «Сохранить». Любую стадию (в том числе с меткой «встроенная») можно удалить кнопкой с корзиной: если в ней есть контакты, система автоматически перенесёт их в соседнюю стадию, а если соседней нет — очистит у них это поле. Новые шаги — блок ниже; <strong>slug</strong> необязателен — сгенерируется из латиницы в названии. <strong>Все строки этой таблицы</strong> — это колонки на доске в том же порядке; доска теперь <strong>автоматически раскладывает их по ширине страницы без горизонтального скролла</strong>. Свои стадии без метки «встроенная» там же; чтобы быстро найти колонку, нажмите её название в блоке «Стадии на доске» над доской.</p>
+        <table class="funnel-stages-table">
+          <thead>
+            <tr>
+              <th style="width:1%;white-space:nowrap">Порядок</th>
+              <th>Название в интерфейсе</th>
+              <th>Slug</th>
+              <th style="width:1%;white-space:nowrap"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in stage_rows %}
+            <tr>
+              <td>
+                <div class="funnel-stage-move-btns">
+                  <form method="post" action="/crm/funnel/stages/{{ s.id }}/move" style="display:inline">
+                    <input type="hidden" name="direction" value="up"/>
+                    <input type="hidden" name="ret_q" value="{{ search_q }}"/>
+                    <input type="hidden" name="ret_donor_id" value="{{ donor_id or '' }}"/>
+                    <input type="hidden" name="ret_view" value="{{ view }}"/>
+                    <input type="hidden" name="ret_tab" value="{{ active_tab }}"/>
+                    <button type="submit" class="btn btn-sm btn-secondary" title="Выше" aria-label="Переместить стадию выше">↑</button>
+                  </form>
+                  <form method="post" action="/crm/funnel/stages/{{ s.id }}/move" style="display:inline">
+                    <input type="hidden" name="direction" value="down"/>
+                    <input type="hidden" name="ret_q" value="{{ search_q }}"/>
+                    <input type="hidden" name="ret_donor_id" value="{{ donor_id or '' }}"/>
+                    <input type="hidden" name="ret_view" value="{{ view }}"/>
+                    <input type="hidden" name="ret_tab" value="{{ active_tab }}"/>
+                    <button type="submit" class="btn btn-sm btn-secondary" title="Ниже" aria-label="Переместить стадию ниже">↓</button>
+                  </form>
+                </div>
+              </td>
+              <td>
+                <form method="post" action="/crm/funnel/stages/{{ s.id }}/rename" class="funnel-stage-rename">
+                  <input type="text" name="label" value="{{ s.label }}" class="form-input" required maxlength="255" aria-label="Название стадии"/>
+                  <input type="hidden" name="ret_q" value="{{ search_q }}"/>
+                  <input type="hidden" name="ret_donor_id" value="{{ donor_id or '' }}"/>
+                  <input type="hidden" name="ret_view" value="{{ view }}"/>
+                  <input type="hidden" name="ret_tab" value="{{ active_tab }}"/>
+                  <button type="submit" class="btn btn-sm btn-primary">Сохранить</button>
+                </form>
+                {% if s.slug == 'new' %}
+                <div class="form-hint" style="margin-top:6px">На рабочей CRM-доске эта стадия показывается как «Уже контактировали» и включает только тех, с кем уже был контакт.</div>
+                {% endif %}
+              </td>
+              <td>
+                <code style="font-size:var(--font-size-xs)">{{ s.slug }}</code>
+                {% if s.slug == 'new' %}
+                <span class="badge badge-default" style="margin-left:6px">системная</span>
+                {% elif s.is_builtin %}
+                <span class="badge badge-default" style="margin-left:6px">встроенная</span>
+                {% endif %}
+              </td>
+              <td>
+                <button type="button" class="btn btn-sm btn-danger funnel-stage-delete-open" title="Удалить стадию"
+                        data-action="/crm/funnel/stages/{{ s.id }}/delete"
+                        data-stage-label="{{ stage_labels.get(s.slug, s.label)|e }}"
+                        data-stage-slug="{{ s.slug|e }}">
+                  <i class="ti ti-trash"></i>
+                </button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <form method="post" action="/crm/funnel/stages/add" class="funnel-add-stage">
+          <div>
+            <label class="form-label" for="new-stage-label">Новая стадия</label>
+            <input id="new-stage-label" type="text" name="label" class="form-input" placeholder="Например: Позвонить позже" maxlength="255" autocomplete="off"/>
+          </div>
+          <div>
+            <label class="form-label" for="new-stage-slug">Slug (необязательно)</label>
+            <input id="new-stage-slug" type="text" name="slug" class="form-input" placeholder="call_later" maxlength="50" title="Латиница, цифры и подчёркивание; с буквы"/>
+          </div>
+          <input type="hidden" name="ret_q" value="{{ search_q }}"/>
+          <input type="hidden" name="ret_donor_id" value="{{ donor_id or '' }}"/>
+          <input type="hidden" name="ret_view" value="{{ view }}"/>
+          <input type="hidden" name="ret_tab" value="{{ active_tab }}"/>
+          <button type="submit" class="btn btn-primary"><i class="ti ti-plus"></i> Добавить стадию</button>
+        </form>
+      </div>
+    </details>
+
+    <form method="get" action="/crm/funnel" class="funnel-toolbar" id="funnel-filter-form">
+      <input type="hidden" name="view" value="{{ view }}"/>
+      <div class="search-bar" style="display:flex;align-items:center;gap:8px;width:100%;max-width:420px">
+        <i class="ti ti-search"></i>
+        <input type="text" name="q" value="{{ search_q }}" placeholder="Поиск по имени или URL…" class="form-input"/>
+      </div>
+      <div>
+        <label class="form-label" for="funnel-donor">Донор</label>
+        <select name="donor_id" id="funnel-donor" class="form-input" style="min-width:200px">
+          <option value="">Все доноры</option>
+          {% for d in donors %}
+          <option value="{{ d.id }}" {% if donor_id == d.id %}selected{% endif %}>{{ d.name or d.url[:48] }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary btn-sm"><i class="ti ti-filter"></i> Применить</button>
+      {% if search_q or donor_id %}
+      <a href="/crm/funnel?view={{ view }}" class="btn btn-secondary btn-sm">Сбросить</a>
+      {% endif %}
+      <div class="funnel-view-switch">
+        <a href="/crm/funnel?view=kanban&amp;q={{ search_q|urlencode }}{% if donor_id %}&amp;donor_id={{ donor_id }}{% endif %}" class="btn btn-sm {{ 'btn-primary' if view == 'kanban' else 'btn-secondary' }}">Доска</a>
+        <a href="/crm/funnel?view=tabs&amp;tab={{ active_tab }}&amp;q={{ search_q|urlencode }}{% if donor_id %}&amp;donor_id={{ donor_id }}{% endif %}" class="btn btn-sm {{ 'btn-primary' if view == 'tabs' else 'btn-secondary' }}">Вкладки</a>
+      </div>
+    </form>
+    <script>
+    (function () {
+      var form = document.getElementById('funnel-filter-form');
+      if (!form) return;
+      var qIn = form.querySelector('input[name="q"]');
+      if (!qIn) return;
+      var t = null;
+      function submitDebounced() {
+        if (t) clearTimeout(t);
+        t = setTimeout(function () {
+          t = null;
+          if (typeof form.requestSubmit === 'function') form.requestSubmit();
+          else form.submit();
+        }, 420);
+      }
+      qIn.addEventListener('input', submitDebounced);
+    })();
+    </script>
+    <p id="funnel-move-error" class="funnel-msg" role="alert"></p>
+
+    {% if view == 'kanban' %}
+    <p class="funnel-board-hint" role="note">
+      <i class="ti ti-info-circle" aria-hidden="true"></i>
+      <span>Все стадии автоматически <strong>раскладываются по ширине страницы без прокрутки вправо</strong>. Колонка <strong>«Уже контактировали»</strong> закреплена как основная слева и остаётся выше остальных, чтобы вмещать больше карточек. Все следующие стадии строятся отдельной сеткой <strong>только справа от неё</strong>, по порядку, без появления новых колонок под базовой колонкой. Кнопки стадий ниже <strong>подсвечивают</strong> колонку и при необходимости прокручивают страницу к нужному ряду. С пунктиром и точкой — <strong>ваши</strong> стадии.</span>
+    </p>
+    <nav class="funnel-stage-rail" id="funnel-stage-rail" aria-label="Стадии воронки — переход к колонке">
+      <span class="funnel-stage-rail__title">Стадии на доске</span>
+      <span class="funnel-stage-rail__subtitle">Нажмите название — колонка подсветится; если она ниже по странице, экран аккуратно прокрутится к нужному ряду.</span>
+      {% for s in stage_rows %}
+      <button type="button" class="funnel-stage-rail__chip{% if not s.is_builtin %} funnel-stage-rail__chip--custom{% endif %}" data-funnel-scroll-stage="{{ s.slug }}" title="Показать колонку «{{ stage_labels.get(s.slug, s.label) }}»">
+        <span>{{ stage_labels.get(s.slug, s.label) }}</span>
+        <span class="funnel-stage-rail__count">{{ counts.get(s.slug, 0) }}</span>
+      </button>
+      {% endfor %}
+      {% if other_by_stage %}
+      <button type="button" class="funnel-stage-rail__chip funnel-stage-rail__chip--other" data-funnel-scroll-stage="__other__" title="Колонка «Другое»">
+        <span>Другое</span>
+        <span class="funnel-stage-rail__count">{{ other_total }}</span>
+      </button>
+      {% endif %}
+    </nav>
+    {% set primary_stage_key = 'new' if 'new' in stage_keys else (stage_keys[0] if stage_keys else None) %}
+    <div class="funnel-board" id="funnel-board">
+      {% if primary_stage_key %}
+      {% set col = columns[primary_stage_key] %}
+      {% set cnt = counts.get(primary_stage_key, 0) %}
+      <div class="funnel-col funnel-col--primary" data-stage="{{ primary_stage_key }}">
+        <div class="funnel-col-header">
+          <span class="funnel-col-header-inner">
+            <i class="ti {{ stage_icon_map.get(primary_stage_key, 'ti-tag') }} funnel-col-header-icon" aria-hidden="true"></i>
+            <span>{{ stage_labels[primary_stage_key] }}</span>
+          </span>
+          <span class="funnel-col-count">{{ cnt }}</span>
+        </div>
+        <div class="funnel-cards funnel-drop-zone" data-stage="{{ primary_stage_key }}">
+          {% for p in col %}
+          <div class="funnel-card" draggable="true" data-person-id="{{ p.id }}" data-stage="{{ primary_stage_key }}">
+            <div class="funnel-card-head">
+              <p class="funnel-card-title">{{ p.display_name or 'Без имени' }}</p>
+            </div>
+            <div class="funnel-card-meta">
+              {% if p.donor_id and donor_labels.get(p.donor_id) %}
+              <span>{{ donor_labels[p.donor_id] }}</span><br/>
+              {% endif %}
+              <a href="{{ p.canonical_url }}" target="_blank" rel="noopener" onclick="event.stopPropagation()">{{ p.canonical_url.replace('https://www.facebook.com/', '') }}</a>
+            </div>
+            {{ funnel_followup_card(p) }}
+            {{ funnel_card_actions(p) }}
+          </div>
+          {% endfor %}
+        </div>
+        {% if overflow.get(primary_stage_key) %}
+        <div class="funnel-overflow">Ещё {{ overflow[primary_stage_key] }} — <a href="/people?stage={{ primary_stage_key }}&amp;q={{ search_q|urlencode }}">открыть в «Базе контактов»</a></div>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      <div class="funnel-board-rest">
+      {% for key in stage_keys %}
+      {% if key != primary_stage_key %}
+      {% set col = columns[key] %}
+      {% set cnt = counts.get(key, 0) %}
+      <div class="funnel-col" data-stage="{{ key }}">
+        <div class="funnel-col-header">
+          <span class="funnel-col-header-inner">
+            <i class="ti {{ stage_icon_map.get(key, 'ti-tag') }} funnel-col-header-icon" aria-hidden="true"></i>
+            <span>{{ stage_labels[key] }}</span>
+          </span>
+          <span class="funnel-col-count">{{ cnt }}</span>
+        </div>
+        <div class="funnel-cards funnel-drop-zone" data-stage="{{ key }}">
+          {% for p in col %}
+          <div class="funnel-card" draggable="true" data-person-id="{{ p.id }}" data-stage="{{ key }}">
+            <div class="funnel-card-head">
+              <p class="funnel-card-title">{{ p.display_name or 'Без имени' }}</p>
+            </div>
+            <div class="funnel-card-meta">
+              {% if p.donor_id and donor_labels.get(p.donor_id) %}
+              <span>{{ donor_labels[p.donor_id] }}</span><br/>
+              {% endif %}
+              <a href="{{ p.canonical_url }}" target="_blank" rel="noopener" onclick="event.stopPropagation()">{{ p.canonical_url.replace('https://www.facebook.com/', '') }}</a>
+            </div>
+            {{ funnel_followup_card(p) }}
+            {{ funnel_card_actions(p) }}
+          </div>
+          {% endfor %}
+        </div>
+        {% if overflow.get(key) %}
+        <div class="funnel-overflow">Ещё {{ overflow[key] }} — <a href="/people?stage={{ key }}&amp;q={{ search_q|urlencode }}">открыть в «Базе контактов»</a></div>
+        {% endif %}
+      </div>
+      {% endif %}
+      {% endfor %}
+      {% if other_by_stage %}
+      <div class="funnel-col" data-stage="__other__">
+        <div class="funnel-col-header">
+          <span class="funnel-col-header-inner">
+            <i class="ti ti-layout-kanban funnel-col-header-icon" aria-hidden="true"></i>
+            <span>Другое</span>
+          </span>
+          <span class="funnel-col-count">{{ other_total }}</span>
+        </div>
+        <div class="funnel-cards funnel-drop-zone" data-stage="__other__">
+          {% for ost, plist in other_by_stage.items() %}
+          <div class="funnel-other-group">
+            <h4>{{ ost if ost != '_empty' else '(пусто)' }}</h4>
+            {% for p in plist %}
+            <div class="funnel-card" draggable="true" data-person-id="{{ p.id }}" data-stage="{{ p.crm_stage or '' }}">
+              <div class="funnel-card-head">
+                <p class="funnel-card-title">{{ p.display_name or 'Без имени' }}</p>
+              </div>
+              <div class="funnel-card-meta">
+                <a href="{{ p.canonical_url }}" target="_blank" rel="noopener" onclick="event.stopPropagation()">{{ p.canonical_url.replace('https://www.facebook.com/', '') }}</a>
+              </div>
+              {{ funnel_followup_card(p) }}
+              {{ funnel_card_actions(p) }}
+            </div>
+            {% endfor %}
+          </div>
+          {% endfor %}
+        </div>
+        {% if other_overflow %}
+        <div class="funnel-overflow">Ещё {{ other_overflow }} контактов не показано — сузьте фильтр.</div>
+        {% endif %}
+      </div>
+      {% endif %}
+      </div>
+    </div>
+    {% else %}
+    <div class="funnel-tabs-bar">
+      {% for key in stage_keys %}
+      <a href="/crm/funnel?view=tabs&amp;tab={{ key }}&amp;q={{ search_q|urlencode }}{% if donor_id %}&amp;donor_id={{ donor_id }}{% endif %}"
+         class="btn btn-sm {{ 'btn-primary' if active_tab == key else 'btn-secondary' }}"><i class="ti {{ stage_icon_map.get(key, 'ti-tag') }}" style="margin-right:4px;vertical-align:-2px" aria-hidden="true"></i>{{ stage_labels[key] }} ({{ counts.get(key, 0) }})</a>
+      {% endfor %}
+    </div>
+    <div class="funnel-tabs-panel">
+      <div class="funnel-col-header" style="border:none;padding:0 0 10px">
+        <span class="funnel-col-header-inner">
+          <i class="ti {{ stage_icon_map.get(active_tab, 'ti-tag') }} funnel-col-header-icon" aria-hidden="true"></i>
+          <span>{{ stage_labels[active_tab] }}</span>
+        </span>
+        <span class="funnel-col-count">{{ counts.get(active_tab, 0) }}</span>
+      </div>
+      <div class="funnel-cards funnel-drop-zone" data-stage="{{ active_tab }}">
+        {% for p in columns[active_tab] %}
+        <div class="funnel-card" draggable="false" data-person-id="{{ p.id }}" data-stage="{{ active_tab }}">
+          <div class="funnel-card-head">
+            <p class="funnel-card-title">{{ p.display_name or 'Без имени' }}</p>
+          </div>
+          <div class="funnel-card-meta">
+            {% if p.donor_id and donor_labels.get(p.donor_id) %}
+            <span>{{ donor_labels[p.donor_id] }}</span><br/>
+            {% endif %}
+            <a href="{{ p.canonical_url }}" target="_blank" rel="noopener" onclick="event.stopPropagation()">{{ p.canonical_url.replace('https://www.facebook.com/', '') }}</a>
+          </div>
+          {{ funnel_followup_card(p) }}
+          {{ funnel_card_actions(p) }}
+          <label class="form-label" style="margin-top:10px;font-size:var(--font-size-xs)">Стадия</label>
+          <select class="form-input funnel-tab-stage-select" style="margin-top:4px;font-size:var(--font-size-sm)" data-person-id="{{ p.id }}" data-current="{{ active_tab }}">
+            {% for sk in stage_keys %}
+            <option value="{{ sk }}" {% if sk == active_tab %}selected{% endif %}>{{ stage_labels[sk] }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% endfor %}
+      </div>
+      {% if overflow.get(active_tab) %}
+      <div class="funnel-overflow">Ещё {{ overflow[active_tab] }} — <a href="/people?stage={{ active_tab }}&amp;q={{ search_q|urlencode }}">в «Базе контактов»</a></div>
+      {% endif %}
+    </div>
+    {% if other_total %}
+    <p class="form-hint" style="margin-top:14px">Вне стандартных стадий: {{ other_total }} контакт(ов). Переключитесь на доску, чтобы видеть колонку «Другое».</p>
+    {% endif %}
+    {% endif %}
+  </div>
+</div>
+
+<form id="funnel-stage-delete-exec" method="post" action="#" style="display:none" aria-hidden="true">
+  <input type="hidden" name="ret_q" value="{{ search_q }}"/>
+  <input type="hidden" name="ret_donor_id" value="{{ donor_id or '' }}"/>
+  <input type="hidden" name="ret_view" value="{{ view }}"/>
+  <input type="hidden" name="ret_tab" value="{{ active_tab }}"/>
+</form>
+
+<div id="funnel-followup-overlay" aria-hidden="true">
+  <div class="funnel-followup-dialog" role="dialog" aria-modal="true" aria-labelledby="funnel-followup-title">
+    <div class="funnel-followup-dialog__head">
+      <h2 id="funnel-followup-title" class="funnel-followup-dialog__title">Написать позже — AI в Messenger</h2>
+      <p class="form-hint" style="margin:8px 0 0">В срок нейросеть сгенерирует сообщение и поставит его в очередь отправки (нужны ключ LLM и чат с контактом в Мессенджере).</p>
+    </div>
+    <div class="funnel-followup-dialog__body">
+      <label class="form-label" for="funnel-followup-preset">Когда отправить</label>
+      <select id="funnel-followup-preset" class="form-input" style="margin-bottom:10px">
+        <option value="24h">Через 24 часа</option>
+        <option value="7d">Через 7 дней</option>
+        <option value="30d">Через 30 дней</option>
+      </select>
+      <label class="form-label" for="funnel-followup-prompt">Задание для нейросети</label>
+      <textarea id="funnel-followup-prompt" class="form-input" rows="3" maxlength="4000" placeholder="Например: напомни, что мы договорились сегодня отписаться и предложи удобное время…"></textarea>
+    </div>
+    <div class="funnel-followup-dialog__foot">
+      <button type="button" class="btn btn-secondary" id="funnel-followup-cancel">Отмена</button>
+      <button type="button" class="btn btn-secondary" id="funnel-followup-stage-only">Только стадия</button>
+      <button type="button" class="btn btn-primary" id="funnel-followup-confirm">Сохранить с планом</button>
+    </div>
+  </div>
+</div>
+
+<div id="funnel-stage-delete-overlay" aria-hidden="true">
+  <div class="funnel-stage-delete-dialog" role="alertdialog" aria-modal="true" aria-labelledby="funnel-stage-delete-title" aria-describedby="funnel-stage-delete-desc">
+    <div class="funnel-stage-delete-dialog__head">
+      <span class="funnel-stage-delete-dialog__icon" aria-hidden="true"><i class="ti ti-trash"></i></span>
+      <div style="min-width:0">
+        <h2 id="funnel-stage-delete-title" class="funnel-stage-delete-dialog__title">Удалить стадию?</h2>
+        <p id="funnel-stage-delete-desc" class="funnel-stage-delete-dialog__text"></p>
+        <div id="funnel-stage-delete-slug" class="funnel-stage-delete-dialog__slug" style="display:none"></div>
+      </div>
+    </div>
+    <div class="funnel-stage-delete-dialog__foot">
+      <button type="button" class="btn btn-secondary" id="funnel-stage-delete-cancel">Отмена</button>
+      <button type="button" class="btn btn-danger" id="funnel-stage-delete-confirm"><i class="ti ti-trash"></i> Удалить стадию</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var errEl = document.getElementById('funnel-move-error');
+  function showErr(msg) {
+    if (!errEl) return;
+    errEl.textContent = msg || '';
+    errEl.classList.toggle('visible', !!msg);
+  }
+
+  var FU_SLUG = 'follow_up_later';
+
+  function postFunnelMove(personId, newStage, extra, onOk, onFail) {
+    var body = { person_id: personId, crm_stage: newStage };
+    if (extra && typeof extra === 'object') {
+      if (extra.messenger_followup_preset != null) body.messenger_followup_preset = extra.messenger_followup_preset;
+      if (extra.messenger_followup_prompt) body.messenger_followup_prompt = extra.messenger_followup_prompt;
+    }
+    showErr('');
+    fetch('/crm/funnel/move', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(body)
+    })
+      .then(function (r) {
+        return r.json().then(function (j) {
+          if (!r.ok) throw new Error((typeof j.detail === 'string' ? j.detail : JSON.stringify(j.detail)) || r.statusText || 'Ошибка');
+          return j;
+        });
+      })
+      .then(onOk)
+      .catch(function (ex) {
+        showErr(ex.message || 'Не удалось сохранить');
+        if (onFail) onFail(ex);
+      });
+  }
+
+  var dragged = null;
+  document.querySelectorAll('.funnel-card[draggable="true"]').forEach(function (card) {
+    card.addEventListener('dragstart', function (e) {
+      dragged = card;
+      card.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', card.getAttribute('data-person-id') || '');
+    });
+    card.addEventListener('dragend', function () {
+      card.classList.remove('dragging');
+      dragged = null;
+      document.querySelectorAll('.funnel-drag-over').forEach(function (z) { z.classList.remove('funnel-drag-over'); });
+    });
+  });
+
+  document.querySelectorAll('.funnel-drop-zone[data-stage]').forEach(function (zone) {
+    zone.addEventListener('dragover', function (e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      zone.classList.add('funnel-drag-over');
+    });
+    zone.addEventListener('dragleave', function (e) {
+      if (e.target === zone) zone.classList.remove('funnel-drag-over');
+    });
+    zone.addEventListener('drop', function (e) {
+      e.preventDefault();
+      zone.classList.remove('funnel-drag-over');
+      if (!dragged) return;
+      var newStage = zone.getAttribute('data-stage');
+      if (!newStage || newStage === '__other__') {
+        showErr('Перетащите карточку в колонку одной из стадий воронки (не в «Другое»).');
+        return;
+      }
+      var personId = parseInt(dragged.getAttribute('data-person-id'), 10);
+      if (!personId) return;
+      var prevStage = dragged.getAttribute('data-stage');
+      if (prevStage === newStage) return;
+
+      function doMove(extra) {
+        postFunnelMove(
+          personId,
+          newStage,
+          extra,
+          function () {
+            window.location.reload();
+          },
+          null
+        );
+      }
+
+      if (newStage === FU_SLUG) {
+        var ov = document.getElementById('funnel-followup-overlay');
+        var pr = document.getElementById('funnel-followup-prompt');
+        var ps = document.getElementById('funnel-followup-preset');
+        var btnX = document.getElementById('funnel-followup-cancel');
+        var btnS = document.getElementById('funnel-followup-stage-only');
+        var btnOk = document.getElementById('funnel-followup-confirm');
+        if (!ov || !pr || !ps || !btnX || !btnS || !btnOk) {
+          doMove({ messenger_followup_preset: 'none' });
+          return;
+        }
+        pr.value = '';
+        function closeFu() {
+          ov.style.display = 'none';
+          ov.setAttribute('aria-hidden', 'true');
+          document.body.style.overflow = '';
+        }
+        function openFu() {
+          ov.style.display = 'flex';
+          ov.setAttribute('aria-hidden', 'false');
+          document.body.style.overflow = 'hidden';
+        }
+        openFu();
+        function onKey(e) {
+          if (e.key === 'Escape') {
+            document.removeEventListener('keydown', onKey);
+            closeFu();
+          }
+        }
+        document.addEventListener('keydown', onKey);
+        btnX.onclick = function () {
+          document.removeEventListener('keydown', onKey);
+          closeFu();
+        };
+        btnS.onclick = function () {
+          document.removeEventListener('keydown', onKey);
+          closeFu();
+          doMove({ messenger_followup_preset: 'none' });
+        };
+        btnOk.onclick = function () {
+          document.removeEventListener('keydown', onKey);
+          closeFu();
+          doMove({
+            messenger_followup_preset: (ps.value || '24h').trim(),
+            messenger_followup_prompt: (pr.value || '').trim()
+          });
+        };
+        ov.onclick = function (e) {
+          if (e.target === ov) {
+            document.removeEventListener('keydown', onKey);
+            closeFu();
+          }
+        };
+      } else {
+        doMove(null);
+      }
+    });
+  });
+
+  document.querySelectorAll('.funnel-card-cut').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var personId = parseInt(btn.getAttribute('data-person-id'), 10);
+      var name = btn.getAttribute('data-person-name') || 'контакт';
+      if (!personId) return;
+      var msg =
+        'Убрать «' +
+        name +
+        '» с доски воронки? Стадия CRM будет очищена; контакт останется в разделе «База контактов», при необходимости стадию можно снова задать в мессенджере.';
+      function doRemove() {
+        showErr('');
+        fetch('/crm/funnel/remove', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ person_id: personId })
+        })
+          .then(function (r) {
+            return r.json().then(function (j) {
+              if (!r.ok) throw new Error(j.detail || r.statusText || 'Ошибка');
+              return j;
+            });
+          })
+          .then(function () {
+            window.location.reload();
+          })
+          .catch(function (ex) {
+            showErr(ex.message || 'Не удалось убрать контакт с доски');
+          });
+      }
+      if (typeof window.fbConfirm === 'function') {
+        window.fbConfirm({
+          title: 'Убрать с доски воронки',
+          message: msg,
+          variant: 'danger',
+          confirmLabel: 'Убрать',
+          onConfirm: doRemove
+        });
+      } else if (window.confirm(msg)) {
+        doRemove();
+      }
+    });
+  });
+
+  document.querySelectorAll('.funnel-tab-stage-select').forEach(function (sel) {
+    sel.addEventListener('change', function () {
+      var personId = parseInt(sel.getAttribute('data-person-id'), 10);
+      var cur = sel.getAttribute('data-current') || '';
+      var nv = sel.value;
+      if (!personId || nv === cur) return;
+      if (nv === FU_SLUG) {
+        var ov = document.getElementById('funnel-followup-overlay');
+        var pr = document.getElementById('funnel-followup-prompt');
+        var ps = document.getElementById('funnel-followup-preset');
+        var btnX = document.getElementById('funnel-followup-cancel');
+        var btnS = document.getElementById('funnel-followup-stage-only');
+        var btnOk = document.getElementById('funnel-followup-confirm');
+        if (!ov || !pr || !ps || !btnX || !btnS || !btnOk) {
+          postFunnelMove(personId, nv, { messenger_followup_preset: 'none' }, function () {
+            window.location.reload();
+          }, function () {
+            sel.value = cur;
+          });
+          return;
+        }
+        pr.value = '';
+        function closeFu() {
+          ov.style.display = 'none';
+          ov.setAttribute('aria-hidden', 'true');
+          document.body.style.overflow = '';
+        }
+        function openFu() {
+          ov.style.display = 'flex';
+          ov.setAttribute('aria-hidden', 'false');
+          document.body.style.overflow = 'hidden';
+        }
+        openFu();
+        function onKey(e) {
+          if (e.key === 'Escape') {
+            document.removeEventListener('keydown', onKey);
+            closeFu();
+            sel.value = cur;
+          }
+        }
+        document.addEventListener('keydown', onKey);
+        btnX.onclick = function () {
+          document.removeEventListener('keydown', onKey);
+          closeFu();
+          sel.value = cur;
+        };
+        btnS.onclick = function () {
+          document.removeEventListener('keydown', onKey);
+          closeFu();
+          postFunnelMove(
+            personId,
+            nv,
+            { messenger_followup_preset: 'none' },
+            function () {
+              window.location.reload();
+            },
+            function () {
+              sel.value = cur;
+            }
+          );
+        };
+        btnOk.onclick = function () {
+          document.removeEventListener('keydown', onKey);
+          closeFu();
+          postFunnelMove(
+            personId,
+            nv,
+            {
+              messenger_followup_preset: (ps.value || '24h').trim(),
+              messenger_followup_prompt: (pr.value || '').trim()
+            },
+            function () {
+              window.location.reload();
+            },
+            function () {
+              sel.value = cur;
+            }
+          );
+        };
+        ov.onclick = function (e) {
+          if (e.target === ov) {
+            document.removeEventListener('keydown', onKey);
+            closeFu();
+            sel.value = cur;
+          }
+        };
+        return;
+      }
+      postFunnelMove(
+        personId,
+        nv,
+        null,
+        function () {
+          window.location.reload();
+        },
+        function () {
+          sel.value = cur;
+        }
+      );
+    });
+  });
+
+  document.addEventListener('click', function (e) {
+    var btn = e.target && e.target.closest ? e.target.closest('.funnel-fu-save') : null;
+    if (!btn) return;
+    var personId = parseInt(btn.getAttribute('data-person-id'), 10);
+    if (!personId) return;
+    var wrap = btn.closest('.funnel-card-followup');
+    if (!wrap) return;
+    var ta = wrap.querySelector('.funnel-fu-ta');
+    var prs = wrap.querySelector('.funnel-fu-preset');
+    if (!ta || !prs) return;
+    var preset = (prs.value || '').trim();
+    if (!preset) {
+      showErr('Выберите срок (24 ч / 7 дней / 30 дней) или «Снять напоминание».');
+      return;
+    }
+    showErr('');
+    fetch('/crm/person/' + personId + '/messenger-followup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        messenger_followup_preset: preset,
+        messenger_followup_prompt: (ta.value || '').trim()
+      })
+    })
+      .then(function (r) {
+        return r.json().then(function (j) {
+          if (!r.ok) throw new Error((typeof j.detail === 'string' ? j.detail : JSON.stringify(j.detail)) || r.statusText || 'Ошибка');
+          return j;
+        });
+      })
+      .then(function () {
+        window.location.reload();
+      })
+      .catch(function (ex) {
+        showErr(ex.message || 'Не удалось сохранить план');
+      });
+  });
+
+  (function funnelStageRailScroll() {
+    var board = document.getElementById('funnel-board');
+    document.querySelectorAll('[data-funnel-scroll-stage]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var slug = btn.getAttribute('data-funnel-scroll-stage') || '';
+        if (!board || !slug) return;
+        var col = board.querySelector('.funnel-col[data-stage="' + slug.replace(/"/g, '') + '"]');
+        if (!col) return;
+        /* Для сетки без горизонтального скролла браузер просто доводит нужную колонку в видимую область страницы. */
+        col.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+        col.classList.remove('funnel-col--flash');
+        void col.offsetWidth;
+        col.classList.add('funnel-col--flash');
+        window.setTimeout(function () { col.classList.remove('funnel-col--flash'); }, 950);
+      });
+    });
+  })();
+
+  (function stageDeleteModal() {
+    var overlay = document.getElementById('funnel-stage-delete-overlay');
+    var descEl = document.getElementById('funnel-stage-delete-desc');
+    var slugEl = document.getElementById('funnel-stage-delete-slug');
+    var cancelBtn = document.getElementById('funnel-stage-delete-cancel');
+    var confirmBtn = document.getElementById('funnel-stage-delete-confirm');
+    var execForm = document.getElementById('funnel-stage-delete-exec');
+    var pendingAction = null;
+
+    function closeModal() {
+      if (!overlay) return;
+      overlay.style.display = 'none';
+      overlay.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      pendingAction = null;
+    }
+
+    function openModal(action, label, slug) {
+      if (!overlay || !execForm || !descEl) return;
+      pendingAction = action;
+      execForm.setAttribute('action', action);
+      var name = label || 'эта стадия';
+      descEl.textContent =
+        'Стадия «' + name + '» будет удалена без восстановления. Если в ней ещё есть контакты, система сама перенесёт их в соседнюю стадию; если соседней стадии нет, поле стадии у этих контактов очистится.';
+      if (slugEl && slug) {
+        slugEl.style.display = 'block';
+        slugEl.textContent = 'Slug в базе: ' + slug;
+      } else if (slugEl) {
+        slugEl.style.display = 'none';
+        slugEl.textContent = '';
+      }
+      overlay.style.display = 'flex';
+      overlay.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      if (confirmBtn) confirmBtn.focus();
+    }
+
+    document.querySelectorAll('.funnel-stage-delete-open').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var action = btn.getAttribute('data-action') || '';
+        var label = btn.getAttribute('data-stage-label') || '';
+        var slug = btn.getAttribute('data-stage-slug') || '';
+        if (!action) return;
+        openModal(action, label, slug);
+      });
+    });
+
+    if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+    if (overlay) {
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) closeModal();
+      });
+    }
+    if (confirmBtn) {
+      confirmBtn.addEventListener('click', function () {
+        if (pendingAction && execForm) execForm.submit();
+      });
+    }
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && overlay && overlay.getAttribute('aria-hidden') === 'false') closeModal();
+    });
+  })();
+})();
+</script>
+{% endblock %}

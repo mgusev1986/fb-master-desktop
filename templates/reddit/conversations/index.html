@@ -1,0 +1,482 @@
+{% extends "reddit/base.html" %}
+
+{% block title %}Диалоги · Reddit Master{% endblock %}
+
+{% block head %}
+{{ super() }}
+<style>
+  .reddit-msg {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 12px;
+    height: calc(100vh - 140px);
+    min-height: 520px;
+  }
+  .reddit-msg__col {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .reddit-msg__head {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .reddit-msg__head h2 {
+    margin: 0;
+    font: 600 14px/1.2 Inter, sans-serif;
+    color: var(--text-primary);
+    flex: 1;
+    min-width: 0;
+  }
+  .reddit-msg__list { flex: 1; overflow-y: auto; padding: 4px 0; }
+  .reddit-msg__item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 12px;
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+    cursor: pointer;
+    transition: background .12s ease;
+  }
+  .reddit-msg__item:hover { background: color-mix(in srgb, var(--ws-accent) 6%, transparent); }
+  .reddit-msg__item.is-active { background: color-mix(in srgb, var(--ws-accent) 12%, transparent); }
+  .reddit-msg__item-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .reddit-msg__item-name {
+    font: 600 13px/1.2 Inter, sans-serif;
+    color: var(--text-primary);
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .reddit-msg__item-time {
+    font: 400 11px/1 Inter, sans-serif;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+  .reddit-msg__item-preview {
+    font: 400 12px/1.4 Inter, sans-serif;
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .reddit-msg__badge {
+    background: var(--ws-accent);
+    color: #fff;
+    border-radius: 999px;
+    padding: 1px 7px;
+    font: 600 11px/1.4 Inter, sans-serif;
+    flex-shrink: 0;
+  }
+  .reddit-msg__thread {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: color-mix(in srgb, var(--bg-base) 60%, transparent);
+  }
+  .reddit-bubble {
+    max-width: 72%;
+    padding: 8px 12px;
+    border-radius: 14px;
+    font: 400 13px/1.45 Inter, sans-serif;
+    white-space: pre-wrap;
+    word-break: break-word;
+    box-shadow: 0 1px 2px rgba(0,0,0,.05);
+  }
+  .reddit-bubble--in {
+    align-self: flex-start;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+  }
+  .reddit-bubble--out {
+    align-self: flex-end;
+    background: var(--ws-accent);
+    color: #fff;
+    border: 1px solid var(--ws-accent);
+  }
+  .reddit-bubble--draft {
+    align-self: flex-end;
+    background: color-mix(in srgb, var(--ws-accent) 18%, var(--bg-surface));
+    color: var(--text-primary);
+    border: 1px dashed var(--ws-accent);
+  }
+  .reddit-bubble__meta {
+    font: 400 11px/1 Inter, sans-serif;
+    opacity: .8;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .reddit-bubble__actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+  .reddit-msg__compose {
+    border-top: 1px solid var(--border);
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: var(--bg-surface);
+  }
+  .reddit-msg__compose textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font: 400 13px/1.45 Inter, sans-serif;
+    background: var(--bg-base);
+    color: var(--text-primary);
+    resize: vertical;
+    min-height: 60px;
+  }
+  .reddit-msg__empty {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font: 400 13px/1.4 Inter, sans-serif;
+    text-align: center;
+    padding: 24px;
+  }
+  .reddit-msg__search {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-base);
+    color: var(--text-primary);
+    font: 400 13px/1.4 Inter, sans-serif;
+  }
+  .reddit-msg__toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .reddit-msg__sync {
+    font: 400 12px/1 Inter, sans-serif;
+    color: var(--text-muted);
+  }
+  .reddit-msg__sync.is-error { color: #c33; }
+  .reddit-msg__sync.is-ok { color: #1b873f; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="reddit-page">
+  <header class="reddit-page__header">
+    <div class="reddit-page__title-wrap">
+      <h1 class="reddit-page__title">Диалоги / Inbox</h1>
+      <p class="reddit-page__subtitle">
+        Полноценный мессенджер по Reddit PM. Входящие тянутся фоном из <code>/message/inbox</code>,
+        исходящие отправляются через официальный <code>/api/compose</code>.
+      </p>
+    </div>
+    <div class="reddit-msg__toolbar">
+      <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text-muted);">
+        <input type="checkbox" id="reddit-msg-autosync"/> Auto-sync
+      </label>
+      <button id="reddit-msg-sync" class="reddit-btn"><i class="ti ti-refresh"></i> Sync now</button>
+      <a href="/reddit/conversations/compose" class="reddit-btn reddit-btn--primary"><i class="ti ti-edit"></i> Новый диалог</a>
+    </div>
+  </header>
+
+  {% if not has_account %}
+  <div class="reddit-card reddit-card--accent">
+    <h2 class="reddit-card__title"><i class="ti ti-alert-triangle"></i> Нужен подключенный Reddit-аккаунт</h2>
+    <div><a href="/reddit/accounts" class="reddit-btn reddit-btn--primary">К аккаунтам</a></div>
+  </div>
+  {% else %}
+  <div class="reddit-msg">
+    <div class="reddit-msg__col">
+      <div class="reddit-msg__head">
+        <input id="reddit-msg-search" class="reddit-msg__search" type="search" placeholder="Поиск по u/…"/>
+      </div>
+      <div id="reddit-msg-list" class="reddit-msg__list">
+        <div class="reddit-msg__empty">Загружаю…</div>
+      </div>
+      <div class="reddit-msg__head" style="border-top:1px solid var(--border);border-bottom:none;justify-content:space-between;">
+        <span id="reddit-msg-sync-status" class="reddit-msg__sync">—</span>
+      </div>
+    </div>
+    <div class="reddit-msg__col">
+      <div class="reddit-msg__head">
+        <h2 id="reddit-msg-thread-title">Выберите диалог</h2>
+        <a id="reddit-msg-thread-link" target="_blank" rel="noreferrer noopener" style="display:none;color:var(--ws-accent);font:500 12px/1 Inter;text-decoration:none;"><i class="ti ti-external-link"></i> Открыть в Reddit</a>
+      </div>
+      <div id="reddit-msg-thread" class="reddit-msg__thread">
+        <div class="reddit-msg__empty">Слева — список диалогов. Кликните, чтобы открыть переписку.</div>
+      </div>
+      <form id="reddit-msg-compose" class="reddit-msg__compose" style="display:none;">
+        <textarea id="reddit-msg-text" placeholder="Введите сообщение u/… (по умолчанию — manual approval)"></textarea>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <button type="submit" class="reddit-btn reddit-btn--primary"><i class="ti ti-send"></i> Создать draft</button>
+          <span id="reddit-msg-compose-hint" style="font:400 12px/1.4 Inter;color:var(--text-muted);">Approval-mode определяет автосенд.</span>
+        </div>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+(function(){
+  var listEl = document.getElementById('reddit-msg-list');
+  if (!listEl) return;
+  var threadEl = document.getElementById('reddit-msg-thread');
+  var threadTitleEl = document.getElementById('reddit-msg-thread-title');
+  var threadLinkEl = document.getElementById('reddit-msg-thread-link');
+  var composeForm = document.getElementById('reddit-msg-compose');
+  var composeText = document.getElementById('reddit-msg-text');
+  var searchEl = document.getElementById('reddit-msg-search');
+  var syncBtn = document.getElementById('reddit-msg-sync');
+  var syncStatus = document.getElementById('reddit-msg-sync-status');
+  var autosyncEl = document.getElementById('reddit-msg-autosync');
+
+  var state = {
+    items: [],
+    activeId: null,
+    pollMs: 8000,
+    autosync: localStorage.getItem('reddit_msg_autosync') !== '0',
+    filter: '',
+  };
+  autosyncEl.checked = state.autosync;
+  autosyncEl.addEventListener('change', function(){
+    state.autosync = autosyncEl.checked;
+    localStorage.setItem('reddit_msg_autosync', state.autosync ? '1' : '0');
+  });
+
+  function fmtTime(iso){
+    if (!iso) return '';
+    try {
+      var d = new Date(iso);
+      var now = new Date();
+      var sameDay = d.toDateString() === now.toDateString();
+      if (sameDay) {
+        return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+      }
+      return d.toLocaleDateString([], {day:'2-digit', month:'short'}) + ' ' +
+             d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    } catch(e) { return ''; }
+  }
+
+  function escapeHtml(s){
+    return (s || '').replace(/[&<>"']/g, function(c){
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+    });
+  }
+
+  function renderList(){
+    var q = state.filter.trim().toLowerCase();
+    var items = state.items.filter(function(c){
+      if (!q) return true;
+      return (c.counterpart_username || '').toLowerCase().indexOf(q) !== -1;
+    });
+    if (!items.length) {
+      listEl.innerHTML = '<div class="reddit-msg__empty">Нет диалогов. Начните с «Новый диалог» или дождитесь входящего.</div>';
+      return;
+    }
+    var html = items.map(function(c){
+      var active = c.id === state.activeId ? ' is-active' : '';
+      var unread = c.unread_count ? '<span class="reddit-msg__badge">' + c.unread_count + '</span>' : '';
+      return '<div class="reddit-msg__item' + active + '" data-id="' + c.id + '">' +
+        '<div class="reddit-msg__item-row">' +
+          '<div class="reddit-msg__item-name">u/' + escapeHtml(c.counterpart_username) + '</div>' +
+          '<div class="reddit-msg__item-time">' + escapeHtml(fmtTime(c.last_message_at)) + '</div>' +
+          unread +
+        '</div>' +
+        '<div class="reddit-msg__item-preview">' + escapeHtml(c.subject || '— без темы —') + '</div>' +
+      '</div>';
+    }).join('');
+    listEl.innerHTML = html;
+    [].forEach.call(listEl.querySelectorAll('.reddit-msg__item'), function(el){
+      el.addEventListener('click', function(){
+        var id = parseInt(el.getAttribute('data-id'), 10);
+        openConversation(id);
+      });
+    });
+  }
+
+  function renderThread(payload){
+    var conv = payload.conversation;
+    var msgs = payload.messages || [];
+    threadTitleEl.textContent = 'u/' + conv.counterpart_username;
+    threadLinkEl.style.display = '';
+    threadLinkEl.href = 'https://www.reddit.com/message/messages/';
+    composeForm.style.display = '';
+    composeText.placeholder = 'Сообщение для u/' + conv.counterpart_username;
+    if (!msgs.length) {
+      threadEl.innerHTML = '<div class="reddit-msg__empty">В этом диалоге пока нет сообщений. Напишите первое в поле ниже.</div>';
+      return;
+    }
+    var html = msgs.map(function(m){
+      var cls = 'reddit-bubble reddit-bubble--' + (m.direction === 'in' ? 'in' : 'out');
+      var stateBadge = '';
+      if (m.draft_state) {
+        cls = 'reddit-bubble reddit-bubble--draft';
+        stateBadge = ' · ' + escapeHtml(m.draft_state);
+      }
+      var actions = '';
+      if (m.draft_state === 'pending_review' || m.draft_state === 'approved') {
+        actions = '<div class="reddit-bubble__actions">' +
+          '<button class="reddit-btn reddit-btn--primary" data-action="approve-send" data-draft="' + m.draft_id + '"><i class="ti ti-send"></i> Approve & Send</button>' +
+        '</div>';
+      } else if (m.draft_state === 'failed') {
+        actions = '<div class="reddit-bubble__meta" style="color:#c33;">' + escapeHtml(m.last_error || 'failed') + '</div>';
+      }
+      return '<div class="' + cls + '">' +
+        escapeHtml(m.body) +
+        '<div class="reddit-bubble__meta">' + escapeHtml(fmtTime(m.sent_at)) + stateBadge + '</div>' +
+        actions +
+      '</div>';
+    }).join('');
+    threadEl.innerHTML = html;
+    threadEl.scrollTop = threadEl.scrollHeight;
+
+    [].forEach.call(threadEl.querySelectorAll('button[data-action="approve-send"]'), function(btn){
+      btn.addEventListener('click', function(){
+        var draftId = btn.getAttribute('data-draft');
+        approveAndSend(state.activeId, draftId);
+      });
+    });
+  }
+
+  function setSync(state_, label){
+    syncStatus.className = 'reddit-msg__sync' + (state_ ? ' is-' + state_ : '');
+    syncStatus.textContent = label || '—';
+  }
+
+  function fetchList(){
+    return fetch('/reddit/api/conversations', {credentials:'same-origin'})
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        state.items = data.items || [];
+        renderList();
+      });
+  }
+
+  function openConversation(id){
+    state.activeId = id;
+    renderList();
+    threadEl.innerHTML = '<div class="reddit-msg__empty">Загружаю переписку…</div>';
+    return fetch('/reddit/api/conversations/' + id + '/messages', {credentials:'same-origin'})
+      .then(function(r){ return r.json(); })
+      .then(function(payload){
+        renderThread(payload);
+        return fetch('/reddit/api/conversations/' + id + '/mark-read', {
+          method:'POST', credentials:'same-origin'
+        });
+      })
+      .then(function(){ return fetchList(); })
+      .catch(function(err){
+        threadEl.innerHTML = '<div class="reddit-msg__empty">Не удалось загрузить: ' + escapeHtml(String(err)) + '</div>';
+      });
+  }
+
+  function refreshActive(){
+    if (!state.activeId) return Promise.resolve();
+    return fetch('/reddit/api/conversations/' + state.activeId + '/messages', {credentials:'same-origin'})
+      .then(function(r){ return r.json(); })
+      .then(renderThread)
+      .catch(function(){});
+  }
+
+  function approveAndSend(convId, draftId){
+    setSync('', 'отправляю…');
+    fetch('/reddit/api/conversations/' + convId + '/draft/' + draftId + '/approve-send', {
+      method:'POST', credentials:'same-origin'
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if (res.ok) {
+        setSync('ok', 'отправлено');
+      } else {
+        setSync('error', 'ошибка: ' + (res.reason_code || 'unknown'));
+      }
+      return refreshActive().then(fetchList);
+    })
+    .catch(function(err){ setSync('error', 'ошибка: ' + String(err)); });
+  }
+
+  function pollInbox(){
+    setSync('', 'sync…');
+    return fetch('/reddit/api/conversations/poll-inbox', {
+      method:'POST', credentials:'same-origin',
+      headers:{'Content-Type':'application/json'}, body:'{}'
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      var saved = res.saved || 0;
+      setSync(saved ? 'ok' : '', saved ? ('новых: ' + saved) : 'без изменений');
+      return fetchList().then(refreshActive);
+    })
+    .catch(function(err){ setSync('error', 'ошибка: ' + String(err)); });
+  }
+
+  syncBtn.addEventListener('click', function(e){ e.preventDefault(); pollInbox(); });
+  searchEl.addEventListener('input', function(){
+    state.filter = searchEl.value || '';
+    renderList();
+  });
+
+  composeForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    var text = (composeText.value || '').trim();
+    if (!text || !state.activeId) return;
+    setSync('', 'создаю draft…');
+    fetch('/reddit/api/conversations/' + state.activeId + '/send', {
+      method:'POST', credentials:'same-origin',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({text: text})
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      composeText.value = '';
+      if (res.state === 'sent') setSync('ok', 'отправлено');
+      else if (res.state === 'failed') setSync('error', 'ошибка: ' + (res.reason_code || 'unknown'));
+      else setSync('', 'draft создан — нужен approve');
+      return refreshActive().then(fetchList);
+    })
+    .catch(function(err){ setSync('error', 'ошибка: ' + String(err)); });
+  });
+
+  // Initial + polling
+  fetchList().then(function(){
+    // Auto-open via hash #conv=ID
+    var m = (location.hash || '').match(/conv=(\d+)/);
+    if (m) openConversation(parseInt(m[1], 10));
+    else if (state.items.length) openConversation(state.items[0].id);
+  });
+
+  setInterval(function(){
+    if (!state.autosync) return;
+    if (!document.hasFocus()) return;
+    fetchList().then(refreshActive);
+  }, state.pollMs);
+})();
+</script>
+{% endblock %}

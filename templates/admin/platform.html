@@ -1,0 +1,392 @@
+{% extends "base.html" %}
+{% block title %}Админ-панель — SOCMASTER{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Админ-панель</h1>
+  <p class="subtitle">Глобальная сводка по сервису и техническому окружению. Доступна только email из <code>FB_MASTER_OWNER_EMAILS</code> в <code>.env</code>.</p>
+</div>
+
+<div class="admin-hero card">
+  <div class="card-body admin-hero__body">
+    <div class="admin-hero__main">
+      <div class="admin-hero__label">Зарегистрировано пользователей</div>
+      <div class="admin-hero__value">{{ totals.users }}</div>
+      <div class="admin-hero__hint">Аккаунты входа (таблица <code>admin_users</code>)</div>
+    </div>
+    <div class="admin-hero__side">
+      <div class="admin-hero-stat">
+        <span class="admin-hero-stat__label">Активность за 7 дней</span>
+        <span class="admin-hero-stat__value">{{ totals.users_active_7d }}</span>
+        <span class="admin-hero-stat__hint">Был вход (last login)</span>
+      </div>
+      <div class="admin-hero-stat">
+        <span class="admin-hero-stat__label">Организаций</span>
+        <span class="admin-hero-stat__value">{{ totals.organizations }}</span>
+      </div>
+      <div class="admin-hero-stat">
+        <span class="admin-hero-stat__label">Задач в работе</span>
+        <span class="admin-hero-stat__value">{{ totals.jobs_active }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="admin-quick-links">
+  <a href="/admin/platform/access-keys" class="btn btn-secondary"><i class="ti ti-key"></i> Ключи доступа</a>
+  <a href="/system/logs" class="btn btn-secondary"><i class="ti ti-report-analytics"></i> Журнал и отчёты</a>
+  <a href="/system/settings" class="btn btn-secondary"><i class="ti ti-settings"></i> Настройки кабинета</a>
+  <a href="/system/speed" class="btn btn-secondary"><i class="ti ti-gauge"></i> Скорость и паузы</a>
+</div>
+
+<div class="card" style="margin-bottom:20px">
+  <div class="card-header">Клиентские машины: ID установки и онлайн</div>
+  <div class="card-body">
+    <p class="subtitle" style="margin:0 0 14px">
+      В сайдбаре у каждой копии программы — <strong>ID установки</strong> (файл <code>client_installation_id</code> в каталоге данных).
+      Пульс в эту таблицу: не чаще раз в {{ presence_interval_sec|int }} с (<code>FBM_CLIENT_PRESENCE_INTERVAL_SEC</code>); «онлайн» — активность за {{ online_threshold_sec }} с (<code>FBM_CLIENT_ONLINE_THRESHOLD_SEC</code>).
+      {% if presence_db_is_postgresql %}
+      Кабинет на этом сервере (PostgreSQL) пишет строки напрямую. Копии <strong>десктопа</strong> с локальной SQLite отправляют пульс на тот же хост через
+      <code>POST …/api/public/client-presence</code> (см. <code>FB_MASTER_LICENSE_API_BASE</code> / <code>FB_MASTER_PRESENCE_REPORT_URL</code>){% if presence_endpoint_hint %}: например <code>{{ presence_endpoint_hint }}</code>{% endif %}.
+      Привязка к клиенту — по <strong>ключу доступа</strong> (тот же <code>device_fingerprint</code>, что при активации).
+      {% else %}
+      На этой инсталляции база SQLite: в таблице будут только машины, которые ходят в <em>этот</em> локальный процесс. Для сводки по всем клиентам откройте админку на VPS с PostgreSQL.
+      {% endif %}
+    </p>
+    {% if machine_presences %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID установки</th>
+            <th>Статус</th>
+            <th>Ключ доступа</th>
+            <th>Пользователь</th>
+            <th>Организация</th>
+            <th>Имя ПК</th>
+            <th>Версия UI</th>
+            <th>Последняя активность</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in machine_presences %}
+          <tr>
+            <td><code style="word-break:break-all">{{ row.installation_id }}</code></td>
+            <td>
+              {% if row.online %}
+              <span class="badge badge-success">онлайн</span>
+              {% else %}
+              <span class="badge badge-default">нет</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if row.access_key_id %}
+              <div>{% if row.access_key_label %}{{ row.access_key_label }}{% else %}<span class="settings-note">без подписи</span>{% endif %}</div>
+              <div class="settings-note">ключ #{{ row.access_key_id }}</div>
+              {% else %}—{% endif %}
+            </td>
+            <td>
+              {% if row.admin_email %}
+              <div>{{ row.admin_email }}</div>
+              {% if row.admin_name %}<div class="settings-note">{{ row.admin_name }}</div>{% endif %}
+              {% else %}—{% endif %}
+            </td>
+            <td>
+              {% if row.org_name %}
+              <div>{{ row.org_name }}</div>
+              <div class="settings-note">org #{{ row.org_id }}</div>
+              {% else %}—{% endif %}
+            </td>
+            <td>{% if row.hostname %}<code>{{ row.hostname }}</code>{% else %}—{% endif %}</td>
+            <td>{% if row.desktop_app_version %}<code>{{ row.desktop_app_version }}</code>{% else %}—{% endif %}</td>
+            <td>{{ format_dt_madrid(row.last_seen_at) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="subtitle" style="margin:0">Пока нет записей о запусках копий программы (откройте кабинет хотя бы раз после обновления).</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:20px;border-color:var(--accent)">
+  <div class="card-header">Просмотр как у клиента</div>
+  <div class="card-body">
+    <p class="subtitle" style="margin:0 0 14px">
+      Включите режим, чтобы кабинет совпадал с тем, что видит клиент: в «Настройках» скрыты блоки Supabase, прямой Google OAuth, пути к данным, карточка «Runtime и системная диагностика» и кнопка «Проверить login»;
+      в сайдбаре скрыты кнопка «Выйти» и пункт «Админ-панель». Выйти из предпросмотра — жёлтая полоска сверху или снова откройте
+      <code>/admin/platform</code> вручную.
+    </p>
+    <form method="post" action="/admin/platform/preview-as-user" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+      <input type="hidden" name="next" value="/admin/platform"/>
+      {% if preview_as_user_active(request) %}
+      <input type="hidden" name="enable" value="0"/>
+      <span class="badge badge-success">Предпросмотр включён</span>
+      <button type="submit" class="btn btn-primary"><i class="ti ti-eye-off"></i> Выключить предпросмотр</button>
+      {% else %}
+      <input type="hidden" name="enable" value="1"/>
+      <button type="submit" class="btn btn-secondary"><i class="ti ti-eye"></i> Включить предпросмотр клиента</button>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-label">Связей пользователь ↔ организация</div>
+    <div class="stat-value">{{ totals.memberships }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Контактов в базе (всего)</div>
+    <div class="stat-value">{{ totals.people }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Доноров</div>
+    <div class="stat-value">{{ totals.donors }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">FB-аккаунтов</div>
+    <div class="stat-value">{{ totals.fb_accounts }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Кампаний рассылки</div>
+    <div class="stat-value">{{ totals.campaigns }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Сценариев прогрева</div>
+    <div class="stat-value">{{ totals.warmup_campaigns }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Сценариев по дням (sequence)</div>
+    <div class="stat-value">{{ totals.sequence_campaigns }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Шаблонов сообщений</div>
+    <div class="stat-value">{{ totals.templates }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Партий импорта</div>
+    <div class="stat-value">{{ totals.import_batches }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Задач всего (jobs)</div>
+    <div class="stat-value">{{ totals.jobs_total }}</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">Техническое окружение</div>
+  <div class="card-body">
+    <p class="subtitle" style="margin-top:0">Параметры процесса и каталоги (секреты и ключи не отображаются).</p>
+    <div class="admin-tech-grid">
+      <dl class="admin-tech-dl">
+        <dt>Версия Python</dt>
+        <dd><code>{{ tech.python_version }}</code></dd>
+        <dt>База данных</dt>
+        <dd>{{ tech.database_kind }}</dd>
+        <dt>Слушает</dt>
+        <dd><code>{{ tech.listen }}</code></dd>
+        <dt>APP_BASE_URL</dt>
+        <dd class="admin-tech-dd-break"><code>{{ tech.app_base_url }}</code></dd>
+        <dt>DATA_DIR</dt>
+        <dd class="admin-tech-dd-break"><code>{{ tech.data_dir }}</code></dd>
+        <dt>LOG_DIR</dt>
+        <dd class="admin-tech-dd-break"><code>{{ tech.log_dir }}</code></dd>
+        <dt>BROWSER_PROFILES_DIR</dt>
+        <dd class="admin-tech-dd-break"><code>{{ tech.browser_profiles_dir }}</code></dd>
+        <dt>BASE_FB_DIR</dt>
+        <dd class="admin-tech-dd-break"><code>{{ tech.base_fb_dir }}</code></dd>
+      </dl>
+      <dl class="admin-tech-dl">
+        <dt>Ключ доступа (FB_MASTER_ACCESS_KEY_REQUIRED)</dt>
+        <dd>{% if tech.access_key_required %}<span class="badge badge-warning">включён</span>{% else %}<span class="badge badge-default">выкл.</span>{% endif %}</dd>
+        <dt>Supabase Auth</dt>
+        <dd>{% if tech.supabase_auth_configured %}<span class="badge badge-success">настроено</span>{% else %}<span class="badge badge-default">нет</span>{% endif %}</dd>
+        <dt>Google OAuth</dt>
+        <dd>{% if tech.google_oauth_configured %}<span class="badge badge-success">настроено</span>{% else %}<span class="badge badge-default">нет</span>{% endif %}</dd>
+        <dt>Dev-login</dt>
+        <dd>{% if tech.dev_login_allowed %}<span class="badge badge-warning">разрешён</span>{% else %}<span class="badge badge-default">выкл.</span>{% endif %}</dd>
+        <dt>Cookie Secure</dt>
+        <dd>{% if tech.session_cookie_secure %}да{% else %}нет{% endif %}</dd>
+        <dt>Имитация прода</dt>
+        <dd>{% if tech.local_simulate_production %}<span class="badge badge-warning">да</span>{% else %}нет{% endif %}</dd>
+        <dt>Playwright, параллельно</dt>
+        <dd>{{ tech.playwright_max_concurrent }}</dd>
+        <dt>Прогрев: headless</dt>
+        <dd>{% if tech.warmup_headless %}да{% else %}нет{% endif %}</dd>
+        <dt>LOG_LEVEL</dt>
+        <dd><code>{{ tech.log_level }}</code></dd>
+        <dt>Cookies из Chrome (локально)</dt>
+        <dd>{% if tech.fb_local_chrome_cookies %}да{% else %}нет{% endif %}</dd>
+        <dt>SEQUENCE_TIMEZONE</dt>
+        <dd><code>{{ tech.sequence_timezone }}</code></dd>
+        <dt>Messenger E2EE wait, c</dt>
+        <dd>{{ tech.messenger_e2ee_wait_seconds }}</dd>
+        <dt>OpenAI API</dt>
+        <dd>{% if tech.openai_configured %}<span class="badge badge-success">ключ задан</span>{% else %}<span class="badge badge-default">нет</span>{% endif %}</dd>
+        <dt>Google API (LLM)</dt>
+        <dd>{% if tech.google_api_key_configured %}<span class="badge badge-success">ключ задан</span>{% else %}<span class="badge badge-default">нет</span>{% endif %}</dd>
+        <dt>Обновления десктопа (API)</dt>
+        <dd>{% if tech.desktop_update_configured %}<span class="badge badge-success">настроено</span> <code>/api/public/desktop-update</code>{% else %}<span class="badge badge-default">нет</span> <span class="settings-note">задайте FB_DESKTOP_LATEST_VERSION и ссылки в .env</span>{% endif %}</dd>
+        <dt>Канал разработчика (превью-сборка)</dt>
+        <dd>{% if tech.desktop_dev_update_configured %}<span class="badge badge-success">настроено</span> <code>/download/dev</code> · <code>/api/public/desktop-update-dev</code>{% else %}<span class="badge badge-default">нет</span> <span class="settings-note">FB_DESKTOP_DEV_LATEST_VERSION и файлы в static/releases/dev/</span>{% endif %}</dd>
+        <dt>NOWPayments (продление ключа)</dt>
+        <dd>{% if tech.nowpayments_billing %}<span class="badge badge-success">включено</span> <code>/webhooks/nowpayments</code>{% else %}<span class="badge badge-default">выкл.</span>{% endif %}</dd>
+      </dl>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">Задачи (jobs) по статусам</div>
+  <div class="card-body">
+    {% if job_by_status %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Статус</th>
+            <th>Количество</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in job_by_status %}
+          <tr>
+            <td><code>{{ row.status }}</code></td>
+            <td>{{ row.count }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="subtitle" style="margin:0">Задач в базе пока нет.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">Организации</div>
+  <div class="card-body">
+    {% if org_stats %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Название</th>
+            <th>Slug</th>
+            <th>Активна</th>
+            <th>Участников</th>
+            <th>Людей</th>
+            <th>Доноров</th>
+            <th>FB</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in org_stats %}
+          {% set o = row.org %}
+          <tr>
+            <td>{{ o.id }}</td>
+            <td>{{ o.name }}</td>
+            <td><code>{{ o.slug }}</code></td>
+            <td>{{ 'да' if o.is_active else 'нет' }}</td>
+            <td>{{ row.members }}</td>
+            <td>{{ row.people }}</td>
+            <td>{{ row.donors }}</td>
+            <td>{{ row.fb_accounts }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="subtitle" style="margin:0">Организаций пока нет.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">Пользователи (последние 30 по дате регистрации)</div>
+  <div class="card-body">
+    {% if recent_users %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Email</th>
+            <th>Имя</th>
+            <th>Регистрация</th>
+            <th>Последний вход</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in recent_users %}
+          <tr>
+            <td>{{ u.id }}</td>
+            <td>{{ u.email }}</td>
+            <td>{{ u.name or '—' }}</td>
+            <td>{{ format_dt_madrid(u.created_at) }}</td>
+            <td>{{ format_dt_madrid(u.last_login_at) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="subtitle" style="margin:0">Пользователей нет.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">Последние задачи (все организации)</div>
+  <div class="card-body">
+    {% if recent_jobs %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Org</th>
+            <th>Тип</th>
+            <th>Статус</th>
+            <th>Создано</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for job in recent_jobs %}
+          <tr>
+            <td>{{ job.id }}</td>
+            <td>{{ job.organization_id }}</td>
+            <td>{{ job.job_type }}</td>
+            <td>
+              {% if job.status == 'success' %}
+                <span class="badge badge-success">Успешно</span>
+              {% elif job.status == 'failed' %}
+                <span class="badge badge-error">Ошибка</span>
+              {% elif job.status == 'running' %}
+                <span class="badge badge-warning">Выполняется</span>
+              {% elif job.status == 'cancelled' %}
+                <span class="badge badge-default">Отмена</span>
+              {% else %}
+                <span class="badge badge-default">{{ job.status }}</span>
+              {% endif %}
+            </td>
+            <td>{{ format_dt_madrid(job.created_at) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <p>Задач пока нет.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

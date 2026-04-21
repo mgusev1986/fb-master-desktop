@@ -1,0 +1,1187 @@
+{% extends "base.html" %}
+{% block title %}Messenger Old — FB Master{% endblock %}
+{% block body_class %}messenger-vk-page{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/messenger-vk.css') }}?v={{ static_v }}"/>
+{% endblock %}
+
+{% block content %}
+{% set mb = messenger_url_base|default('/messenger') %}
+{% set qp = request.query_params %}
+{# Единый переключатель: открытый чат + фоновый список #}
+
+{% macro _messenger_ret(sel_thread) %}
+<input type="hidden" name="ret_q" value="{{ search }}"/>
+<input type="hidden" name="ret_account_id" value="{{ filter_account_id }}"/>
+<input type="hidden" name="ret_folder" value="{{ folder }}"/>
+<input type="hidden" name="ret_thread" value="{{ sel_thread }}"/>
+{% endmacro %}
+
+{% macro _conv_menu_dropdown(conv, ret_thread, notif_muted) %}
+<div class="vk-ms-chat-dropdown" data-vk-ms-dropdown>
+  <form method="post" action="{{ mb }}/conversation/{{ conv.id }}/action" class="vk-ms-dropdown-form">
+    {{ _messenger_ret(ret_thread) }}
+    <input type="hidden" name="action" value="mark_unread"/>
+    <button type="submit" class="vk-ms-dropdown-item"><i class="ti ti-rotate-clockwise"></i> Отметить непрочитанным</button>
+  </form>
+  <form method="post" action="{{ mb }}/conversation/{{ conv.id }}/action" class="vk-ms-dropdown-form">
+    {{ _messenger_ret(ret_thread) }}
+    <input type="hidden" name="action" value="pin_toggle"/>
+    <button type="submit" class="vk-ms-dropdown-item"><i class="ti ti-pin"></i> {% if conv.is_pinned %}Открепить чат{% else %}Закрепить чат{% endif %}</button>
+  </form>
+  <form method="post" action="{{ mb }}/conversation/{{ conv.id }}/archive" class="vk-ms-dropdown-form">
+    {{ _messenger_ret(ret_thread) }}
+    <button type="submit" class="vk-ms-dropdown-item"><i class="ti ti-archive"></i> {% if conv.is_archived %}Вернуть из архива{% else %}Архивировать{% endif %}</button>
+  </form>
+  <div class="vk-ms-dropdown-item vk-ms-has-sub" role="group">
+    <span class="vk-ms-has-sub-label"><i class="ti ti-bell-off"></i> Отключить уведомления</span>
+    <div class="vk-ms-chat-dropdown vk-ms-chat-dropdown--sub">
+      <form method="post" action="{{ mb }}/conversation/{{ conv.id }}/action" class="vk-ms-dropdown-form">
+        {{ _messenger_ret(ret_thread) }}<input type="hidden" name="action" value="mute_1h"/>
+        <button type="submit" class="vk-ms-dropdown-item">На 1 час</button>
+      </form>
+      <form method="post" action="{{ mb }}/conversation/{{ conv.id }}/action" class="vk-ms-dropdown-form">
+        {{ _messenger_ret(ret_thread) }}<input type="hidden" name="action" value="mute_8h"/>
+        <button type="submit" class="vk-ms-dropdown-item">На 8 часов</button>
+      </form>
+      <form method="post" action="{{ mb }}/conversation/{{ conv.id }}/action" class="vk-ms-dropdown-form">
+        {{ _messenger_ret(ret_thread) }}<input type="hidden" name="action" value="mute_forever"/>
+        <button type="submit" class="vk-ms-dropdown-item">Навсегда</button>
+      </form>
+      {% if notif_muted %}
+      <div class="vk-ms-dropdown-divider"></div>
+      <form method="post" action="{{ mb }}/conversation/{{ conv.id }}/action" class="vk-ms-dropdown-form">
+        {{ _messenger_ret(ret_thread) }}<input type="hidden" name="action" value="mute_off"/>
+        <button type="submit" class="vk-ms-dropdown-item"><i class="ti ti-bell"></i> Включить уведомления</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+  <div class="vk-ms-dropdown-divider"></div>
+  <form method="post" action="{{ mb }}/conversation/{{ conv.id }}/action" class="vk-ms-dropdown-form" data-confirm="Удалить все сообщения этого чата из базы FB Master? Синхронизацию с Facebook можно запустить снова." data-confirm-title="Очистить историю" data-confirm-variant="danger">
+    {{ _messenger_ret(ret_thread) }}
+    <input type="hidden" name="action" value="clear_history"/>
+    <button type="submit" class="vk-ms-dropdown-item vk-ms-dropdown-item--danger"><i class="ti ti-trash"></i> Очистить историю</button>
+  </form>
+</div>
+{% endmacro %}
+
+<div class="vk-messenger"
+     data-inbox-auto-sync-enabled="{{ 'true' if messenger_auto_sync_on else 'false' }}"
+     data-inbox-auto-sync-interval-sec="{{ messenger_auto_inbox_sync_interval_sec }}"
+     data-inbox-autosync-min-sec="{{ messenger_inbox_autosync_min_sec }}"
+     data-inbox-last-sync-at="{{ messenger_inbox_last_sync_iso or '' }}">
+  <div class="vk-ms-topbar">
+    <span class="vk-ms-topbar-title">Messenger Old</span>
+    <div class="vk-ms-topbar-actions">
+      <div class="vk-ms-topbar-sync-controls" role="group" aria-label="Синхронизация с Facebook">
+        <div class="vk-ms-auto-sync-pair">
+          <label class="vk-ms-switch" title="Один фоновый цикл: список чатов и недавние диалоги (Playwright по расписанию сервера)">
+            <input type="checkbox" id="vk-ms-auto-pull" {% if messenger_auto_sync_on %}checked{% endif %} {% if sync_busy %}disabled{% endif %} aria-label="Автосинхронизация с Facebook"/>
+            <span class="vk-ms-switch-slider" aria-hidden="true"></span>
+          </label>
+          <span class="vk-ms-auto-sync-text">Автосинхронизация с Facebook</span>
+        </div>
+        <button type="button" class="vk-ms-btn-primary vk-ms-pull-now-topbar-btn" id="vk-ms-pull-now-btn" {% if sync_busy %}disabled{% endif %} title="{% if thread_id %}Обновить открытый чат{% else %}Обновить список чатов со всех аккаунтов{% endif %}">
+          <i class="ti ti-refresh"></i> Ручная синхронизация
+        </button>
+      </div>
+    </div>
+  </div>
+
+  {% if qp.get('err') == 'busy' %}
+  <div class="vk-ms-alert vk-ms-alert--err">Сейчас уже выполняется синхронизация мессенджера. Дождитесь окончания.</div>
+  {% elif qp.get('err') == 'other' %}
+  <div class="vk-ms-alert vk-ms-alert--err">Нельзя запустить синхронизацию, пока идёт прогрев, сценарий по дням или рассылка.</div>
+  {% endif %}
+  <div class="vk-ms-main">
+    <section class="vk-ms-list" aria-label="Список чатов">
+      <div class="vk-ms-list-head">
+        <h2>Чаты</h2>
+        <form method="get" class="vk-ms-search-form" action="{{ mb }}">
+          <input type="hidden" name="folder" value="{{ folder }}"/>
+          {% if filter_account_id %}<input type="hidden" name="account_id" value="{{ filter_account_id }}"/>{% endif %}
+          <input type="search" name="q" value="{{ search }}" class="vk-ms-search" placeholder="Поиск" autocomplete="off"/>
+          <button type="submit" class="vk-ms-btn-icon" title="Найти"><i class="ti ti-search"></i></button>
+        </form>
+      </div>
+      <div class="vk-ms-list-tools">
+        <button type="button" class="vk-ms-btn-icon" id="vk-ms-toggle-select" title="Режим выбора"><i class="ti ti-checkbox"></i></button>
+      </div>
+      <div class="vk-ms-chats-scroll">
+        {% if chat_rows %}
+        {% for row in chat_rows %}
+        {% set c = row.c %}
+        <div class="vk-ms-chat-row {% if thread_id == c.id %}is-active{% endif %}" data-conv-id="{{ c.id }}">
+          <input type="checkbox" class="vk-ms-chk vk-ms-row-chk" style="display:none" value="{{ c.id }}" aria-label="Выбрать {{ c.peer_name or 'чат' }}"/>
+          <a class="vk-ms-chat-row-inner" href="{{ mb }}{{ thread_qs(c.id) }}">
+            <div class="vk-ms-avatar">
+              {% if c.avatar_url %}
+              <img src="{{ c.avatar_url }}" alt="" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.display='none';this.parentElement.textContent='{{ (c.peer_name or '?')[0]|upper }}';"/>
+              {% else %}
+              {{ (c.peer_name or '?')[0]|upper }}
+              {% endif %}
+            </div>
+            <div class="vk-ms-chat-body">
+              <div class="vk-ms-chat-top">
+                <span class="vk-ms-chat-name">{% if c.is_pinned %}<i class="ti ti-pin vk-ms-ico-pin" title="Закреплён"></i>{% endif %}{{ c.peer_name or 'Диалог' }}</span>
+                <div class="vk-ms-chat-meta-right">
+                  {% if row.notif_muted %}<i class="ti ti-bell-off vk-ms-ico-muted" title="Без звука"></i>{% endif %}
+                  <time class="vk-ms-chat-time" {% if c.last_at %}datetime="{{ c.last_at.isoformat() }}"{% endif %} title="{{ row.time_title }}">{{ row.time_s }}</time>
+                  {% if row.unread_n > 0 %}
+                  <span class="vk-ms-unread-pill {% if row.unread_n > 9 %}vk-ms-unread-pill--wide{% endif %}" title="Непрочитанных: {{ row.unread_n }}">{{ row.unread_n if row.unread_n < 100 else '99+' }}</span>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="vk-ms-chat-snippet">
+                {{ (c.last_snippet or '—')[:80] }}{% if c.last_snippet and c.last_snippet|length > 80 %}…{% endif %}
+              </div>
+              <div class="vk-ms-badge-acc">{{ messenger_fb_account_label(row.acc_label) }}</div>
+            </div>
+          </a>
+          <div class="vk-ms-row-menu-wrap">
+            <button type="button" class="vk-ms-btn-icon vk-ms-chat-menu-btn" title="Действия" aria-haspopup="true" aria-expanded="false"><i class="ti ti-dots-vertical"></i></button>
+            {{ _conv_menu_dropdown(c, '', row.notif_muted) }}
+          </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div style="padding:32px 16px;text-align:center;color:var(--vk-muted)">
+          <p style="margin:0 0 8px">Нет диалогов в этой папке.</p>
+          <p style="margin:0;font-size:12px">Запустите синхронизацию или смените фильтр.</p>
+        </div>
+        {% endif %}
+      </div>
+      <div class="vk-ms-list-footer" role="toolbar" aria-label="Фильтр чатов">
+        <span class="vk-ms-list-footer-unread-label"><i class="ti ti-message"></i> Только непрочитанные</span>
+        <label class="vk-ms-switch" title="Показывать только непрочитанные">
+          <input type="checkbox" id="vk-ms-only-unread" {% if folder == 'unread' %}checked{% endif %} aria-label="Только непрочитанные"/>
+          <span class="vk-ms-switch-slider" aria-hidden="true"></span>
+        </label>
+      </div>
+    </section>
+
+    <section class="vk-ms-thread" id="vk-ms-thread-panel" aria-label="Переписка"
+      data-messenger-sync-interval-sec="{{ messenger_effective_autosync_interval_sec }}"
+      data-auto-pull-enabled="{{ 'true' if messenger_auto_sync_on else 'false' }}"
+      {% if thread_id %}data-thread-id="{{ thread_id }}" data-pause-auto-pull="{{ 'true' if messenger_pause_auto_pull else 'false' }}" data-thread-block-hint="{{ messenger_thread_error_hint | e }}"{% endif %}
+      {% if active_conv %}data-ai-enabled="{{ 'true' if active_conv.ai_assistant_enabled else 'false' }}"{% endif %}
+      data-ai-llm-ready="{{ 'true' if messenger_ai_llm_ready else 'false' }}"
+      data-sync-busy="{{ 'true' if sync_busy else 'false' }}">
+      {% if active_conv and active_account %}
+      <header class="vk-ms-thread-header">
+        {% set close_qs = nav_qs.all if folder == 'all' else (nav_qs.unread if folder == 'unread' else nav_qs.archive) %}
+        <a class="vk-ms-thread-close" href="{{ mb }}{{ close_qs }}" title="Закрыть чат">✕</a>
+        <div class="vk-ms-avatar" style="width:40px;height:40px;font-size:14px">
+          {% if active_conv.avatar_url %}
+          <img src="{{ active_conv.avatar_url }}" alt="" referrerpolicy="no-referrer" onerror="this.remove();"/>
+          {% else %}
+          {{ (active_conv.peer_name or '?')[0]|upper }}
+          {% endif %}
+        </div>
+        <div class="vk-ms-thread-peer">
+          <h3>{{ active_conv.peer_name or 'Диалог' }}</h3>
+          <p>
+            {{ messenger_fb_account_label(active_account.label) }}
+            {% if active_conv.peer_url %}· <a href="{{ active_conv.peer_url }}" target="_blank" rel="noopener" style="color:var(--vk-blue)">Facebook</a>{% endif %}
+            <span id="vk-ms-header-funnel-link-wrap" {% if not active_person %}hidden{% endif %}>
+              · <a id="vk-ms-header-funnel-link" href="{% if active_person %}/crm/funnel?q={{ (active_person.display_name or active_person.canonical_url or '')|urlencode }}{% else %}/crm/funnel{% endif %}" style="color:var(--vk-blue)" title="Открыть воронку">Воронка</a>
+            </span>
+          </p>
+        </div>
+        {% if active_conv and crm_stages_messenger %}
+        <div class="vk-ms-thread-crm" role="group" aria-label="Поставить контакт в стадию воронки CRM">
+          {% for st in crm_stages_messenger %}
+          <button type="button"
+                  class="vk-ms-crm-stage-btn {% if active_person and active_person.crm_stage == st.slug %}is-active{% endif %}"
+                  data-conversation-id="{{ active_conv.id }}"
+                  data-slug="{{ st.slug }}"
+                  title="{{ st.label }} — в воронке CRM">
+            <i class="ti {{ st.icon }}" aria-hidden="true"></i>
+            <span class="vk-ms-crm-stage-btn__text">{{ st.label }}</span>
+          </button>
+          {% endfor %}
+          <span class="vk-ms-crm-funnel-status{% if not active_person %} vk-ms-crm-funnel-status--muted{% endif %}" id="vk-ms-crm-funnel-status" role="status" aria-live="polite">{% if not active_person %}Контакт ещё не связан с «Базой контактов»: нажмите нужную стадию, и система сама привяжет или создаст его.{% endif %}</span>
+        </div>
+        {% endif %}
+        <div class="vk-ms-thread-ai-bar" id="vk-ms-ai-bar" role="group" aria-label="AI-ассистент переписки">
+          <label class="vk-ms-switch vk-ms-ai-switch" title="После синхронизации с Facebook, если последнее сообщение от собеседника, нейросеть сгенерирует ответ и поставит его в очередь отправки">
+            <input type="checkbox" id="vk-ms-ai-toggle" {% if active_conv.ai_assistant_enabled %}checked{% endif %} {% if not messenger_ai_llm_ready %}disabled{% endif %} aria-label="AI-ассистент для этого чата"/>
+            <span class="vk-ms-switch-slider" aria-hidden="true"></span>
+          </label>
+          <span class="vk-ms-ai-label">AI-ассистент</span>
+          <button type="button" class="vk-ms-btn-text" id="vk-ms-ai-settings-open">Промпт и ссылки</button>
+          <button type="button" class="vk-ms-btn-text" id="vk-ms-ai-reset-fp" title="Сбросить отметку «уже отвечали на этот транскрипт»">Сбросить отметку</button>
+          <button type="button" class="vk-ms-btn-text" id="vk-ms-ai-reset-steps" title="Обнулить счётчик ответов AI в этом чате">Сброс шагов</button>
+          <span id="vk-ms-ai-steps" style="font-size:12px;color:var(--vk-muted)" aria-live="polite"></span>
+        </div>
+        <p style="margin:6px 0 0;font-size:11px;line-height:1.45;color:var(--vk-muted)">
+          Отвечает только на <strong>входящие</strong> (последнее в чате — от собеседника). Первое ЛС в диалоге AI сам не отправляет.
+        </p>
+        <div class="vk-ms-ai-chat-extra-wrap" style="margin-top:8px">
+          <label for="vk-ms-ai-chat-extra" style="font-size:12px;color:var(--vk-muted)">Уточнения только для этого чата (тон, оффер, что не говорить)</label>
+          <textarea id="vk-ms-ai-chat-extra" class="vk-ms-ai-chat-extra" rows="2" maxlength="8000" placeholder="Необязательно. Сохраняется отдельно от общего промпта.">{{ (active_conv.ai_extra_instructions or '') | e }}</textarea>
+          <button type="button" class="vk-ms-btn-text" id="vk-ms-ai-chat-extra-save" style="margin-top:4px">Сохранить для чата</button>
+        </div>
+        {% if not messenger_ai_llm_ready %}
+        <p class="vk-ms-ai-warn" style="margin:4px 0 0;font-size:12px;color:#b42318">Задайте ключ OpenAI или Google (Gemini) в «Настройках» кабинета — иначе AI не сможет отвечать.</p>
+        {% endif %}
+        <div class="vk-ms-thread-actions">
+          <div class="vk-ms-row-menu-wrap vk-ms-thread-menu-wrap">
+            <button type="button" class="vk-ms-btn-icon vk-ms-chat-menu-btn" title="Ещё" aria-haspopup="true"><i class="ti ti-dots-vertical"></i></button>
+            {{ _conv_menu_dropdown(active_conv, (thread_id or '')|string, active_notif_muted) }}
+          </div>
+        </div>
+      </header>
+      <div class="vk-ms-thread-scroll" id="vk-ms-thread-scroll">
+        <div id="vk-ms-bubbles">
+        {% if messages %}
+        {% for m in messages %}
+        <div class="vk-ms-bubble {% if m.direction == 'out' %}vk-ms-bubble-out{% else %}vk-ms-bubble-in{% endif %}">
+          <div style="white-space:pre-wrap">{{ m.body }}</div>
+          <div class="vk-ms-bubble-meta">{{ format_dt_madrid(m.created_at) }}</div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p class="vk-ms-bubbles-empty" style="text-align:center;color:var(--vk-muted);margin:24px 0">Сообщений в базе пока нет — они появятся после первой синхронизации или отправки.</p>
+        {% endif %}
+        </div>
+      </div>
+      <footer class="vk-ms-thread-footer">
+        <div class="vk-ms-composer">
+          <textarea id="vk-ms-compose-input" class="vk-ms-compose-input" rows="3" maxlength="4000" placeholder="Сообщение…"></textarea>
+          <div class="vk-ms-composer-actions">
+            <button type="button" class="vk-ms-btn-primary" id="vk-ms-send-btn"><i class="ti ti-send"></i> Отправить</button>
+          </div>
+        </div>
+        <p class="vk-ms-live-status-line" id="vk-ms-live-status" role="status" aria-live="polite"></p>
+        <p class="vk-ms-resume-pull-line" style="margin:6px 0 0" id="vk-ms-resume-pull-wrap" hidden>
+          <button type="button" class="vk-ms-btn-text" id="vk-ms-resume-pull-btn">Снять паузу после PIN</button>
+        </p>
+        <!-- Скрыта дублирующая подтяжка: тот же worker, что у кнопки refresh (POST /api/.../pull), но через форму с перезагрузкой страницы. Чтобы вернуть ссылку — уберите атрибут hidden. -->
+        <form method="post" action="{{ mb }}/thread/{{ active_conv.id }}/load-messages" class="vk-ms-fallback-sync-form" hidden>
+          <button type="submit" class="vk-ms-btn-text" {% if sync_busy %}disabled{% endif %}>Классическая синхронизация (как раньше)</button>
+        </form>
+      </footer>
+      {% else %}
+      <div class="vk-ms-thread-empty">
+        <div>
+          <p style="margin:0 0 8px;font-weight:500;color:var(--vk-text)">Выберите чат слева</p>
+          <p style="margin:0;font-size:13px">Сообщения выбранного диалога появятся здесь. Используйте папки и аккаунты справа, как в VK.</p>
+        </div>
+      </div>
+      {% endif %}
+    </section>
+
+    <aside class="vk-ms-rail" aria-label="Папки и аккаунты">
+      <div class="vk-ms-rail-label">Папки</div>
+      <a class="vk-ms-folder {% if folder == 'all' %}is-active{% endif %}" href="{{ mb }}{{ nav_qs.all }}">Все</a>
+      <a class="vk-ms-folder {% if folder == 'unread' %}is-active{% endif %}" href="{{ mb }}{{ nav_qs.unread }}">Непрочитанные</a>
+      <a class="vk-ms-folder {% if folder == 'archive' %}is-active{% endif %}" href="{{ mb }}{{ nav_qs.archive }}">Архив</a>
+
+      <div class="vk-ms-acc-dock">
+        <div class="vk-ms-acc-dock-title">Аккаунты</div>
+        <a class="vk-ms-acc-pill {% if not filter_account_id %}is-active{% endif %}" href="{{ mb }}{{ all_accounts_qs }}" title="Все аккаунты">
+          <span class="vk-ms-acc-dot" style="background:linear-gradient(135deg,#64748b,#475569)">∑</span>
+          <span>Все</span>
+        </a>
+        {% for a, acc_qs in account_dock %}
+        <a class="vk-ms-acc-pill {% if filter_account_id == (a.id|string) %}is-active{% endif %}" href="{{ mb }}{{ acc_qs }}">
+          <span class="vk-ms-acc-dot">{{ (messenger_fb_account_label(a.label) or 'F')[0]|upper }}</span>
+          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ messenger_fb_account_label(a.label) if a.label else ('#' ~ a.id) }}</span>
+        </a>
+        {% endfor %}
+      </div>
+    </aside>
+  </div>
+
+  <dialog id="vk-ms-ai-dialog" class="vk-ms-ai-dialog" style="max-width:min(640px,96vw);border:1px solid var(--vk-border);border-radius:12px;padding:0">
+    <form method="dialog" style="margin:0">
+      <div style="padding:16px 18px;border-bottom:1px solid var(--vk-border)">
+        <h3 style="margin:0;font-size:16px">Настройки AI-ассистента Messenger</h3>
+        <p style="margin:8px 0 0;font-size:12px;color:var(--vk-muted)">Провайдер и модель — как в разделе «Рассылка» → AI-агент. Здесь — ваш бизнес-контекст, ссылки (Zoom, сайт, Telegram, YouTube) и пауза перед отправкой (имитация живого ответа).</p>
+      </div>
+      <div style="padding:16px 18px;display:flex;flex-direction:column;gap:12px">
+        <label style="display:flex;flex-direction:column;gap:4px;font-size:13px"><span>Доп. промпт (продукт, оффер, ограничения)</span>
+          <textarea id="vk-ms-ai-f-prompt" rows="5" style="width:100%;box-sizing:border-box;font-family:inherit"></textarea>
+        </label>
+        <label style="display:flex;flex-direction:column;gap:4px;font-size:13px"><span>Ссылки и материалы (по одной строке: подпись — URL)</span>
+          <textarea id="vk-ms-ai-f-materials" rows="4" placeholder="Сайт — https://…&#10;Запись звонка — https://zoom.us/…" style="width:100%;box-sizing:border-box;font-family:inherit"></textarea>
+        </label>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+          <label style="font-size:13px">Пауза мин, с <input type="number" id="vk-ms-ai-f-dmin" step="1" min="0" style="width:72px;margin-left:6px"/></label>
+          <label style="font-size:13px">макс, с <input type="number" id="vk-ms-ai-f-dmax" step="1" min="0" style="width:72px;margin-left:6px"/></label>
+          <label style="font-size:13px">Temperature <input type="number" id="vk-ms-ai-f-temp" step="0.05" min="0" max="2" style="width:64px;margin-left:6px"/></label>
+          <label style="font-size:13px">Max tokens <input type="number" id="vk-ms-ai-f-mt" step="10" min="80" max="4096" style="width:72px;margin-left:6px"/></label>
+        </div>
+        <label style="font-size:13px">Макс. ответов AI на чат (0 = без лимита)
+          <input type="number" id="vk-ms-ai-f-mrs" step="1" min="0" max="500" style="width:72px;margin-left:6px"/>
+        </label>
+        <p id="vk-ms-ai-dlg-status" style="margin:0;font-size:12px;min-height:16px;color:var(--vk-muted)"></p>
+      </div>
+      <div style="padding:12px 18px;border-top:1px solid var(--vk-border);display:flex;gap:10px;justify-content:flex-end">
+        <button type="button" class="vk-ms-btn-text" id="vk-ms-ai-dlg-cancel" value="cancel">Отмена</button>
+        <button type="button" class="vk-ms-btn-primary" id="vk-ms-ai-dlg-save">Сохранить</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="vk-ms-selection-bar" id="vk-ms-selection-bar" role="status">
+    <span id="vk-ms-sel-count">Выбрано: 0</span>
+    <a href="/outreach" class="vk-ms-btn-primary" style="text-decoration:none;background:#555">Рассылка</a>
+    <button type="button" class="vk-ms-btn-icon" style="background:transparent;color:#fff" id="vk-ms-sel-clear" title="Снять выбор">✕</button>
+  </div>
+</div>
+
+<script>
+var MB = {{ mb | tojson }};
+(function messengerAutoReloadWhenSyncDone() {
+  var panel = document.getElementById('vk-ms-thread-panel');
+  var initialBusy = panel && panel.getAttribute('data-sync-busy') === 'true';
+  var qp = new URLSearchParams(window.location.search);
+  var queued = qp.get('sync_started') === '1' || qp.get('load_started') === '1';
+  if (!initialBusy && !queued) return;
+
+  var needSeenBusy = queued && !initialBusy;
+  var seenBusy = !needSeenBusy;
+  var start = Date.now();
+  var maxMs = 25 * 60 * 1000;
+  var giveUpNoBusyMs = 120 * 1000;
+
+  function cleanUrlAndReplace() {
+    var u = new URL(window.location.href);
+    u.searchParams.delete('sync_started');
+    u.searchParams.delete('load_started');
+    var qs = u.searchParams.toString();
+    window.location.replace(u.pathname + (qs ? '?' + qs : '') + u.hash);
+  }
+
+  function pollOnce() {
+    if (Date.now() - start > maxMs) {
+      clearInterval(timer);
+      cleanUrlAndReplace();
+      return;
+    }
+    if (needSeenBusy && !seenBusy && Date.now() - start > giveUpNoBusyMs) {
+      seenBusy = true;
+    }
+    fetch(MB + '/api/status', { credentials: 'same-origin' })
+      .then(function (r) { return r.json(); })
+      .then(function (st) {
+        if (!st) return;
+        if (st.messenger_busy) seenBusy = true;
+        if (!st.messenger_busy && seenBusy) {
+          clearInterval(timer);
+          cleanUrlAndReplace();
+        }
+      })
+      .catch(function () {});
+  }
+  var timer = setInterval(pollOnce, 2500);
+  pollOnce();
+})();
+(function () {
+  var unreadCb = document.getElementById('vk-ms-only-unread');
+  if (unreadCb) {
+    unreadCb.addEventListener('change', function () {
+      var u = unreadCb.checked ? '{{ nav_qs.unread|e }}' : '{{ nav_qs.all|e }}';
+      window.location.href = MB + u;
+    });
+  }
+
+  var selBtn = document.getElementById('vk-ms-toggle-select');
+  var checks = document.querySelectorAll('.vk-ms-row-chk');
+  var bar = document.getElementById('vk-ms-selection-bar');
+  var countEl = document.getElementById('vk-ms-sel-count');
+  var mode = false;
+  var messengerRoot = document.querySelector('.vk-messenger');
+  (function messengerFocusHeartbeat() {
+    function autosyncOn() {
+      return messengerRoot && messengerRoot.getAttribute('data-inbox-auto-sync-enabled') === 'true';
+    }
+    function ping() {
+      if (!autosyncOn()) return;
+      if (document.visibilityState !== 'visible') return;
+      fetch(MB + '/api/focus-ping', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}',
+      }).catch(function () {});
+    }
+    ping();
+    setInterval(ping, 40000);
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible') ping();
+    });
+    window.vkMsMessengerFocusPing = ping;
+  })();
+  var inboxAutoSyncEnabled = messengerRoot && messengerRoot.getAttribute('data-inbox-auto-sync-enabled') === 'true';
+  var inboxAutosyncMinSec = messengerRoot
+    ? parseInt(messengerRoot.getAttribute('data-inbox-autosync-min-sec') || '300', 10)
+    : 300;
+  if (isNaN(inboxAutosyncMinSec) || inboxAutosyncMinSec < 1) inboxAutosyncMinSec = 300;
+  var inboxAutoSyncIntervalSec = parseInt(
+    (messengerRoot && messengerRoot.getAttribute('data-inbox-auto-sync-interval-sec')) || String(inboxAutosyncMinSec),
+    10
+  );
+  var inboxLastSyncAt = messengerRoot ? (messengerRoot.getAttribute('data-inbox-last-sync-at') || '') : '';
+  var inboxMetaTimer = null;
+
+  function updateBar() {
+    var n = 0;
+    checks.forEach(function (c) { if (c.checked) n++; });
+    if (countEl) countEl.textContent = 'Выбрано: ' + n;
+    if (bar) bar.classList.toggle('is-visible', mode && n > 0);
+  }
+
+  if (selBtn) {
+    selBtn.addEventListener('click', function () {
+      mode = !mode;
+      checks.forEach(function (c) { c.style.display = mode ? 'block' : 'none'; });
+      if (!mode) checks.forEach(function (c) { c.checked = false; });
+      updateBar();
+    });
+  }
+  checks.forEach(function (c) { c.addEventListener('change', updateBar); });
+  var clr = document.getElementById('vk-ms-sel-clear');
+  if (clr) {
+    clr.addEventListener('click', function () {
+      checks.forEach(function (c) { c.checked = false; });
+      updateBar();
+    });
+  }
+
+  document.querySelectorAll('[data-vk-ms-dropdown]').forEach(function (dd) {
+    dd.addEventListener('click', function (e) { e.stopPropagation(); });
+  });
+  document.querySelectorAll('.vk-ms-chat-menu-btn').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var wrap = btn.closest('.vk-ms-row-menu-wrap');
+      if (!wrap) return;
+      var dd = wrap.querySelector('[data-vk-ms-dropdown]');
+      if (!dd) return;
+      var open = dd.classList.toggle('is-open');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      document.querySelectorAll('[data-vk-ms-dropdown].is-open').forEach(function (o) {
+        if (o !== dd) o.classList.remove('is-open');
+      });
+    });
+  });
+  document.addEventListener('click', function () {
+    document.querySelectorAll('[data-vk-ms-dropdown].is-open').forEach(function (o) {
+      o.classList.remove('is-open');
+    });
+    document.querySelectorAll('.vk-ms-chat-menu-btn').forEach(function (b) {
+      b.setAttribute('aria-expanded', 'false');
+    });
+  });
+
+  /* Онлайн-мессенджер: отправка + периодический pull */
+  var threadPanel = document.getElementById('vk-ms-thread-panel');
+  var tid = threadPanel && threadPanel.getAttribute('data-thread-id');
+
+  function clearInboxMetaTimer() {
+    if (inboxMetaTimer) {
+      clearInterval(inboxMetaTimer);
+      inboxMetaTimer = null;
+    }
+  }
+
+  function startInboxMetaWatch() {
+    var inboxOn = messengerRoot && messengerRoot.getAttribute('data-inbox-auto-sync-enabled') === 'true';
+    if (tid || !inboxOn) {
+      clearInboxMetaTimer();
+      return;
+    }
+    inboxAutoSyncEnabled = inboxOn;
+    clearInboxMetaTimer();
+    if (isNaN(inboxAutoSyncIntervalSec) || inboxAutoSyncIntervalSec < inboxAutosyncMinSec) {
+      inboxAutoSyncIntervalSec = inboxAutosyncMinSec;
+    }
+    var pollMs = Math.max(15000, Math.min(60000, Math.floor(inboxAutoSyncIntervalSec * 500)));
+    inboxMetaTimer = setInterval(function () {
+      if (document.visibilityState !== 'visible') return;
+      fetch(MB + '/api/inbox-sync-meta', { credentials: 'same-origin' })
+        .then(function (r) { return r.json(); })
+        .then(function (meta) {
+          if (!meta) return;
+          inboxAutoSyncEnabled = !!meta.auto_inbox_sync_enabled;
+          if (meta.auto_inbox_sync_interval_sec) {
+            var iv = parseInt(meta.auto_inbox_sync_interval_sec, 10);
+            if (!isNaN(iv) && iv >= inboxAutosyncMinSec) inboxAutoSyncIntervalSec = iv;
+          }
+          if (meta.effective_autosync_interval_sec) {
+            var ev = parseInt(meta.effective_autosync_interval_sec, 10);
+            if (!isNaN(ev) && ev >= inboxAutosyncMinSec) inboxAutoSyncIntervalSec = ev;
+          }
+          if (!inboxAutoSyncEnabled) {
+            clearInboxMetaTimer();
+            return;
+          }
+          if (meta.last_sync_at && meta.last_sync_at !== inboxLastSyncAt) {
+            inboxLastSyncAt = meta.last_sync_at;
+            window.location.reload();
+          }
+        })
+        .catch(function () {});
+    }, pollMs);
+  }
+
+  startInboxMetaWatch();
+
+  var autoPullCbNoThread = document.getElementById('vk-ms-auto-pull');
+  if (autoPullCbNoThread && threadPanel && !tid) {
+    autoPullCbNoThread.addEventListener('change', function () {
+      var want = autoPullCbNoThread.checked;
+      autoPullCbNoThread.disabled = true;
+      fetch(MB + '/api/settings/auto-pull', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: want })
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (!d || !d.ok) throw new Error('save');
+          threadPanel.setAttribute('data-auto-pull-enabled', d.enabled ? 'true' : 'false');
+          if (messengerRoot) {
+            messengerRoot.setAttribute('data-inbox-auto-sync-enabled', d.enabled ? 'true' : 'false');
+            inboxAutoSyncEnabled = !!d.enabled;
+          }
+          clearInboxMetaTimer();
+          startInboxMetaWatch();
+          if (d.enabled && typeof window.vkMsMessengerFocusPing === 'function') {
+            window.vkMsMessengerFocusPing();
+          }
+        })
+        .catch(function () {
+          autoPullCbNoThread.checked = !want;
+        })
+        .finally(function () { autoPullCbNoThread.disabled = false; });
+    });
+  }
+
+  var pullNowBtn = document.getElementById('vk-ms-pull-now-btn');
+  window.vkMsPullFly = false;
+
+  function waitForJob(jobId, maxMs) {
+    var start = Date.now();
+    return new Promise(function (resolve, reject) {
+      function poll() {
+        if (Date.now() - start > maxMs) {
+          reject(new Error('Таймаут задачи'));
+          return;
+        }
+        fetch(MB + '/api/job/' + jobId, { credentials: 'same-origin' })
+          .then(function (r) { return r.json(); })
+          .then(function (j) {
+            if (j.status === 'success') resolve(j);
+            else if (j.status === 'failed' || j.status === 'cancelled') reject(new Error(j.error || j.status));
+            else setTimeout(poll, 700);
+          })
+          .catch(reject);
+      }
+      poll();
+    });
+  }
+
+  function runFullMessengerSync() {
+    if (window.vkMsPullFly) return;
+    window.vkMsPullFly = true;
+    fetch(MB + '/api/status', { credentials: 'same-origin' })
+      .then(function (r) { return r.json(); })
+      .then(function (st) {
+        if (st.messenger_busy) {
+          window.vkMsPullFly = false;
+          return null;
+        }
+        return fetch(MB + '/api/sync-inbox', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: '{}',
+        });
+      })
+      .then(function (r) {
+        if (!r) return null;
+        if (r.status === 409) {
+          window.vkMsPullFly = false;
+          return null;
+        }
+        return r.json();
+      })
+      .then(function (j) {
+        if (!j) return null;
+        if (!j.ok) {
+          window.vkMsPullFly = false;
+          return null;
+        }
+        return waitForJob(j.job_id, 300000);
+      })
+      .then(function (done) {
+        window.vkMsPullFly = false;
+        if (done) window.location.reload();
+      })
+      .catch(function () {
+        window.vkMsPullFly = false;
+      });
+  }
+
+  if (tid) {
+    var bubblesEl = document.getElementById('vk-ms-bubbles');
+    var scrollEl = document.getElementById('vk-ms-thread-scroll');
+    var composeInput = document.getElementById('vk-ms-compose-input');
+    var sendBtn = document.getElementById('vk-ms-send-btn');
+    var liveStatus = document.getElementById('vk-ms-live-status');
+    var pollSec = parseInt(threadPanel.getAttribute('data-messenger-sync-interval-sec') || '180', 10);
+    if (isNaN(pollSec) || pollSec < inboxAutosyncMinSec) pollSec = inboxAutosyncMinSec;
+    var autoPullEnabled = threadPanel.getAttribute('data-auto-pull-enabled') === 'true';
+    var pullPaused = threadPanel.getAttribute('data-pause-auto-pull') === 'true';
+    var threadBlockHint = threadPanel.getAttribute('data-thread-block-hint') || '';
+    window.vkMsOutgoingInflight = 0;
+    var aiLlmReady = threadPanel.getAttribute('data-ai-llm-ready') === 'true';
+    var aiDlg = document.getElementById('vk-ms-ai-dialog');
+    var aiToggle = document.getElementById('vk-ms-ai-toggle');
+    var aiDlgStatus = document.getElementById('vk-ms-ai-dlg-status');
+
+    function postAiAssistant(payload) {
+      return fetch(MB + '/api/thread/' + tid + '/ai-assistant', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload || {}),
+      }).then(function (r) { return r.json().then(function (j) { return { r: r, j: j }; }); });
+    }
+
+    function refreshAiSteps() {
+      var el = document.getElementById('vk-ms-ai-steps');
+      if (!el) return;
+      fetch(MB + '/api/thread/' + tid + '/ai-assistant', { credentials: 'same-origin' })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (!d || !d.ok) return;
+          var u = d.ai_reply_steps_used != null ? d.ai_reply_steps_used : 0;
+          var m = d.ai_reply_steps_max != null ? d.ai_reply_steps_max : 0;
+          el.textContent =
+            m <= 0 ? 'Ответов AI: ' + u + ' (без лимита)' : 'Ответов AI: ' + u + ' / ' + m;
+        })
+        .catch(function () {});
+    }
+    refreshAiSteps();
+
+    if (aiToggle && aiLlmReady) {
+      aiToggle.addEventListener('change', function () {
+        var want = aiToggle.checked;
+        aiToggle.disabled = true;
+        postAiAssistant({ enabled: want })
+          .then(function (o) {
+            if (!o.r.ok || !o.j.ok) throw new Error(o.j.error || 'save');
+          })
+          .catch(function () {
+            aiToggle.checked = !want;
+            setStatus('Не удалось сохранить настройку AI', true);
+          })
+          .finally(function () { aiToggle.disabled = false; });
+      });
+    }
+
+    document.getElementById('vk-ms-ai-reset-fp') && document.getElementById('vk-ms-ai-reset-fp').addEventListener('click', function () {
+      if (
+        !confirm(
+          'Сбросить отметку «уже отвечали на этот транскрипт»?\n\nПосле сброса AI сможет снова сгенерировать ответ на то же входящее сообщение.'
+        )
+      ) {
+        return;
+      }
+      postAiAssistant({ reset_transcript_fingerprint: true })
+        .then(function (o) {
+          if (!o.r.ok || !o.j.ok) throw new Error();
+          setStatus('Отметка сброшена. После следующей синхронизации ответ сгенерируется снова (если AI включён).');
+          refreshAiSteps();
+        })
+        .catch(function () { setStatus('Не удалось сбросить отметку', true); });
+    });
+
+    document.getElementById('vk-ms-ai-reset-steps') &&
+      document.getElementById('vk-ms-ai-reset-steps').addEventListener('click', function () {
+        if (!confirm('Обнулить счётчик ответов AI в этом чате?')) {
+          return;
+        }
+        postAiAssistant({ reset_ai_reply_steps: true })
+          .then(function (o) {
+            if (!o.r.ok || !o.j.ok) throw new Error();
+            setStatus('Счётчик ответов AI сброшен');
+            refreshAiSteps();
+          })
+          .catch(function () { setStatus('Не удалось сбросить шаги', true); });
+      });
+
+    function openAiDialog() {
+      if (!aiDlg) return;
+      aiDlgStatus.textContent = '';
+      fetch(MB + '/api/ai-settings', { credentials: 'same-origin' })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (!d || !d.ok) throw new Error();
+          document.getElementById('vk-ms-ai-f-prompt').value = d.prompt_addon || '';
+          document.getElementById('vk-ms-ai-f-materials').value = d.materials_text || '';
+          document.getElementById('vk-ms-ai-f-dmin').value = d.delay_min_sec;
+          document.getElementById('vk-ms-ai-f-dmax').value = d.delay_max_sec;
+          document.getElementById('vk-ms-ai-f-temp').value = d.temperature;
+          document.getElementById('vk-ms-ai-f-mt').value = d.max_tokens;
+          var mrs = document.getElementById('vk-ms-ai-f-mrs');
+          if (mrs) mrs.value = d.max_reply_steps != null ? d.max_reply_steps : 0;
+          if (typeof aiDlg.showModal === 'function') aiDlg.showModal();
+          else aiDlg.setAttribute('open', '');
+        })
+        .catch(function () { setStatus('Не удалось загрузить настройки AI', true); });
+    }
+
+    document.getElementById('vk-ms-ai-settings-open') && document.getElementById('vk-ms-ai-settings-open').addEventListener('click', openAiDialog);
+    var aiChatExtra = document.getElementById('vk-ms-ai-chat-extra');
+    document.getElementById('vk-ms-ai-chat-extra-save') && document.getElementById('vk-ms-ai-chat-extra-save').addEventListener('click', function () {
+      postAiAssistant({ extra_instructions: (aiChatExtra && aiChatExtra.value) ? aiChatExtra.value : '' })
+        .then(function (o) {
+          if (!o.r.ok || !o.j.ok) throw new Error();
+          setStatus('Инструкции для чата сохранены');
+        })
+        .catch(function () { setStatus('Не удалось сохранить текст для чата', true); });
+    });
+    document.getElementById('vk-ms-ai-dlg-cancel') && document.getElementById('vk-ms-ai-dlg-cancel').addEventListener('click', function () {
+      if (aiDlg && typeof aiDlg.close === 'function') aiDlg.close();
+      else if (aiDlg) aiDlg.removeAttribute('open');
+    });
+    document.getElementById('vk-ms-ai-dlg-save') && document.getElementById('vk-ms-ai-dlg-save').addEventListener('click', function () {
+      var body = {
+        prompt_addon: document.getElementById('vk-ms-ai-f-prompt').value,
+        materials_text: document.getElementById('vk-ms-ai-f-materials').value,
+        delay_min_sec: parseFloat(document.getElementById('vk-ms-ai-f-dmin').value),
+        delay_max_sec: parseFloat(document.getElementById('vk-ms-ai-f-dmax').value),
+        temperature: parseFloat(document.getElementById('vk-ms-ai-f-temp').value),
+        max_tokens: parseInt(document.getElementById('vk-ms-ai-f-mt').value, 10),
+        max_reply_steps: parseInt(
+          (document.getElementById('vk-ms-ai-f-mrs') || {}).value || '0',
+          10
+        ),
+      };
+      fetch(MB + '/api/ai-settings', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (!d || !d.ok) throw new Error();
+          aiDlgStatus.textContent = 'Сохранено.';
+          if (aiDlg && typeof aiDlg.close === 'function') setTimeout(function () { aiDlg.close(); }, 400);
+        })
+        .catch(function () { aiDlgStatus.textContent = 'Ошибка сохранения'; });
+    });
+
+    function isUiBlockedMessengerErr(msg) {
+      if (!msg) return false;
+      var s = String(msg).toLowerCase();
+      return s.indexOf('сквозного шифрования') !== -1 || s.indexOf('введите pin') !== -1
+        || s.indexOf('отсутствует история чатов') !== -1;
+    }
+
+    function setResumePullVisible(show) {
+      var w = document.getElementById('vk-ms-resume-pull-wrap');
+      if (w) w.hidden = !show;
+    }
+
+    function pauseAutoPullFromBlocker(msg) {
+      pullPaused = true;
+      setResumePullVisible(true);
+      setStatus(msg || 'Автообновление остановлено: сначала устраните блокировку Facebook (PIN).', true);
+    }
+
+    function resumeAutoPull() {
+      pullPaused = false;
+      setResumePullVisible(false);
+      setStatus('');
+    }
+
+    function setStatus(t, isErr) {
+      if (!liveStatus) return;
+      liveStatus.textContent = t || '';
+      liveStatus.style.color = isErr ? '#b42318' : 'var(--vk-muted)';
+    }
+
+    function scrollThreadBottom() {
+      if (!scrollEl) return;
+      var run = function () {
+        scrollEl.scrollTop = scrollEl.scrollHeight;
+      };
+      run();
+      if (window.requestAnimationFrame) {
+        window.requestAnimationFrame(function () {
+          run();
+          window.requestAnimationFrame(run);
+        });
+      }
+      window.setTimeout(run, 0);
+      window.setTimeout(run, 80);
+      window.setTimeout(run, 220);
+    }
+
+    function renderBubbles(msgs) {
+      if (!bubblesEl) return;
+      bubblesEl.innerHTML = '';
+      if (!msgs || !msgs.length) {
+        var p = document.createElement('p');
+        p.className = 'vk-ms-bubbles-empty';
+        p.style.cssText = 'text-align:center;color:var(--vk-muted);margin:24px 0';
+        p.textContent = 'Сообщений в базе пока нет.';
+        bubblesEl.appendChild(p);
+        scrollThreadBottom();
+        return;
+      }
+      msgs.forEach(function (m) {
+        var div = document.createElement('div');
+        div.className = 'vk-ms-bubble ' + (m.direction === 'out' ? 'vk-ms-bubble-out' : 'vk-ms-bubble-in');
+        var body = document.createElement('div');
+        body.style.whiteSpace = 'pre-wrap';
+        body.textContent = m.body || '';
+        div.appendChild(body);
+        var meta = document.createElement('div');
+        meta.className = 'vk-ms-bubble-meta';
+        meta.textContent = m.time || '';
+        div.appendChild(meta);
+        bubblesEl.appendChild(div);
+      });
+      scrollThreadBottom();
+    }
+
+    function fetchMessages() {
+      return fetch(MB + '/api/thread/' + tid + '/messages', { credentials: 'same-origin' })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (data && data.messages) renderBubbles(data.messages);
+        });
+    }
+
+    function refreshSyncMeta() {
+      return fetch(MB + '/api/thread/' + tid + '/sync-meta', { credentials: 'same-origin' })
+        .then(function (r) { return r.json(); })
+        .then(function (m) {
+          if (!m || m.error) return;
+          var master = typeof m.auto_sync_master === 'boolean' ? m.auto_sync_master : m.auto_pull_enabled;
+          if (typeof master === 'boolean') {
+            autoPullEnabled = master;
+            var apEl = document.getElementById('vk-ms-auto-pull');
+            if (apEl) apEl.checked = master;
+            threadPanel.setAttribute('data-auto-pull-enabled', master ? 'true' : 'false');
+            if (messengerRoot) {
+              messengerRoot.setAttribute('data-inbox-auto-sync-enabled', master ? 'true' : 'false');
+              inboxAutoSyncEnabled = master;
+            }
+            clearInboxMetaTimer();
+            startInboxMetaWatch();
+          }
+          var psec = parseInt(m.effective_autosync_interval_sec || m.poll_interval_sec || pollSec, 10);
+          if (isNaN(psec) || psec < inboxAutosyncMinSec) psec = inboxAutosyncMinSec;
+          pollSec = psec;
+        })
+        .catch(function () {});
+    }
+
+    function runPull(opts) {
+      opts = opts || {};
+      var pullHeadless = !!opts.background;
+      if (window.vkMsPullFly || window.vkMsOutgoingInflight > 0) return Promise.resolve();
+      window.vkMsPullFly = true;
+      setStatus('Проверка…');
+      return fetch(MB + '/api/status', { credentials: 'same-origin' })
+        .then(function (r) { return r.json(); })
+        .then(function (st) {
+          if (st.messenger_busy) {
+            window.vkMsPullFly = false;
+            setStatus('Уже идёт синхронизация с Facebook — подождите немного и повторите.');
+            return null;
+          }
+          return fetch(MB + '/api/thread/' + tid + '/pull', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ background: pullHeadless }),
+          });
+        })
+        .then(function (r) {
+          if (!r) return null;
+          if (r.status === 409) {
+            window.vkMsPullFly = false;
+            setStatus('Занято, повторим позже');
+            return null;
+          }
+          return r.json();
+        })
+        .then(function (j) {
+          if (!j || !j.ok) {
+            window.vkMsPullFly = false;
+            if (j && j.error === 'other_automation') setStatus('Сначала дождитесь окончания прогрева / рассылки / парсера');
+            return null;
+          }
+          setStatus('Синхронизация с Facebook…');
+          return waitForJob(j.job_id, 180000);
+        })
+        .then(function (done) {
+          if (!done) return { synced: false };
+          return fetchMessages()
+            .then(function () { return refreshSyncMeta(); })
+            .then(function () { return { synced: true }; });
+        })
+        .then(function (r) {
+          window.vkMsPullFly = false;
+          if (r && r.synced && pullPaused) {
+            pullPaused = false;
+            setResumePullVisible(false);
+          }
+          setStatus('');
+        })
+        .catch(function (e) {
+          window.vkMsPullFly = false;
+          var em = e.message || String(e);
+          if (isUiBlockedMessengerErr(em)) pauseAutoPullFromBlocker(em);
+          else setStatus(em, true);
+        });
+    }
+
+    function waitForSendQueue(queueId) {
+      var start = Date.now();
+      var maxMs = 300000;
+      return new Promise(function poll(resolve, reject) {
+        if (Date.now() - start > maxMs) {
+          reject(new Error('Таймаут очереди отправки'));
+          return;
+        }
+        fetch(MB + '/api/send-queue/' + queueId, { credentials: 'same-origin' })
+          .then(function (r) { return r.json().then(function (j) { return { r: r, j: j }; }); })
+          .then(function (o) {
+            var q = o.j;
+            if (!o.r.ok || !q.ok) {
+              reject(new Error(q.error || 'not_found'));
+              return;
+            }
+            if (q.status === 'failed') {
+              reject(new Error(q.error_summary || 'Ошибка отправки'));
+              return;
+            }
+            if (q.status === 'sent') {
+              resolve();
+              return;
+            }
+            if (q.job_id) {
+              waitForJob(q.job_id, 180000).then(function () { resolve(); }).catch(reject);
+              return;
+            }
+            if (q.ahead > 0) {
+              setStatus('В очереди на отправку… впереди ещё ' + q.ahead + ' сообщ.');
+            } else {
+              setStatus('В очереди на отправку…');
+            }
+            setTimeout(poll, 700);
+          })
+          .catch(reject);
+      });
+    }
+
+    function postThreadSend(textBody) {
+      return fetch(MB + '/api/thread/' + tid + '/send', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: textBody })
+      }).then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (j) {
+          if (r.status === 429 && j.error === 'queue_full') {
+            throw new Error(j.message || 'Слишком много сообщений в очереди на этот чат');
+          }
+          if (!r.ok || !j.ok) throw new Error(j.message || j.error || 'Ошибка отправки');
+          if (j.job_id) return waitForJob(j.job_id, 180000);
+          if (j.queued && j.queue_id) return waitForSendQueue(j.queue_id);
+          return Promise.resolve();
+        });
+      });
+    }
+
+    if (sendBtn && composeInput) {
+      sendBtn.addEventListener('click', function () {
+        var txt = (composeInput.value || '').trim();
+        if (!txt) return;
+        composeInput.value = '';
+        window.vkMsOutgoingInflight++;
+        setStatus('В очереди / отправка…');
+        postThreadSend(txt)
+          .then(function () {
+            setStatus('Отправлено');
+            if (pullPaused) {
+              pullPaused = false;
+              setResumePullVisible(false);
+            }
+            return fetchMessages().then(function () { return refreshSyncMeta(); });
+          })
+          .catch(function (e) {
+            var em = e.message || String(e);
+            if (isUiBlockedMessengerErr(em)) pauseAutoPullFromBlocker(em);
+            else setStatus(em, true);
+          })
+          .finally(function () {
+            window.vkMsOutgoingInflight = Math.max(0, window.vkMsOutgoingInflight - 1);
+          });
+      });
+      composeInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendBtn.click();
+        }
+      });
+    }
+
+    if (pullNowBtn) {
+      pullNowBtn.addEventListener('click', function () { runPull(); });
+    }
+
+    var autoPullCb = document.getElementById('vk-ms-auto-pull');
+    if (autoPullCb) {
+      autoPullCb.addEventListener('change', function () {
+        var want = autoPullCb.checked;
+        autoPullCb.disabled = true;
+        fetch(MB + '/api/settings/auto-pull', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled: want })
+        })
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            if (!d || !d.ok) throw new Error('save');
+            autoPullEnabled = !!d.enabled;
+            threadPanel.setAttribute('data-auto-pull-enabled', autoPullEnabled ? 'true' : 'false');
+            if (messengerRoot) {
+              messengerRoot.setAttribute('data-inbox-auto-sync-enabled', autoPullEnabled ? 'true' : 'false');
+              inboxAutoSyncEnabled = autoPullEnabled;
+            }
+            clearInboxMetaTimer();
+            startInboxMetaWatch();
+            if (d.enabled && typeof window.vkMsMessengerFocusPing === 'function') {
+              window.vkMsMessengerFocusPing();
+            }
+            return refreshSyncMeta();
+          })
+          .catch(function () {
+            autoPullCb.checked = !want;
+            setStatus('Не удалось сохранить настройку автосинхронизации', true);
+          })
+          .finally(function () { autoPullCb.disabled = false; });
+      });
+    }
+
+    var resumePullBtn = document.getElementById('vk-ms-resume-pull-btn');
+    if (resumePullBtn) {
+      resumePullBtn.addEventListener('click', function () { resumeAutoPull(); });
+    }
+
+    scrollThreadBottom();
+    window.addEventListener('load', scrollThreadBottom);
+    window.addEventListener('pageshow', scrollThreadBottom);
+
+    if (pullPaused) {
+      setResumePullVisible(true);
+      setStatus(
+        threadBlockHint ||
+          'PIN / E2EE: разблокируйте чат в обычном Chrome, затем «Ручная синхронизация».',
+        true
+      );
+    } else {
+      setStatus('');
+    }
+
+    refreshSyncMeta();
+
+    window.addEventListener('beforeunload', function () {
+      clearInboxMetaTimer();
+    });
+  } else {
+    window.addEventListener('beforeunload', clearInboxMetaTimer);
+    if (pullNowBtn) {
+      pullNowBtn.addEventListener('click', function () { runFullMessengerSync(); });
+    }
+  }
+})();
+</script>
+<script>
+var MB = {{ mb | tojson }};
+(function () {
+  var statusEl = document.getElementById('vk-ms-crm-funnel-status');
+  var headerFunnelWrap = document.getElementById('vk-ms-header-funnel-link-wrap');
+  var headerFunnelLink = document.getElementById('vk-ms-header-funnel-link');
+  var statusTimer = null;
+
+  function setCrmStatus(msg, isErr, keepVisible) {
+    if (!statusEl) return;
+    if (statusTimer) {
+      clearTimeout(statusTimer);
+      statusTimer = null;
+    }
+    statusEl.textContent = msg || '';
+    statusEl.style.color = isErr ? '#b42318' : (keepVisible ? 'var(--vk-muted)' : '#0d6b3a');
+    statusEl.classList.toggle('vk-ms-crm-funnel-status--muted', !!keepVisible && !isErr);
+    if (msg && !isErr && !keepVisible) {
+      statusTimer = setTimeout(function () {
+        statusEl.textContent = '';
+        statusTimer = null;
+      }, 4200);
+    }
+  }
+
+  document.querySelectorAll('.vk-ms-crm-stage-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var cid = parseInt(btn.getAttribute('data-conversation-id'), 10);
+      var slug = btn.getAttribute('data-slug');
+      if (!cid || !slug) return;
+      var all = document.querySelectorAll('.vk-ms-crm-stage-btn');
+      all.forEach(function (b) { b.disabled = true; });
+      setCrmStatus('Сохраняю стадию в CRM…', false, true);
+      fetch(MB + '/api/thread/' + cid + '/crm-stage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ crm_stage: slug }),
+        credentials: 'same-origin'
+      }).then(function (r) {
+        return r.json().then(function (j) {
+          if (!r.ok) {
+            throw new Error(
+              (typeof j.detail === 'string' ? j.detail : '') ||
+              (typeof j.error === 'string' ? j.error : '') ||
+              (r.statusText || 'Ошибка')
+            );
+          }
+          return j;
+        });
+      }).then(function (j) {
+        all.forEach(function (b) {
+          b.disabled = false;
+          b.classList.toggle('is-active', b.getAttribute('data-slug') === slug);
+        });
+        if (headerFunnelWrap && headerFunnelLink) {
+          headerFunnelWrap.hidden = false;
+          headerFunnelLink.href = j.funnel_url || '/crm/funnel';
+        }
+        var msg = 'Стадия в воронке обновлена';
+        if (j.created_person) msg = 'Контакт создан в «Базе контактов» и отправлен в воронку';
+        else if (j.linked_existing_person) msg = 'Чат привязан к контакту и стадия обновлена';
+        setCrmStatus(msg, false, false);
+      }).catch(function (ex) {
+        all.forEach(function (b) { b.disabled = false; });
+        setCrmStatus(ex.message || 'Не удалось обновить стадию', true, false);
+      });
+    });
+  });
+})();
+</script>
+{% endblock %}

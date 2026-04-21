@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>FB Master — сборка для разработчика</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='css/main.css') }}"/>
+  <style>
+    .fbm-premium-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: clamp(1rem, 3vw, 2rem);
+      background: radial-gradient(ellipse 120% 80% at 50% -20%, rgba(120, 140, 200, 0.14), transparent 50%),
+        linear-gradient(165deg, #0c0d10 0%, #12141a 40%, #0a0b0e 100%);
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    .fbm-premium-card {
+      max-width: min(44rem, 94vw);
+      width: 100%;
+      background: linear-gradient(145deg, rgba(28, 32, 42, 0.97) 0%, rgba(18, 22, 30, 0.99) 100%);
+      border-radius: 24px;
+      padding: clamp(2.25rem, 5vw, 3.25rem);
+      border: 1px solid rgba(130, 160, 220, 0.35);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+        0 32px 64px -16px rgba(0, 0, 0, 0.55),
+        0 0 80px -30px rgba(100, 130, 200, 0.18);
+    }
+    .fbm-dev-banner {
+      background: rgba(30, 58, 120, 0.45);
+      border: 1px solid rgba(147, 180, 255, 0.35);
+      color: #dbeafe;
+      padding: 0.85rem 1rem;
+      border-radius: 12px;
+      font-size: 0.88rem;
+      line-height: 1.45;
+      margin-bottom: 1.35rem;
+    }
+    .fbm-premium-eyebrow {
+      font-size: 0.75rem;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: rgba(170, 190, 240, 0.9);
+      margin: 0 0 0.6rem;
+      font-weight: 600;
+    }
+    .fbm-premium-card h1 {
+      font-size: clamp(1.5rem, 4vw, 1.95rem);
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      color: #f5f5f4;
+      margin: 0 0 1rem;
+      line-height: 1.2;
+    }
+    .fbm-premium-section-label {
+      font-size: 0.78rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(168, 180, 210, 0.9);
+      margin: 0 0 0.85rem;
+      font-weight: 600;
+    }
+    .fbm-premium-dl { list-style: none; padding: 0; margin: 0 0 1.5rem; }
+    .fbm-premium-dl li { margin: 0.65rem 0; }
+    .fbm-premium-dl a {
+      color: #c7d8ff;
+      font-weight: 500;
+      font-size: 1.02rem;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(199, 216, 255, 0.4);
+      padding-bottom: 2px;
+      transition: color 0.15s ease, border-color 0.15s ease;
+    }
+    .fbm-premium-dl a:hover { color: #eef4ff; border-bottom-color: rgba(238, 244, 255, 0.65); }
+    .fbm-premium-note { color: rgba(168, 180, 200, 0.88); font-size: 0.9rem; margin: 0 0 0.85rem; line-height: 1.55; }
+    .fbm-premium-note code { font-size: 0.82em; color: #e2e8f0; }
+    .fbm-premium-link-muted {
+      display: inline-block;
+      margin-top: 1.1rem;
+      font-size: 0.8rem;
+      color: rgba(168, 180, 200, 0.95);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(168, 180, 200, 0.35);
+    }
+    .fbm-premium-link-muted:hover { color: #e2e8f0; }
+  </style>
+</head>
+<body>
+<div class="fbm-premium-page">
+  <div class="fbm-premium-card">
+    <div class="fbm-dev-banner">
+      <strong>Только для разработчика.</strong> Эта страница и манифест <code>/api/public/desktop-update-dev</code> не совпадают с клиентским каналом. После проверки выкладывайте финальную сборку в обычный <code>static/releases/</code> и обновляйте <code>FB_DESKTOP_*</code> (см. <code>deploy/DEVELOPER_RELEASE.md</code>).
+    </div>
+    <p class="fbm-premium-eyebrow">FB Master · developer</p>
+    <h1>Превью-сборка macOS (Apple Silicon)</h1>
+
+    {% if dev_latest_version %}
+    <p class="fbm-premium-note">Текущая версия канала: <strong>v{{ dev_latest_version }}</strong>{% if dev_release_notes %} — {{ dev_release_notes }}{% endif %}</p>
+    {% endif %}
+
+    {% if download_urls %}
+    <p class="fbm-premium-section-label">Скачать</p>
+    <ul class="fbm-premium-dl">
+      {% if download_urls.get('darwin_arm64_bundle') %}
+      <li><a href="{{ download_urls['darwin_arm64_bundle'] }}" rel="noopener">macOS — архив установки (.zip)</a></li>
+      {% endif %}
+      {% if download_urls.get('darwin_arm64') and not download_urls.get('darwin_arm64_bundle') %}
+      <li><a href="{{ download_urls['darwin_arm64'] }}" rel="noopener">macOS — установщик (.dmg)</a></li>
+      {% endif %}
+    </ul>
+    {% else %}
+    <p class="fbm-premium-note">Ссылки недоступны: задайте <code>FB_DESKTOP_DEV_LATEST_VERSION</code> и положите файлы в <code>static/releases/dev/</code>, либо явные URL в .env (<code>FB_DESKTOP_DEV_DOWNLOAD_*</code>).</p>
+    {% endif %}
+
+    <p class="fbm-premium-section-label">Проверка API</p>
+    <p class="fbm-premium-note">JSON манифеста: <code>{{ dev_manifest_url }}</code></p>
+
+    <a class="fbm-premium-link-muted" href="/buy">Клиентская страница скачивания (/buy)</a>
+  </div>
+</div>
+</body>
+</html>

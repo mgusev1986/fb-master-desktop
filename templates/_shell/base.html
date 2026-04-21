@@ -1,0 +1,121 @@
+{#
+  Multi-workspace shell layout.
+
+  Полный корневой layout для всех workspace'ов (Facebook, Reddit, будущие
+  Twitter/X, LinkedIn). Per-workspace файлы (`templates/base.html` для FB,
+  `templates/reddit/base.html` для Reddit, и т.д.) наследуют этот layout
+  и заполняют блоки.
+
+  Блоки:
+    - title                         : текст <title>
+    - shell_html_lang, shell_theme  : атрибуты <html>
+    - shell_workspace               : data-workspace (facebook|reddit|core)
+    - head, shell_head              : дополнительные теги в <head>
+    - body_class                    : class для <body>
+    - shell_workspace_switcher      : dropdown в верхней панели main-content
+    - shell_sidebar                 : sidebar слева
+    - shell_banners                 : баннеры над page-body (preview-as-user)
+    - content                       : основной контент страницы
+    - shell_modals                  : модалки (например fb-confirm-modal)
+    - shell_scripts                 : скрипты в конце body
+#}
+<!DOCTYPE html>
+<html lang="{% block shell_html_lang %}ru{% endblock %}" data-theme="{% block shell_theme %}dark{% endblock %}" data-workspace="{% block shell_workspace %}core{% endblock %}">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>{% block title %}SOCMASTER{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
+  <link rel="stylesheet" href="{{ url_for('static', path='css/main.css') }}?v={{ static_v }}"/>
+  <link rel="stylesheet" href="{{ url_for('static', path='css/_workspace-tokens.css') }}?v={{ static_v }}"/>
+  <script src="{{ url_for('static', path='js/app.js') }}?v={{ static_v }}"></script>
+  <script defer src="{{ url_for('static', path='js/workspace-switcher.js') }}?v={{ static_v }}"></script>
+  {# Фолбэк, если старый main.css всё ещё в кэше: контент на всю ширину справа от сайдбара #}
+  <style>
+    .layout { width: 100% !important; max-width: 100% !important; box-sizing: border-box; }
+    .main-content {
+      margin-left: var(--sidebar-width) !important;
+      flex: 1 1 0% !important;
+      min-width: 0 !important;
+      width: calc(100vw - var(--sidebar-width)) !important;
+      max-width: calc(100vw - var(--sidebar-width)) !important;
+      box-sizing: border-box !important;
+    }
+    .page-body {
+      max-width: 100% !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      box-sizing: border-box !important;
+      align-self: stretch !important;
+    }
+    .card { width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
+    body.m2-desktop-page .main-content,
+    body.messenger-vk-page .main-content {
+      width: auto !important;
+      max-width: none !important;
+    }
+    @media (max-width: 768px) {
+      .main-content { margin-left: 0 !important; width: 100% !important; max-width: 100% !important; }
+    }
+    .fb-preview-as-user-banner {
+      flex-shrink: 0;
+      padding: 10px 18px;
+      border-bottom: 1px solid var(--border);
+      background: color-mix(in srgb, var(--warning) 14%, var(--bg-surface));
+      font-size: var(--font-size-sm);
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .fb-preview-as-user-banner form { margin: 0; }
+    .fbm-ws-topbar {
+      display: flex;
+      align-items: flex-end;
+      padding: 8px 14px 0;
+      background: color-mix(in srgb, var(--bg-surface, #fff) 80%, transparent);
+    }
+    .fbm-ws-topbar--hidden { display: none; }
+  </style>
+  {% block shell_head %}{% endblock %}
+  {% block head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}{% if user and is_platform_owner(user) and preview_as_user_active(request) %} fb-preview-as-user{% endif %}">
+<div class="layout">
+
+  {# Sidebar слот — заполняет per-workspace шаблон. #}
+  {% block shell_sidebar %}{% endblock %}
+
+  {# Main content. #}
+  <div class="main-content">
+
+    {# Workspace switcher — появляется только при FB_MASTER_MULTI_WORKSPACE_ENABLED=1. #}
+    {% block shell_workspace_switcher %}
+      {% if fbm_multi_workspace_enabled %}
+        {% set available_workspaces = fbm_available_workspaces_for(request) %}
+        {% set current_workspace_id = fbm_current_workspace_id_for(request) %}
+        {% if available_workspaces and current_workspace_id %}
+        <div class="fbm-ws-topbar">
+          {% include "_shell/_workspace_switcher.html" %}
+        </div>
+        {% endif %}
+      {% endif %}
+    {% endblock %}
+
+    {% block shell_banners %}{% endblock %}
+    <div class="page-body">
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+
+</div>
+
+{% block shell_modals %}{% endblock %}
+{% block shell_scripts %}{% endblock %}
+</body>
+</html>

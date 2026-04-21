@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+{% block title %}Ключи доступа — SOCMASTER{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Ключи доступа</h1>
+  <p class="subtitle">Выдаются клиентам для запуска копии программы. Один ключ после первого ввода привязывается к <strong>одному компьютеру</strong> (в SOCMASTER — к железу; в браузере — к устойчивому отпечатку устройства). Срок отсчитывается от выдачи ключа. Отозванный или просроченный ключ перестаёт работать. В таблице ключ отображается скрытым; расшифровка возможна только здесь, на сервере с вашим <code>SECRET_KEY</code>.</p>
+</div>
+
+<div class="admin-quick-links" style="margin-bottom:20px">
+  <a href="/admin/platform" class="btn btn-secondary"><i class="ti ti-arrow-left"></i> К сводке платформы</a>
+</div>
+
+{% set qmsg = request.query_params.get('msg') %}
+{% if qmsg %}
+<div class="settings-banner" role="status" style="margin-bottom:16px;background:#ecfdf5;border-color:#6ee7b7;color:#065f46">
+  {{ qmsg }}
+</div>
+{% endif %}
+{% set qerr = request.query_params.get('err') %}
+{% if qerr == 'delete_no_consent' %}
+<div class="settings-banner" role="alert" style="margin-bottom:16px;border-color:var(--danger);color:var(--error)">
+  Удаление не выполнено: отметьте галочку согласия в окне подтверждения и снова нажмите «Удалить навсегда».
+</div>
+{% endif %}
+
+{% if new_key_plaintext %}
+<div class="settings-banner" role="status" style="background:#ecfdf5;border-color:#6ee7b7;color:#065f46">
+  <strong>Сохраните ключ сейчас</strong> (копия также хранится в базе зашифрованной — ниже можно снова «Показать»):
+  <div style="display:flex;gap:10px;align-items:center;margin-top:8px;flex-wrap:wrap">
+    <code id="new-access-key-value" style="margin:0;padding:10px;background:#fff;border-radius:6px;word-break:break-all">{{ new_key_plaintext }}</code>
+    <button type="button" class="btn btn-secondary" id="copy-new-access-key" style="white-space:nowrap" title="Копировать ключ в буфер обмена">
+      <i class="ti ti-copy"></i> Копировать
+    </button>
+  </div>
+</div>
+<script>
+(function () {
+  var btn = document.getElementById("copy-new-access-key");
+  var el = document.getElementById("new-access-key-value");
+  if (!btn || !el) return;
+  var text = (el.textContent || "").trim();
+  btn.addEventListener("click", function () {
+    var orig = btn.innerHTML;
+    function ok() {
+      btn.innerHTML = '<i class="ti ti-check"></i> Скопировано';
+      setTimeout(function () { btn.innerHTML = orig; }, 2200);
+    }
+    function fail() {
+      btn.innerHTML = '<i class="ti ti-alert-circle"></i> Не вышло';
+      setTimeout(function () { btn.innerHTML = orig; }, 2200);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(ok).catch(function () {
+        try {
+          var r = document.createRange();
+          r.selectNodeContents(el);
+          var s = window.getSelection();
+          s.removeAllRanges();
+          s.addRange(r);
+          if (document.execCommand("copy")) ok();
+          else fail();
+          s.removeAllRanges();
+        } catch (e) {
+          fail();
+        }
+      });
+    } else {
+      try {
+        var r = document.createRange();
+        r.selectNodeContents(el);
+        var s = window.getSelection();
+        s.removeAllRanges();
+        s.addRange(r);
+        if (document.execCommand("copy")) ok();
+        else fail();
+        s.removeAllRanges();
+      } catch (e) {
+        fail();
+      }
+    }
+  });
+})();
+</script>
+{% endif %}
+
+<div class="card" style="margin-bottom:24px">
+  <div class="card-header">Создать ключ</div>
+  <div class="card-body">
+    <form method="post" action="/admin/platform/access-keys/create" class="settings-form">
+      <label class="form-label">Подпись (необязательно)</label>
+      <input type="text" name="label" class="form-input" placeholder="Например: клиент Иван, офис №2"/>
+      <label class="form-label" style="margin-top:16px">Срок действия (с момента выдачи)</label>
+      <select name="duration" class="form-input">
+        <option value="forever">Бессрочно</option>
+        <option value="m3">Тест — 3 минуты (проверка истечения)</option>
+        <option value="30">30 дней</option>
+        <option value="90">3 месяца (90 дней)</option>
+        <option value="180">6 месяцев (180 дней)</option>
+        <option value="365">1 год (365 дней)</option>
+      </select>
+      <button type="submit" class="btn btn-primary" style="margin-top:12px">Сгенерировать ключ</button>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header ak-keys-header">
+    <span class="ak-keys-header__title">Выданные ключи</span>
+    <nav class="ak-status-filters" aria-label="Фильтр по статусу">
+      {% set c = access_key_counts %}
+      {% set fs = filter_status %}
+      <a href="/admin/platform/access-keys?status=all" class="ak-filter-pill{% if fs == 'all' %} ak-filter-pill--active{% endif %}">Все <span class="ak-filter-count">{{ c.all }}</span></a>
+      <a href="/admin/platform/access-keys?status=active" class="ak-filter-pill{% if fs == 'active' %} ak-filter-pill--active{% endif %}">Активные <span class="ak-filter-count">{{ c.active }}</span></a>
+      <a href="/admin/platform/access-keys?status=pending" class="ak-filter-pill{% if fs == 'pending' %} ak-filter-pill--active{% endif %}">Ожидают <span class="ak-filter-count">{{ c.pending }}</span></a>
+      <a href="/admin/platform/access-keys?status=expired" class="ak-filter-pill{% if fs == 'expired' %} ak-filter-pill--active{% endif %}">Истёкшие <span class="ak-filter-count">{{ c.expired }}</span></a>
+      <a href="/admin/platform/access-keys?status=revoked" class="ak-filter-pill{% if fs == 'revoked' %} ak-filter-pill--active{% endif %}">Отозванные <span class="ak-filter-count">{{ c.revoked }}</span></a>
+    </nav>
+  </div>
+  <div class="card-body">
+    {% if not keys %}
+    {% if c.all == 0 %}
+    <p class="settings-note">Пока нет ключей. Создайте первый выше или выполните на сервере:
+      <code>python scripts/create_access_key.py --duration 30 "подпись"</code> (для быстрого теста истечения: <code>--duration m3</code>)</p>
+    {% else %}
+    <p class="settings-note">В выбранном сегменте ключей нет. <a href="/admin/platform/access-keys?status=all">Показать все</a> или переключите фильтр выше.</p>
+    {% endif %}
+    {% else %}
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Подпись</th>
+            <th>Ключ</th>
+            <th>Создан</th>
+            <th>Действует до</th>
+            <th>Устройство</th>
+            <th>Статус</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for k in keys %}
+          <tr>
+            <td>{{ k.id }}</td>
+            <td>{{ k.label or '—' }}</td>
+            <td style="min-width:200px;max-width:360px">
+              {% if k.key_plain_enc %}
+              <code class="ak-masked" style="display:block;word-break:break-all">FBM-••••••••••••••••••••••</code>
+              <code class="ak-shown" style="display:none;word-break:break-all;font-size:0.85rem;margin:0"></code>
+              <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+                <button type="button" class="btn btn-sm btn-secondary ak-btn-show" data-key-id="{{ k.id }}">Показать</button>
+                <button type="button" class="btn btn-sm btn-secondary ak-btn-copy" style="display:none">Копировать</button>
+                <button type="button" class="btn btn-sm btn-secondary ak-btn-hide" style="display:none">Скрыть</button>
+              </div>
+              {% else %}
+              <span class="settings-note" title="Ключ создан до обновления или без сохранения копии">нет копии в базе</span>
+              {% endif %}
+            </td>
+            <td>{{ format_dt_madrid(k.created_at) if k.created_at else '—' }}</td>
+            <td>
+              {% if k.expires_at %}
+              {{ format_dt_madrid(k.expires_at) }}
+              {% else %}
+              <span class="badge badge-default">бессрочно</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if k.device_fingerprint %}
+              <code title="{{ k.device_fingerprint }}">{{ k.device_fingerprint[:12] }}…</code>
+              {% else %}
+              <span class="badge badge-warning">не активирован</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if k.revoked_at %}
+              <span class="badge badge-error">отозван</span>
+              {% elif access_key_expiry_expired(k.expires_at) %}
+              <span class="badge badge-error">истёк</span>
+              {% elif k.device_fingerprint %}
+              <span class="badge badge-success">активен</span>
+              {% else %}
+              <span class="badge badge-default">ожидает</span>
+              {% endif %}
+            </td>
+            <td>
+              <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+              {% if not k.revoked_at %}
+              <form method="post" action="/admin/platform/access-keys/{{ k.id }}/revoke" style="display:inline" onsubmit="return confirm('Отозвать этот ключ? Клиент потеряет доступ.');">
+                <input type="hidden" name="return_status" value="{{ filter_status }}"/>
+                <button type="submit" class="btn btn-sm btn-secondary">Отозвать</button>
+              </form>
+              {% endif %}
+              <button type="button" class="btn btn-sm btn-danger ak-open-delete" data-key-id="{{ k.id }}">Удалить</button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<p class="settings-note" style="margin-top:20px">В <code>.env</code> включите <code>FB_MASTER_ACCESS_KEY_REQUIRED=true</code>. Пока ключей нет, сначала создайте один здесь (или скриптом), затем включайте режим.</p>
+
+<dialog id="ak-delete-dialog" class="ak-delete-dialog">
+  <form method="post" id="ak-delete-form" class="ak-delete-dialog__form" action="">
+    <h2 class="ak-delete-dialog__title">Удалить ключ навсегда?</h2>
+    <p class="ak-delete-dialog__text">Запись будет <strong>безвозвратно</strong> удалена из базы. Клиент потеряет доступ (как при отзыве), восстановить ключ нельзя. Связи «устройство / оплата» в админке будут отвязаны от этого ключа.</p>
+    <label class="fb-check ak-delete-dialog__consent">
+      <input type="checkbox" name="confirm_delete" value="yes" id="ak-delete-consent" required/>
+      <span>Я понимаю последствия и согласен(на) удалить ключ без возможности отката</span>
+    </label>
+    <input type="hidden" name="return_status" id="ak-delete-return-status" value="{{ filter_status }}"/>
+    <div class="ak-delete-dialog__actions">
+      <button type="button" class="btn btn-secondary" id="ak-delete-cancel">Отмена</button>
+      <button type="submit" class="btn btn-danger">Удалить навсегда</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+(function () {
+  function copyText(text, onOk, onFail) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(onOk).catch(onFail);
+      return;
+    }
+    onFail();
+  }
+  document.querySelectorAll(".ak-btn-show").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var id = btn.getAttribute("data-key-id");
+      if (!id) return;
+      var cell = btn.closest("td");
+      if (!cell) return;
+      var masked = cell.querySelector(".ak-masked");
+      var shown = cell.querySelector(".ak-shown");
+      var bCopy = cell.querySelector(".ak-btn-copy");
+      var bHide = cell.querySelector(".ak-btn-hide");
+      btn.disabled = true;
+      fetch("/admin/platform/access-keys/" + encodeURIComponent(id) + "/reveal", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { Accept: "application/json" },
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          btn.disabled = false;
+          if (!data || !data.ok) {
+            alert((data && data.message) || "Не удалось получить ключ.");
+            return;
+          }
+          if (shown) shown.textContent = data.key;
+          if (masked) masked.style.display = "none";
+          if (shown) shown.style.display = "block";
+          btn.style.display = "none";
+          if (bCopy) bCopy.style.display = "inline-flex";
+          if (bHide) bHide.style.display = "inline-flex";
+        })
+        .catch(function () {
+          btn.disabled = false;
+          alert("Ошибка сети.");
+        });
+    });
+  });
+  document.querySelectorAll(".ak-btn-hide").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var cell = btn.closest("td");
+      if (!cell) return;
+      var masked = cell.querySelector(".ak-masked");
+      var shown = cell.querySelector(".ak-shown");
+      var bShow = cell.querySelector(".ak-btn-show");
+      var bCopy = cell.querySelector(".ak-btn-copy");
+      if (shown) { shown.textContent = ""; shown.style.display = "none"; }
+      if (masked) masked.style.display = "block";
+      btn.style.display = "none";
+      if (bCopy) bCopy.style.display = "none";
+      if (bShow) bShow.style.display = "inline-flex";
+    });
+  });
+  document.querySelectorAll(".ak-btn-copy").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var cell = btn.closest("td");
+      if (!cell) return;
+      var shown = cell.querySelector(".ak-shown");
+      var text = (shown && shown.textContent) ? shown.textContent.trim() : "";
+      if (!text) return;
+      var orig = btn.innerHTML;
+      copyText(
+        text,
+        function () {
+          btn.innerHTML = '<i class="ti ti-check"></i> Скопировано';
+          setTimeout(function () { btn.innerHTML = orig; }, 2000);
+        },
+        function () {
+          btn.innerHTML = '<i class="ti ti-alert-circle"></i> Ошибка';
+          setTimeout(function () { btn.innerHTML = orig; }, 2000);
+        }
+      );
+    });
+  });
+})();
+</script>
+<script>
+(function () {
+  var dlg = document.getElementById("ak-delete-dialog");
+  var form = document.getElementById("ak-delete-form");
+  var cancel = document.getElementById("ak-delete-cancel");
+  if (!dlg || !form || !cancel) return;
+  function openForKey(id) {
+    form.action = "/admin/platform/access-keys/" + encodeURIComponent(String(id)) + "/delete";
+    var cb = document.getElementById("ak-delete-consent");
+    if (cb) cb.checked = false;
+    dlg.showModal();
+  }
+  document.querySelectorAll(".ak-open-delete").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var id = btn.getAttribute("data-key-id");
+      if (!id) return;
+      openForKey(id);
+    });
+  });
+  cancel.addEventListener("click", function () {
+    dlg.close();
+    try { form.reset(); } catch (e) {}
+  });
+  dlg.addEventListener("close", function () {
+    try { form.reset(); } catch (e) {}
+  });
+})();
+</script>
+{% endblock %}

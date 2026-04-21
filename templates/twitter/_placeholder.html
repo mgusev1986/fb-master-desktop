@@ -1,0 +1,21 @@
+{% extends "twitter/base.html" %}
+
+{% block title %}{{ page_title }} · Twitter / X Master{% endblock %}
+
+{% block content %}
+<div class="x-page">
+  <header class="x-page__header">
+    <div class="x-page__title-wrap">
+      <h1 class="x-page__title">{{ page_title }} <span class="x-page__beta-pill">Beta</span></h1>
+      {% if page_subtitle %}<p class="x-page__subtitle">{{ page_subtitle }}</p>{% endif %}
+    </div>
+    <span class="x-page__status"><span class="x-page__status-dot"></span>В разработке · Beta</span>
+  </header>
+  <div class="x-placeholder">
+    <div class="x-placeholder__icon"><i class="ti ti-{{ page_icon or 'tools' }}"></i></div>
+    <h2 class="x-placeholder__title">Раздел подключается</h2>
+    <p class="x-placeholder__text">Скелет готов. Полная реализация — в следующем milestone Beta.</p>
+    <a href="/twitter" class="x-btn x-btn--ghost"><i class="ti ti-arrow-left"></i> К обзору</a>
+  </div>
+</div>
+{% endblock %}

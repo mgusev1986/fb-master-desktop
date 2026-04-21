@@ -1,0 +1,116 @@
+{% extends "twitter/base.html" %}
+
+{% block title %}X-аккаунты · Twitter Master{% endblock %}
+
+{% block content %}
+<div class="x-page">
+  <header class="x-page__header">
+    <div class="x-page__title-wrap">
+      <h1 class="x-page__title">X-аккаунты <span class="x-page__beta-pill">Beta</span></h1>
+      <p class="x-page__subtitle">
+        Подключение через browser-профиль (Chromium + cookies <code>auth_token</code>, <code>ct0</code>).
+        На каждый аккаунт — свой profile_dir и свой прокси.
+      </p>
+    </div>
+    <div class="x-stats">
+      <span class="x-stats__pill"><strong>{{ summary.total }}</strong> всего</span>
+      <span class="x-stats__pill x-stats__pill--ok"><strong>{{ summary.connected }}</strong> подключено</span>
+      <span class="x-stats__pill x-stats__pill--warn"><strong>{{ summary.needs_attention or 0 }}</strong> внимание</span>
+    </div>
+  </header>
+
+  {% if notice == 'imported' %}
+  <div class="x-banner">
+    <div class="x-banner__icon"><i class="ti ti-check"></i></div>
+    <div class="x-banner__body">
+      <h2 class="x-banner__title">Импорт завершён</h2>
+      <p class="x-banner__text">Добавлено: <strong>{{ imported }}</strong>. Ошибок: <strong>{{ errors_count }}</strong>.</p>
+    </div>
+  </div>
+  {% endif %}
+
+  <section class="x-card x-card--accent">
+    <h2 class="x-card__title"><i class="ti ti-upload"></i> Импорт купленных X-аккаунтов</h2>
+    <p class="x-card__desc">Поддерживаемые форматы (одна строка = один аккаунт):</p>
+    <ul style="margin:0;padding-left:20px;color:var(--text-secondary,#606770);font:400 13px/1.6 Inter,sans-serif;">
+      <li><strong>JSON</strong>: <code>{"label":"@handle","handle":"handle","cookies":[...],"proxy_url":"http://user:pass@host:port","user_agent":"..."}</code></li>
+      <li><strong>Массив cookies</strong>: <code>[{"name":"auth_token","value":"...","domain":".x.com"},{"name":"ct0","value":"..."}]</code></li>
+      <li><strong>TSV</strong>: <code>label&lt;TAB&gt;cookies_json&lt;TAB&gt;proxy_url</code></li>
+    </ul>
+    <p class="x-card__desc" style="margin-top:8px;color:var(--text-muted,#888);font-size:12px;">Обязательные cookies: <code>auth_token</code> + <code>ct0</code>.</p>
+    <form method="post" action="/twitter/accounts/import" style="display:flex;flex-direction:column;gap:10px;">
+      <textarea name="blob" rows="7" placeholder='{"label":"@my","handle":"my","cookies":[{"name":"auth_token","value":"a"},{"name":"ct0","value":"c"}]}'
+                style="padding:12px;border-radius:10px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);font:400 13px/1.4 ui-monospace,Menlo,monospace;resize:vertical;"></textarea>
+      <div style="display:flex;justify-content:flex-end;"><button type="submit" class="x-btn x-btn--primary"><i class="ti ti-upload"></i> Импортировать</button></div>
+    </form>
+  </section>
+
+  <section>
+    <h2 class="x-card__title" style="margin:8px 0 12px;">Подключённые аккаунты</h2>
+    {% if accounts %}
+      <div class="x-grid x-grid--wide">
+        {% for a in accounts %}
+        <article class="x-card">
+          <header style="display:flex;align-items:flex-start;gap:10px;justify-content:space-between;">
+            <h3 class="x-card__title" style="font-size:15px;">
+              <i class="ti ti-brand-twitter"></i> {{ a.label }}
+              {% if a.handle %}<small style="color:var(--text-muted,#888);font-weight:400;">@{{ a.handle }}</small>{% endif %}
+            </h3>
+            <span class="compliance-cell__level
+              {% if a.status == 'connected' %}compliance-cell__level--supported
+              {% elif a.status == 'restricted' %}compliance-cell__level--restricted
+              {% elif a.status == 'disabled' %}compliance-cell__level--unsupported
+              {% else %}compliance-cell__level--partial{% endif %}">{{ a.status }}</span>
+          </header>
+          <p class="x-card__desc" style="font-size:13px;">
+            cookies: <strong>{{ (a.cookies_json or [])|length }}</strong>
+            {% if a.cookies_imported_at %} · импорт: {{ a.cookies_imported_at.strftime('%d.%m.%Y %H:%M') }}{% endif %}
+          </p>
+          {% if a.login_blocked_reason %}
+          <p style="margin:0;padding:8px 10px;border-radius:8px;background:color-mix(in srgb,#c33 12%,transparent);color:#c33;font:400 12px/1.4 Inter,sans-serif;">
+            <i class="ti ti-alert-triangle"></i> {{ a.login_blocked_reason }}
+          </p>
+          {% endif %}
+          <details>
+            <summary style="cursor:pointer;color:var(--ws-accent);font:500 13px/1 Inter,sans-serif;">Прокси</summary>
+            <form method="post" action="/twitter/accounts/{{ a.id }}/proxy" style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">
+              <input type="text" name="proxy_url" value="{{ a.proxy_url or '' }}" placeholder="http://host:port" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 12px/1 Inter,sans-serif;"/>
+              <div style="display:flex;gap:6px;">
+                <input type="text" name="proxy_username" value="{{ a.proxy_username or '' }}" placeholder="user" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 12px/1 Inter,sans-serif;"/>
+                <input type="password" name="proxy_password" value="{{ a.proxy_password or '' }}" placeholder="pass" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 12px/1 Inter,sans-serif;"/>
+              </div>
+              <label style="font:400 12px/1.2 Inter,sans-serif;color:var(--text-secondary);"><input type="checkbox" name="proxy_enabled" value="on" {% if a.proxy_enabled %}checked{% endif %}/> использовать прокси</label>
+              <button type="submit" class="x-btn" style="font-size:12px;padding:6px 10px;align-self:flex-start;">Сохранить</button>
+            </form>
+          </details>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <form method="post" action="/twitter/accounts/{{ a.id }}/probe" style="margin:0;" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Проверяю…';">
+              <button class="x-btn" type="submit" style="font-size:12px;padding:6px 10px;"><i class="ti ti-refresh"></i> Проверить</button>
+            </form>
+            <form method="post" action="/twitter/accounts/{{ a.id }}/inbox-sync" style="margin:0;" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Sync…';">
+              <button class="x-btn" type="submit" style="font-size:12px;padding:6px 10px;"><i class="ti ti-mail-down"></i> Sync inbox</button>
+            </form>
+            <form method="post" action="/twitter/accounts/{{ a.id }}/delete" style="margin:0;" onsubmit="return confirm('Удалить аккаунт {{ a.label }}?');">
+              <button class="x-btn" type="submit" style="background:transparent;border-color:#c33;color:#c33;font-size:12px;padding:6px 10px;"><i class="ti ti-trash"></i> Удалить</button>
+            </form>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="x-placeholder">
+        <div class="x-placeholder__icon"><i class="ti ti-brand-twitter"></i></div>
+        <h2 class="x-placeholder__title">Аккаунтов пока нет</h2>
+        <p class="x-placeholder__text">Импортируйте купленные X-аккаунты через JSON / cookies-array / TSV выше.</p>
+      </div>
+    {% endif %}
+  </section>
+</div>
+
+<style>
+.x-stats{display:inline-flex;gap:6px;flex-wrap:wrap;}
+.x-stats__pill{padding:6px 10px;border-radius:999px;background:var(--bg-surface);border:1px solid var(--border);color:var(--text-secondary);font:500 12px/1 Inter,sans-serif;}
+.x-stats__pill strong{color:var(--text-primary);margin-right:4px;}
+.x-stats__pill--ok strong{color:#1b873f;} .x-stats__pill--warn strong{color:#b26a00;}
+</style>
+{% endblock %}

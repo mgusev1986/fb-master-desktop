@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>FB Master — Мессенджер</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; font-family: system-ui, -apple-system, sans-serif; }
+    .shell { display: flex; height: 100%; }
+    aside {
+      width: 220px;
+      min-width: 220px;
+      background: #f0f2f5;
+      border-right: 1px solid #d8dadf;
+      display: flex;
+      flex-direction: column;
+    }
+    .aside-head {
+      padding: 14px 12px;
+      font-weight: 600;
+      font-size: 13px;
+      color: #65676b;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+    #accounts { display: flex; flex-direction: column; gap: 4px; padding: 0 8px 12px; flex: 1; overflow-y: auto; }
+    .acc-item {
+      text-align: left;
+      padding: 10px 12px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      cursor: pointer;
+      font-size: 14px;
+      color: #050505;
+    }
+    .acc-item:hover { background: #e4e6eb; }
+    .acc-item.active { background: #e7f3ff; font-weight: 600; }
+    main { flex: 1; display: flex; flex-direction: column; min-width: 0; background: #fff; }
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-bottom: 1px solid #d8dadf;
+      font-size: 13px;
+      color: #65676b;
+      flex-wrap: wrap;
+    }
+    .toolbar button {
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid #ccd0d5;
+      background: #fff;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .toolbar button:hover { background: #f5f6f7; }
+    #webview-wrap { flex: 1; min-height: 0; position: relative; }
+    webview { position: absolute; inset: 0; }
+    #external-open { display: none; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside>
+      <div class="aside-head">Аккаунты</div>
+      <div id="accounts"></div>
+    </aside>
+    <main>
+      <div class="toolbar">
+        <span>Встроенный webview — отдельная сессия от FB Master. С профилем из «Аккаунты»:</span>
+        <button type="button" id="external-open">Открыть в Chrome (папка профиля)</button>
+      </div>
+      <div id="webview-wrap"></div>
+    </main>
+  </div>
+  <script src="renderer.js"></script>
+</body>
+</html>

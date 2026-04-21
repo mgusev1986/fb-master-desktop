@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+{% block title %}{% if cabinet_client_mode(request) %}Прогрев профиля — FB Master{% else %}Прогрев аккаунтов — FB Master{% endif %}{% endblock %}
+{% block body_class %}page-nw-warming{% endblock %}
+
+{% block content %}
+{% set _nw_presets = warmup_presets_ui_client if cabinet_client_mode(request) else warmup_presets_ui %}
+<div class="page-header">
+  <div>
+    <h1>{% if cabinet_client_mode(request) %}Прогрев профиля{% else %}Прогрев аккаунтов{% endif %}</h1>
+    <p class="subtitle">
+      {% if cabinet_client_mode(request) %}
+      Несколько дней подряд программа <strong>ведёт себя как обычный пользователь</strong>: лента и группы, просмотр страниц, редкие лайки, иногда короткий комментарий к нейтральным постам и заявки в друзья из рекомендаций.
+      Активность только <strong>днём</strong> (примерно с 8:00 до 22:00) по расписанию из раздела <a href="/system/speed">«Темп работы»</a>; <strong>ночью пауза</strong>.
+      Острые темы программа <strong>обходит</strong> — под них комментарии не пишутся.
+      Чтобы комментарии с ИИ вообще включались, в <strong>«Настройках»</strong> должен быть подключён ИИ — обычно это делает администратор.
+      Выберите <strong>срок 1–7 дней</strong> — ниже появится план. Итог смотрите в <a href="/system/logs">«История и отчёты»</a>. Нужны <strong>вход в Facebook</strong> и <strong>место 1, 2 или 3</strong> в разделе аккаунтов.
+      {% else %}
+      Многодневный <strong>автоматический</strong> прогрев: <strong>группы</strong> → лента и <strong>профили</strong> → редкие <strong>лайки</strong>
+      → нейрокомментарии только к «безопасным» постам → заявки в друзья из рекомендаций.
+      <strong>С 08:00 до 22:00</strong> по часовому поясу из раздела <a href="/system/speed">«Скорость и паузы»</a> (календарный день сценариев); <strong>ночью сессии не планируются</strong> (аккаунт «отдыхает»).
+      Посты про <strong>насилие, смерть, войну, трагедию, агрессию</strong> и близкие темы <strong>сначала отсекаются стоп-словами</strong>, затем короткой автоматической проверкой текста; под такие посты комментарий не пишется.
+      <strong>Нейрокомментарии</strong> включаются только если в «Настройках» задан ключ <strong>OpenAI или Google AI</strong> (без них фаза комментирования не ставится в очередь).
+      <strong>Режим 1–7 дней</strong> — пресеты пауз и лимитов; план виден при выборе срока. Действия фиксируются в <strong>«Журнал и отчёты»</strong>. Нужны <strong>слот 1–3</strong> и рабочая сессия Facebook.
+      {% endif %}
+    </p>
+    <p class="subtitle" style="font-size:var(--font-size-sm);opacity:0.9">
+      {% if cabinet_client_mode(request) %}
+      Прогрев <strong>по списку людей</strong> — в разделе <strong>«Сценарии по дням»</strong>; здесь только мягкий сценарий для самого профиля Facebook.
+      {% else %}
+      Кампании «Прогрев по контактам» в агенте — отдельно; здесь только «естественное» поведение аккаунта.
+      {% endif %}
+    </p>
+  </div>
+</div>
+
+{% if request.query_params.get('msg') %}
+<div class="card" style="margin-bottom:16px;border-color:var(--success)">
+  <div class="card-body" style="font-size:var(--font-size-sm)">{{ request.query_params.get('msg') }}</div>
+</div>
+{% endif %}
+{% set err = request.query_params.get('err') %}
+{% if err %}
+<div class="card" style="margin-bottom:16px;border-color:var(--danger)">
+  <div class="card-body" style="font-size:var(--font-size-sm)">
+    {% if err == 'bad_account' %}Некорректный аккаунт.{% elif err == 'no_slot' %}{% if cabinet_client_mode(request) %}В разделе «Аккаунты» выберите для профиля <strong>место 1, 2 или 3</strong>.{% else %}Назначьте аккаунту слот (1–3) в разделе «Аккаунты».{% endif %}{% elif err == 'already' %}По этому аккаунту прогрев уже запущен.{% elif err == 'account_busy' %}{{ request.query_params.get('why') or 'Аккаунт уже занят другой автоматизацией.' }}{% else %}{{ err }}{% endif %}
+  </div>
+</div>
+{% endif %}
+
+<div class="card" style="margin-bottom:20px">
+  <div class="card-header">Как запустить</div>
+  <div class="card-body" style="font-size:var(--font-size-sm);line-height:1.55">
+    <ol style="margin:0;padding-left:1.25rem">
+      <li>{% if cabinet_client_mode(request) %}В разделе «Аккаунты» выполните вход в Facebook и при необходимости нажмите «Проверить вход».{% else %}Выполните вход и проверку сессии в «Аккаунтах».{% endif %}</li>
+      <li>{% if cabinet_client_mode(request) %}Назначьте аккаунту <strong>место</strong> 1, 2 или 3.{% else %}Назначьте аккаунту слот 1, 2 или 3.{% endif %}</li>
+      <li>{% if cabinet_client_mode(request) %}Если нужны <strong>комментарии с ИИ</strong>, попросите администратора включить ИИ в <strong>«Настройках»</strong> программы.{% else %}В <a href="/system/settings">«Настройках»</a> укажите ключ нейросети (OpenAI или Google AI), если нужны нейрокомментарии; при необходимости локальный вариант задаётся там же по инструкции к развёртыванию.{% endif %}</li>
+      <li>{% if cabinet_client_mode(request) %}Выберите срок 1–7 дней и нажмите <strong>«Запустить прогрев»</strong>.{% else %}Выберите срок 1–7 дней и нажмите «Запустить прогрев».{% endif %}</li>
+    </ol>
+  </div>
+</div>
+
+{% if not accounts and not hidden_warmup_accounts %}
+<div class="card">
+  <div class="card-body">
+    <p>{% if cabinet_client_mode(request) %}Пока нет аккаунтов. <a href="/fb-accounts">Добавьте аккаунт Facebook</a> в соответствующем разделе.{% else %}Нет аккаунтов. <a href="/fb-accounts">Добавьте Facebook-аккаунт</a>.{% endif %}</p>
+  </div>
+</div>
+{% elif not accounts and hidden_warmup_accounts %}
+<div class="card" style="margin-bottom:16px">
+  <div class="card-body" style="font-size:var(--font-size-sm)">
+    {% if cabinet_client_mode(request) %}Все аккаунты скрыты с этой страницы. Верните нужные в блоке ниже или в разделе «Аккаунты».{% else %}Все аккаунты скрыты со страницы прогрева — верните карточки блоком ниже.{% endif %}
+  </div>
+</div>
+{% endif %}
+{% if accounts %}
+<div class="nw-accounts-stack" role="list">
+      {% for a in accounts %}
+      {% set st = a.natural_warmup_json if a.natural_warmup_json is mapping else none %}
+      {% set rs = (a.readiness_status or 'cold') %}
+      <article class="card nw-account-card" role="listitem">
+        <div class="card-body">
+          <header class="nw-account-card__header">
+            <div class="nw-account-card__title">
+              <strong class="nw-account-card__name">{{ a.label }}</strong>
+              <div class="nw-account-card__badges" aria-label="Слот, сессия, готовность">
+                {% if a.active_slot %}
+                <span class="badge badge-default">Слот {{ a.active_slot }}</span>
+                {% else %}
+                <span class="badge badge-warning">{% if cabinet_client_mode(request) %}В очереди{% else %}Ожидание{% endif %}</span>
+                {% endif %}
+                {% if a.session_ok is sameas true %}
+                <span class="badge badge-success">{% if cabinet_client_mode(request) %}Вход: ок{% else %}Сессия: ок{% endif %}</span>
+                {% elif a.session_ok is sameas false %}
+                <span class="badge badge-warning">{% if cabinet_client_mode(request) %}Вход: нет{% else %}Сессия: нет{% endif %}</span>
+                {% else %}
+                <span class="badge badge-default">{% if cabinet_client_mode(request) %}Вход: —{% else %}Сессия: —{% endif %}</span>
+                {% endif %}
+                {% if rs == 'ready' %}
+                <span class="badge badge-success">{{ readiness_labels.get('ready', 'Готов') }}</span>
+                {% elif rs == 'warming' %}
+                <span class="badge badge-default">{{ readiness_labels.get('warming', 'Прогрев') }}</span>
+                {% else %}
+                <span class="badge badge-default">{{ readiness_labels.get('cold', 'Холодный') }}</span>
+                {% endif %}
+              </div>
+            </div>
+          </header>
+          <div class="nw-account-card__grid">
+            <div class="nw-account-card__plan nw-col-plan">
+              <div class="nw-account-card__sec-label">План прогрева</div>
+              {% if st and st.get('ends_at') %}
+              {% set dkey = (st.get('duration_days', 3)|int)|string %}
+              {% set pu = _nw_presets.get(dkey) or _nw_presets.get('3') %}
+              <strong>{{ pu.title if pu else ('Режим ' ~ dkey ~ ' дн.') }}</strong>
+              <div class="nw-plan-summary">{{ pu.summary if pu else '' }}</div>
+              <div class="nw-plan-meta">{% if cabinet_client_mode(request) %}до {{ (st.get('ends_at')|string)[:16]|replace('T', ' ') }} · заходов: {{ st.get('ticks_total', 0) }}{% else %}до {{ (st.get('ends_at')|string)[:16]|replace('T', ' ') }} UTC · сессий: {{ st.get('ticks_total', 0) }}{% endif %}</div>
+              {% if rs == 'warming' and pu %}
+              <div class="nw-plan-meta">сегодня: комм. {{ st.get('comments_today', 0) }}/{{ pu.max_comments_per_day }} · друзья {{ st.get('friends_today', 0) }}/{{ pu.max_friends_per_day }}</div>
+              {% endif %}
+              {% set ttot = st.get('activity_totals') if st is mapping else none %}
+              {% if ttot is mapping and ttot|length > 0 %}
+              <div class="nw-plan-totals">
+                <span class="nw-plan-totals-label">Всего за период:</span>
+                {% if ttot.get('group_feed_scroll_rounds') %}группы {{ ttot.get('group_feed_scroll_rounds') }} циклов{% endif %}
+                {% if ttot.get('profile_visits') %}{% if ttot.get('group_feed_scroll_rounds') %} · {% endif %}профили {{ ttot.get('profile_visits') }}{% endif %}
+                {% if ttot.get('timeline_likes') %}{% if ttot.get('group_feed_scroll_rounds') or ttot.get('profile_visits') %} · {% endif %}лайки {{ ttot.get('timeline_likes') }}{% endif %}
+                {% if ttot.get('ai_comments_posted') %}{% if ttot.get('group_feed_scroll_rounds') or ttot.get('profile_visits') or ttot.get('timeline_likes') %} · {% endif %}коммент. {{ ttot.get('ai_comments_posted') }}{% endif %}
+                {% if ttot.get('friend_requests_sent') %}{% if ttot.get('group_feed_scroll_rounds') or ttot.get('profile_visits') or ttot.get('timeline_likes') or ttot.get('ai_comments_posted') %} · {% endif %}заявки {{ ttot.get('friend_requests_sent') }}{% endif %}
+              </div>
+              {% endif %}
+              {% elif rs == 'warming' %}
+              <span class="nw-plan-placeholder">Идёт прогрев…</span>
+              {% else %}
+              <span class="nw-plan-placeholder">Выберите срок справа — ниже появится описание выбранного пресета.</span>
+              {% endif %}
+            </div>
+            <div class="nw-account-card__actions nw-col-actions">
+              <div class="nw-account-card__sec-label">Действия</div>
+              <div class="nw-actions-stack">
+                {% if rs != 'warming' %}
+                <form id="nw-start-{{ a.id }}" method="post" action="/account-warming/start" class="nw-start-form">
+                  <div class="nw-actions-toolbar">
+                    <input type="hidden" name="fb_account_id" value="{{ a.id }}"/>
+                    <select name="duration_days" class="form-select nw-duration-select" data-account-id="{{ a.id }}" aria-label="Срок прогрева в днях">
+                      {% for d in range(1, 8) %}
+                      <option value="{{ d }}" {% if d == 3 %}selected{% endif %}>{{ d }} дн.</option>
+                      {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-primary btn-sm" {% if a.id not in slotted_ids %}disabled title="{% if cabinet_client_mode(request) %}Нужно место 1–3 в «Аккаунтах»{% else %}Нужен слот 1–3{% endif %}"{% endif %}>{% if cabinet_client_mode(request) %}Запустить прогрев{% else %}Запустить{% endif %}</button>
+                  </div>
+                </form>
+                {% else %}
+                <form method="post" action="/account-warming/stop" class="nw-inline-form" onsubmit="return confirm('Остановить автопрогрев для этого аккаунта?');">
+                  <input type="hidden" name="fb_account_id" value="{{ a.id }}"/>
+                  <button type="submit" class="btn btn-secondary btn-sm">Остановить</button>
+                </form>
+                {% endif %}
+                {% if rs != 'ready' %}
+                <form method="post" action="/account-warming/mark-ready" class="nw-inline-form nw-manual-ready-form" onsubmit="return confirm('Отметить аккаунт как готовый к работе без ожидания срока?');">
+                  <input type="hidden" name="fb_account_id" value="{{ a.id }}"/>
+                  <button type="submit" class="btn btn-secondary btn-sm nw-btn-manual-ready">Вручную: готов</button>
+                </form>
+                {% endif %}
+                <form method="post" action="/account-warming/hide-from-page" class="nw-inline-form" onsubmit="return confirm('Убрать эту карточку со страницы прогрева? Автопрогрев будет остановлен; аккаунт останется в «Аккаунтах».');">
+                  <input type="hidden" name="fb_account_id" value="{{ a.id }}"/>
+                  <button type="submit" class="btn btn-secondary btn-sm nw-btn-remove-warmup">
+                    <i class="ti ti-eye-off" aria-hidden="true"></i> Убрать со страницы
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+          {% if rs != 'warming' %}
+          <div class="nw-account-card__preset nw-preset-subrow" data-for-account="{{ a.id }}">
+            <div class="nw-preset-preview">
+              <div class="nw-preset-title"></div>
+              <ul class="nw-preset-bullets"></ul>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </article>
+      {% endfor %}
+</div>
+{% endif %}
+{% if hidden_warmup_accounts %}
+<div class="card nw-hidden-warmup-card" style="margin-top:20px">
+  <div class="card-header">Скрытые с этой страницы</div>
+  <div class="card-body" style="font-size:var(--font-size-sm)">
+    <p class="form-hint" style="margin-top:0">Аккаунты по-прежнему в <a href="/fb-accounts">«Аккаунтах»</a>. Здесь можно вернуть карточку для прогрева.</p>
+    <ul class="nw-hidden-warmup-list">
+      {% for h in hidden_warmup_accounts %}
+      <li class="nw-hidden-warmup-row">
+        <span class="nw-hidden-warmup-name">{{ h.label }}</span>
+        <form method="post" action="/account-warming/show-on-page" class="nw-inline-form">
+          <input type="hidden" name="fb_account_id" value="{{ h.id }}"/>
+          <button type="submit" class="btn btn-secondary btn-sm">Вернуть в список</button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endif %}
+<script>
+(function () {
+  var presets = {{ _nw_presets | tojson }};
+  function fillPreview(container, days) {
+    var p = presets[String(days)] || presets['3'];
+    if (!p || !container) return;
+    var titleEl = container.querySelector('.nw-preset-title');
+    var listEl = container.querySelector('.nw-preset-bullets');
+    if (titleEl) titleEl.textContent = p.title || '';
+    if (listEl) {
+      listEl.innerHTML = '';
+      (p.bullets || []).forEach(function (b) {
+        var li = document.createElement('li');
+        li.textContent = b;
+        listEl.appendChild(li);
+      });
+    }
+  }
+  document.querySelectorAll('form.nw-start-form').forEach(function (form) {
+    var sel = form.querySelector('select.nw-duration-select');
+    var id = form.id || '';
+    var aid = id.indexOf('nw-start-') === 0 ? id.slice('nw-start-'.length) : '';
+    var sub = aid ? document.querySelector('.nw-preset-subrow[data-for-account="' + aid + '"]') : null;
+    var box = sub ? sub.querySelector('.nw-preset-preview') : form.querySelector('.nw-preset-preview');
+    if (!sel || !box) return;
+    sel.addEventListener('change', function () { fillPreview(box, sel.value); });
+    fillPreview(box, sel.value);
+  });
+})();
+</script>
+{% endblock %}

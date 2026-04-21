@@ -1,0 +1,189 @@
+{
+  "meta": {
+    "title": "FB Master — leads from Facebook without ads",
+    "description": "Automatic flow of inquiries from social networks for any business. No complex funnels, no daily manual grind."
+  },
+  "nav": {
+    "features": "How it works",
+    "ai": "AI for sales",
+    "business": "Who it's for",
+    "app": "App",
+    "testimonials": "Reviews",
+    "cta": "Get access",
+    "cta_mobile": "Get access"
+  },
+  "lang": {
+    "ru": "RU",
+    "en": "EN"
+  },
+  "hero": {
+    "badge": "SOCIAL LEADS • NO AD SPEND • 2026",
+    "title_line1": "An automatic flow of leads",
+    "title_highlight": "from Facebook",
+    "title_line2": "for any business",
+    "subtitle": "Finds people, starts the chat, and carries the conversation to a request. No paid ads, no heavy funnels — it keeps working on its own.",
+    "bullet1": "Launch once — get inquiries every day",
+    "bullet2": "Works even if marketing isn’t your thing",
+    "bullet3": "Fits any line of business",
+    "cta": "Get license key",
+    "cta_secondary": "See how it looks",
+    "trust1_title": "Money, not vanity metrics",
+    "trust1_sub": "Focused on requests and sales",
+    "trust2_title": "No Facebook ad budget",
+    "trust2_sub": "Cold traffic and real conversations",
+    "trust3_title": "Your Mac only",
+    "trust3_sub": "Your data stays with you",
+    "stat1_value": "340+",
+    "stat1_label": "entrepreneurs already run the system",
+    "stat2_value": "×4.7",
+    "stat2_label": "average inquiry growth — from customer stories"
+  },
+  "mockup": {
+    "brand": "FB Master",
+    "version": "v1.5.2",
+    "live": "Chats • live",
+    "stat": "+14,392 requests",
+    "stat_sub": "in 30 days",
+    "badge": "System running"
+  },
+  "trust_bar": {
+    "ai": "Neural AI inside: writes, replies, and nudges people to a request",
+    "server": "Can run on a server 24/7",
+    "auto": "Fully automatic — no babysitting"
+  },
+  "business": {
+    "kicker": "Any business",
+    "title": "Who gets clients from this",
+    "card1_title": "Network marketing & partners",
+    "card1_text": "You need new people every day. The system finds contacts, opens the conversation, and helps get them to a call.",
+    "card2_title": "Services & small business",
+    "card2_text": "Studios, courses, agencies, shops. Inquiries from social without expensive ads and without hiring a marketing department.",
+    "card3_title": "Sales & growth teams",
+    "card3_text": "Scale without chaos: more dialogues, less manual grind. One process — clear numbers at the end."
+  },
+  "features": {
+    "title": "How it brings you clients",
+    "f1_title": "Finds your future clients",
+    "f1_text": "Problem: unclear who to message first. Solution: the system gathers the right people on Facebook. Result: your contact list keeps growing.",
+    "f2_title": "Writes first and sparks interest",
+    "f2_text": "Problem: easy to look like spam and get ignored. Solution: careful first messages and comments on posts. Result: more replies and real chats.",
+    "f3_title": "From “hello” to a request",
+    "f3_text": "Problem: leads vanish in threads. Solution: clear stages and follow-ups like a good rep. Result: fewer lost deals, more revenue.",
+    "f4_title": "Scenarios on your schedule",
+    "f4_text": "Problem: no time to click every day. Solution: actions planned weeks ahead. Result: steady flow without daily babysitting.",
+    "f5_title": "Gentle account warm-up",
+    "f5_text": "Problem: fresh profiles get blocked fast. Solution: soft, human-like activity. Result: lower risk, more stable runs.",
+    "f6_title": "Chats next to your sales",
+    "f6_text": "Problem: chats scattered across tabs. Solution: conversations inside one app. Result: faster replies, faster closes."
+  },
+  "ai": {
+    "kicker": "AI INSIDE THE APP",
+    "title": "AI features that drive clients",
+    "body": "The AI looks at the audience, picks words, and chats like a strong sales rep — without weekends or burnout.",
+    "tag_models": "Neural models",
+    "tag_flow": "Scenarios & automation",
+    "quote": "“It writes so people answer — and more often reach the request stage.”"
+  },
+  "testimonials": {
+    "title": "What entrepreneurs say",
+    "items": [
+      {
+        "quote": "In two weeks I got more qualified requests than in three months of paid ads. Money finally went to conversations, not clicks.",
+        "name": "Alex Morozov",
+        "role": "Founder, partner program",
+        "metric": "×6 more requests"
+      },
+      {
+        "quote": "I used to live in chats. Now part of the follow-up runs itself — I jump in where interest is already warm.",
+        "name": "Maria Kovaleva",
+        "role": "Head of sales, retail",
+        "metric": "~40 hours saved weekly"
+      },
+      {
+        "quote": "I run it on a spare Mac and rarely touch settings. The lead stream runs in the background like a hire without payroll.",
+        "name": "Michael Orlov",
+        "role": "Lead gen agency",
+        "metric": "Steady flow, fewer issues"
+      },
+      {
+        "quote": "I thought it was “for techies.” Took one evening. A month later — noticeably more calls and bookings.",
+        "name": "Dmitry Sokolov",
+        "role": "Salon chain owner",
+        "metric": "+1,200 inbound/month"
+      },
+      {
+        "quote": "Clear logic: who we touch, what we say, what counts as success. Reports show numbers, not decoration.",
+        "name": "Elena Volkova",
+        "role": "Commercial director",
+        "metric": "Higher win rate"
+      },
+      {
+        "quote": "Manual outreach used to eat the team. Scenarios now run on their own — people don’t go cold in the funnel.",
+        "name": "Ilya Karpov",
+        "role": "Traffic manager",
+        "metric": "Thousands of FB-sourced touches"
+      },
+      {
+        "quote": "We needed conversations with money behind them, not followers. In a month there were more real talks and payments.",
+        "name": "Anna Svetlova",
+        "role": "Online school",
+        "metric": "Higher average order from leads"
+      },
+      {
+        "quote": "Launched once — the system pushes people toward “how do I buy?” I only catch the hot ones.",
+        "name": "Sergey Nikiforov",
+        "role": "B2B consulting",
+        "metric": "More qualified inbound"
+      },
+      {
+        "quote": "We wanted cold social traffic with a request in mind. Here everything ties to a lead, not a pretty dashboard.",
+        "name": "Olga Remez",
+        "role": "Marketing director",
+        "metric": "Inbound up week over week"
+      }
+    ]
+  },
+  "app": {
+    "title": "Simple, clear desktop app",
+    "body": "Up and running in about five minutes. No special skills required. The essentials are already in one place — you just start the process.",
+    "point1": "Mac install without a novel-length manual",
+    "point2": "Runs automatically while the machine is on",
+    "point3": "Device-bound license with updates",
+    "mock_title": "FB Master for Mac",
+    "mock_version": "First real chats right after launch"
+  },
+  "how": {
+    "title": "Three steps — then the system hunts clients",
+    "step1_title": "Get the app",
+    "step1_text": "Download the Mac installer. In-app tips walk you through the first launch without extra theory.",
+    "step2_title": "Activate your key",
+    "step2_text": "Purchase access on socmaster.pro, enter the key — the app binds to your device.",
+    "step3_title": "Start the request flow",
+    "step3_text": "Connect Facebook accounts, pick a scenario — the system runs on schedule from there."
+  },
+  "final": {
+    "title": "Want steady social inquiries without ad spend?",
+    "subtitle": "License and app — everything you need to start.",
+    "pricing_before": "Single plan:",
+    "pricing_after": "USD per year",
+    "cta": "Get FB Master",
+    "foot1": "Crypto checkout via a secure provider",
+    "foot2": "Regular updates",
+    "foot3": "Telegram support"
+  },
+  "chat": {
+    "title": "FB Master support",
+    "status": "Online · AI assistant",
+    "welcome": "Hi! I'm the FB Master AI assistant. Ask about your license, first launch, scenarios, messenger, or billing — I'll answer clearly.",
+    "placeholder": "Type a message…",
+    "fab_aria": "Open support chat",
+    "close_aria": "Close chat",
+    "send_aria": "Send",
+    "error": "Could not get a reply. Try again later or contact us on Telegram."
+  },
+  "footer": {
+    "features": "How it works",
+    "testimonials": "Reviews",
+    "rights": "© 2026 FB Master. All rights reserved."
+  }
+}

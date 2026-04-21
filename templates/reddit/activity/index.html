@@ -1,0 +1,130 @@
+{% extends "reddit/base.html" %}
+
+{% block title %}Недавняя активность · Reddit Master{% endblock %}
+
+{% block content %}
+<div class="reddit-page">
+  <header class="reddit-page__header">
+    <div class="reddit-page__title-wrap">
+      <h1 class="reddit-page__title">Recent visible activity</h1>
+      <p class="reddit-page__subtitle">
+        Видимые посты и комментарии за выбранное окно времени. Это НЕ статус «онлайн» —
+        Reddit не предоставляет надёжный сигнал присутствия. Здесь вы видите только то,
+        что пользователь публично сделал в выбранный интервал.
+      </p>
+    </div>
+  </header>
+
+  {% if not has_account %}
+  <div class="reddit-card reddit-card--accent">
+    <h2 class="reddit-card__title"><i class="ti ti-alert-triangle"></i> Нужен подключенный Reddit-аккаунт</h2>
+    <div><a href="/reddit/accounts" class="reddit-btn reddit-btn--primary">К аккаунтам</a></div>
+  </div>
+  {% endif %}
+
+  <form method="get" action="/reddit/activity" class="reddit-card" style="gap:12px;">
+    <label style="display:flex;flex-direction:column;gap:4px;">
+      <span style="font:600 12px/1 Inter;color:var(--text-muted)">Список usernames (по одному на строке или через запятую)</span>
+      <textarea name="usernames" rows="3"
+                placeholder="u/username1&#10;username2"
+                style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-family:ui-monospace,monospace;">{{ usernames_raw }}</textarea>
+    </label>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;">
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font:600 12px/1 Inter;color:var(--text-muted)">Окно времени</span>
+        <select name="window" style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;">
+          <option value="1h" {% if window == '1h' %}selected{% endif %}>последний час</option>
+          <option value="24h" {% if window == '24h' %}selected{% endif %}>24 часа</option>
+          <option value="3d" {% if window == '3d' %}selected{% endif %}>3 дня</option>
+          <option value="7d" {% if window == '7d' %}selected{% endif %}>7 дней</option>
+          <option value="30d" {% if window == '30d' %}selected{% endif %}>30 дней</option>
+          <option value="custom" {% if window == 'custom' %}selected{% endif %}>custom (часы)</option>
+        </select>
+      </label>
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font:600 12px/1 Inter;color:var(--text-muted)">custom hours</span>
+        <input type="number" name="custom_hours" min="1" max="8760" value="{{ custom_hours or '' }}"
+               style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;"/>
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;padding:10px 12px;">
+        <input type="checkbox" name="use_leads" value="1" {% if use_leads %}checked{% endif %}/>
+        сканировать все текущие лиды
+      </label>
+      <button type="submit" class="reddit-btn reddit-btn--primary" style="align-self:end;">
+        <i class="ti ti-activity"></i> Сканировать
+      </button>
+    </div>
+    <div style="font:400 12px/1.4 Inter;color:var(--text-muted);">
+      При скане каждого пользователя идёт запрос <code>/user/{name}/about</code> + <code>/user/{name}/overview</code>.
+      Это считает лимит запросов — не сканируйте сотни usernames подряд без перерыва.
+    </div>
+  </form>
+
+  {% if error %}
+  <div class="reddit-card" style="border-color:#c33;color:#c33;background:color-mix(in srgb,#c33 6%,var(--bg-surface));">
+    <i class="ti ti-alert-triangle"></i> {{ error }}
+  </div>
+  {% endif %}
+
+  {% if reports %}
+  <section>
+    <h2 class="reddit-card__title" style="margin:16px 0 12px;">Результат · {{ reports|length }}</h2>
+    <div class="reddit-grid reddit-grid--wide">
+      {% for r in reports %}
+      <article class="reddit-card">
+        <header style="display:flex;align-items:center;gap:8px;">
+          <h3 class="reddit-card__title" style="margin:0;flex:1;">
+            <a href="https://www.reddit.com/user/{{ r.username }}" target="_blank" rel="noreferrer noopener" style="color:var(--text-primary);text-decoration:none;">u/{{ r.username }}</a>
+          </h3>
+          {% if r.error %}
+          <span style="font-size:11px;padding:2px 6px;border-radius:999px;background:color-mix(in srgb,#c33 14%,transparent);color:#c33;">ошибка</span>
+          {% else %}
+          <span style="font-size:11px;padding:2px 6px;border-radius:999px;background:var(--ws-accent-soft);color:var(--ws-accent);">
+            {{ r.posts_count + r.comments_count }} действий
+          </span>
+          {% endif %}
+        </header>
+
+        {% if r.error %}
+        <p class="reddit-card__desc" style="color:#c33;font-size:13px;">{{ r.error }}</p>
+        {% else %}
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font:400 13px/1.4 Inter;">
+          <div><span style="color:var(--text-muted)">карма</span> {{ r.karma_total if r.karma_total is not none else '—' }}</div>
+          <div><span style="color:var(--text-muted)">age</span> {{ r.account_age_days if r.account_age_days is not none else '—' }} дн</div>
+          <div><span style="color:var(--text-muted)">last post</span> {{ format_dt_madrid(r.last_post_at) }}</div>
+          <div><span style="color:var(--text-muted)">last comment</span> {{ format_dt_madrid(r.last_comment_at) }}</div>
+          <div><span style="color:var(--text-muted)">posts в окне</span> {{ r.posts_count }}</div>
+          <div><span style="color:var(--text-muted)">comments в окне</span> {{ r.comments_count }}</div>
+        </div>
+        {% if r.subreddits_seen %}
+        <div class="reddit-card__desc" style="font-size:12px;">
+          Активен в: {% for s in r.subreddits_seen %}{{ s }}{% if not loop.last %}, {% endif %}{% endfor %}
+        </div>
+        {% endif %}
+        {% if r.latest_items %}
+        <details>
+          <summary style="cursor:pointer;font:500 13px/1 Inter;color:var(--ws-accent);">timeline · {{ r.latest_items|length }}</summary>
+          <ul style="list-style:none;padding:8px 0 0;margin:0;font-size:13px;">
+            {% for it in r.latest_items %}
+            <li style="padding:6px 0;border-bottom:1px solid var(--border);">
+              <span style="font-weight:600;color:var(--text-primary);">{{ it.kind|ru_status }}</span>
+              · r/{{ it.subreddit or '—' }}
+              · <span style="color:var(--text-muted)">{{ format_dt_madrid(it.at) }}</span>
+              <div style="color:var(--text-secondary);margin-top:2px;">{{ it.excerpt }}</div>
+              {% if it.permalink %}
+              <a href="https://www.reddit.com{{ it.permalink }}" target="_blank" rel="noreferrer noopener" style="color:var(--ws-accent);font-size:12px;">→ ссылка</a>
+              {% endif %}
+            </li>
+            {% endfor %}
+          </ul>
+        </details>
+        {% endif %}
+        {% endif %}
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

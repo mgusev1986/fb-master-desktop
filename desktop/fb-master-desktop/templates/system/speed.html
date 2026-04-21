@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+{% block title %}{% if cabinet_client_mode(request) %}Темп работы — FB Master{% else %}Скорость и паузы — FB Master{% endif %}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>{% if cabinet_client_mode(request) %}Темп работы{% else %}Скорость и паузы{% endif %}</h1>
+  <p class="subtitle">{% if cabinet_client_mode(request) %}
+  Насколько быстро программа делает паузы между действиями в Facebook. Для стабильности удобнее <strong>«Медленно»</strong> или <strong>«Средне»</strong>; «Быстро» и «Очень быстро» — заметно выше риск ограничений.
+  {% else %}
+  Глобальный темп работы по умолчанию. Для устойчивости и поведения «как человек» чаще выбирайте <strong>«Медленно»</strong> или <strong>«Средне»</strong>; «Быстро» и особенно <strong>«Очень быстро»</strong> — только если осознанно принимаете больший риск ограничений со стороны сети.
+  {% endif %}</p>
+</div>
+
+<div id="fb-speed-settings">
+<form method="post" action="/system/speed/save">
+  <input type="hidden" id="preset-input" name="preset" value="{{ current_preset }}"/>
+
+  <div class="card" style="margin-bottom:24px">
+    <div class="card-header">{% if cabinet_client_mode(request) %}Выберите скорость{% else %}Выберите режим{% endif %}</div>
+    <div class="card-body">
+      <div class="preset-grid">
+
+        <div class="preset-card {{ 'selected' if current_preset == 'ulitka' }}" data-preset="ulitka" role="button" tabindex="0" aria-pressed="{{ 'true' if current_preset == 'ulitka' else 'false' }}">
+          <div class="preset-icon">🐌</div>
+          <h3>Улитка</h3>
+          <p>Очень медленно — ориентир <strong>~20 сообщений в час</strong> (пауза между контактами в рассылке). Максимальная осторожность.</p>
+        </div>
+
+        <div class="preset-card {{ 'selected' if current_preset == 'slow' }}" data-preset="slow" role="button" tabindex="0" aria-pressed="{{ 'true' if current_preset == 'slow' else 'false' }}">
+          <div class="preset-icon">🐢</div>
+          <h3>Медленно</h3>
+          <p>Рекомендовано: <strong>~30 сообщений в час</strong>. Длинные паузы, ниже риск ограничений со стороны сети.</p>
+        </div>
+
+        <div class="preset-card {{ 'selected' if current_preset == 'medium' }}" data-preset="medium" role="button" tabindex="0" aria-pressed="{{ 'true' if current_preset == 'medium' else 'false' }}">
+          <div class="preset-icon">🏎</div>
+          <h3>Средне</h3>
+          <p>Баланс: <strong>~45 сообщений в час</strong>. Умеренные задержки между действиями.</p>
+        </div>
+
+        <div class="preset-card {{ 'selected' if current_preset == 'fast' }}" data-preset="fast" role="button" tabindex="0" aria-pressed="{{ 'true' if current_preset == 'fast' else 'false' }}">
+          <div class="preset-icon">🚀</div>
+          <h3>Быстро</h3>
+          <p style="color:var(--warning)">⚠ До <strong>~60 сообщений в час</strong>. Повышенный риск блокировки.</p>
+        </div>
+
+        <div class="preset-card {{ 'selected' if current_preset == 'very_fast' }}" data-preset="very_fast" role="button" tabindex="0" aria-pressed="{{ 'true' if current_preset == 'very_fast' else 'false' }}">
+          <div class="preset-icon">⚡️</div>
+          <h3>Очень быстро</h3>
+          <p style="color:var(--error)">⚠ Ориентир <strong>~100 сообщений в час</strong>. Очень высокий риск ограничений и блокировки.</p>
+        </div>
+
+      </div>
+
+      <button type="submit" class="btn btn-primary">
+        <i class="ti ti-device-floppy"></i> Сохранить режим
+      </button>
+    </div>
+  </div>
+</form>
+
+<div class="card" style="margin-bottom:24px">
+  <div class="card-header">
+    Задержки для режима «<span id="speed-delays-preset-label">{{ preset_labels.get(current_preset, current_preset) }}</span>»
+    <span style="font-weight:400;color:var(--text-secondary);font-size:var(--font-size-xs)">
+      — каждая пауза случайная в указанном диапазоне
+    </span>
+  </div>
+  <p class="card-subnote" style="margin:-8px 0 12px;font-size:var(--font-size-xs);color:var(--text-secondary);padding:0 1.25rem">
+    При переключении карточек выше таблица <strong>обновляется сразу</strong> (до кнопки «Сохранить режим»).
+    Все типы пауз (лайк, комментарий, заявка в друзья, ЛС и т.д.) привязаны к тому же ориентиру сообщений в час;
+    колонка «Нижний пол» не меняется от режима — меняются только мин. и макс. паузы.
+  </p>
+  <div class="card-body">
+    <div class="table-wrap">
+      <table class="delays-table">
+        <thead>
+          <tr>
+            <th>Действие</th>
+            <th>Мин. пауза</th>
+            <th>Макс. пауза</th>
+            <th title="{% if cabinet_client_mode(request) %}Минимальная пауза даже на быстром режиме{% else %}Одинаково для всех режимов: пауза никогда не короче этого значения (в т.ч. на «Быстро» и «Очень быстро»).{% endif %}">{% if cabinet_client_mode(request) %}Минимум{% else %}Нижний пол{% endif %}</th>
+          </tr>
+        </thead>
+        <tbody id="speed-delays-tbody" aria-live="polite" aria-atomic="true">
+          {% for action, (lo, hi) in delays.items() %}
+          <tr data-action="{{ action }}">
+            <td>{{ action_type_labels.get(action, action) }}</td>
+            <td class="delay-range delay-lo">{{ lo }} сек</td>
+            <td class="delay-range delay-hi">{{ hi }} сек</td>
+            <td style="color:var(--text-secondary)">{{ min_floors.get(action, '—') }} сек</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:24px">
+  <div class="card-header">{% if cabinet_client_mode(request) %}Часовой пояс для сценариев по дням{% else %}Сценарии по дням — календарный день{% endif %}</div>
+  <div class="card-body">
+    {% if cabinet_client_mode(request) %}
+    <p style="color:var(--text-secondary);margin-bottom:12px;font-size:var(--font-size-sm)">
+      Сценарии, где есть «день 1», «день 2» и т.д., ориентируются на <strong>ваш календарный день</strong> в выбранном часовом поясе.
+    </p>
+    {% else %}
+    <p style="color:var(--text-secondary);margin-bottom:12px;font-size:var(--font-size-sm)">
+      Смещение «день 0 / день 1» считается по <strong>локальной дате</strong> в выбранном поясе IANA, а не по UTC.
+      Время зачисления в базе хранится в UTC и переводится в этот пояс.
+    </p>
+    {% endif %}
+    {% if request.query_params.get('tz') == 'saved' %}
+    <p style="color:var(--success);font-size:var(--font-size-sm);margin-bottom:12px">Часовой пояс сохранён.</p>
+    {% elif request.query_params.get('tz') == 'bad' %}
+    <p style="color:var(--error);font-size:var(--font-size-sm);margin-bottom:12px">{% if cabinet_client_mode(request) %}Не удалось распознать пояс. Пример: Europe/Moscow{% else %}Некорректное имя пояса. Пример: <code>Europe/Moscow</code>{% endif %}</p>
+    {% elif request.query_params.get('tz') == 'reset' %}
+    <p style="color:var(--text-secondary);font-size:var(--font-size-sm);margin-bottom:12px">{% if cabinet_client_mode(request) %}Сброшено к настройке по умолчанию.{% else %}Сброшено к значению из .env (<code>SEQUENCE_TIMEZONE</code>).{% endif %}</p>
+    {% endif %}
+    <p style="font-size:var(--font-size-xs);color:var(--text-secondary);margin-bottom:12px">
+      {% if cabinet_client_mode(request) %}
+      Сейчас: <strong>{{ sequence_timezone_effective }}</strong>
+      {% else %}
+      Сейчас используется: <strong>{{ sequence_timezone_effective }}</strong>
+      {% if not sequence_timezone_saved %}<span> (из .env, т.к. в БД не задано)</span>{% endif %}
+      {% endif %}
+    </p>
+    <form method="post" action="/system/speed/sequence-timezone" style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end">
+      <div class="form-group" style="margin:0">
+        <label class="form-label" for="sequence_timezone_preset">Частые пояса</label>
+        <select id="sequence_timezone_preset" class="form-select" style="min-width:220px"
+                onchange="document.getElementById('sequence_timezone').value = this.value">
+          <option value="">— выберите или введите ниже —</option>
+          {% for zone, label in common_timezones %}
+          <option value="{{ zone }}" {% if zone == sequence_timezone_effective %}selected{% endif %}>{{ zone }} — {{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group" style="margin:0;flex:1;min-width:200px">
+        <label class="form-label" for="sequence_timezone">{% if cabinet_client_mode(request) %}Свой пояс (если знаете точное название){% else %}Своё имя (перекрывает список){% endif %}</label>
+        <input id="sequence_timezone" name="sequence_timezone" type="text" class="form-input"
+               value="{{ sequence_timezone_saved }}"
+               placeholder="{{ sequence_timezone_effective }}" autocomplete="off"/>
+      </div>
+      <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy"></i> Сохранить пояс</button>
+    </form>
+    <form method="post" action="/system/speed/sequence-timezone" style="margin-top:12px">
+      <input type="hidden" name="sequence_timezone" value=""/>
+      <button type="submit" class="btn btn-ghost btn-sm">{% if cabinet_client_mode(request) %}Сбросить по умолчанию{% else %}Сбросить к .env{% endif %}</button>
+    </form>
+    <script>
+      (function () {
+        var inp = document.getElementById("sequence_timezone");
+        var sel = document.getElementById("sequence_timezone_preset");
+        if (inp && sel && !inp.value.trim() && sel.value) inp.value = sel.value;
+      })();
+    </script>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">{% if cabinet_client_mode(request) %}Уложиться в заданное время{% else %}Режим «Уложиться во время»{% endif %}</div>
+  <div class="card-body">
+    <p style="color:var(--text-secondary);margin-bottom:16px;font-size:var(--font-size-sm)">
+      {% if cabinet_client_mode(request) %}
+      В настройках отдельных задач (поиск людей, прогрев, рассылка, сценарий) можно включить режим, при котором программа <strong>сама подбирает паузы</strong>, чтобы уложиться в выбранный срок. В рассылке лимит задаётся в минутах.
+      {% else %}
+      Этот режим доступен <strong>в настройках каждой задачи</strong> (парсинг, прогрев, рассылка, сценарий).
+      Система сама распределит задержки с джиттером, чтобы уложиться в указанное время.
+      В <strong>рассылке</strong> бюджет задаётся в <strong>минутах</strong> (с теми же пресетами, что ниже).
+      {% endif %}
+    </p>
+    <p style="color:var(--text-secondary);margin-bottom:12px;font-size:var(--font-size-sm)">
+      Типовые значения (для ориентира):
+    </p>
+    <div style="display:flex;flex-wrap:wrap;gap:8px">
+      {% for key, label, _ in time_budget_presets %}
+      <span class="badge badge-default">{{ label }}</span>
+      {% endfor %}
+      <span class="badge badge-default">Своё время</span>
+    </div>
+  </div>
+</div>
+
+<form method="post" action="/system/speed/reset" style="margin-top:24px" data-confirm="Сбросить все настройки темпа к заводским?" data-confirm-title="Сброс настроек" data-confirm-variant="danger">
+  <button type="submit" class="btn btn-ghost">
+    <i class="ti ti-refresh"></i> Сбросить к заводским
+  </button>
+</form>
+</div>{# /#fb-speed-settings #}
+
+<script type="application/json" id="fb-speed-delays-by-preset">{{ delays_by_preset | tojson }}</script>
+<script type="application/json" id="fb-speed-preset-labels">{{ preset_labels | tojson }}</script>
+<script>
+(function () {
+  function parseJsonScript(id) {
+    var el = document.getElementById(id);
+    if (!el || !el.textContent) return null;
+    try {
+      return JSON.parse(el.textContent);
+    } catch (e) {
+      console.error("fb-speed-settings: failed to parse", id, e);
+      return null;
+    }
+  }
+
+  function updateSpeedDelaysPreview(delaysByPreset, presetLabelsForSpeed, preset) {
+    if (!delaysByPreset || !preset) return;
+    var delays = delaysByPreset[preset];
+    if (!delays) {
+      console.warn("fb-speed-settings: no delays for preset", preset);
+      return;
+    }
+    var root = document.getElementById("fb-speed-settings");
+    var tbody = document.getElementById("speed-delays-tbody");
+    var titleEl = document.getElementById("speed-delays-preset-label");
+    if (tbody) {
+      tbody.querySelectorAll("tr[data-action]").forEach(function (tr) {
+        var act = tr.getAttribute("data-action");
+        var pair = delays[act];
+        if (!pair || pair.length < 2) return;
+        var lo = tr.querySelector(".delay-lo");
+        var hi = tr.querySelector(".delay-hi");
+        if (lo) lo.textContent = pair[0] + " сек";
+        if (hi) hi.textContent = pair[1] + " сек";
+      });
+    }
+    if (titleEl && presetLabelsForSpeed && presetLabelsForSpeed[preset]) {
+      titleEl.textContent = presetLabelsForSpeed[preset];
+    }
+    if (root) {
+      root.querySelectorAll(".preset-card").forEach(function (c) {
+        var on = (c.getAttribute("data-preset") || "") === preset;
+        c.setAttribute("aria-pressed", on ? "true" : "false");
+      });
+    }
+  }
+
+  function wireSpeedSettings() {
+    var delaysByPreset = parseJsonScript("fb-speed-delays-by-preset");
+    var presetLabelsForSpeed = parseJsonScript("fb-speed-preset-labels");
+    var root = document.getElementById("fb-speed-settings");
+    if (!root || !delaysByPreset) return;
+
+    root.querySelectorAll(".preset-card").forEach(function (card) {
+      function selectPreset() {
+        var preset = card.getAttribute("data-preset") || "";
+        root.querySelectorAll(".preset-card").forEach(function (c) {
+          c.classList.remove("selected");
+        });
+        card.classList.add("selected");
+        var input = document.getElementById("preset-input");
+        if (input) input.value = preset;
+        updateSpeedDelaysPreview(delaysByPreset, presetLabelsForSpeed, preset);
+      }
+      card.addEventListener("click", selectPreset);
+      card.addEventListener("keydown", function (ev) {
+        if (ev.key === "Enter" || ev.key === " ") {
+          ev.preventDefault();
+          selectPreset();
+        }
+      });
+    });
+
+    var presetInput = document.getElementById("preset-input");
+    var initial = (presetInput && presetInput.value) ? presetInput.value : "slow";
+    updateSpeedDelaysPreview(delaysByPreset, presetLabelsForSpeed, initial);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", wireSpeedSettings);
+  } else {
+    wireSpeedSettings();
+  }
+})();
+</script>
+{% endblock %}

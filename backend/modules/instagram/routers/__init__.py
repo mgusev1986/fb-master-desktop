@@ -1,0 +1,1 @@
+"""Instagram Master — отдельные routers."""

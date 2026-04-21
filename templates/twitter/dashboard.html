@@ -1,0 +1,79 @@
+{% extends "twitter/base.html" %}
+
+{% block title %}Twitter / X Master · Обзор{% endblock %}
+
+{% block content %}
+<div class="x-page">
+  <header class="x-page__header">
+    <div class="x-page__title-wrap">
+      <h1 class="x-page__title">Twitter / X Master <span class="x-page__beta-pill">Beta</span></h1>
+      <p class="x-page__subtitle">
+        Подключение через browser-профиль (Chromium + cookies <code>auth_token</code>, <code>ct0</code>),
+        поиск аудитории, рассылка DM, реплаи и <strong>AI-автоответчик</strong>, который ведёт переписку
+        до цели (созвон / запрос материалов).
+      </p>
+    </div>
+    <span class="x-page__status"><span class="x-page__status-dot"></span>Beta</span>
+  </header>
+
+  <section class="x-banner">
+    <div class="x-banner__icon"><i class="ti ti-bolt"></i></div>
+    <div class="x-banner__body">
+      <h2 class="x-banner__title">Browser-profile режим как в FB / Reddit / LinkedIn Master</h2>
+      <p class="x-banner__text">
+        X-API без partner-доступа стоит $5K/mo, поэтому работаем через Chromium + cookies. AI-автоответчик
+        читает входящие, генерирует осмысленный ответ и удерживает цель сессии (book_call / share_info /
+        qualify_lead) до явного результата. Default approval = manual review каждого ответа.
+      </p>
+    </div>
+  </section>
+
+  <section class="x-grid x-grid--wide">
+    <article class="x-card x-card--accent">
+      <h2 class="x-card__title"><i class="ti ti-brand-twitter"></i> Шаг 1 — подключить аккаунт</h2>
+      <p class="x-card__desc">
+        Импорт купленных X-аккаунтов с cookies. На каждый аккаунт — свой profile_dir и свой proxy.
+      </p>
+      <div><a href="/twitter/accounts" class="x-btn x-btn--primary"><i class="ti ti-plug"></i> К аккаунтам</a></div>
+    </article>
+
+    <article class="x-card">
+      <h2 class="x-card__title"><i class="ti ti-users-group"></i> Шаг 2 — Поиск аудитории</h2>
+      <p class="x-card__desc">Browser-парсер X Search → leads с дедупом по handle.</p>
+      <div><a href="/twitter/audience" class="x-btn">Audience search</a></div>
+    </article>
+
+    <article class="x-card">
+      <h2 class="x-card__title"><i class="ti ti-template"></i> Шаг 3 — Шаблоны и AI</h2>
+      <p class="x-card__desc">DM / reply / quote-tweet шаблоны. AI-вариации, rewrite, shorten, soften.</p>
+      <div><a href="/twitter/templates" class="x-btn">Шаблоны</a></div>
+    </article>
+
+    <article class="x-card">
+      <h2 class="x-card__title"><i class="ti ti-send"></i> Шаг 4 — Кампании рассылки</h2>
+      <p class="x-card__desc">DM / reply / quote-tweet. Daily caps, review queue, runtime.</p>
+      <div><a href="/twitter/outreach" class="x-btn">Outreach Builder</a></div>
+    </article>
+
+    <article class="x-card">
+      <h2 class="x-card__title"><i class="ti ti-message-circle"></i> Inbox / диалоги</h2>
+      <p class="x-card__desc">Conversation workspace + compose с AI-помощником.</p>
+      <div><a href="/twitter/conversations" class="x-btn">Inbox</a></div>
+    </article>
+
+    <article class="x-card">
+      <h2 class="x-card__title"><i class="ti ti-robot"></i> AI-автоответчик</h2>
+      <p class="x-card__desc">
+        Нейросеть ведёт диалог в DM до цели. Persona (продукт + оффер + ссылки), goal, manual/auto approval.
+      </p>
+      <div><a href="/twitter/autoresponder" class="x-btn">AI-автоответчик</a></div>
+    </article>
+
+    <article class="x-card">
+      <h2 class="x-card__title"><i class="ti ti-shield-check"></i> Правила и лимиты</h2>
+      <p class="x-card__desc">Capability matrix, safety caps, известные ограничения.</p>
+      <div><a href="/twitter/compliance" class="x-btn">Compliance</a></div>
+    </article>
+  </section>
+</div>
+{% endblock %}
