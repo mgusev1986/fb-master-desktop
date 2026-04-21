@@ -275,8 +275,12 @@ async def template_neuro_variations(
         return JSONResponse({"ok": False, "error": "Нет ключа OpenAI"}, status_code=400)
     if prov == "gemini" and not gk.strip():
         return JSONResponse({"ok": False, "error": "Нет ключа Google (Gemini)"}, status_code=400)
+    # Для AI-генерации берём самый содержательный вариант (обычно это полноценное
+    # письмо с абзацами), а не просто первый кусок. В старых шаблонах, где абзацы были
+    # автоматически разбиты на отдельные варианты, первый вариант часто оказывается
+    # огрызком в одно предложение — тогда нейросеть генерировала шаблоны по нему.
     src_parts = split_template_variants(row.body or "")
-    source_body = src_parts[0] if src_parts else ""
+    source_body = max(src_parts, key=len) if src_parts else ""
     try:
         variants, used_p, used_fb = await _neuro_variations_with_fallback(
             db=db,
@@ -365,44 +369,60 @@ async def template_save(
     template_id: int | None = Form(default=None),
     variant_pick_mode: str = Form("random"),
 ):
-    org_id = require_org_id(request, db)
-    name = name.strip()
-    body = prepare_template_body_for_storage(body)
-    if not name:
-        return _redirect("Укажите название шаблона", "error")
-    if not body:
-        return _redirect("Текст шаблона не может быть пустым", "error")
-    allowed = set(CATEGORY_LABELS.keys())
-    if category not in allowed:
-        category = "outreach"
+    import logging
+    import traceback
 
-    vpm = (variant_pick_mode or "random").strip().lower()
-    if vpm not in ("random", "sequential"):
-        vpm = "random"
+    log = logging.getLogger(__name__)
+    try:
+        org_id = require_org_id(request, db)
+        name = name.strip()
+        body = prepare_template_body_for_storage(body)
+        if not name:
+            return _redirect("Укажите название шаблона", "error")
+        if not body:
+            return _redirect("Текст шаблона не может быть пустым", "error")
+        allowed = set(CATEGORY_LABELS.keys())
+        if category not in allowed:
+            category = "outreach"
 
-    if template_id:
-        row = (
-            db.query(MsgTemplate)
-            .filter(MsgTemplate.id == template_id, MsgTemplate.organization_id == org_id)
-            .first()
-        )
-        if not row:
-            raise HTTPException(404)
-        row.name = name
-        row.body = body
-        row.category = category
-        row.variant_pick_mode = vpm
-    else:
-        row = MsgTemplate(
-            organization_id=org_id,
-            name=name,
-            body=body,
-            category=category,
-            variant_pick_mode=vpm,
-        )
-        db.add(row)
-    db.commit()
-    return _redirect("Шаблон сохранён", "ok")
+        vpm = (variant_pick_mode or "random").strip().lower()
+        if vpm not in ("random", "sequential"):
+            vpm = "random"
+
+        if template_id:
+            row = (
+                db.query(MsgTemplate)
+                .filter(MsgTemplate.id == template_id, MsgTemplate.organization_id == org_id)
+                .first()
+            )
+            if not row:
+                raise HTTPException(404)
+            row.name = name
+            row.body = body
+            row.category = category
+            row.variant_pick_mode = vpm
+        else:
+            row = MsgTemplate(
+                organization_id=org_id,
+                name=name,
+                body=body,
+                category=category,
+                variant_pick_mode=vpm,
+            )
+            db.add(row)
+        db.commit()
+        return _redirect("Шаблон сохранён", "ok")
+    except HTTPException:
+        raise
+    except Exception as e:
+        # Не показываем клиенту "Internal Server Error" — возвращаем понятное сообщение.
+        log.exception("template_save failed: %s", e)
+        try:
+            db.rollback()
+        except Exception:
+            pass
+        short = str(e).splitlines()[0][:200] if str(e) else type(e).__name__
+        return _redirect(f"Не удалось сохранить шаблон: {short}", "error")
 
 
 @router.post("/{template_id}/delete")

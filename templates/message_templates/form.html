@@ -67,8 +67,11 @@
       <div class="form-group">
         <label class="form-label">Текст сообщения</label>
         <p class="form-hint" style="margin-top:0;margin-bottom:12px">
-          Каждый блок — отдельный вариант. При рассылке контакту уходит <strong>один</strong> вариант (случайно или по очереди — см. ниже). Маркеры <code>{{ "{{first_name}}" }}</code> / <code>{{ "{{full_name}}" }}</code> вставляйте в активное поле кнопками под редактором.
-          <strong>Пакет из буфера:</strong> можно вставить сразу несколько готовых текстов подряд, разделяя их <strong>пустой строкой</strong> — при сохранении они станут отдельными вариантами. Слово <code>NAME</code> как отдельное слово (латиницей) будет заменено на <code>{{ "{{first_name}}" }}</code>.
+          Каждый блок — отдельный вариант. При рассылке контакту уходит <strong>один</strong> вариант (случайно или по очереди — см. ниже).
+          Пустые строки внутри одного блока — это <strong>абзацы сообщения</strong>, они сохраняются как есть.
+          Маркеры <code>{{ "{{first_name}}" }}</code> / <code>{{ "{{full_name}}" }}</code> вставляйте в активное поле кнопками под редактором.
+          Чтобы вставить <strong>несколько готовых текстов</strong> и сделать из них варианты — используйте блок «Импорт пакета» ниже и нажмите «Разнести по вариантам».
+          Слово <code>NAME</code> как отдельное слово (латиницей) будет заменено на <code>{{ "{{first_name}}" }}</code>.
           {% if row %}
           Сейчас вариантов в шаблоне: <strong>{{ variants_for_editor|length }}</strong>
           (логически после сохранения пустые блоки не учитываются).
@@ -159,14 +162,9 @@
     });
   }
 
-  function maybeExpandSingleCardPackage() {
-    var texts = gatherTexts();
-    if (texts.length !== 1) return;
-    var parts = splitPackagePaste(texts[0]);
-    if (parts.length >= 2) {
-      buildFromList(parts);
-    }
-  }
+  // Авто-разбиение одной карточки на несколько по пустым строкам отключено:
+  // пустые строки — это абзацы сообщения, а не разделители вариантов. Для явного
+  // разбиения на варианты есть кнопка «Разнести по вариантам» в блоке «Импорт пакета».
 
   var root = document.getElementById('tpl-variants-editor');
   var bodyHidden = document.getElementById('body');
@@ -298,7 +296,6 @@
   }
 
   form.addEventListener('submit', function (e) {
-    maybeExpandSingleCardPackage();
     syncHidden();
     var joined = nonEmptyJoined(gatherTexts());
     if (!joined.trim()) {

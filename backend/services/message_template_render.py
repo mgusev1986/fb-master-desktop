@@ -46,9 +46,11 @@ def split_package_paste(raw: str) -> list[str]:
 
 def prepare_template_body_for_storage(body: str) -> str:
     """
-    Перед сохранением шаблона: явные варианты (<<<TPL_VARIANT>>>) оставляем структурно;
-    иначе, если в тексте несколько абзацев через пустую строку — разносим по вариантам;
-    в любом случае применяем NAME → {{first_name}} по частям.
+    Перед сохранением шаблона: явные варианты (<<<TPL_VARIANT>>>) оставляем структурно
+    (пустые строки внутри варианта — абзацы, не разделители). Без таких маркеров весь
+    текст сохраняется как один шаблон (абзацы через пустую строку — это часть сообщения,
+    а не N независимых вариантов). Явное разбиение на варианты — через кнопку
+    «Разнести по вариантам» в UI. NAME → {{first_name}} применяется по частям.
     """
     b = (body or "").replace("\r\n", "\n").replace("\r", "\n").strip()
     if not b:
@@ -57,11 +59,6 @@ def prepare_template_body_for_storage(body: str) -> str:
         parts = split_template_variants(b)
         norm = [normalize_name_placeholder_token(p) for p in parts]
         return join_template_variants(norm) if len(norm) > 1 else (norm[0] if norm else "")
-    pkg = split_package_paste(b)
-    if len(pkg) >= 2:
-        return join_template_variants(pkg)
-    if len(pkg) == 1:
-        return pkg[0]
     return normalize_name_placeholder_token(b)
 
 
