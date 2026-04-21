@@ -1,7 +1,12 @@
 'use strict';
 
 const { app, BrowserWindow, ipcMain, session, dialog, shell, screen } = require('electron');
-const { startEmbeddedBackend, stopEmbeddedBackend } = require('./local-backend-launcher');
+const {
+  startEmbeddedBackend,
+  stopEmbeddedBackend,
+  initLauncherLog,
+  getLauncherLogPath,
+} = require('./local-backend-launcher');
 
 /** Если задан — Electron грузит UI с локального uvicorn (прогрев/Playwright на ПК клиента). */
 let embeddedBackendBaseUrl = null;
@@ -1473,6 +1478,11 @@ async function ensureLocalEmbeddedBackendOrAbort() {
   if (String(process.env.FB_MASTER_FORCE_REMOTE || '').trim() === '1') {
     return;
   }
+  try {
+    initLauncherLog(userDataPath);
+  } catch (_e) {
+    /* ignore */
+  }
   const allowRemote = String(process.env.FB_MASTER_ALLOW_REMOTE_FALLBACK || '').trim() === '1';
 
   const tryStart = async () => {
@@ -1498,20 +1508,41 @@ async function ensureLocalEmbeddedBackendOrAbort() {
       );
       return;
     }
+    const logPath = getLauncherLogPath();
+    const hintWin =
+      process.platform === 'win32'
+        ? '\n\nНа Windows наиболее частая причина — Защитник/антивирус карантинит python.exe или chromium.\n' +
+          'Добавьте в исключения папку:\n%LOCALAPPDATA%\\Programs\\socmaster\n' +
+          'Если нет Visual C++ Redistributable — установите: https://aka.ms/vs/17/release/vc_redist.x64.exe'
+        : '';
+    const hintMac =
+      process.platform === 'darwin'
+        ? '\n\nНа Mac снимите карантин приложения (запустите в Terminal):\nxattr -cr "/Applications/SOCMASTER.app"'
+        : '';
     const choice = dialog.showMessageBoxSync({
       type: 'error',
       title: 'SOCMASTER',
       message: 'Не удалось запустить локальный модуль',
       detail:
-        'SOCMASTER должен работать на вашем компьютере: Chromium, парсер и рассылка запускаются локально.\n\n' +
-        'Если вместо этого открыть сайт, интерфейс с сервера часто даёт ошибку Chromium (путь вида /home/fbmaster/...).\n\n' +
-        'На Mac снимите карантин приложения:\nxattr -cr "/Applications/SOCMASTER.app"\n\n' +
-        `Попытка ${attempt} из 3.`,
-      buttons: ['Повторить', 'Выход'],
+        'SOCMASTER должен работать на вашем компьютере: Chromium, парсер и рассылка запускаются локально.' +
+        hintWin +
+        hintMac +
+        (logPath ? '\n\nЛог старта:\n' + logPath : '') +
+        `\n\nПопытка ${attempt} из 3.`,
+      buttons: logPath ? ['Повторить', 'Открыть папку с логами', 'Выход'] : ['Повторить', 'Выход'],
       defaultId: 0,
-      cancelId: 1,
+      cancelId: logPath ? 2 : 1,
     });
-    if (choice === 1) {
+    if (logPath && choice === 1) {
+      try {
+        shell.showItemInFolder(logPath);
+      } catch (_e) {
+        /* ignore */
+      }
+      // Показать тот же диалог снова вместо повтора старта
+      continue;
+    }
+    if ((logPath && choice === 2) || (!logPath && choice === 1)) {
       app.quit();
       process.exit(0);
     }

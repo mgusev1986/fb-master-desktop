@@ -9,10 +9,67 @@
 const crypto = require('crypto');
 const fs = require('fs');
 const net = require('net');
+const os = require('os');
 const path = require('path');
 const { spawn } = require('child_process');
 
 let child = null;
+let launcherLogPath = null;
+
+/**
+ * Постоянный лог старта локального бэкенда. На упакованной сборке console.error
+ * невидим клиенту — без файлового лога его невозможно диагностировать удалённо.
+ * Windows: %APPDATA%\SOCMASTER\launcher.log
+ * macOS:   ~/Library/Application Support/SOCMASTER/launcher.log
+ */
+function initLauncherLog(userDataPath) {
+  try {
+    const dir = userDataPath || path.join(os.homedir(), '.socmaster');
+    fs.mkdirSync(dir, { recursive: true });
+    launcherLogPath = path.join(dir, 'launcher.log');
+    // Ротация: если файл больше 2 MB — переименовываем в .old
+    try {
+      const st = fs.statSync(launcherLogPath);
+      if (st && st.size > 2 * 1024 * 1024) {
+        fs.renameSync(launcherLogPath, launcherLogPath + '.old');
+      }
+    } catch (_e) {
+      /* нет файла — ОК */
+    }
+    launchLog('==== SOCMASTER launcher start', {
+      version: readDesktopAppVersion(),
+      platform: process.platform,
+      arch: process.arch,
+      node: process.version,
+      cwd: process.cwd(),
+    });
+  } catch (e) {
+    console.error('[fb-master] cannot init launcher.log:', e && e.message);
+  }
+}
+
+function launchLog(msg, extra) {
+  const line =
+    '[' + new Date().toISOString() + '] ' + msg +
+    (extra ? ' ' + (typeof extra === 'string' ? extra : JSON.stringify(extra)) : '') +
+    '\n';
+  try {
+    if (launcherLogPath) {
+      fs.appendFileSync(launcherLogPath, line, { encoding: 'utf8' });
+    }
+  } catch (_e) {
+    /* ignore */
+  }
+  try {
+    process.stderr.write(line);
+  } catch (_e) {
+    /* ignore */
+  }
+}
+
+function getLauncherLogPath() {
+  return launcherLogPath;
+}
 
 /**
  * Один и тот же SECRET_KEY между запусками приложения — иначе cookie сессии недействительна,
@@ -170,6 +227,28 @@ async function startEmbeddedBackend(resourcesPath, opts) {
   }
   const port = await pickEmbeddedBackendPort(cfg.port || '8799');
   const win = process.platform === 'win32';
+
+  // Pre-flight checks: без нужных файлов python.exe не стартует и клиент
+  // увидит generic «не удалось запустить». Лучше заранее показать, чего не хватает.
+  const expectedFiles = win
+    ? [
+        path.join(cfg.root, 'python', 'python.exe'),
+        path.join(cfg.root, 'main.py'),
+      ]
+    : [
+        path.join(cfg.root, 'main.py'),
+      ];
+  const missing = expectedFiles.filter((p) => !fs.existsSync(p));
+  if (missing.length) {
+    launchLog('pre-flight FAIL: отсутствуют файлы', missing);
+    launchLog('HINT: скорее всего антивирус удалил файлы из установки. Добавьте папку приложения в исключения и переустановите.');
+    return null;
+  }
+  const chromiumDir = path.join(cfg.root, 'playwright-browsers');
+  if (!fs.existsSync(chromiumDir)) {
+    launchLog('pre-flight WARN: нет папки playwright-browsers', chromiumDir);
+  }
+
   const portable = resolvePortableMacPython(cfg.root);
   let pythonPathExtra = '';
   let python;
@@ -332,6 +411,7 @@ async function startEmbeddedBackend(resourcesPath, opts) {
     env.FB_MASTER_LAUNCHER_DEFAULT = '1';
   }
   const args = ['-m', 'uvicorn', appModule, '--host', '127.0.0.1', '--port', String(port)];
+  launchLog('spawn uvicorn', { python, cwd: cfg.root, port, appModule });
   child = spawn(python, args, {
     cwd: cfg.root,
     env,
@@ -340,25 +420,32 @@ async function startEmbeddedBackend(resourcesPath, opts) {
   });
   const trimLog = (buf, n) => buf.toString().replace(/\s+$/, '').slice(0, n);
   child.stderr?.on('data', (buf) => {
-    const s = trimLog(buf, 800);
+    const s = trimLog(buf, 2000);
     if (s) {
       console.error('[fb-master-backend]', s);
+      launchLog('stderr', s);
     }
   });
   child.stdout?.on('data', (buf) => {
-    const s = trimLog(buf, 400);
+    const s = trimLog(buf, 1000);
     if (s) {
       console.log('[fb-master-backend]', s);
+      launchLog('stdout', s);
     }
   });
   child.on('error', (err) => {
     console.error('[fb-master] локальный бэкенд spawn:', err.message || err);
+    launchLog('spawn error', err && (err.message || String(err)));
+  });
+  child.on('exit', (code, signal) => {
+    launchLog('uvicorn exited', { code, signal });
   });
 
   const timeoutMs = parseInt(String(cfg.startTimeoutMs || '120000'), 10) || 120000;
   const ok = await waitHealth(port, timeoutMs);
   if (!ok) {
     console.error('[fb-master] локальный бэкенд не ответил на /health за', timeoutMs, 'мс');
+    launchLog('FAIL: /health не ответил за ' + timeoutMs + 'мс; вероятнее всего python упал при старте (stderr выше) или antivirus блокирует.');
     try {
       child.kill(win ? undefined : 'SIGTERM');
     } catch (_e) {
@@ -367,6 +454,7 @@ async function startEmbeddedBackend(resourcesPath, opts) {
     child = null;
     return null;
   }
+  launchLog('OK: uvicorn готов на порту ' + port);
   return `http://127.0.0.1:${port}/`;
 }
 
@@ -386,4 +474,9 @@ function stopEmbeddedBackend() {
   child = null;
 }
 
-module.exports = { startEmbeddedBackend, stopEmbeddedBackend };
+module.exports = {
+  startEmbeddedBackend,
+  stopEmbeddedBackend,
+  initLauncherLog,
+  getLauncherLogPath,
+};
