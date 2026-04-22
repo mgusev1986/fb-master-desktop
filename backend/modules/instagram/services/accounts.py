@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from backend.config import BROWSER_PROFILES_DIR
 from backend.modules.instagram.models import InstagramAccount, InstagramComplianceEvent
 from backend.modules.instagram.services.cookie_import import ParsedInstagramAccount, parse_text
+from backend.services.fb_credentials_crypto import encrypt_secret
 
 
 _PROFILE_PREFIX = "instagram"
@@ -72,6 +73,69 @@ def create_from_parsed(db: Session, organization_id: int, parsed: ParsedInstagra
     return acc
 
 
+def create_from_credentials(
+    db: Session,
+    organization_id: int,
+    *,
+    username: str,
+    password: str,
+    label: str | None = None,
+    totp_secret: str | None = None,
+    proxy_url: str | None = None,
+    proxy_username: str | None = None,
+    proxy_password: str | None = None,
+    handle_hint: str | None = None,
+) -> InstagramAccount:
+    """Импорт «своего» IG-аккаунта через логин + пароль.
+
+    Cookies ещё нет — они появятся после первого Playwright-логина
+    (кнопка «Войти» на карточке аккаунта). Статус — `needs_login`.
+    """
+    user_s = (username or "").strip()
+    pwd_s = (password or "").strip()
+    if not user_s:
+        raise ValueError("Укажите логин/email/телефон Instagram")
+    if not pwd_s:
+        raise ValueError("Укажите пароль")
+
+    # handle = логин без @, если он похож на @handle (без точек/email/цифр в начале)
+    handle = (handle_hint or "").strip().lstrip("@") or None
+    if not handle and re.match(r"^[a-zA-Z0-9._]{2,30}$", user_s) and "@" not in user_s:
+        handle = user_s.lstrip("@")
+
+    final_label = (label or "").strip() or (handle or user_s)[:64]
+
+    acc = InstagramAccount(
+        organization_id=organization_id,
+        label=final_label[:255],
+        handle=handle,
+        full_name=None,
+        profile_url=f"https://www.instagram.com/{handle}/" if handle else None,
+        profile_dir=_make_profile_dir(final_label),
+        cookies_json=None,
+        cookies_imported_at=None,
+        proxy_enabled=bool((proxy_url or "").strip()),
+        proxy_url=(proxy_url or "").strip() or None,
+        proxy_username=(proxy_username or "").strip() or None,
+        proxy_password=(proxy_password or "").strip() or None,
+        status="needs_login",
+        session_ok=None,
+        login_username=user_s,
+        enc_password=encrypt_secret(pwd_s),
+        enc_totp_secret=encrypt_secret(totp_secret.strip()) if (totp_secret or "").strip() else None,
+    )
+    db.add(acc)
+    db.flush()
+    acc.profile_dir = _make_profile_dir(final_label, acc.id)
+    Path(acc.profile_dir).mkdir(parents=True, exist_ok=True)
+    log_event(
+        db, organization_id, acc.id, "account_imported_credentials", "info",
+        {"label": acc.label, "handle": handle, "username": user_s},
+    )
+    db.commit()
+    return acc
+
+
 def import_from_text(db: Session, organization_id: int, blob: str) -> dict[str, Any]:
     parsed_items = parse_text(blob)
     imported = 0
@@ -127,4 +191,14 @@ def log_event(db: Session, organization_id: int, account_id: int | None, event_t
     )
 
 
-__all__ = ["create_from_parsed", "delete_account", "get_account", "import_from_text", "list_accounts", "log_event", "status_summary", "update_proxy"]
+__all__ = [
+    "create_from_credentials",
+    "create_from_parsed",
+    "delete_account",
+    "get_account",
+    "import_from_text",
+    "list_accounts",
+    "log_event",
+    "status_summary",
+    "update_proxy",
+]

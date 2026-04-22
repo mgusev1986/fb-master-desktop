@@ -84,6 +84,15 @@ class InstagramAccount(Base):
     cap_story_likes_per_day = Column(Integer, nullable=True)
 
     notes = Column(Text, nullable=True)
+
+    # Импорт «свой личный аккаунт» через логин+пароль (аналог FBAccount.fb_login_username).
+    # Пароль и TOTP шифруются Fernet-ом (см. backend.services.fb_credentials_crypto).
+    # При первом открытии (или кнопке «Войти») запускается Playwright-логин,
+    # после чего cookies_json заполняется реальной session-парой и status → 'connected'.
+    login_username = Column(String(255), nullable=True)
+    enc_password = Column(Text, nullable=True)
+    enc_totp_secret = Column(Text, nullable=True)
+
     created_at = Column(DateTime(timezone=True), nullable=False, default=_utcnow)
     updated_at = Column(DateTime(timezone=True), nullable=False, default=_utcnow, onupdate=_utcnow)
 

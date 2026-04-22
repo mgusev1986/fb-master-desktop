@@ -1426,6 +1426,7 @@ def init_db() -> None:
     _migrate_discovery_tables()
     _seed_natural_warmup_topic_stopwords()
     _migrate_reddit_accounts_browser_mode()
+    _migrate_instagram_accounts_credentials()
 
 
 def _migrate_reddit_accounts_browser_mode() -> None:
@@ -1470,4 +1471,26 @@ def _migrate_reddit_accounts_browser_mode() -> None:
         extra_sql_pg=[
             "CREATE INDEX IF NOT EXISTS ix_reddit_accounts_auth_mode ON reddit_accounts (auth_mode)",
         ],
+    )
+
+
+def _migrate_instagram_accounts_credentials() -> None:
+    """Добавить поля login_username/enc_password/enc_totp_secret к `instagram_accounts`.
+
+    Нужно для режима «свой личный аккаунт через логин+пароль» (v2.34+).
+    Безопасно: только ADD COLUMN nullable — купленные аккаунты (cookies-only)
+    продолжают работать.
+    """
+    _add_columns(
+        "instagram_accounts",
+        (
+            ("login_username", "VARCHAR(255)"),
+            ("enc_password", "TEXT"),
+            ("enc_totp_secret", "TEXT"),
+        ),
+        (
+            ("login_username", "VARCHAR(255)"),
+            ("enc_password", "TEXT"),
+            ("enc_totp_secret", "TEXT"),
+        ),
     )
