@@ -831,6 +831,18 @@ async def messenger2_api_thread_ai_from_url(
         conv.ai_last_transcript_fingerprint = None
     if body.reset_ai_reply_steps:
         conv.ai_reply_steps_used = 0
+    autosync_was_enabled = False
+    # Если клиент только что включил IA-асистента — автоматически поднимаем
+    # фоновую автосинхронизацию inbox. Без неё AI никогда не увидит новое
+    # входящее сообщение и не ответит (было частой UX-ловушкой).
+    if body.enabled is True:
+        from backend.services.messenger_settings import (
+            get_messenger_auto_inbox_sync_enabled,
+            set_messenger_auto_inbox_sync_enabled,
+        )
+        if not get_messenger_auto_inbox_sync_enabled(db):
+            set_messenger_auto_inbox_sync_enabled(db, True)
+            autosync_was_enabled = True
     db.commit()
     s = load_messenger_ai_settings(db)
     return {
@@ -839,6 +851,7 @@ async def messenger2_api_thread_ai_from_url(
         "enabled": conv.ai_assistant_enabled,
         "ai_reply_steps_used": int(conv.ai_reply_steps_used or 0),
         "ai_reply_steps_max": s["max_reply_steps"],
+        "autosync_enabled_now": autosync_was_enabled,
     }
 
 
@@ -871,11 +884,21 @@ async def messenger2_api_thread_ai_post(
         conv.ai_last_transcript_fingerprint = None
     if body.reset_ai_reply_steps:
         conv.ai_reply_steps_used = 0
+    autosync_was_enabled = False
+    if body.enabled is True:
+        from backend.services.messenger_settings import (
+            get_messenger_auto_inbox_sync_enabled,
+            set_messenger_auto_inbox_sync_enabled,
+        )
+        if not get_messenger_auto_inbox_sync_enabled(db):
+            set_messenger_auto_inbox_sync_enabled(db, True)
+            autosync_was_enabled = True
     db.commit()
     return {
         "ok": True,
         "enabled": conv.ai_assistant_enabled,
         "ai_reply_steps_used": int(conv.ai_reply_steps_used or 0),
+        "autosync_enabled_now": autosync_was_enabled,
     }
 
 

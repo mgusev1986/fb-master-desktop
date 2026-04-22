@@ -1003,6 +1003,18 @@
         .then(function (o) {
           if (!o.r.ok || !o.j || !o.j.ok) throw new Error();
           m2AiSetStepsText(o.j.ai_reply_steps_used, o.j.ai_reply_steps_max);
+          // Сервер сообщает, если авто-автосинхронизация inbox только что включилась
+          // (раньше было частой UX-ловушкой: AI on, но background sync off → AI молчит).
+          if (o.j.autosync_enabled_now) {
+            try {
+              alert(
+                'IA-асистент включён.\n\n' +
+                'Автоматически включена фоновая синхронизация входящих сообщений — ' +
+                'без неё AI не видит новые входящие и не отвечает. Можно оставить так, ' +
+                'отключить в настройках мессенджера позднее или «Обновить» вручную.'
+              );
+            } catch (_e) { /* ignore */ }
+          }
         })
         .catch(function () {
           toggle.checked = !want;

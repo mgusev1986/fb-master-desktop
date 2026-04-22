@@ -22,6 +22,63 @@ _STORAGE_STATE_TIMEOUT_SEC = 14.0
 # (как во встроенном Messenger). Лента и настройки по-прежнему доступны из меню внутри FB.
 FB_LOGIN_WINDOW_INITIAL_URL = "https://www.facebook.com/messages/"
 
+# Многоязычные подписи кнопки «Продолжить» на remembered-login / session-gate странице FB.
+# FB отдаёт интерфейс по locale прокси → у одного клиента будет русский, у другого латышский
+# (Turpināt) или турецкий (Devam et). В embedded_login.html уже есть такой список (v2.33),
+# теперь тот же набор используется в Playwright-окне «В отдельном окне».
+_FB_CONTINUE_LABELS: tuple[str, ...] = (
+    "Продолжить", "Continue", "Продовжити",
+    "Turpināt",                                   # lv
+    "Tęsti", "Testi",                             # lt
+    "Jätka", "Jatka",                             # et (Jätka) + fi (Jatkaa) upper
+    "Devam et", "Devam",                          # tr
+    "Fortfahren", "Weiter",                       # de
+    "Continuer", "Poursuivre",                    # fr
+    "Continuar", "Seguir", "Prosseguir",          # es/pt
+    "Continua", "Proseguire",                     # it
+    "Doorgaan", "Verdergaan",                     # nl
+    "Dalej", "Kontynuuj",                         # pl
+    "Fortsätt",                                   # sv
+    "Jatkaa",                                     # fi
+    "Folytatás", "Tovább",                        # hu
+    "Pokračovat",                                 # cs/sk
+    "Продължи",                                   # bg
+    "Continuă",                                   # ro
+    "Nastaviti", "Nastavi",                       # hr/sr/sl
+    "继续",                                        # zh
+    "続ける", "続行",                              # ja
+    "계속",                                        # ko
+    "ดำเนินการต่อ", "ต่อไป",                     # th
+    "Tiếp tục",                                   # vi
+    "Lanjutkan", "Teruskan",                      # id/ms
+    "متابعة",                                     # ar
+    "המשך",                                       # he
+    "ادامه",                                       # fa
+)
+
+
+def _fb_continue_selectors() -> tuple[str, ...]:
+    """Playwright-селекторы для всех локализаций кнопки «Продолжить».
+
+    Для каждой подписи — 5 селекторов (button / div[role=button] / a /
+    input[submit] / input[button]). Итого ~170 селекторов — итерация по ним
+    быстрая, т.к. `locator(sel).count()` отрабатывает за миллисекунды.
+    """
+    out: list[str] = []
+    for label in _FB_CONTINUE_LABELS:
+        esc = label.replace('"', r"\"")
+        out.extend((
+            f'button:has-text("{esc}")',
+            f'div[role="button"]:has-text("{esc}")',
+            f'a:has-text("{esc}")',
+            f'input[type="submit"][value="{esc}"]',
+            f'input[type="button"][value="{esc}"]',
+        ))
+    return tuple(out)
+
+
+_FB_CONTINUE_SELECTORS: tuple[str, ...] = _fb_continue_selectors()
+
 
 def playwright_chromium_precheck() -> str | None:
     """
@@ -609,18 +666,7 @@ def try_click_facebook_remembered_continue(page: Any) -> bool:
     gate, _msg = page_has_facebook_remembered_login_gate(page)
     if not gate:
         return False
-    for sel in (
-        'button:has-text("Продолжить")',
-        'button:has-text("Continue")',
-        'div[role="button"]:has-text("Продолжить")',
-        'div[role="button"]:has-text("Continue")',
-        'a:has-text("Продолжить")',
-        'a:has-text("Continue")',
-        'input[type="submit"][value="Continue"]',
-        'input[type="submit"][value="Продолжить"]',
-        'input[type="button"][value="Continue"]',
-        'input[type="button"][value="Продолжить"]',
-    ):
+    for sel in _FB_CONTINUE_SELECTORS:
         try:
             loc = page.locator(sel).first
             if loc.count() == 0:
@@ -1494,12 +1540,13 @@ def _try_fill_facebook_2fa(page: Any, totp_secret: str) -> bool:
 
 
 def _try_click_trust_browser(page: Any) -> None:
-    for sel in (
-        'button:has-text("Continue")',
-        'button:has-text("Продолжить")',
+    # Расширенный список локализаций + OK-кнопка для «Trust this browser» диалогов.
+    selectors = _FB_CONTINUE_SELECTORS + (
         'button:has-text("OK")',
-        'div[role="button"]:has-text("Continue")',
-    ):
+        'button:has-text("Ok")',
+        'div[role="button"]:has-text("OK")',
+    )
+    for sel in selectors:
         try:
             page.locator(sel).first.click(timeout=900)
             return
@@ -1598,18 +1645,52 @@ def open_auto_login_window_blocking(
                 pass_loc.click(timeout=2_000)
                 pass_loc.fill((password or "").strip())
                 clicked_submit = False
-                for sel in (
+                # Многоязычный «Войти / Log in / Pieteikties / Giriş yap / ...» +
+                # резерв с «Continue / Turpināt / ...» (на некоторых FB-формах submit
+                # называется как continue).
+                login_labels = (
+                    "Log in", "Войти", "Увійти",
+                    "Pieteikties",                      # lv
+                    "Prisijungti",                      # lt
+                    "Logi sisse",                       # et
+                    "Giriş yap",                        # tr
+                    "Anmelden",                         # de
+                    "Se connecter",                     # fr
+                    "Iniciar sesión",                   # es
+                    "Entrar",                           # pt
+                    "Accedi",                           # it
+                    "Inloggen",                         # nl
+                    "Zaloguj",                          # pl
+                    "Logga in",                         # sv
+                    "Kirjaudu",                         # fi
+                    "Bejelentkezés",                    # hu
+                    "Přihlásit",                        # cs
+                    "Prihlásiť",                        # sk
+                    "Conectare",                        # ro
+                    "Prijavi",                          # hr/sr/sl
+                    "Влез",                             # bg
+                    "登录", "登入",                      # zh
+                    "ログイン",                          # ja
+                    "로그인",                             # ko
+                    "เข้าสู่ระบบ",                       # th
+                    "Đăng nhập",                        # vi
+                    "Masuk", "Log masuk",               # id/ms
+                    "تسجيل الدخول",                    # ar
+                    "להיכנס",                           # he
+                    "ورود",                              # fa
+                )
+                login_selectors: list[str] = [
                     'button[name="login"]',
                     'button[type="submit"]',
-                    'button:has-text("Log in")',
-                    'button:has-text("Войти")',
-                    'button:has-text("Continue")',
-                    'button:has-text("Продолжить")',
-                    'div[role="button"]:has-text("Log in")',
-                    'div[role="button"]:has-text("Войти")',
-                    'div[role="button"]:has-text("Continue")',
-                    'div[role="button"]:has-text("Продолжить")',
-                ):
+                    'button[data-testid="royal_login_button"]',
+                ]
+                for lbl in login_labels:
+                    esc = lbl.replace('"', r"\"")
+                    login_selectors.append(f'button:has-text("{esc}")')
+                    login_selectors.append(f'div[role="button"]:has-text("{esc}")')
+                # Дальше — те же continue-селекторы как резерв (FB иногда называет submit Continue).
+                login_selectors.extend(_FB_CONTINUE_SELECTORS)
+                for sel in login_selectors:
                     try:
                         loc = page.locator(sel).first
                         if loc.count() == 0:
