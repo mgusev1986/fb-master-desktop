@@ -279,19 +279,51 @@
       });
     }
 
-    /* Пробовать нажать «Продолжить» внутри webview — Saved-login gate FB. */
+    /* Пробовать нажать «Продолжить» внутри webview — Saved-login gate FB.
+     * Многоязычный список: FB показывает интерфейс по прокси/locale, у разных клиентов
+     * будут разные языки. Покрываем основные языки, под которые обычно куплены аккаунты. */
     async function clickContinueInWebview() {
       if (!wv || typeof wv.executeJavaScript !== 'function') return false;
       var js = "(function(){" +
-        "var labels=['продолжить','continue','продовжити'];" +
+        /* label: text или НАЧАЛО текста кнопки; в нижнем регистре; с unicode */
+        "var labels=[" +
+        "'продолжить','continue','продовжити'," +          /* ru, en, uk */
+        "'turpināt','turpinat'," +                         /* lv (+ без диакритики) */
+        "'tęsti','testi'," +                               /* lt (tęsti) */
+        "'jätka','jatka'," +                               /* et */
+        "'devam et','devam'," +                            /* tr */
+        "'fortfahren','weiter'," +                         /* de */
+        "'continuer','poursuivre'," +                      /* fr */
+        "'continuar','seguir','prosseguir'," +             /* es, pt */
+        "'proseguire','continua'," +                       /* it */
+        "'doorgaan','verdergaan'," +                       /* nl */
+        "'dalej','kontynuuj'," +                           /* pl */
+        "'fortsätt','fortsatt'," +                         /* sv */
+        "'jatkaa'," +                                      /* fi */
+        "'folytatás','folytatas','tovább','tovabb'," +    /* hu */
+        "'pokračovat','pokracovat','dalej'," +             /* cs, sk */
+        "'продължи'," +                                    /* bg */
+        "'continuă','continua'," +                         /* ro */
+        "'nastaviti','nastavi'," +                         /* hr, sr, bs, sl */
+        "'continuar'," +                                   /* gl, ca */
+        "'继续'," +                                         /* zh */
+        "'続ける','続行'," +                                 /* ja */
+        "'계속'," +                                         /* ko */
+        "'ดำเนินการต่อ','ต่อไป'," +                         /* th */
+        "'tiếp tục','tiep tuc'," +                         /* vi */
+        "'lanjutkan','teruskan'," +                        /* id, ms */
+        "'المتابعة','متابعة'," +                           /* ar */
+        "'המשך'," +                                        /* he */
+        "'ادامه'" +                                        /* fa */
+        "];" +
         "var nodes=document.querySelectorAll('button,a,div[role=\"button\"]');" +
         "for(var i=0;i<nodes.length;i++){" +
         "  var el=nodes[i];" +
         "  var t=(el.innerText||el.textContent||'').trim().toLowerCase();" +
-        "  if(!t) continue;" +
+        "  if(!t || t.length>60) continue;" +  /* исключаем случайные длинные тексты */
         "  for(var j=0;j<labels.length;j++){" +
         "    if(t===labels[j] || t.indexOf(labels[j])===0){" +
-        "      try{ el.click(); return {ok:true,text:t}; }catch(e){ return {ok:false,err:String(e)}; }" +
+        "      try{ el.click(); return {ok:true,text:t,lang:labels[j]}; }catch(e){ return {ok:false,err:String(e)}; }" +
         "    }" +
         "  }" +
         "}" +
@@ -342,20 +374,55 @@
       var js = "(function(){try{" +
         "var SL=" + JSON.stringify(storedLogin) + ";" +
         "var SP=" + JSON.stringify(storedPassword) + ";" +
-        /* 1. Если на gate — кликнем «Использовать другой профиль» */
-        "var otherLabels=['использовать другой профиль','başka bir profil kullan','log into another account','use another profile'];" +
+        /* 1. Если на gate — кликнем «Использовать другой профиль» (многоязычно) */
+        "var otherLabels=[" +
+        "'использовать другой профиль','використовувати інший профіль','использувай друг профил'," +  /* ru, uk, bg */
+        "'başka bir profil kullan','başka hesap'," +                                                 /* tr */
+        "'log into another account','use another profile','use a different account'," +              /* en */
+        "'izmantot citu profilu','lietot citu kontu'," +                                             /* lv */
+        "'naudoti kitą profilį','naudoti kita profili'," +                                           /* lt */
+        "'kasuta teist profiili'," +                                                                 /* et */
+        "'anderes profil verwenden','andere anmeldung'," +                                           /* de */
+        "'utiliser un autre profil','autre compte'," +                                               /* fr */
+        "'usar otra cuenta','usar otro perfil','iniciar sesión con otra cuenta'," +                  /* es */
+        "'usar outra conta','usar outro perfil'," +                                                  /* pt */
+        "'utilizzare un altro profilo','usa un altro account'," +                                    /* it */
+        "'een ander profiel gebruiken','ander account'," +                                           /* nl */
+        "'użyj innego profilu','inne konto'," +                                                      /* pl */
+        "'använd ett annat konto','annat profil'," +                                                 /* sv */
+        "'käytä toista profiilia','toinen tili'," +                                                  /* fi */
+        "'másik profil használata','másik fiók'," +                                                  /* hu */
+        "'použít jiný profil','jiný účet'," +                                                        /* cs */
+        "'pouziť iný profil','iný účet'," +                                                          /* sk */
+        "'folosește alt profil','alt cont'," +                                                       /* ro */
+        "'drugi profil','drugi nalog','drugi račun'," +                                              /* hr, sr, sl */
+        "'使用其他账号','使用其他個人檔案'," +                                                          /* zh */
+        "'他のプロフィールを使う'," +                                                                 /* ja */
+        "'다른 프로필 사용'," +                                                                      /* ko */
+        "'ใช้โปรไฟล์อื่น'," +                                                                       /* th */
+        "'sử dụng tài khoản khác'," +                                                                /* vi */
+        "'gunakan akun lain','gunakan profil lain'," +                                               /* id, ms */
+        "'استخدام حساب آخر'," +                                                                      /* ar */
+        "'השתמש בחשבון אחר'," +                                                                      /* he */
+        "'از حساب دیگری استفاده کنید'" +                                                             /* fa */
+        "];" +
         "var nodes=document.querySelectorAll('a,button,div[role=\"button\"]');" +
         "for(var i=0;i<nodes.length;i++){var t=(nodes[i].innerText||'').trim().toLowerCase();" +
-        "for(var j=0;j<otherLabels.length;j++){if(t===otherLabels[j]||t.indexOf(otherLabels[j])===0){nodes[i].click();return {ok:true,step:'clicked_other_profile'};}}}" +
+        "if(!t||t.length>80) continue;" +
+        "for(var j=0;j<otherLabels.length;j++){if(t===otherLabels[j]||t.indexOf(otherLabels[j])===0){nodes[i].click();return {ok:true,step:'clicked_other_profile',lang:otherLabels[j]};}}}" +
         /* 2. Иначе пробуем найти форму email/password */
         "var userInp=document.querySelector('input[name=\"email\"],input#email,input[type=\"email\"],input[name=\"login\"]');" +
         "var passInp=document.querySelector('input[name=\"pass\"],input#pass,input[type=\"password\"]');" +
         "if(userInp&&passInp){" +
         "function setVal(el,v){var p=Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype,'value').set;p.call(el,v);el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));}" +
         "setVal(userInp,SL);setVal(passInp,SP);" +
-        /* Submit кнопку */
+        /* Submit кнопку — по selector'ам + многоязычно по тексту */
         "var subm=document.querySelector('button[name=\"login\"],button#loginbutton,button[type=\"submit\"][data-testid=\"royal_login_button\"],input[name=\"login\"],button[type=\"submit\"]');" +
-        "if(!subm){var btns=document.querySelectorAll('button,div[role=\"button\"]');for(var k=0;k<btns.length;k++){var tt=(btns[k].innerText||'').trim().toLowerCase();if(tt==='giriş yap'||tt==='log in'||tt==='вход'||tt==='войти'||tt==='увійти'){subm=btns[k];break;}}}" +
+        "if(!subm){" +
+        "var submitLabels=['giriş yap','log in','вход','войти','увійти','pieteikties','prisijungti','logi sisse','anmelden','se connecter','iniciar sesión','entrar','accedi','inloggen','zaloguj','logga in','kirjaudu','bejelentkezés','přihlásit','prihlásiť','conectare','prijaviti','prijavi','prijava','登录','登入','ログイン','로그인','เข้าสู่ระบบ','đăng nhập','masuk','log masuk','تسجيل الدخول','להיכנס','ورود'];" +
+        "var btns=document.querySelectorAll('button,div[role=\"button\"]');" +
+        "for(var k=0;k<btns.length;k++){var tt=(btns[k].innerText||'').trim().toLowerCase();if(tt.length>30) continue;for(var m=0;m<submitLabels.length;m++){if(tt===submitLabels[m]||tt.indexOf(submitLabels[m])===0){subm=btns[k];break;}}if(subm)break;}" +
+        "}" +
         "if(subm){setTimeout(function(){subm.click();},400);return {ok:true,step:'filled_and_submitted'};}" +
         "return {ok:true,step:'filled_but_no_submit'};" +
         "}" +
