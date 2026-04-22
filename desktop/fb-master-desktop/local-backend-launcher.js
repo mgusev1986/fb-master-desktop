@@ -112,15 +112,38 @@ function readLaunchConfig(resourcesPath) {
   const root = path.join(resourcesPath, 'fb-master-backend');
   const cfgPath = path.join(root, 'launch.json');
   if (!fs.existsSync(cfgPath)) {
+    try {
+      launchLog('readLaunchConfig FAIL: нет launch.json', { cfgPath, root, rootExists: fs.existsSync(root) });
+      if (fs.existsSync(root)) {
+        try {
+          const contents = fs.readdirSync(root).slice(0, 50);
+          launchLog('fb-master-backend содержимое', contents);
+        } catch (e) {
+          launchLog('readdirSync error', e && e.message);
+        }
+      }
+    } catch (_e) {
+      /* ignore */
+    }
     return null;
   }
   try {
-    const cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+    let raw = fs.readFileSync(cfgPath, 'utf8');
+    // Windows PowerShell 5.x `Out-File -Encoding utf8` добавляет BOM (\uFEFF) — JSON.parse
+    // на этом кидает SyntaxError. Срезаем BOM до парсинга на любой платформе.
+    if (raw.charCodeAt(0) === 0xFEFF) {
+      raw = raw.slice(1);
+      launchLog('readLaunchConfig: обнаружен и удалён BOM в launch.json');
+    }
+    const cfg = JSON.parse(raw);
     if (!cfg || typeof cfg !== 'object') {
+      launchLog('readLaunchConfig FAIL: launch.json пустой/не объект', { size: raw.length });
       return null;
     }
+    launchLog('readLaunchConfig OK', { executable: cfg.executable, port: cfg.port, appModule: cfg.appModule });
     return { root, ...cfg };
-  } catch {
+  } catch (e) {
+    launchLog('readLaunchConfig FAIL: JSON parse error', e && (e.message || String(e)));
     return null;
   }
 }
@@ -218,13 +241,17 @@ async function waitHealth(port, timeoutMs) {
  * @returns {Promise<string|null>} базовый URL с завершающим / или null
  */
 async function startEmbeddedBackend(resourcesPath, opts) {
+  launchLog('startEmbeddedBackend called', { resourcesPath });
   if (process.env.FB_MASTER_FORCE_REMOTE === '1') {
+    launchLog('FB_MASTER_FORCE_REMOTE=1 → не запускаю локальный бэкенд');
     return null;
   }
   const cfg = readLaunchConfig(resourcesPath);
   if (!cfg) {
+    launchLog('startEmbeddedBackend: readLaunchConfig вернул null → выход');
     return null;
   }
+  launchLog('cfg.root', cfg.root);
   const port = await pickEmbeddedBackendPort(cfg.port || '8799');
   const win = process.platform === 'win32';
 

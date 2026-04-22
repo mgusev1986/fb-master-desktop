@@ -36,7 +36,7 @@ if ($LASTEXITCODE -gt 7) { throw "robocopy static failed: $LASTEXITCODE" }
 Copy-Item "$Root\main.py" $Out -Force
 Copy-Item "$Root\requirements.txt" $Out -Force
 
-@'
+$launchJson = @'
 {
   "executable": "python/python.exe",
   "appModule": "main:app",
@@ -48,7 +48,15 @@ Copy-Item "$Root\requirements.txt" $Out -Force
     "FB_MASTER_WEB_CABINET_EMAIL_LOGIN_DISABLED": "1"
   }
 }
-'@ | Out-File (Join-Path $Out 'launch.json') -Encoding utf8
+'@
+# ВАЖНО: пишем UTF-8 БЕЗ BOM. Windows PowerShell 5.x `Out-File -Encoding utf8`
+# добавляет BOM (0xEF 0xBB 0xBF), и Node.js JSON.parse на этом БРОСАЕТ SyntaxError.
+# Launcher ловил исключение в catch и молча делал return null → пустой launcher.log.
+[System.IO.File]::WriteAllText(
+    (Join-Path $Out 'launch.json'),
+    $launchJson,
+    (New-Object System.Text.UTF8Encoding $false)
+)
 
 New-Item -ItemType File -Force -Path (Join-Path $Out '.gitkeep') | Out-Null
 

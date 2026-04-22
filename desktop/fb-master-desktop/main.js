@@ -1516,6 +1516,22 @@ async function ensureLocalEmbeddedBackendOrAbort() {
   } catch (_e) {
     /* ignore */
   }
+  // Дублируем доп. диагностику в launcher.log — чтобы при тихом провале было что анализировать.
+  const logLine = (msg, extra) => {
+    try {
+      const p = getLauncherLogPath();
+      if (!p) return;
+      const line =
+        '[' + new Date().toISOString() + '] ' + msg +
+        (extra !== undefined ? ' ' + (typeof extra === 'string' ? extra : JSON.stringify(extra)) : '') +
+        '\n';
+      require('fs').appendFileSync(p, line, { encoding: 'utf8' });
+    } catch (_e) {
+      /* ignore */
+    }
+  };
+  logLine('main: resourcesPath', process.resourcesPath);
+  logLine('main: userDataPath', userDataPath);
   const allowRemote = String(process.env.FB_MASTER_ALLOW_REMOTE_FALLBACK || '').trim() === '1';
 
   const tryStart = async () => {
@@ -1523,6 +1539,11 @@ async function ensureLocalEmbeddedBackendOrAbort() {
       return await startEmbeddedBackend(process.resourcesPath, { userDataPath });
     } catch (e) {
       console.error('[fb-master] встроенный бэкенд:', e);
+      logLine('main tryStart EXCEPTION', {
+        message: e && (e.message || String(e)),
+        code: e && e.code,
+        stack: e && e.stack ? String(e.stack).split('\n').slice(0, 8).join(' | ') : undefined,
+      });
       return null;
     }
   };
