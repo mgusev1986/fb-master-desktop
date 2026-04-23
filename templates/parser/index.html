@@ -43,6 +43,27 @@
   </div>
 </div>
 {% endif %}
+{% if qp.get('notice') == 'speed_saved' %}
+<div class="card" style="margin-bottom:16px;border-color:var(--success)">
+  <div class="card-body" style="font-size:var(--font-size-sm)">
+    <i class="ti ti-check"></i> Режим скорости парсера обновлён: <strong>{{ qp.get('mode') or 'normal' }}</strong>.
+  </div>
+</div>
+{% endif %}
+<div class="card" style="margin-bottom:16px">
+  <div class="card-body" style="font-size:var(--font-size-sm)">
+    <form method="post" action="/parser/api/scroll-speed" style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;">
+      <label for="parser-scroll-speed" style="font-weight:600;">Скорость сбора:</label>
+      <select id="parser-scroll-speed" name="mode" class="form-input" style="max-width:280px;">
+        <option value="fast" {% if parser_scroll_speed == 'fast' %}selected{% endif %}>Быстрый (≈1–2 с/раунд, выше риск капчи/FB-throttle)</option>
+        <option value="normal" {% if parser_scroll_speed == 'normal' or not parser_scroll_speed %}selected{% endif %}>Обычный (≈2–5 с/раунд, дефолт)</option>
+        <option value="gentle" {% if parser_scroll_speed == 'gentle' %}selected{% endif %}>Мягкий (≈3–7 с/раунд, для слабых аккаунтов)</option>
+      </select>
+      <button type="submit" class="btn btn-secondary">Сохранить</button>
+      <span style="color:var(--text-secondary);font-size:var(--font-size-xs);">Если сбор идёт слишком долго — попробуйте «Быстрый». Если FB начал показывать капчу — верните «Обычный» или «Мягкий».</span>
+    </form>
+  </div>
+</div>
 {% if qp.get('started') == '1' %}
 <div class="card" style="margin-bottom:16px;border-color:var(--success)">
   <div class="card-body" style="font-size:var(--font-size-sm)">

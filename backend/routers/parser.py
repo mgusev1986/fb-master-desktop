@@ -65,9 +65,24 @@ def _parser_progress_percent(p: dict[str, Any] | None) -> int | None:
     return min(100, max(0, int(round(100 * (d + extra) / t))))
 
 
+@router.post("/api/scroll-speed")
+async def parser_set_scroll_speed(request: Request, db: Session = Depends(get_db)):
+    """Смена режима скорости парсера (fast/normal/gentle)."""
+    from backend.services.parser_speed import set_parser_scroll_speed
+
+    require_org_id(request, db)
+    form = await request.form()
+    mode = str(form.get("mode") or "normal").strip().lower()
+    set_parser_scroll_speed(db, mode)  # type: ignore[arg-type]
+    return RedirectResponse("/parser?notice=speed_saved&mode=" + mode, status_code=303)
+
+
 @router.get("")
 async def parser_page(request: Request, db: Session = Depends(get_db)):
     org_id = require_org_id(request, db)
+    from backend.services.parser_speed import get_parser_scroll_speed
+
+    parser_scroll_speed = get_parser_scroll_speed(db)
     parser_language_filter = normalize_person_language_filter(
         request.query_params.get("language_filter")
     )
@@ -115,6 +130,7 @@ async def parser_page(request: Request, db: Session = Depends(get_db)):
                 for key, label in LANGUAGE_FILTER_LABELS.items()
                 if key != "unknown"
             },
+            "parser_scroll_speed": parser_scroll_speed,
         },
     )
 
