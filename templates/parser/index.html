@@ -54,13 +54,14 @@
   <div class="card-body" style="font-size:var(--font-size-sm)">
     <form method="post" action="/parser/api/scroll-speed" style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;">
       <label for="parser-scroll-speed" style="font-weight:600;">Скорость сбора:</label>
-      <select id="parser-scroll-speed" name="mode" class="form-input" style="max-width:280px;">
-        <option value="fast" {% if parser_scroll_speed == 'fast' %}selected{% endif %}>Быстрый (≈1–2 с/раунд, выше риск капчи/FB-throttle)</option>
-        <option value="normal" {% if parser_scroll_speed == 'normal' or not parser_scroll_speed %}selected{% endif %}>Обычный (≈2–5 с/раунд, дефолт)</option>
-        <option value="gentle" {% if parser_scroll_speed == 'gentle' %}selected{% endif %}>Мягкий (≈3–7 с/раунд, для слабых аккаунтов)</option>
+      <select id="parser-scroll-speed" name="mode" class="form-input" style="max-width:320px;">
+        <option value="turbo" {% if parser_scroll_speed == 'turbo' %}selected{% endif %}>🚀 TURBO (≈0.2–0.5 с/раунд, как в v1 — самый быстрый, выше риск капчи)</option>
+        <option value="fast" {% if parser_scroll_speed == 'fast' %}selected{% endif %}>⚡ Быстрый (≈1–2 с/раунд)</option>
+        <option value="normal" {% if parser_scroll_speed == 'normal' or not parser_scroll_speed %}selected{% endif %}>🐢 Обычный (≈2–5 с/раунд, дефолт)</option>
+        <option value="gentle" {% if parser_scroll_speed == 'gentle' %}selected{% endif %}>🪶 Мягкий (≈3–7 с/раунд, для слабых аккаунтов)</option>
       </select>
       <button type="submit" class="btn btn-secondary">Сохранить</button>
-      <span style="color:var(--text-secondary);font-size:var(--font-size-xs);">Если сбор идёт слишком долго — попробуйте «Быстрый». Если FB начал показывать капчу — верните «Обычный» или «Мягкий».</span>
+      <span style="color:var(--text-secondary);font-size:var(--font-size-xs);">🚀 <strong>TURBO</strong> — как в первых версиях парсера, когда «всё летало». Минимум задержек, тысячи контактов за минуту. Если FB начал показывать капчу — верните «Быстрый»/«Обычный».</span>
     </form>
   </div>
 </div>
