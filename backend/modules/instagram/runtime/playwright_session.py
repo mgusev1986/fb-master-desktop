@@ -104,6 +104,7 @@ class InstagramBrowser:
         from backend.modules.instagram.runtime.human_behavior import (
             antidetect_enabled, jittered_viewport,
         )
+        from backend.services.fb_playwright import chromium_launch_kwargs_with_bundle
 
         profile_dir = Path(self.account.profile_dir or "")
         if not str(profile_dir):
@@ -142,7 +143,9 @@ class InstagramBrowser:
             launch_kwargs["proxy"] = proxy
 
         try:
-            self._context = self._pw.chromium.launch_persistent_context(str(profile_dir), **launch_kwargs)
+            self._context = self._pw.chromium.launch_persistent_context(
+                str(profile_dir), **chromium_launch_kwargs_with_bundle(launch_kwargs)
+            )
         except Exception:
             self._safe_stop_pw()
             raise

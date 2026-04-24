@@ -22,20 +22,44 @@ _STORAGE_STATE_TIMEOUT_SEC = 14.0
 FB_LOGIN_WINDOW_INITIAL_URL = "https://www.facebook.com/messages/"
 
 
+def bundled_chromium_executable_for_playwright() -> Path | None:
+    """Return the packaged Chromium executable, if this desktop/backend bundle has one."""
+    import os
+
+    try:
+        from backend.config import _bundled_chromium_executable, reapply_playwright_browsers_path
+
+        reapply_playwright_browsers_path()
+        browsers_root = (os.environ.get("PLAYWRIGHT_BROWSERS_PATH") or "").strip()
+        root_path = Path(browsers_root) if browsers_root else (BASE_DIR / "playwright-browsers")
+        return _bundled_chromium_executable(root_path.resolve())
+    except Exception:
+        logger.debug("bundled_chromium_executable_for_playwright", exc_info=True)
+        return None
+
+
+def chromium_launch_kwargs_with_bundle(kwargs: dict[str, Any]) -> dict[str, Any]:
+    """Force Playwright launches to use the bundled Chromium when it is present.
+
+    On Windows the diagnostic launch may pass with `channel="chromium"`, while a
+    headed persistent profile can still fail to resolve the packaged executable.
+    `executable_path` removes that ambiguity for both launch() and
+    launch_persistent_context().
+    """
+    out = dict(kwargs)
+    bundled = bundled_chromium_executable_for_playwright()
+    if bundled is not None:
+        out.pop("channel", None)
+        out["executable_path"] = str(bundled)
+    return out
+
+
 def playwright_chromium_precheck() -> str | None:
     """
     Перед запуском окна «Войти в Facebook» / автовхода без CDP.
     None — Chromium найден; иначе короткое сообщение для пользователя (flash).
     """
-    import os
-
-    from backend.config import BASE_DIR, _bundled_chromium_executable, reapply_playwright_browsers_path
-
-    reapply_playwright_browsers_path()
-
-    browsers_root = (os.environ.get("PLAYWRIGHT_BROWSERS_PATH") or "").strip()
-    root_path = Path(browsers_root) if browsers_root else (BASE_DIR / "playwright-browsers")
-    bundled = _bundled_chromium_executable(root_path.resolve())
+    bundled = bundled_chromium_executable_for_playwright()
     if bundled is None:
         return (
             "В установке FB Master не найден встроенный Chromium (папка playwright-browsers). "
@@ -47,12 +71,10 @@ def playwright_chromium_precheck() -> str | None:
 
     try:
         with sync_playwright() as p:
-            # Playwright 1.49+: channel=\"chromium\" — полный Chromium из PLAYWRIGHT_BROWSERS_PATH,
-            # а не отдельный chromium-headless-shell (его нет в бандле клиента).
-            # У Browser нет executable_path — только у BrowserType; успех = launch без исключения.
+            # Проверяем ровно тот chrome.exe/Chromium.app, который лежит внутри desktop-бандла.
             browser = None
             try:
-                browser = p.chromium.launch(headless=True, channel="chromium")
+                browser = p.chromium.launch(headless=True, executable_path=str(bundled))
             finally:
                 if browser is not None:
                     try:
@@ -460,6 +482,7 @@ def _launch_ephemeral_chromium_for_check(p, bundled: dict[str, Any]) -> tuple[An
     ch = kw.get("channel")
     if ch:
         launch_kwargs["channel"] = ch
+    launch_kwargs = chromium_launch_kwargs_with_bundle(launch_kwargs)
     browser = p.chromium.launch(**launch_kwargs)
     ctx_parts: dict[str, Any] = {
         "locale": kw.get("locale") or "ru-RU",
@@ -778,7 +801,7 @@ def pregrant_facebook_automation_permissions(ctx) -> None:
 
 def launch_persistent_context_from_bundle(p, profile_path: str | Path, bundled: dict[str, Any]):
     """launch_persistent_context с ignore_default_args из bundle (_launch_kwargs_persistent)."""
-    kwargs = dict(bundled["kwargs"])
+    kwargs = chromium_launch_kwargs_with_bundle(dict(bundled["kwargs"]))
     ign = bundled.get("ignore_default_args")
     if ign:
         return p.chromium.launch_persistent_context(
@@ -1108,11 +1131,15 @@ def test_facebook_credentials(
         browser = None
         try:
             browser = p.chromium.launch(
-                headless=True,
-                channel="chromium",
-                locale="ru-RU",
-                args=["--disable-blink-features=AutomationControlled"],
-                proxy=proxy,
+                **chromium_launch_kwargs_with_bundle(
+                    {
+                        "headless": True,
+                        "channel": "chromium",
+                        "locale": "ru-RU",
+                        "args": ["--disable-blink-features=AutomationControlled"],
+                        "proxy": proxy,
+                    }
+                )
             )
             ctx = browser.new_context(
                 viewport={"width": 1280, "height": 1200},
@@ -1197,7 +1224,11 @@ def test_proxy(
     with sync_playwright() as p:
         browser = None
         try:
-            browser = p.chromium.launch(headless=True, channel="chromium", proxy=proxy)
+            browser = p.chromium.launch(
+                **chromium_launch_kwargs_with_bundle(
+                    {"headless": True, "channel": "chromium", "proxy": proxy}
+                )
+            )
             page = browser.new_page()
             page.goto(
                 "https://api.ipify.org?format=json",
