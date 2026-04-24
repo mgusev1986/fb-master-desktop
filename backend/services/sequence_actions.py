@@ -1458,7 +1458,7 @@ def _messages_new_recipient_ready(page: Page) -> bool:
 
 
 def _dm_page_looks_restricted(page: Page) -> bool:
-    """Только явные тексты блокировки в области основного контента (не весь body — меньше ложных срабатываний)."""
+    """Recipient/chat-specific restriction. This is not an account-wide Messenger request limit."""
     try:
         return bool(
             page.evaluate(
@@ -1471,8 +1471,15 @@ def _dm_page_looks_restricted(page: Page) -> bool:
           return (
             t.includes("doesn't have access to this chat") ||
             t.includes("can't reply to this conversation") ||
+            t.includes("can't message this person") ||
+            t.includes("can't send a message to this person") ||
+            t.includes("can't send a message request to this person") ||
             t.includes("can't message") ||
             t.includes("this person is unavailable") ||
+            t.includes("this person isn't available") ||
+            t.includes("this person isn't receiving messages") ||
+            t.includes("some people limit who can message them") ||
+            t.includes("can't send messages to this account") ||
             t.includes("logs into messenger") ||
             t.includes("you will be able to send") ||
             t.includes('нет доступа к этому чату') ||
@@ -1482,7 +1489,14 @@ def _dm_page_looks_restricted(page: Page) -> bool:
             t.includes('сможете отправлять') ||
             t.includes('у вас нет доступа к этому чату') ||
             t.includes('вы не можете писать в этот чат') ||
-            t.includes('невозможно ответить в этом чате')
+            t.includes('вы не можете отправить сообщение этому человеку') ||
+            t.includes('нельзя отправить сообщение этому человеку') ||
+            t.includes('невозможно отправить сообщение этому человеку') ||
+            t.includes('невозможно ответить в этом чате') ||
+            t.includes('некоторые люди ограничивают') ||
+            t.includes('кто может отправлять им сообщения') ||
+            t.includes('человек не принимает сообщения') ||
+            t.includes('не может получать сообщения')
           );
         }"""
             )
@@ -1495,29 +1509,61 @@ def page_shows_messenger_message_request_limit(page: Page) -> bool:
     """
     Лимит Meta на запросы в переписку (часто 24 ч): вместо поля ввода — плашка в чате / popup.
     RU: «Достигнут лимит числа запросов на переписку».
+    Важно: не путать с закрытыми ЛС у конкретного получателя.
     """
     try:
         return bool(
             page.evaluate(
                 """() => {
+          function recipientOnly(t) {
+            const s = String(t || '').toLowerCase();
+            return (
+              s.includes("doesn't have access to this chat") ||
+              s.includes("can't reply to this conversation") ||
+              s.includes("can't message this person") ||
+              s.includes("can't send a message to this person") ||
+              s.includes("can't send a message request to this person") ||
+              s.includes("this person is unavailable") ||
+              s.includes("this person isn't available") ||
+              s.includes("this person isn't receiving messages") ||
+              s.includes("some people limit who can message them") ||
+              s.includes("can't send messages to this account") ||
+              s.includes('нет доступа к этому чату') ||
+              s.includes('у вас нет доступа к этому чату') ||
+              s.includes('вы не можете писать в этот чат') ||
+              s.includes('вы не можете отправить сообщение этому человеку') ||
+              s.includes('нельзя отправить сообщение этому человеку') ||
+              s.includes('невозможно отправить сообщение этому человеку') ||
+              s.includes('невозможно ответить в этом чате') ||
+              s.includes('некоторые люди ограничивают') ||
+              s.includes('кто может отправлять им сообщения') ||
+              s.includes('человек не принимает сообщения') ||
+              s.includes('не может получать сообщения')
+            );
+          }
           function strong(t) {
             const s = String(t || '').toLowerCase();
             if (!s) return false;
-            if (s.includes('достигнут лимит') && s.includes('переписк')) return true;
-            if (s.includes('лимит числа запросов')) return true;
-            if (s.includes('message request limit')) return true;
+            if (recipientOnly(s)) return false;
+            if (s.includes('достигнут лимит') && (s.includes('переписк') || s.includes('сообщ'))) return true;
+            if (s.includes('лимит числа запросов') && s.includes('переписк')) return true;
+            if ((s.includes('вы достигли') || s.includes('достигли лимита')) && s.includes('запрос') && s.includes('переписк')) return true;
+            if ((s.includes("you've reached") || s.includes("you have reached") || s.includes('reached the')) &&
+                s.includes('message request') && s.includes('limit')) return true;
+            if (s.includes('message request limit') &&
+                (s.includes('reached') || s.includes('too many') || s.includes('try again') || s.includes('24'))) return true;
             if (s.includes('too many') && s.includes('message request')) return true;
-            if (s.includes('limit') && s.includes('message requests') && (s.includes('24') || s.includes('hours')))
-              return true;
+            if (s.includes('temporarily blocked') && s.includes('message request')) return true;
             return false;
           }
           const roots = document.querySelectorAll(
-            '[role="dialog"], [aria-modal="true"], [data-pagelet="ChatDock"]'
+            '[role="dialog"], [aria-modal="true"], [data-pagelet="ChatDock"], ' +
+            '[role="main"] [role="alert"], [role="main"] [role="status"], [data-pagelet*="MW"]'
           );
           for (const el of roots) {
             if (strong(el.innerText || '')) return true;
           }
-          return strong(document.body ? document.body.innerText : '');
+          return false;
         }"""
             )
         )
@@ -2344,6 +2390,9 @@ def send_dm_via_profile_popup_chat(
 
     logger.info("popup-dm: ожидаем popup-окно чата")
     if not _find_popup_chat_composer(page):
+        if _dm_page_looks_restricted(page):
+            logger.info("popup-dm: ЛС недоступны у получателя — пропуск контакта")
+            return False, "dm_restricted_or_no_access:popup_none"
         if page_shows_messenger_message_request_limit(page):
             logger.warning("popup-dm: лимит запросов Messenger Meta — останавливаем попытку")
             return False, "facebook_message_request_limit"
@@ -2379,6 +2428,8 @@ def send_dm_via_profile_popup_chat(
         _dismiss_profile_share_or_post_composer_dialog(page)
         page.wait_for_timeout(600)
         if not _find_popup_chat_composer(page):
+            if _dm_page_looks_restricted(page):
+                return False, "dm_restricted_or_no_access:popup_wrong_context"
             if page_shows_messenger_message_request_limit(page):
                 logger.warning("popup-dm: лимит запросов Messenger (контекст композера)")
                 return False, "facebook_message_request_limit"
@@ -2412,6 +2463,9 @@ def send_dm_via_profile_popup_chat(
         ok, reason = _verify_dm_send_cleared(page, safe)
 
     if not ok:
+        if _dm_page_looks_restricted(page):
+            logger.info("popup-dm: отправка невозможна — ЛС закрыты у получателя")
+            return False, f"dm_restricted_or_no_access:{reason}"[:200]
         if page_shows_messenger_message_request_limit(page):
             logger.warning("popup-dm: лимит запросов Messenger после попытки отправки")
             return False, "facebook_message_request_limit"
@@ -2499,6 +2553,8 @@ def _try_send_via_profile_popup_chat(
     page.wait_for_timeout(500)
 
     if not _find_popup_chat_composer(page):
+        if _dm_page_looks_restricted(page):
+            return False, "dm_restricted_or_no_access:popup_fallback_none"
         if page_shows_messenger_message_request_limit(page):
             logger.warning("popup-chat fallback: лимит запросов Messenger Meta")
             return False, "facebook_message_request_limit"
@@ -2515,6 +2571,8 @@ def _try_send_via_profile_popup_chat(
 
     ok_clear, vreason = _submit_messenger_composer_after_typing(page, text)
     if not ok_clear:
+        if _dm_page_looks_restricted(page):
+            return False, f"dm_restricted_or_no_access:{vreason}"[:200]
         if page_shows_messenger_message_request_limit(page):
             return False, "facebook_message_request_limit"
         return False, f"popup_send_unverified:{vreason}"[:200]
@@ -3345,11 +3403,11 @@ def try_send_dm_from_profile(
                 pass
 
         if not isinstance(pick, dict) or not pick.get("ok"):
-            if page_shows_messenger_message_request_limit(page):
-                return False, "facebook_message_request_limit"
             reason = str((pick or {}).get("reason", "fail"))
             if _dm_page_looks_restricted(page):
                 return False, f"dm_restricted_or_no_access:{reason}"
+            if page_shows_messenger_message_request_limit(page):
+                return False, "facebook_message_request_limit"
             # ── Fallback: popup-чат на профиле (кнопка «Сообщение» → маленькое окно) ──
             logger.info(
                 "try_send_dm_from_profile: DM composer не найден в Messenger; "
@@ -3429,6 +3487,8 @@ def try_send_dm_from_profile(
 
         ok_clear, vreason = _submit_messenger_composer_after_typing(page, safe)
         if not ok_clear:
+            if _dm_page_looks_restricted(page):
+                return False, f"dm_restricted_or_no_access:{vreason}"[:200]
             if page_shows_messenger_message_request_limit(page):
                 return False, "facebook_message_request_limit"
             return False, vreason[:200]
@@ -3638,11 +3698,11 @@ def try_send_dm_on_open_thread_page(
             except Exception:
                 pass
         if not isinstance(pick, dict) or not pick.get("ok"):
-            if page_shows_messenger_message_request_limit(page):
-                return False, "facebook_message_request_limit"
             reason = str((pick or {}).get("reason", "fail"))
             if _dm_page_looks_restricted(page):
                 return False, f"dm_restricted_or_no_access:{reason}"
+            if page_shows_messenger_message_request_limit(page):
+                return False, "facebook_message_request_limit"
             return False, f"dm_composer_not_found:{reason}"
 
         # Прокрутить к полю ввода, чтобы пользователь видел в Electron
@@ -3690,6 +3750,8 @@ def try_send_dm_on_open_thread_page(
 
         ok_clear, vreason = _submit_messenger_composer_after_typing(page, safe)
         if not ok_clear:
+            if _dm_page_looks_restricted(page):
+                return False, f"dm_restricted_or_no_access:{vreason}"[:200]
             if page_shows_messenger_message_request_limit(page):
                 return False, "facebook_message_request_limit"
             return False, vreason[:200]

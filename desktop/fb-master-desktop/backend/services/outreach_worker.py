@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from backend.database import SessionLocal
 from backend.models import (
     FBAccount,
+    FBAccountDayUsage,
     Job,
     OutreachCampaign,
     OutreachQueue,
@@ -36,6 +37,12 @@ from backend.services.message_template_render import (
 )
 from backend.services.outreach_actions import run_commenting_on_profile, run_outreach_on_profile
 from backend.services.outreach_error_display import humanize_outreach_row_error
+from backend.services.outreach_job_wait import (
+    clear_outreach_wait,
+    reason_humanize,
+    record_outreach_wait,
+    should_abort_due_to_wait,
+)
 from backend.services.sequence_ai_comment import (
     extract_timeline_post_text,
     generate_dm_message_sync,
@@ -45,7 +52,7 @@ from backend.services.sequence_ai_comment import (
 from backend.services.throttle import is_valid_throttle_preset, resolve_delay
 from backend.services.parallel_automation_slots import outreach_worker_slots
 from backend.services.playwright_resource import playwright_run_slot
-from backend.services.proxy_health_guard import pause_all_automation_for_fb_account
+from backend.services.proxy_health_guard import ProxyTunnelBlockedError, pause_all_automation_for_fb_account
 from backend.services.warmup_actions import parse_storage_state, profile_url_from_person
 from backend.services.outreach_shared_profile import (
     outreach_shared_disk_profile_eligible,
@@ -178,6 +185,10 @@ def _open_outreach_account_session(
     """
     slot_cm = playwright_run_slot(fb_account_id=account.id)
     slot_cm.__enter__()
+    profile_cm = None
+    ctx = None
+    profile_entered = False
+    slot_released = False
     prefer_shared = False
     lock_acquired = False
     try:
@@ -203,12 +214,15 @@ def _open_outreach_account_session(
         )
         try:
             ctx = profile_cm.__enter__()
+            profile_entered = True
         except Exception:
             if lock_acquired:
                 release_outreach_shared_profile_lock(
                     db, account_id=int(account.id), job_id=int(job_id)
                 )
+                lock_acquired = False
             slot_cm.__exit__(None, None, None)
+            slot_released = True
             raise
         page = ctx.pages[0] if ctx.pages else ctx.new_page()
         sess = {
@@ -226,6 +240,31 @@ def _open_outreach_account_session(
         return sess
     except Exception:
         logger.exception("open outreach browser session account=%s", account.id)
+        if profile_entered and profile_cm is not None:
+            try:
+                profile_cm.__exit__(None, None, None)
+            except Exception:
+                logger.exception(
+                    "cleanup partially opened outreach browser profile account=%s",
+                    account.id,
+                )
+        if lock_acquired:
+            try:
+                release_outreach_shared_profile_lock(
+                    db, account_id=int(account.id), job_id=int(job_id)
+                )
+            except Exception:
+                logger.exception(
+                    "release partial outreach shared profile lock account=%s",
+                    account.id,
+                )
+        if not slot_released:
+            try:
+                slot_cm.__exit__(None, None, None)
+            except Exception:
+                logger.exception(
+                    "release partial outreach browser slot account=%s", account.id
+                )
         raise
 
 
@@ -359,6 +398,61 @@ def _record_contacted(db, *, person_id: int, fb_account_id: int, canonical_url: 
         touched_at=datetime.now(timezone.utc),
     )
     db.commit()
+
+
+def _mark_outreach_account_limited_today(db: Session, account_id: int) -> None:
+    """
+    Meta message-request limit is account-scoped. Saturating today's outreach usage
+    lets rotation skip this account for the rest of the day without pausing the whole run.
+    """
+    usage_date = datetime.now(timezone.utc).date().isoformat()
+    row = (
+        db.query(FBAccountDayUsage)
+        .filter(
+            FBAccountDayUsage.fb_account_id == int(account_id),
+            FBAccountDayUsage.usage_date == usage_date,
+        )
+        .first()
+    )
+    if not row:
+        row = FBAccountDayUsage(
+            fb_account_id=int(account_id),
+            usage_date=usage_date,
+            outreach_actions=0,
+            warmup_actions=0,
+            sequence_actions=0,
+        )
+        db.add(row)
+        db.flush()
+    row.outreach_actions = max(int(row.outreach_actions or 0), 500)
+
+
+def _outreach_detail_needs_browser_reset(detail: str | None) -> bool:
+    low = (detail or "").lower()
+    if not low:
+        return False
+    needles = (
+        "err:",
+        "timeout",
+        "target closed",
+        "browser has been closed",
+        "context or browser has been closed",
+        "page has been closed",
+        "net::",
+        "econnrefused",
+    )
+    return any(n in low for n in needles)
+
+
+def _campaign_can_continue_after_account_limit(
+    db: Session,
+    camp: OutreachCampaign,
+    blocked_account_id: int,
+) -> bool:
+    if not rotation_enabled_outreach(camp):
+        return False
+    account, err, _new_fb_id = resolve_outreach_executor(db, camp, int(blocked_account_id))
+    return bool(account is not None and err is None and int(account.id) != int(blocked_account_id))
 
 
 def _message_mode(cfg: dict[str, Any] | None) -> str:
@@ -570,6 +664,17 @@ def process_outreach_job(job_id: int) -> None:
                                     outcome="deferred",
                                     payload={"reason": rot_err},
                                 )
+                                wait_count = record_outreach_wait(db, job_id, rot_err)
+                                if should_abort_due_to_wait(wait_count):
+                                    job_cancel_reason = reason_humanize(rot_err)[:1000]
+                                    finish_job(
+                                        db,
+                                        job,
+                                        status="failed",
+                                        error=job_cancel_reason,
+                                    )
+                                    db.commit()
+                                    break
                                 if rot_err == "daily_cap_all_accounts":
                                     _sleep_seconds_outreach_interruptible(
                                         db, campaign_id=campaign.id, total_sec=60.0
@@ -645,6 +750,7 @@ def process_outreach_job(job_id: int) -> None:
 
                         storage = parse_storage_state(account.session_state_json)
                         current_account_id = int(account.id)
+                        action_type = "next_person"
 
                         try:
                             if (
@@ -847,6 +953,7 @@ def process_outreach_job(job_id: int) -> None:
                                     increment_usage(db, account.id, "outreach")
                                 row.status = "done"
                                 row.error = None
+                                clear_outreach_wait(db, job_id)
                                 log_job_event(
                                     db,
                                     job_id=job_id,
@@ -896,21 +1003,40 @@ def process_outreach_job(job_id: int) -> None:
                                     person.crm_stage_changed_at = datetime.now(timezone.utc)
                             else:
                                 row.status = "failed"
-                                row.error = humanize_outreach_row_error(detail)[:1000]
+                                row_error_ru = humanize_outreach_row_error(detail)
                                 messenger_limit_hit = "facebook_message_request_limit" in (
                                     detail or ""
                                 )
+                                reset_browser_after_row = _outreach_detail_needs_browser_reset(detail)
                                 if messenger_limit_hit:
-                                    pause_all_automation_for_fb_account(db, account.id)
-                                    job_cancel_reason = (
-                                        "Лимит запросов Messenger Meta (обычно 24 ч): "
-                                        "рассылка и связанные кампании по аккаунту приостановлены."
+                                    _mark_outreach_account_limited_today(db, account.id)
+                                    can_continue = _campaign_can_continue_after_account_limit(
+                                        db, camp, account.id
                                     )
+                                    if can_continue:
+                                        pause_all_automation_for_fb_account(
+                                            db,
+                                            account.id,
+                                            exclude_outreach_campaign_ids={int(camp.id)},
+                                        )
+                                        row_error_ru = (
+                                            "Facebook ограничил отправку запросов в переписку для этого аккаунта "
+                                            "(лимит Meta, обычно на 24 ч). Аккаунт исключён из рассылки на сегодня; "
+                                            "кампания продолжит работу с другим доступным аккаунтом."
+                                        )
+                                    else:
+                                        pause_all_automation_for_fb_account(db, account.id)
+                                        job_cancel_reason = (
+                                            "Лимит запросов Messenger Meta (обычно 24 ч): "
+                                            "рассылка и связанные кампании по аккаунту приостановлены."
+                                        )
                                     logger.warning(
-                                        "Outreach: лимит Messenger — пауза автоматизации "
-                                        "для fb_account_id=%s",
+                                        "Outreach: лимит Messenger fb_account_id=%s continue_with_rotation=%s",
                                         account.id,
+                                        can_continue,
                                     )
+                                    reset_browser_after_row = True
+                                row.error = row_error_ru[:1000]
                                 log_job_event(
                                     db,
                                     job_id=job_id,
@@ -924,10 +1050,9 @@ def process_outreach_job(job_id: int) -> None:
                                     duration_ms=ms,
                                     payload={
                                         "detail": detail[:500],
-                                        "detail_ru": humanize_outreach_row_error(detail)[
-                                            :500
-                                        ],
+                                        "detail_ru": row_error_ru[:500],
                                         "messenger_message_request_limit": messenger_limit_hit,
+                                        "browser_reset": reset_browser_after_row,
                                     },
                                 )
                                 if campaign_kind == "dm" and bool(
@@ -948,12 +1073,21 @@ def process_outreach_job(job_id: int) -> None:
                                         fb_account_id=account.id,
                                         canonical_url=person.canonical_url,
                                     )
+                                if (
+                                    reset_browser_after_row
+                                    and active_pw_session is not None
+                                    and int(active_pw_session.get("account_id") or 0)
+                                    == current_account_id
+                                ):
+                                    _close_outreach_account_session(active_pw_session)
+                                    active_pw_session = None
                         except Exception as e:
                             logger.exception("outreach row %s", row.id)
                             ms = int((time.perf_counter() - t0) * 1000)
                             db.expire_all()
                             camp_now = db.get(OutreachCampaign, campaign.id)
                             user_paused = bool(camp_now and camp_now.status == "paused")
+                            is_proxy_blocked = isinstance(e, ProxyTunnelBlockedError)
                             if user_paused:
                                 row.status = "queued"
                                 row.error = None
@@ -972,6 +1106,48 @@ def process_outreach_job(job_id: int) -> None:
                                         "error": str(e)[:300],
                                     },
                                 )
+                            elif is_proxy_blocked:
+                                row.status = "queued"
+                                row.error = None
+                                row.processed_at = None
+                                log_job_event(
+                                    db,
+                                    job_id=job_id,
+                                    event_type="outreach_row_deferred",
+                                    severity="warning",
+                                    person_id=row.person_id,
+                                    fb_account_id=row.fb_account_id,
+                                    outcome="deferred",
+                                    payload={
+                                        "reason": "proxy_tunnel_blocked",
+                                        "error": str(e)[:300],
+                                    },
+                                )
+                                wait_count = record_outreach_wait(
+                                    db,
+                                    job_id,
+                                    "proxy_tunnel_blocked",
+                                    reason_details=str(e)[:300],
+                                )
+                                if should_abort_due_to_wait(wait_count):
+                                    job_cancel_reason = reason_humanize(
+                                        "proxy_tunnel_blocked"
+                                    )[:1000]
+                                    finish_job(
+                                        db,
+                                        job,
+                                        status="failed",
+                                        error=job_cancel_reason,
+                                    )
+                                    db.commit()
+                                    if (
+                                        active_pw_session is not None
+                                        and int(active_pw_session.get("account_id") or 0)
+                                        == current_account_id
+                                    ):
+                                        _close_outreach_account_session(active_pw_session)
+                                        active_pw_session = None
+                                    break
                             else:
                                 row.status = "failed"
                                 row.error = str(e)[:1000]

@@ -109,8 +109,8 @@ def _map_dm_body(rest: str) -> str:
     if r.startswith("dm_restricted_or_no_access:"):
         sub = r.split(":", 1)[1].strip() if ":" in r else ""
         return (
-            "Facebook ограничил чат или нет доступа к переписке с этим человеком "
-            f"({sub})."
+            "у этого человека закрыты или недоступны личные сообщения — контакт пропущен, "
+            f"аккаунт рассылки не ограничен ({sub})."
         )
     if r in ("message_button_not_found", "message_button_click_failed"):
         return (

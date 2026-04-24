@@ -22,8 +22,10 @@ from backend.models import FBAccount, Job, Person, Setting, WarmupCampaign, Warm
 from backend.services.cabinet_settings import effective_playwright_headless
 from backend.services.account_rotation import increment_usage, resolve_warmup_executor, rotation_enabled_warmup
 from backend.services.fb_playwright import (
+    _close_browser_or_context_with_timeout,
     _launch_kwargs_persistent,
     _playwright_profile_in_use_error,
+    _storage_state_with_timeout,
     apply_storage_state_cookies_to_context,
     chromium_profile_dir_locked,
     launch_persistent_context_from_bundle,
@@ -94,6 +96,7 @@ def _persist_account_storage_state_snapshot(
     cookies = snapshot.get("cookies")
     if not isinstance(cookies, list) or not cookies:
         return
+    profile_dir_for_sidecar: str | None = None
     db = SessionLocal()
     try:
         acc = db.get(FBAccount, int(account_id))
@@ -102,11 +105,46 @@ def _persist_account_storage_state_snapshot(
         acc.session_state_json = json.dumps(snapshot, ensure_ascii=False)
         acc.session_saved_at = datetime.now(timezone.utc)
         db.commit()
+        profile_dir_for_sidecar = acc.profile_dir
     except Exception:
         logger.exception("persist automation storage_state account=%s", account_id)
         db.rollback()
     finally:
         db.close()
+    if profile_dir_for_sidecar:
+        _write_storage_state_sidecar(profile_dir_for_sidecar, snapshot, account_id)
+
+
+def _write_storage_state_sidecar(
+    profile_dir: str | Path,
+    snapshot: dict[str, Any],
+    account_id: int | None,
+) -> None:
+    """
+    Пишем JSON-снимок storage_state рядом с боевой папкой профиля аккаунта.
+    Это бэкап на случай порчи БД и задел для будущих потребителей, которые
+    будут читать cookies с диска напрямую (Electron disk-mode webview).
+    Файл: <profile_dir>/.fbm-session-state.json
+    """
+    try:
+        p = Path(profile_dir)
+        p.mkdir(parents=True, exist_ok=True)
+        sidecar = p / ".fbm-session-state.json"
+        payload = {
+            "cookies": snapshot.get("cookies") or [],
+            "origins": snapshot.get("origins") or [],
+            "saved_at": datetime.now(timezone.utc).isoformat(),
+        }
+        tmp = sidecar.with_suffix(".json.tmp")
+        tmp.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+        tmp.replace(sidecar)
+    except Exception:
+        logger.debug(
+            "persist storage_state sidecar account=%s dir=%s",
+            account_id,
+            profile_dir,
+            exc_info=True,
+        )
 
 
 def _global_throttle_preset(db) -> str:
@@ -313,22 +351,8 @@ def fb_account_playwright_profile_ephemeral(
     try:
         yield ctx
     finally:
-        snapshot: dict[str, Any] | None = None
-        try:
-            snapshot = ctx.storage_state()
-        except Exception:
-            logger.debug(
-                "storage_state snapshot failed for automation ctx account=%s",
-                getattr(account, "id", None),
-                exc_info=True,
-            )
-        try:
-            ctx.close()
-        except Exception:
-            logger.exception(
-                "close ephemeral playwright ctx account=%s",
-                getattr(account, "id", None),
-            )
+        snapshot = _storage_state_with_timeout(ctx)
+        _close_browser_or_context_with_timeout(None, ctx)
         _persist_account_storage_state_snapshot(getattr(account, "id", None), snapshot)
         if is_temp_profile:
             try:

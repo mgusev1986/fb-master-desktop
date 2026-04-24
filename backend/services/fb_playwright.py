@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import concurrent.futures
 import importlib.util
 import logging
 import threading
@@ -152,6 +151,38 @@ def playwright_goto_failure_hint(exc: BaseException) -> str:
 _CONTEXT_CLOSE_TIMEOUT_SEC = 12.0
 
 
+def _run_playwright_cleanup_call(
+    label: str,
+    fn: Callable[[], Any],
+    timeout_sec: float,
+) -> tuple[bool, Any | None, BaseException | None]:
+    """
+    Run a best-effort Playwright cleanup call without letting it block automation slots.
+
+    ThreadPoolExecutor used as a context manager waits for the worker on exit even
+    after Future.result(timeout=...) times out. If ctx.storage_state()/ctx.close()
+    gets stuck, outreach can finish the queue but never release the account/global
+    Playwright locks until the app is restarted.
+    """
+    result: dict[str, Any] = {}
+
+    def _target() -> None:
+        try:
+            result["value"] = fn()
+        except BaseException as exc:  # noqa: BLE001 - cleanup failures must not block slots.
+            result["exc"] = exc
+
+    th = threading.Thread(target=_target, name=f"fbm-playwright-cleanup-{label}", daemon=True)
+    th.start()
+    th.join(max(0.1, float(timeout_sec)))
+    if th.is_alive():
+        return False, None, None
+    exc = result.get("exc")
+    if isinstance(exc, BaseException):
+        return True, None, exc
+    return True, result.get("value"), None
+
+
 def _storage_state_with_timeout(ctx: Any, timeout_sec: float = _STORAGE_STATE_TIMEOUT_SEC) -> dict[str, Any] | None:
     """Снимок сессии без бесконечного ожидания (после kill Chromium sync API может зависнуть)."""
     if ctx is None:
@@ -160,19 +191,22 @@ def _storage_state_with_timeout(ctx: Any, timeout_sec: float = _STORAGE_STATE_TI
     def _call() -> dict[str, Any]:
         return ctx.storage_state()
 
-    try:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as ex:
-            fut = ex.submit(_call)
-            return fut.result(timeout=timeout_sec)
-    except concurrent.futures.TimeoutError:
+    done, value, exc = _run_playwright_cleanup_call("storage-state", _call, timeout_sec)
+    if not done:
         logger.warning(
             "ctx.storage_state() превысила %.0f с (account cleanup) — снимок пропущен",
             timeout_sec,
         )
         return None
-    except Exception:
-        logger.exception("storage_state_with_timeout")
+    if exc is not None:
+        logger.debug(
+            "storage_state_with_timeout",
+            exc_info=(type(exc), exc, exc.__traceback__),
+        )
         return None
+    if isinstance(value, dict):
+        return value
+    return None
 
 
 def _close_browser_or_context_with_timeout(
@@ -189,13 +223,16 @@ def _close_browser_or_context_with_timeout(
         except Exception:
             pass
 
-    try:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as ex:
-            ex.submit(_call).result(timeout=timeout_sec)
-    except concurrent.futures.TimeoutError:
+    done, _value, exc = _run_playwright_cleanup_call("close-context", _call, timeout_sec)
+    if not done:
         logger.error(
             "Закрытие браузера/контекста превысило %.0f с — UI разблокирован, процесс Chromium может остаться в фоне",
             timeout_sec,
+        )
+    elif exc is not None:
+        logger.debug(
+            "close_browser_or_context_with_timeout",
+            exc_info=(type(exc), exc, exc.__traceback__),
         )
 
 

@@ -77,7 +77,12 @@ def _int_ids(raw: Any) -> list[int]:
     return out
 
 
-def _pause_campaigns_using_account(db: Session, account_id: int) -> None:
+def _pause_campaigns_using_account(
+    db: Session,
+    account_id: int,
+    *,
+    exclude_outreach_campaign_ids: set[int] | None = None,
+) -> None:
     from backend.models import OutreachCampaign, SequenceCampaign, WarmupCampaign
     from backend.services.automation_auto_resume import strip_auto_resume_flag_from_config
 
@@ -86,7 +91,10 @@ def _pause_campaigns_using_account(db: Session, account_id: int) -> None:
             camp.config = strip_auto_resume_flag_from_config(camp.config)
 
     aid = int(account_id)
+    excluded_outreach = exclude_outreach_campaign_ids or set()
     for camp in db.query(OutreachCampaign).filter(OutreachCampaign.status == "running").all():
+        if int(camp.id) in excluded_outreach:
+            continue
         if aid in _int_ids(camp.fb_account_ids):
             camp.status = "paused"
             _strip_restart_flag(camp)
@@ -101,9 +109,18 @@ def _pause_campaigns_using_account(db: Session, account_id: int) -> None:
             _strip_restart_flag(camp)
 
 
-def pause_all_automation_for_fb_account(db: Session, account_id: int) -> None:
+def pause_all_automation_for_fb_account(
+    db: Session,
+    account_id: int,
+    *,
+    exclude_outreach_campaign_ids: set[int] | None = None,
+) -> None:
     """Пауза рассылки, прогрева и сценариев по fb_account_id (единый стоп автоматизации на аккаунте)."""
-    _pause_campaigns_using_account(db, int(account_id))
+    _pause_campaigns_using_account(
+        db,
+        int(account_id),
+        exclude_outreach_campaign_ids=exclude_outreach_campaign_ids,
+    )
 
 
 def _label_append_proxy_lease_expired_marker(acc: Any) -> bool:
