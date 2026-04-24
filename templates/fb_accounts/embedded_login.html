@@ -176,6 +176,15 @@
   var alreadyCaptured = false;
   var captureInFlight = false;
 
+  function storageHasCookie(storageState, name) {
+    var cookies = storageState && Array.isArray(storageState.cookies) ? storageState.cookies : [];
+    for (var i = 0; i < cookies.length; i++) {
+      var c = cookies[i] || {};
+      if (String(c.name || '') === name && String(c.value || '').trim()) return true;
+    }
+    return false;
+  }
+
   async function captureAndSend(opts) {
     if (alreadyCaptured && !(opts && opts.force)) return false;
     if (captureInFlight) return false;
@@ -190,6 +199,10 @@
         setStatus('warn', 'Ещё не залогинен', 'c_user не найден. Завершите вход в Facebook.');
         return false;
       }
+      if (!storageHasCookie(exported.storage_state, 'xs')) {
+        setStatus('warn', 'Ещё не полный вход', 'Facebook ещё не выдал cookie xs. Нажмите «Продолжить» или завершите вход паролем/2FA, затем сохраните снова.');
+        return false;
+      }
       var r = await fetch(captureUrl, {
         method: 'POST',
         credentials: 'same-origin',
@@ -201,6 +214,10 @@
         alreadyCaptured = true;
         setStatus('ok', 'Сохранено: ' + (j.cookies || 0) + ' cookie', 'Сессия обновлена в базе. Можно перейти в Мессенджер — PIN не должен спрашиваться повторно.');
         return true;
+      }
+      if (j && j.error === 'missing_xs') {
+        setStatus('warn', 'Ещё не полный вход', j.hint || 'Нажмите «Продолжить» или завершите вход паролем/2FA.');
+        return false;
       }
       setStatus('error', 'Ошибка сохранения', (j && j.error) ? String(j.error) : ('HTTP ' + r.status));
       return false;

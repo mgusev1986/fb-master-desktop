@@ -871,13 +871,28 @@ async def fb_account_embedded_login_capture(
     if not isinstance(cookies, list) or not cookies:
         return JSONResponse({"ok": False, "error": "empty_cookies"}, status_code=400)
     c_user = ""
+    xs_cookie = ""
     for c in cookies:
-        if isinstance(c, dict) and c.get("name") == "c_user":
-            c_user = str(c.get("value") or "").strip()
-            break
+        if not isinstance(c, dict):
+            continue
+        name = str(c.get("name") or "")
+        value = str(c.get("value") or "").strip()
+        if name == "c_user" and value:
+            c_user = value
+        elif name == "xs" and value:
+            xs_cookie = value
     if not c_user:
         return JSONResponse(
             {"ok": False, "error": "missing_c_user", "hint": "Логин не завершён"},
+            status_code=400,
+        )
+    if not xs_cookie:
+        return JSONResponse(
+            {
+                "ok": False,
+                "error": "missing_xs",
+                "hint": "Facebook ещё не выдал auth-cookie xs. Нажмите «Продолжить» или завершите вход паролем/2FA.",
+            },
             status_code=400,
         )
     try:

@@ -60,6 +60,23 @@ def _c_user_from_cookies(cookies: list[Any]) -> str | None:
     return None
 
 
+def _cookie_value_from_cookies(cookies: list[Any], name: str) -> str | None:
+    expected = str(name or "").strip()
+    if not expected:
+        return None
+    for c in cookies:
+        if not isinstance(c, dict):
+            continue
+        if str(c.get("name") or "") != expected:
+            continue
+        dom = str(c.get("domain") or "").lower()
+        if "facebook.com" not in dom and "messenger.com" not in dom:
+            continue
+        v = str(c.get("value") or "").strip()
+        return v or None
+    return None
+
+
 def session_state_is_usable(
     snap: dict[str, Any] | None,
     *,
@@ -72,13 +89,17 @@ def session_state_is_usable(
         return False, "нет cookies в снимке"
     if not _facebook_cookie_present(cookies):
         return False, "нет cookies для домена Facebook"
+    c_user = _c_user_from_cookies(cookies)
+    if not c_user:
+        return False, "нет cookie c_user"
+    if not _cookie_value_from_cookies(cookies, "xs"):
+        return False, "нет cookie xs"
     exp = (expected_login or "").strip()
     # Сравниваем только когда expected_login похож на FB user ID (длинный числовой).
     # Настоящие c_user — это 14-17 значные числа. Телефоны (79516776278) — до 13
     # цифр. Если сравнивать телефон с c_user → всегда не совпадает → ложное
     # «сессия непригодна». Поэтому проверяем только длинные числовые логины.
     if exp and exp.isdigit() and len(exp) >= 14:
-        c_user = _c_user_from_cookies(cookies)
         if c_user and c_user != exp:
             return False, "cookie c_user не совпадает с логином аккаунта"
     return True, ""

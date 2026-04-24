@@ -283,6 +283,8 @@ def record_outbound_dm_in_cabinet(
     )
     row.person_id = person.id
     row.last_at = datetime.now(timezone.utc)
+    row.unread_count = 0
+    row.local_unread = False
     text_full = (message_text or "").strip()[:8000]
     db.flush()
     if text_full and row.id:
@@ -545,6 +547,8 @@ def process_messenger_sync_job(job_id: int) -> None:
                                     msgs = scrape_thread_messages(page)
                                     conv_send.last_at = datetime.now(timezone.utc)
                                     conv_send.last_snippet = body[:2000]
+                                    conv_send.unread_count = 0
+                                    conv_send.local_unread = False
                                     stored_n = _replace_conversation_messages(
                                         db,
                                         conv=conv_send,

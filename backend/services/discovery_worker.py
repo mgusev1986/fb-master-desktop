@@ -18,6 +18,7 @@ from backend.services.fb_playwright import (
     inject_local_chrome_facebook_cookies_and_reload,
     login_window_busy,
     page_requires_facebook_login,
+    resolve_facebook_remembered_login_gate,
 )
 from backend.services.fb_search_scrape import build_search_url, scroll_search_results
 from backend.services.friends_list_scrape import dismiss_facebook_dom_overlays
@@ -160,6 +161,17 @@ def _warm_facebook(ctx: Any, page: Any) -> None:
             logger.exception("discovery: inject Chrome cookies after warm")
 
 
+def _settle_facebook_login_gate(page: Any) -> bool:
+    """Снять промежуточный экран FB «Продолжить как ...», если он появился."""
+    clicked = resolve_facebook_remembered_login_gate(page, attempts=3, settle_ms=1800)
+    if clicked:
+        try:
+            dismiss_facebook_dom_overlays(page)
+        except Exception:
+            pass
+    return clicked
+
+
 def process_discovery_job(job_id: int) -> None:
     err = discovery_worker_slots.try_begin(job_id)
     if err == "duplicate":
@@ -283,6 +295,7 @@ def process_discovery_job(job_id: int) -> None:
                                 warm_failed = False
                                 try:
                                     _warm_facebook(ctx, page)
+                                    _settle_facebook_login_gate(page)
                                     need_login, login_msg = page_requires_facebook_login(page)
                                     if need_login:
                                         raise RuntimeError(
@@ -319,6 +332,15 @@ def process_discovery_job(job_id: int) -> None:
                                             page.goto(search_url, wait_until="domcontentloaded", timeout=60_000)
                                             page.wait_for_timeout(int(2000 + 1000 * (0.5)))
                                             dismiss_facebook_dom_overlays(page)
+                                            if _settle_facebook_login_gate(page):
+                                                page.goto(search_url, wait_until="domcontentloaded", timeout=60_000)
+                                                page.wait_for_timeout(1800)
+                                                dismiss_facebook_dom_overlays(page)
+                                            need_login, login_msg = page_requires_facebook_login(page)
+                                            if need_login:
+                                                raise RuntimeError(
+                                                    f"{login_msg} Войдите в Facebook через «Аккаунты» → «Войти в Facebook» и запустите автопоиск снова."
+                                                )
                                         except Exception as e:
                                             logger.warning("discovery: goto %s failed: %s", search_url[:120], e)
                                             log_job_event(

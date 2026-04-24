@@ -56,6 +56,37 @@ _FB_CONTINUE_LABELS: tuple[str, ...] = (
 )
 
 
+_FB_REMEMBERED_LOGIN_ALT_PROFILE_HINTS: tuple[str, ...] = (
+    "использовать другой профиль",
+    "использовать другой аккаунт",
+    "use another account",
+    "use another profile",
+    "use a different account",
+    "log into another account",
+    "создать новый аккаунт",
+    "create new account",
+    "використовувати інший профіль",
+    "izmantot citu profilu",
+    "naudoti kitą profilį",
+    "kasuta teist profiili",
+    "başka bir profil kullan",
+    "anderes profil verwenden",
+    "utiliser un autre profil",
+    "usar otro perfil",
+    "usar otra cuenta",
+    "usar outro perfil",
+    "utilizzare un altro profilo",
+    "een ander profiel gebruiken",
+    "użyj innego profilu",
+    "använd ett annat konto",
+    "käytä toista profiilia",
+    "másik profil használata",
+    "použít jiný profil",
+    "folosește alt profil",
+    "gunakan akun lain",
+)
+
+
 def _fb_continue_selectors() -> tuple[str, ...]:
     """Playwright-селекторы для всех локализаций кнопки «Продолжить».
 
@@ -649,20 +680,33 @@ def page_has_facebook_remembered_login_gate(page: Any) -> tuple[bool, str]:
     try:
         url = (page.url or "").lower()
         probe = page.evaluate(
-            """() => {
+            """({ continueLabels, altHints }) => {
               const text = ((document.body && document.body.innerText) || '').slice(0, 12000);
+              const norm = (value) => String(value || '').replace(/\\s+/g, ' ').trim().toLowerCase();
+              const continueSet = new Set((continueLabels || []).map(norm).filter(Boolean));
+              const alt = (altHints || []).map(norm).filter(Boolean);
               const hasPassword = !!document.querySelector(
                 'input[name="pass"], input#pass, input[type="password"]'
               );
               const hasContinue = Array.from(
                 document.querySelectorAll('button, a, div[role="button"], input[type="submit"], input[type="button"]')
               ).some((el) => {
-                const txt = String(el.innerText || el.value || '').trim().toLowerCase();
-                return txt === 'continue' || txt === 'продолжить';
+                const txt = norm(el.innerText || el.value || '');
+                if (!txt || txt.length > 90) return false;
+                if (continueSet.has(txt)) return true;
+                for (const label of continueSet) {
+                  if (label && (txt === label || txt.startsWith(label + ' '))) return true;
+                }
+                return false;
               });
-              const hasAltProfile = /использовать другой профиль|use another account|use another profile|создать новый аккаунт|create new account/i.test(text);
+              const lowText = norm(text);
+              const hasAltProfile = alt.some((hint) => lowText.includes(hint));
               return { hasPassword, hasContinue, hasAltProfile };
-            }"""
+            }""",
+            {
+                "continueLabels": list(_FB_CONTINUE_LABELS),
+                "altHints": list(_FB_REMEMBERED_LOGIN_ALT_PROFILE_HINTS),
+            },
         )
         if not isinstance(probe, dict):
             return False, ""
@@ -740,6 +784,39 @@ def try_click_facebook_remembered_continue(page: Any) -> bool:
         except Exception:
             continue
     return False
+
+
+def resolve_facebook_remembered_login_gate(
+    page: Any,
+    *,
+    attempts: int = 3,
+    settle_ms: int = 1500,
+) -> bool:
+    """
+    Мягко снимает FB saved-login gate («Продолжить как ...»).
+
+    Для автоматизаций это промежуточное состояние: если после клика Facebook
+    пустит в аккаунт, поиск/парсер продолжают работу; если попросит пароль или
+    checkpoint, обычная проверка `page_requires_facebook_login` вернёт ошибку.
+    """
+    clicked = False
+    for _ in range(max(1, int(attempts or 1))):
+        try:
+            if not try_click_facebook_remembered_continue(page):
+                break
+            clicked = True
+            try:
+                page.wait_for_load_state("domcontentloaded", timeout=10_000)
+            except Exception:
+                pass
+            try:
+                page.wait_for_timeout(max(250, int(settle_ms or 0)))
+            except Exception:
+                pass
+        except Exception:
+            logger.debug("resolve_facebook_remembered_login_gate", exc_info=True)
+            break
+    return clicked
 
 
 def fb_c_user_from_storage_state(storage_state: dict[str, Any] | None) -> str | None:
@@ -1836,6 +1913,7 @@ def try_start_auto_login_window(
     stealth_bundle: dict[str, Any],
     *,
     on_closed_storage: Callable[[dict[str, Any] | None], None] | None = None,
+    on_login_blocked: Callable[[str], None] | None = None,
     cdp_endpoint: str | None = None,
 ) -> tuple[bool, str]:
     """Фоновый поток: автоматический вход с TOTP."""
@@ -1855,6 +1933,11 @@ def try_start_auto_login_window(
             )
         except Exception:
             logger.exception("open_auto_login_window account_id=%s", account_id)
+            if on_login_blocked:
+                try:
+                    on_login_blocked("Автовход не завершился: ошибка окна Chromium или Facebook")
+                except Exception:
+                    logger.debug("on_login_blocked callback failed", exc_info=True)
         finally:
             _active_login.discard(account_id)
             _login_threads.pop(account_id, None)

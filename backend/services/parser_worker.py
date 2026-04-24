@@ -21,6 +21,7 @@ from backend.services.fb_playwright import (
     inject_local_chrome_facebook_cookies_and_reload,
     login_window_busy,
     page_requires_facebook_login,
+    resolve_facebook_remembered_login_gate,
 )
 from backend.services.fb_url_normalize import normalize_facebook_profile_url
 from backend.services.friends_list_scrape import (
@@ -286,6 +287,16 @@ def _parser_warm_facebook_home(ctx: Any, page: Any, *, timeout_ms: int = 120_000
             logger.exception("parser: inject Chrome cookies after warm")
 
 
+def _parser_settle_facebook_login_gate(page: Any) -> bool:
+    clicked = resolve_facebook_remembered_login_gate(page, attempts=3, settle_ms=1800)
+    if clicked:
+        try:
+            dismiss_facebook_dom_overlays(page)
+        except Exception:
+            pass
+    return clicked
+
+
 def _throttled_progress_update(db, job_id: int, data: dict[str, Any], *, force: bool = False) -> None:
     global _last_progress_mon
     now = time.monotonic()
@@ -508,6 +519,10 @@ def _classify_parser_friend_language(
                 scan_page.goto(profile_url, wait_until="domcontentloaded", timeout=90_000)
                 scan_page.wait_for_timeout(1400)
                 dismiss_facebook_dom_overlays(scan_page)
+                if _parser_settle_facebook_login_gate(scan_page):
+                    scan_page.goto(profile_url, wait_until="domcontentloaded", timeout=90_000)
+                    scan_page.wait_for_timeout(1200)
+                    dismiss_facebook_dom_overlays(scan_page)
                 need_login, login_msg = page_requires_facebook_login(scan_page)
                 if need_login:
                     raise FacebookSessionRequiredError(
@@ -542,6 +557,10 @@ def _classify_parser_friend_language(
         scan_page.goto(profile_url, wait_until="domcontentloaded", timeout=90_000)
         scan_page.wait_for_timeout(1400)
         dismiss_facebook_dom_overlays(scan_page)
+        if _parser_settle_facebook_login_gate(scan_page):
+            scan_page.goto(profile_url, wait_until="domcontentloaded", timeout=90_000)
+            scan_page.wait_for_timeout(1200)
+            dismiss_facebook_dom_overlays(scan_page)
         need_login, login_msg = page_requires_facebook_login(scan_page)
         if need_login:
             raise FacebookSessionRequiredError(
@@ -1005,6 +1024,7 @@ def process_parser_job(job_id: int) -> None:
                                 warm_failed = False
                                 try:
                                     _parser_warm_facebook_home(ctx, page)
+                                    _parser_settle_facebook_login_gate(page)
                                     try:
                                         page.bring_to_front()
                                     except Exception:
@@ -1072,6 +1092,14 @@ def process_parser_job(job_id: int) -> None:
                                             )
                                             page.wait_for_timeout(int(2000))
                                             dismiss_facebook_dom_overlays(page)
+                                            if _parser_settle_facebook_login_gate(page):
+                                                page.goto(
+                                                    friends_url,
+                                                    wait_until="domcontentloaded",
+                                                    timeout=120_000,
+                                                )
+                                                page.wait_for_timeout(1800)
+                                                dismiss_facebook_dom_overlays(page)
                                             need_login, login_msg = page_requires_facebook_login(page)
                                             if need_login:
                                                 raise FacebookSessionRequiredError(

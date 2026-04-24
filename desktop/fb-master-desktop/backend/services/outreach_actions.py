@@ -96,6 +96,7 @@ def run_outreach_on_profile(
             page,
             text,
             canonical_url=canonical_url,
+            person_raw_meta=person_raw_meta,
             throttle_preset=tp,
         )
         parts.append(f"dm={'ok' if dk else 'fail'}:{msg}")

@@ -37,6 +37,8 @@ from backend.services.playwright_humanize import (
 from backend.services.throttle import is_valid_throttle_preset
 from backend.services.messenger_scrape import (
     messenger_pin_restore_dialog_open,
+    open_thread,
+    scroll_messenger_open_thread_to_bottom,
     try_resolve_messenger_e2ee_thread_blockers,
     verify_outgoing_message_appeared_in_thread,
 )
@@ -617,6 +619,94 @@ def dm_direct_thread_url_for_person(
     if mid:
         return f"https://www.facebook.com/messages/t/{mid}"
     return None
+
+
+def _visible_messenger_thread_url(page: Page) -> str | None:
+    """Best-effort thread URL from the currently open Messenger page or dock popup."""
+    try:
+        raw = page.evaluate(
+            """() => {
+              const looksThread = (u) =>
+                /facebook\\.com\\/messages\\/(?:e2ee\\/)?t\\//i.test(u || '') ||
+                /messenger\\.com\\/(?:e2ee\\/)?t\\//i.test(u || '');
+              if (looksThread(location.href)) return location.href;
+              const roots = Array.from(document.querySelectorAll(
+                '[data-pagelet="MWThread"], [data-pagelet="MWChatTab"], [role="dialog"], [role="main"]'
+              ));
+              roots.push(document.body);
+              for (const root of roots) {
+                if (!root) continue;
+                const a = root.querySelector(
+                  'a[href*="/messages/t/"], a[href*="/messages/e2ee/t/"], ' +
+                  'a[href*="messenger.com/t/"], a[href*="messenger.com/e2ee/t/"]'
+                );
+                const href = a && (a.href || a.getAttribute('href'));
+                if (looksThread(href)) return href;
+              }
+              return '';
+            }"""
+        )
+    except Exception:
+        logger.debug("_visible_messenger_thread_url", exc_info=True)
+        return None
+    return dm_thread_url_from_canonical(str(raw or ""))
+
+
+def acknowledge_sent_messenger_thread_read(
+    page: Page,
+    *,
+    canonical_url: str | None = None,
+    peer_url: str | None = None,
+    person_raw_meta: Mapping[str, Any] | None = None,
+    sent_text: str = "",
+    log_label: str = "messenger",
+) -> bool:
+    """
+    After automation sends an outgoing DM, Facebook can still show this thread in
+    Messenger's "Unread" tab for the user's live webview. Opening the actual
+    thread once, scrolling to the sent bubble and waiting briefly lets Facebook
+    clear that unread marker without hiding future incoming replies.
+    """
+    peer_target = dm_thread_url_from_canonical(peer_url or "") if peer_url else None
+    target = (
+        peer_target
+        or dm_direct_thread_url_for_person(canonical_url, person_raw_meta)
+        or _visible_messenger_thread_url(page)
+    )
+    if not target:
+        return False
+    try:
+        logger.info(
+            "%s: открываем отправленный тред для снятия unread-флага Facebook",
+            log_label,
+        )
+        open_thread(page, target, timeout_ms=45_000)
+        for _ in range(3):
+            try_resolve_messenger_e2ee_thread_blockers(page)
+            scroll_messenger_open_thread_to_bottom(page)
+            page.wait_for_timeout(650)
+        if (sent_text or "").strip():
+            verify_outgoing_message_appeared_in_thread(
+                page,
+                sent_text,
+                max_attempts=8,
+                pause_ms=420,
+            )
+        try:
+            page.evaluate(
+                """() => {
+                  window.focus();
+                  const main = document.querySelector('[role="main"]') || document.body;
+                  if (main) main.dispatchEvent(new MouseEvent('mousemove', { bubbles: true }));
+                }"""
+            )
+        except Exception:
+            logger.debug("%s: focus/read acknowledgement JS failed", log_label, exc_info=True)
+        page.wait_for_timeout(random.randint(1200, 2400))
+        return True
+    except Exception:
+        logger.debug("%s: acknowledge sent thread read failed", log_label, exc_info=True)
+        return False
 
 
 def _messages_new_search_term_from_canonical_and_meta(
@@ -2328,6 +2418,7 @@ def send_dm_via_profile_popup_chat(
     text: str,
     *,
     canonical_url: str | None = None,
+    person_raw_meta: Mapping[str, Any] | None = None,
     timeout_ms: int = 90_000,
     throttle_preset: str = "medium",
 ) -> tuple[bool, str]:
@@ -2497,6 +2588,14 @@ def send_dm_via_profile_popup_chat(
         page.wait_for_timeout(settle_ms)
     except Exception:
         pass
+
+    acknowledge_sent_messenger_thread_read(
+        page,
+        canonical_url=canonical_url,
+        person_raw_meta=person_raw_meta,
+        sent_text=safe,
+        log_label="popup-dm",
+    )
 
     try_close_facebook_messenger_popup(page)
     page.wait_for_timeout(400)
@@ -3757,6 +3856,13 @@ def try_send_dm_on_open_thread_page(
             return False, vreason[:200]
 
         page.wait_for_timeout(600)
+
+        acknowledge_sent_messenger_thread_read(
+            page,
+            peer_url=peer_url,
+            sent_text=safe,
+            log_label="open-thread-dm",
+        )
 
         page.wait_for_timeout(300)
         return True, "dm_sent"
