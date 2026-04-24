@@ -131,6 +131,12 @@ async def parser_page(request: Request, db: Session = Depends(get_db)):
                 if key != "unknown"
             },
             "parser_scroll_speed": parser_scroll_speed,
+            # Кнопка «Диагностика Chromium» — только админу/разработчику.
+            # Клиент не должен её видеть: непонятно для чего и путает.
+            # Включение: env FB_MASTER_SHOW_DIAG_TOOLS=1 в launch.json.
+            "parser_diag_tools_visible": __import__("os").environ.get(
+                "FB_MASTER_SHOW_DIAG_TOOLS", ""
+            ).strip() in ("1", "true", "yes"),
         },
     )
 

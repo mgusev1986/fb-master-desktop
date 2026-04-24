@@ -63,6 +63,42 @@
       <button type="submit" class="btn btn-secondary">Сохранить</button>
       <span style="color:var(--text-secondary);font-size:var(--font-size-xs);">🚀 <strong>TURBO</strong> — как в первых версиях парсера, когда «всё летало». Минимум задержек, тысячи контактов за минуту. Если FB начал показывать капчу — верните «Быстрый»/«Обычный».</span>
     </form>
+    {% if parser_diag_tools_visible %}
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border-color,#2a2a3a);display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <button type="button" id="parser-diag-chromium" class="btn btn-secondary" style="display:inline-flex;align-items:center;gap:6px;">
+        🧪 <span>Диагностика Chromium</span>
+      </button>
+      <span style="font-size:var(--font-size-xs);color:var(--text-secondary);">Если парсер/рассылка не запускают Chromium — нажмите. Покажет точную ошибку или «OK».</span>
+    </div>
+    <pre id="parser-diag-chromium-output" style="display:none;margin-top:10px;padding:12px;background:#0f172a;color:#e2e8f0;font-size:11px;border-radius:6px;max-height:420px;overflow:auto;white-space:pre-wrap;word-break:break-all;"></pre>
+    <script>
+    (function(){
+      var btn = document.getElementById('parser-diag-chromium');
+      var out = document.getElementById('parser-diag-chromium-output');
+      if (!btn || !out) return;
+      btn.addEventListener('click', function(){
+        btn.disabled = true;
+        var old = btn.innerHTML;
+        btn.innerHTML = '⏳ <span>Тестирую…</span>';
+        out.style.display = 'block';
+        out.textContent = 'Запускаю Chromium (до 30с)…';
+        fetch('/parser/api/diag/chromium', { credentials:'same-origin' })
+          .then(function(r){ return r.json(); })
+          .then(function(j){
+            var head = j.chromium_launch_ok ? '✅ Chromium стартовал OK (' + j.chromium_launch_ms + ' мс)' : '❌ Chromium НЕ запустился';
+            out.textContent = head + '\n\n' + JSON.stringify(j, null, 2);
+          })
+          .catch(function(e){
+            out.textContent = 'Ошибка запроса: ' + (e && e.message ? e.message : String(e));
+          })
+          .finally(function(){
+            btn.disabled = false;
+            btn.innerHTML = old;
+          });
+      });
+    })();
+    </script>
+    {% endif %}
   </div>
 </div>
 {% if qp.get('started') == '1' %}
