@@ -1072,6 +1072,219 @@ def _migrate_organization_contacted_people() -> None:
             )
 
 
+def _migrate_installation_contacted_profile_urls() -> None:
+    """
+    Глобальный реестр URL профилей: пропуск «уже писали» сохраняется после удаления/переимпорта people
+    (новый person_id для того же Facebook URL).
+    """
+    with engine.begin() as conn:
+        if _is_sqlite():
+            r = conn.execute(
+                text(
+                    "SELECT 1 FROM sqlite_master WHERE type='table' "
+                    "AND name='installation_contacted_profile_urls'"
+                )
+            ).scalar()
+            if not r:
+                conn.execute(
+                    text(
+                        """
+                        CREATE TABLE installation_contacted_profile_urls (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            canonical_url VARCHAR(512) NOT NULL,
+                            first_contacted_at DATETIME,
+                            last_message_at DATETIME,
+                            UNIQUE (canonical_url)
+                        )
+                        """
+                    )
+                )
+                conn.execute(
+                    text(
+                        "CREATE INDEX IF NOT EXISTS ix_inst_prof_url "
+                        "ON installation_contacted_profile_urls (canonical_url)"
+                    )
+                )
+        else:
+            r = conn.execute(
+                text(
+                    "SELECT 1 FROM information_schema.tables "
+                    "WHERE table_schema = current_schema() "
+                    "AND table_name = 'installation_contacted_profile_urls'"
+                )
+            ).scalar()
+            if not r:
+                conn.execute(
+                    text(
+                        """
+                        CREATE TABLE installation_contacted_profile_urls (
+                            id SERIAL PRIMARY KEY,
+                            canonical_url VARCHAR(512) NOT NULL,
+                            first_contacted_at TIMESTAMPTZ,
+                            last_message_at TIMESTAMPTZ,
+                            CONSTRAINT uq_installation_contacted_profile_url UNIQUE (canonical_url)
+                        )
+                        """
+                    )
+                )
+                conn.execute(
+                    text(
+                        "CREATE INDEX IF NOT EXISTS ix_inst_prof_url "
+                        "ON installation_contacted_profile_urls (canonical_url)"
+                    )
+                )
+
+    db = SessionLocal()
+    try:
+        from backend.services.contacted_registry import (
+            prune_orphan_installation_contacted_urls,
+            sync_installation_contacted_urls_from_legacy_tables,
+        )
+
+        sync_installation_contacted_urls_from_legacy_tables(db)
+        # Чинит баг до 2.66: mirror_installation_contacted_urls_for_person_ids зеркалил URL
+        # ВСЕХ удаляемых people, в т.ч. никогда не контактированных. Из-за этого после
+        # «удалил партию импорта → загрузил похожую базу» новые контакты сразу попадали в
+        # «Уже контактировали» и блокировали рассылку. Удаляем такие ложные записи на старте.
+        try:
+            import logging as _logging
+
+            removed = prune_orphan_installation_contacted_urls(db)
+            if removed:
+                _logging.getLogger(__name__).info(
+                    "installation_contacted_profile_urls: prune removed %d orphan URLs",
+                    removed,
+                )
+        except Exception:
+            import logging as _logging
+
+            _logging.getLogger(__name__).exception(
+                "installation_contacted_profile_urls: prune failed"
+            )
+        db.commit()
+    finally:
+        db.close()
+
+
+def _migrate_discovery_tables() -> None:
+    """Таблицы автопоиска аудитории: discovery_tasks + discovery_results."""
+    with engine.begin() as conn:
+        if _is_sqlite():
+            r = conn.execute(
+                text("SELECT 1 FROM sqlite_master WHERE type='table' AND name='discovery_tasks'")
+            ).scalar()
+            if not r:
+                conn.execute(
+                    text(
+                        """
+                        CREATE TABLE discovery_tasks (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            organization_id INTEGER NOT NULL REFERENCES organizations(id),
+                            job_id INTEGER REFERENCES jobs(id),
+                            keywords TEXT NOT NULL,
+                            search_types TEXT NOT NULL,
+                            max_results_per_type INTEGER DEFAULT 50,
+                            language_hint VARCHAR(10),
+                            status VARCHAR(20) DEFAULT 'pending',
+                            results_count INTEGER DEFAULT 0,
+                            created_at DATETIME,
+                            ended_at DATETIME
+                        )
+                        """
+                    )
+                )
+                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_disc_task_org ON discovery_tasks (organization_id)"))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_disc_task_job ON discovery_tasks (job_id)"))
+            r2 = conn.execute(
+                text("SELECT 1 FROM sqlite_master WHERE type='table' AND name='discovery_results'")
+            ).scalar()
+            if not r2:
+                conn.execute(
+                    text(
+                        """
+                        CREATE TABLE discovery_results (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            task_id INTEGER NOT NULL REFERENCES discovery_tasks(id) ON DELETE CASCADE,
+                            organization_id INTEGER NOT NULL REFERENCES organizations(id),
+                            result_type VARCHAR(20) NOT NULL,
+                            url VARCHAR(512) NOT NULL,
+                            name VARCHAR(512),
+                            description TEXT,
+                            member_count INTEGER,
+                            category VARCHAR(255),
+                            relevance_score INTEGER,
+                            is_approved BOOLEAN DEFAULT 0,
+                            donor_id INTEGER REFERENCES donors(id),
+                            created_at DATETIME
+                        )
+                        """
+                    )
+                )
+                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_disc_res_task ON discovery_results (task_id)"))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_disc_res_org ON discovery_results (organization_id)"))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_disc_res_task_type ON discovery_results (task_id, result_type)"))
+        else:
+            r = conn.execute(
+                text(
+                    "SELECT 1 FROM information_schema.tables "
+                    "WHERE table_schema = current_schema() AND table_name = 'discovery_tasks'"
+                )
+            ).scalar()
+            if not r:
+                conn.execute(
+                    text(
+                        """
+                        CREATE TABLE discovery_tasks (
+                            id SERIAL PRIMARY KEY,
+                            organization_id INTEGER NOT NULL REFERENCES organizations(id),
+                            job_id INTEGER REFERENCES jobs(id),
+                            keywords TEXT NOT NULL,
+                            search_types JSONB NOT NULL DEFAULT '[]',
+                            max_results_per_type INTEGER DEFAULT 50,
+                            language_hint VARCHAR(10),
+                            status VARCHAR(20) DEFAULT 'pending',
+                            results_count INTEGER DEFAULT 0,
+                            created_at TIMESTAMPTZ,
+                            ended_at TIMESTAMPTZ
+                        )
+                        """
+                    )
+                )
+                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_disc_task_org ON discovery_tasks (organization_id)"))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_disc_task_job ON discovery_tasks (job_id)"))
+            r2 = conn.execute(
+                text(
+                    "SELECT 1 FROM information_schema.tables "
+                    "WHERE table_schema = current_schema() AND table_name = 'discovery_results'"
+                )
+            ).scalar()
+            if not r2:
+                conn.execute(
+                    text(
+                        """
+                        CREATE TABLE discovery_results (
+                            id SERIAL PRIMARY KEY,
+                            task_id INTEGER NOT NULL REFERENCES discovery_tasks(id) ON DELETE CASCADE,
+                            organization_id INTEGER NOT NULL REFERENCES organizations(id),
+                            result_type VARCHAR(20) NOT NULL,
+                            url VARCHAR(512) NOT NULL,
+                            name VARCHAR(512),
+                            description TEXT,
+                            member_count INTEGER,
+                            category VARCHAR(255),
+                            relevance_score INTEGER,
+                            is_approved BOOLEAN DEFAULT FALSE,
+                            donor_id INTEGER REFERENCES donors(id),
+                            created_at TIMESTAMPTZ
+                        )
+                        """
+                    )
+                )
+                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_disc_res_task ON discovery_results (task_id)"))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_disc_res_org ON discovery_results (organization_id)"))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_disc_res_task_type ON discovery_results (task_id, result_type)"))
+
+
 def _migrate_tenant_organization_columns() -> None:
     """Добавить organization_id к существующим таблицам (апгрейд с однокабинетной схемы)."""
     tenant_tables = (
@@ -1154,6 +1367,38 @@ def init_db() -> None:
     from backend.config import ensure_runtime_directories
 
     ensure_runtime_directories()
+    # ── Reddit Master: регистрируем модели в Base.metadata до create_all.
+    # Таблицы создаются всегда (безопасно: пустые); фактическое использование
+    # управляется FB_MASTER_REDDIT_MODULE_ENABLED.
+    try:
+        import backend.modules.reddit.models  # noqa: F401
+    except Exception:
+        # Сбой импорта модели Reddit не должен блокировать старт FB Master.
+        import logging as _logging
+
+        _logging.getLogger(__name__).exception("reddit models import failed")
+    # ── LinkedIn Master: регистрируем модели в Base.metadata до create_all.
+    try:
+        import backend.modules.linkedin.models  # noqa: F401
+    except Exception:
+        import logging as _logging
+
+        _logging.getLogger(__name__).exception("linkedin models import failed")
+    # ── Twitter / X Master: регистрируем модели в Base.metadata до create_all.
+    try:
+        import backend.modules.twitter.models  # noqa: F401
+    except Exception:
+        import logging as _logging
+
+        _logging.getLogger(__name__).exception("twitter models import failed")
+    # ── Instagram Master: регистрируем модели в Base.metadata до create_all.
+    try:
+        import backend.modules.instagram.models  # noqa: F401
+    except Exception:
+        import logging as _logging
+
+        _logging.getLogger(__name__).exception("instagram models import failed")
+
     if _is_sqlite():
         with engine.begin() as conn:
             conn.execute(text("PRAGMA journal_mode=WAL"))
@@ -1176,6 +1421,7 @@ def init_db() -> None:
     _migrate_import_batches_updated_at()
     _migrate_import_batches_skip_details()
     _migrate_organization_contacted_people()
+    _migrate_installation_contacted_profile_urls()
     _migrate_conversations_archived()
     _migrate_conversations_vk_actions()
     _migrate_conversations_messenger_ai()
@@ -1197,4 +1443,74 @@ def init_db() -> None:
     _migrate_access_keys_admin_note()
     _migrate_client_machine_presence_access_key()
     _migrate_sequence_campaigns_config()
+    _migrate_discovery_tables()
     _seed_natural_warmup_topic_stopwords()
+    _migrate_reddit_accounts_browser_mode()
+    _migrate_instagram_accounts_credentials()
+
+
+def _migrate_reddit_accounts_browser_mode() -> None:
+    """Добавить browser-mode колонки к существующей `reddit_accounts`.
+
+    Безопасно: только ADD COLUMN с дефолтами; OAuth-аккаунты сохраняют поведение.
+    """
+    cols = (
+        ("auth_mode", "VARCHAR(24) NOT NULL DEFAULT 'oauth'"),
+        ("profile_dir", "VARCHAR(512)"),
+        ("cookies_json", "JSON"),
+        ("cookies_imported_at", "TIMESTAMP WITH TIME ZONE"),
+        ("proxy_enabled", "BOOLEAN NOT NULL DEFAULT FALSE"),
+        ("proxy_url", "VARCHAR(512)"),
+        ("proxy_username", "VARCHAR(255)"),
+        ("proxy_password", "VARCHAR(255)"),
+        ("stealth_user_agent", "VARCHAR(512)"),
+        ("stealth_locale", "VARCHAR(32)"),
+        ("stealth_timezone_id", "VARCHAR(64)"),
+        ("stealth_viewport_w", "INTEGER"),
+        ("stealth_viewport_h", "INTEGER"),
+        ("session_ok", "BOOLEAN"),
+        ("last_login_check_at", "TIMESTAMP WITH TIME ZONE"),
+        ("login_blocked_at", "TIMESTAMP WITH TIME ZONE"),
+        ("login_blocked_reason", "VARCHAR(512)"),
+        ("cap_messages_per_day", "INTEGER"),
+        ("cap_comments_per_day", "INTEGER"),
+        ("cap_posts_per_day", "INTEGER"),
+    )
+    # SQLite: упрощённые типы без JSON (хранится как TEXT).
+    cols_sqlite = tuple(
+        (c, t.replace("JSON", "TEXT").replace("TIMESTAMP WITH TIME ZONE", "TIMESTAMP"))
+        for c, t in cols
+    )
+    _add_columns(
+        "reddit_accounts",
+        cols_sqlite,
+        cols,
+        extra_sql_sqlite=[
+            "CREATE INDEX IF NOT EXISTS ix_reddit_accounts_auth_mode ON reddit_accounts (auth_mode)",
+        ],
+        extra_sql_pg=[
+            "CREATE INDEX IF NOT EXISTS ix_reddit_accounts_auth_mode ON reddit_accounts (auth_mode)",
+        ],
+    )
+
+
+def _migrate_instagram_accounts_credentials() -> None:
+    """Добавить поля login_username/enc_password/enc_totp_secret к `instagram_accounts`.
+
+    Нужно для режима «свой личный аккаунт через логин+пароль» (v2.34+).
+    Безопасно: только ADD COLUMN nullable — купленные аккаунты (cookies-only)
+    продолжают работать.
+    """
+    _add_columns(
+        "instagram_accounts",
+        (
+            ("login_username", "VARCHAR(255)"),
+            ("enc_password", "TEXT"),
+            ("enc_totp_secret", "TEXT"),
+        ),
+        (
+            ("login_username", "VARCHAR(255)"),
+            ("enc_password", "TEXT"),
+            ("enc_totp_secret", "TEXT"),
+        ),
+    )

@@ -1137,10 +1137,30 @@ def _migrate_installation_contacted_profile_urls() -> None:
     db = SessionLocal()
     try:
         from backend.services.contacted_registry import (
+            prune_orphan_installation_contacted_urls,
             sync_installation_contacted_urls_from_legacy_tables,
         )
 
         sync_installation_contacted_urls_from_legacy_tables(db)
+        # Чинит баг до 2.66: mirror_installation_contacted_urls_for_person_ids зеркалил URL
+        # ВСЕХ удаляемых people, в т.ч. никогда не контактированных. Из-за этого после
+        # «удалил партию импорта → загрузил похожую базу» новые контакты сразу попадали в
+        # «Уже контактировали» и блокировали рассылку. Удаляем такие ложные записи на старте.
+        try:
+            import logging as _logging
+
+            removed = prune_orphan_installation_contacted_urls(db)
+            if removed:
+                _logging.getLogger(__name__).info(
+                    "installation_contacted_profile_urls: prune removed %d orphan URLs",
+                    removed,
+                )
+        except Exception:
+            import logging as _logging
+
+            _logging.getLogger(__name__).exception(
+                "installation_contacted_profile_urls: prune failed"
+            )
         db.commit()
     finally:
         db.close()

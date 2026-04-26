@@ -96,19 +96,177 @@ def upsert_installation_contacted_profile_url(
     db.flush()
 
 
+def _person_ids_with_contact_evidence(db, candidate_ids: set[int]) -> set[int]:
+    """
+    Подмножество candidate_ids, у кого есть реальный след исходящего касания
+    (без installation_contacted_profile_urls — иначе циклическая логика).
+    """
+    if not candidate_ids:
+        return set()
+    cids = [int(x) for x in candidate_ids]
+    out: set[int] = set()
+    for (pid,) in (
+        db.query(ContactedPerson.person_id)
+        .filter(ContactedPerson.person_id.in_(cids))
+        .distinct()
+    ):
+        if pid is not None:
+            out.add(int(pid))
+    for (pid,) in (
+        db.query(OrganizationContactedPerson.person_id)
+        .filter(OrganizationContactedPerson.person_id.in_(cids))
+        .distinct()
+    ):
+        if pid is not None:
+            out.add(int(pid))
+    for (pid,) in (
+        db.query(OutreachQueue.person_id)
+        .filter(OutreachQueue.person_id.in_(cids), OutreachQueue.status == "done")
+        .distinct()
+    ):
+        if pid is not None:
+            out.add(int(pid))
+    for (pid,) in (
+        db.query(CRMActivity.person_id)
+        .filter(
+            CRMActivity.person_id.in_(cids),
+            CRMActivity.activity_type.in_(_OUTREACH_SKIP_CRM_TYPES),
+        )
+        .distinct()
+    ):
+        if pid is not None:
+            out.add(int(pid))
+    for (pid,) in (
+        db.query(JobEvent.person_id)
+        .filter(
+            JobEvent.person_id.in_(cids),
+            JobEvent.event_type == "outreach_row_done",
+            JobEvent.outcome == "ok",
+        )
+        .distinct()
+    ):
+        if pid is not None:
+            out.add(int(pid))
+    for (pid,) in (
+        db.query(Conversation.person_id)
+        .join(Message, Message.conversation_id == Conversation.id)
+        .filter(
+            Conversation.person_id.in_(cids),
+            func.lower(func.trim(Message.direction)) == "out",
+        )
+        .distinct()
+    ):
+        if pid is not None:
+            out.add(int(pid))
+    for (pid,) in (
+        db.query(Conversation.person_id)
+        .join(MessengerSendQueue, MessengerSendQueue.conversation_id == Conversation.id)
+        .filter(
+            Conversation.person_id.in_(cids),
+            MessengerSendQueue.status == "sent",
+        )
+        .distinct()
+    ):
+        if pid is not None:
+            out.add(int(pid))
+    remaining = set(cids) - out
+    if remaining:
+        for camp in db.query(OutreachCampaign).yield_per(100):
+            cfg = camp.config if isinstance(camp.config, dict) else {}
+            if outreach_campaign_kind_normalized(cfg.get("campaign_kind")) not in ("dm", "comment"):
+                continue
+            for pid in outreach_done_person_ids(cfg):
+                pid_i = int(pid)
+                if pid_i in remaining:
+                    out.add(pid_i)
+                    remaining.discard(pid_i)
+            if not remaining:
+                break
+    return out
+
+
 def mirror_installation_contacted_urls_for_person_ids(db, person_ids: list[int] | set[int]) -> None:
     """
-    Перед удалением строк people: зафиксировать их canonical_url в глобальном реестре,
-    чтобы повторный импорт того же профиля не обходил пропуск «уже писали».
+    Перед удалением строк people: зафиксировать canonical_url в глобальном реестре —
+    но только для тех person_id, у кого реально был исходящий контакт. Иначе при цикле
+    «загрузил базу → удалил партию → загрузил снова» новый импорт ложно попадал в
+    «уже писали» и блокировал рассылку (баг до 2.66).
     """
     if not person_ids:
         return
-    pids = [int(x) for x in person_ids]
-    rows = db.query(Person.canonical_url).filter(Person.id.in_(pids)).all()
+    pids = {int(x) for x in person_ids}
+    evidence_pids = _person_ids_with_contact_evidence(db, pids)
+    if not evidence_pids:
+        return
+    rows = (
+        db.query(Person.canonical_url).filter(Person.id.in_(list(evidence_pids))).all()
+    )
     for (curl,) in rows:
         if curl and str(curl).strip():
             upsert_installation_contacted_profile_url(db, canonical_url=str(curl))
     db.flush()
+
+
+def prune_orphan_installation_contacted_urls(db) -> int:
+    """
+    Удаляет URL из installation_contacted_profile_urls, если для URL есть Person в БД,
+    но у этого Person нет ни одного следа реального контакта. Это ровно те случаи,
+    когда в прошлых версиях mirror_* зеркалил все URL подряд (включая никогда не контактированных)
+    после «удалил партию импорта» / «удалил карточку», и потом тот же URL снова появлялся при
+    импорте — карточка попадала в «Уже контактировали» без реальной истории.
+
+    Не трогает orphan-URL (без матча на Person): для них восстановить «был ли реальный контакт»
+    нечем — оставляем, чтобы не потерять историю реальных касаний после удаления карточек.
+
+    Возвращает число удалённых URL. Идемпотентно, безопасно вызывать при каждом старте.
+    """
+    rows = db.query(
+        InstallationContactedProfileUrl.id, InstallationContactedProfileUrl.canonical_url
+    ).all()
+    if not rows:
+        return 0
+    by_url: dict[str, list[int]] = {}
+    for rid, url in rows:
+        if url is None:
+            continue
+        by_url.setdefault(str(url), []).append(int(rid))
+    if not by_url:
+        return 0
+
+    person_pairs = (
+        db.query(Person.canonical_url, Person.id)
+        .filter(Person.canonical_url.in_(list(by_url.keys())))
+        .all()
+    )
+    pids_by_url: dict[str, set[int]] = {}
+    all_pids: set[int] = set()
+    for url, pid in person_pairs:
+        if not url or pid is None:
+            continue
+        pids_by_url.setdefault(str(url), set()).add(int(pid))
+        all_pids.add(int(pid))
+
+    if not all_pids:
+        return 0
+
+    evidence_pids = _person_ids_with_contact_evidence(db, all_pids)
+
+    to_delete: list[int] = []
+    for url, registry_ids in by_url.items():
+        pids = pids_by_url.get(url)
+        if not pids:
+            continue  # orphan URL — оставляем
+        if not (pids & evidence_pids):
+            to_delete.extend(registry_ids)
+
+    if not to_delete:
+        return 0
+
+    db.query(InstallationContactedProfileUrl).filter(
+        InstallationContactedProfileUrl.id.in_(to_delete)
+    ).delete(synchronize_session=False)
+    db.flush()
+    return len(to_delete)
 
 
 def sync_installation_contacted_urls_from_legacy_tables(db) -> None:

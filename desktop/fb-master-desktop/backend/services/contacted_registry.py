@@ -4,16 +4,30 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from sqlalchemy import select, union
+from sqlalchemy import func, select, union
 
 from backend.models import (
+    CRMActivity,
     ContactedPerson,
     Conversation,
     FBAccount,
+    InstallationContactedProfileUrl,
+    JobEvent,
+    Message,
+    MessengerSendQueue,
     OrganizationContactedPerson,
+    OutreachCampaign,
     OutreachQueue,
     Person,
 )
+from backend.services.fb_url_normalize import normalize_facebook_profile_url
+from backend.services.outreach_campaign_done import (
+    outreach_campaign_kind_normalized,
+    outreach_done_person_ids,
+)
+
+# Успешные исходящие касания рассылки (аудит в CRM / job_events переживает сбои contacted_people).
+_OUTREACH_SKIP_CRM_TYPES = ("outreach_dm", "outreach_comment")
 
 
 def _resolve_organization_id_for_contact(
@@ -29,6 +43,383 @@ def _resolve_organization_id_for_contact(
     if person is not None:
         return int(person.organization_id)
     return None
+
+
+def _norm_profile_url_for_installation_registry(raw: str) -> str:
+    """Нормализованный URL профиля для глобального реестра; пустая строка — невалидный ввод."""
+    s = (raw or "").strip()
+    if not s:
+        return ""
+    nu = normalize_facebook_profile_url(s)
+    url = (nu or s).strip()[:512]
+    if not url:
+        return ""
+    low = url.lower().rstrip("/")
+    if low in (
+        "https://www.facebook.com",
+        "http://www.facebook.com",
+        "https://facebook.com",
+        "http://facebook.com",
+    ):
+        return ""
+    return url
+
+
+def upsert_installation_contacted_profile_url(
+    db,
+    *,
+    canonical_url: str,
+    touched_at: datetime | None = None,
+) -> None:
+    """Глобально по БД: URL профиля, которому уже писали/комментировали (переживает смену person_id)."""
+    now = touched_at or datetime.now(timezone.utc)
+    url = _norm_profile_url_for_installation_registry(canonical_url)
+    if not url:
+        return
+    row = (
+        db.query(InstallationContactedProfileUrl)
+        .filter(InstallationContactedProfileUrl.canonical_url == url)
+        .first()
+    )
+    if row:
+        row.last_message_at = now
+        if row.first_contacted_at is None:
+            row.first_contacted_at = now
+    else:
+        db.add(
+            InstallationContactedProfileUrl(
+                canonical_url=url,
+                first_contacted_at=now,
+                last_message_at=now,
+            )
+        )
+    db.flush()
+
+
+def _person_ids_with_contact_evidence(db, candidate_ids: set[int]) -> set[int]:
+    """
+    Подмножество candidate_ids, у кого есть реальный след исходящего касания
+    (без installation_contacted_profile_urls — иначе циклическая логика).
+    """
+    if not candidate_ids:
+        return set()
+    cids = [int(x) for x in candidate_ids]
+    out: set[int] = set()
+    for (pid,) in (
+        db.query(ContactedPerson.person_id)
+        .filter(ContactedPerson.person_id.in_(cids))
+        .distinct()
+    ):
+        if pid is not None:
+            out.add(int(pid))
+    for (pid,) in (
+        db.query(OrganizationContactedPerson.person_id)
+        .filter(OrganizationContactedPerson.person_id.in_(cids))
+        .distinct()
+    ):
+        if pid is not None:
+            out.add(int(pid))
+    for (pid,) in (
+        db.query(OutreachQueue.person_id)
+        .filter(OutreachQueue.person_id.in_(cids), OutreachQueue.status == "done")
+        .distinct()
+    ):
+        if pid is not None:
+            out.add(int(pid))
+    for (pid,) in (
+        db.query(CRMActivity.person_id)
+        .filter(
+            CRMActivity.person_id.in_(cids),
+            CRMActivity.activity_type.in_(_OUTREACH_SKIP_CRM_TYPES),
+        )
+        .distinct()
+    ):
+        if pid is not None:
+            out.add(int(pid))
+    for (pid,) in (
+        db.query(JobEvent.person_id)
+        .filter(
+            JobEvent.person_id.in_(cids),
+            JobEvent.event_type == "outreach_row_done",
+            JobEvent.outcome == "ok",
+        )
+        .distinct()
+    ):
+        if pid is not None:
+            out.add(int(pid))
+    for (pid,) in (
+        db.query(Conversation.person_id)
+        .join(Message, Message.conversation_id == Conversation.id)
+        .filter(
+            Conversation.person_id.in_(cids),
+            func.lower(func.trim(Message.direction)) == "out",
+        )
+        .distinct()
+    ):
+        if pid is not None:
+            out.add(int(pid))
+    for (pid,) in (
+        db.query(Conversation.person_id)
+        .join(MessengerSendQueue, MessengerSendQueue.conversation_id == Conversation.id)
+        .filter(
+            Conversation.person_id.in_(cids),
+            MessengerSendQueue.status == "sent",
+        )
+        .distinct()
+    ):
+        if pid is not None:
+            out.add(int(pid))
+    remaining = set(cids) - out
+    if remaining:
+        for camp in db.query(OutreachCampaign).yield_per(100):
+            cfg = camp.config if isinstance(camp.config, dict) else {}
+            if outreach_campaign_kind_normalized(cfg.get("campaign_kind")) not in ("dm", "comment"):
+                continue
+            for pid in outreach_done_person_ids(cfg):
+                pid_i = int(pid)
+                if pid_i in remaining:
+                    out.add(pid_i)
+                    remaining.discard(pid_i)
+            if not remaining:
+                break
+    return out
+
+
+def mirror_installation_contacted_urls_for_person_ids(db, person_ids: list[int] | set[int]) -> None:
+    """
+    Перед удалением строк people: зафиксировать canonical_url в глобальном реестре —
+    но только для тех person_id, у кого реально был исходящий контакт. Иначе при цикле
+    «загрузил базу → удалил партию → загрузил снова» новый импорт ложно попадал в
+    «уже писали» и блокировал рассылку (баг до 2.66).
+    """
+    if not person_ids:
+        return
+    pids = {int(x) for x in person_ids}
+    evidence_pids = _person_ids_with_contact_evidence(db, pids)
+    if not evidence_pids:
+        return
+    rows = (
+        db.query(Person.canonical_url).filter(Person.id.in_(list(evidence_pids))).all()
+    )
+    for (curl,) in rows:
+        if curl and str(curl).strip():
+            upsert_installation_contacted_profile_url(db, canonical_url=str(curl))
+    db.flush()
+
+
+def prune_orphan_installation_contacted_urls(db) -> int:
+    """
+    Удаляет URL из installation_contacted_profile_urls, если для URL есть Person в БД,
+    но у этого Person нет ни одного следа реального контакта. Это ровно те случаи,
+    когда в прошлых версиях mirror_* зеркалил все URL подряд (включая никогда не контактированных)
+    после «удалил партию импорта» / «удалил карточку», и потом тот же URL снова появлялся при
+    импорте — карточка попадала в «Уже контактировали» без реальной истории.
+
+    Не трогает orphan-URL (без матча на Person): для них восстановить «был ли реальный контакт»
+    нечем — оставляем, чтобы не потерять историю реальных касаний после удаления карточек.
+
+    Возвращает число удалённых URL. Идемпотентно, безопасно вызывать при каждом старте.
+    """
+    rows = db.query(
+        InstallationContactedProfileUrl.id, InstallationContactedProfileUrl.canonical_url
+    ).all()
+    if not rows:
+        return 0
+    by_url: dict[str, list[int]] = {}
+    for rid, url in rows:
+        if url is None:
+            continue
+        by_url.setdefault(str(url), []).append(int(rid))
+    if not by_url:
+        return 0
+
+    person_pairs = (
+        db.query(Person.canonical_url, Person.id)
+        .filter(Person.canonical_url.in_(list(by_url.keys())))
+        .all()
+    )
+    pids_by_url: dict[str, set[int]] = {}
+    all_pids: set[int] = set()
+    for url, pid in person_pairs:
+        if not url or pid is None:
+            continue
+        pids_by_url.setdefault(str(url), set()).add(int(pid))
+        all_pids.add(int(pid))
+
+    if not all_pids:
+        return 0
+
+    evidence_pids = _person_ids_with_contact_evidence(db, all_pids)
+
+    to_delete: list[int] = []
+    for url, registry_ids in by_url.items():
+        pids = pids_by_url.get(url)
+        if not pids:
+            continue  # orphan URL — оставляем
+        if not (pids & evidence_pids):
+            to_delete.extend(registry_ids)
+
+    if not to_delete:
+        return 0
+
+    db.query(InstallationContactedProfileUrl).filter(
+        InstallationContactedProfileUrl.id.in_(to_delete)
+    ).delete(synchronize_session=False)
+    db.flush()
+    return len(to_delete)
+
+
+def sync_installation_contacted_urls_from_legacy_tables(db) -> None:
+    """
+    Идемпотентно: подтягивает URL из contacted_people / organization_contacted_people / успешной очереди рассылки,
+    а также из CRM (успешные ЛС/комментарии), job_events (outreach_row_done), фактических исходящих в Messenger
+    (messages.direction=out) и успешной очереди отправки из UI (messenger_send_queue.sent), если они ещё не попали
+    в installation_contacted_profile_urls (восстановление после сбоев или старых версий).
+    """
+    seen: set[str] = set()
+    for (u,) in db.query(InstallationContactedProfileUrl.canonical_url).all():
+        if u and str(u).strip():
+            nu = _norm_profile_url_for_installation_registry(str(u))
+            if nu:
+                seen.add(nu)
+    for (u,) in db.query(ContactedPerson.canonical_url).distinct():
+        if u and str(u).strip():
+            nu = _norm_profile_url_for_installation_registry(str(u))
+            if not nu:
+                continue
+            if nu not in seen:
+                seen.add(nu)
+                upsert_installation_contacted_profile_url(db, canonical_url=str(u))
+    for (u,) in db.query(OrganizationContactedPerson.canonical_url).distinct():
+        if u and str(u).strip():
+            nu = _norm_profile_url_for_installation_registry(str(u))
+            if not nu:
+                continue
+            if nu not in seen:
+                seen.add(nu)
+                upsert_installation_contacted_profile_url(db, canonical_url=str(u))
+    done_rows = (
+        db.query(Person.canonical_url)
+        .join(OutreachQueue, OutreachQueue.person_id == Person.id)
+        .filter(OutreachQueue.status == "done")
+        .distinct()
+    )
+    for (u,) in done_rows:
+        if u and str(u).strip():
+            nu = _norm_profile_url_for_installation_registry(str(u))
+            if not nu:
+                continue
+            if nu not in seen:
+                seen.add(nu)
+                upsert_installation_contacted_profile_url(db, canonical_url=str(u))
+
+    crm_urls = (
+        db.query(Person.canonical_url)
+        .join(CRMActivity, CRMActivity.person_id == Person.id)
+        .filter(CRMActivity.activity_type.in_(_OUTREACH_SKIP_CRM_TYPES))
+        .distinct()
+    )
+    for (u,) in crm_urls:
+        if u and str(u).strip():
+            nu = _norm_profile_url_for_installation_registry(str(u))
+            if not nu:
+                continue
+            if nu not in seen:
+                seen.add(nu)
+                upsert_installation_contacted_profile_url(db, canonical_url=str(u))
+
+    je_urls = (
+        db.query(Person.canonical_url)
+        .join(JobEvent, JobEvent.person_id == Person.id)
+        .filter(
+            JobEvent.event_type == "outreach_row_done",
+            JobEvent.outcome == "ok",
+        )
+        .distinct()
+    )
+    for (u,) in je_urls:
+        if u and str(u).strip():
+            nu = _norm_profile_url_for_installation_registry(str(u))
+            if not nu:
+                continue
+            if nu not in seen:
+                seen.add(nu)
+                upsert_installation_contacted_profile_url(db, canonical_url=str(u))
+
+    for camp in db.query(OutreachCampaign).yield_per(100):
+        cfg = camp.config if isinstance(camp.config, dict) else {}
+        if outreach_campaign_kind_normalized(cfg.get("campaign_kind")) not in ("dm", "comment"):
+            continue
+        for pid in outreach_done_person_ids(cfg):
+            p = db.get(Person, int(pid))
+            if not p or not (p.canonical_url or "").strip():
+                continue
+            nu = _norm_profile_url_for_installation_registry(str(p.canonical_url))
+            if not nu:
+                continue
+            if nu not in seen:
+                seen.add(nu)
+                upsert_installation_contacted_profile_url(db, canonical_url=str(p.canonical_url))
+
+    send_urls = (
+        db.query(Person.canonical_url)
+        .join(Conversation, Conversation.person_id == Person.id)
+        .join(MessengerSendQueue, MessengerSendQueue.conversation_id == Conversation.id)
+        .filter(
+            Conversation.person_id.isnot(None),
+            MessengerSendQueue.status == "sent",
+        )
+        .distinct()
+    )
+    for (u,) in send_urls:
+        if u and str(u).strip():
+            nu = _norm_profile_url_for_installation_registry(str(u))
+            if not nu:
+                continue
+            if nu not in seen:
+                seen.add(nu)
+                upsert_installation_contacted_profile_url(db, canonical_url=str(u))
+
+    msg_urls = (
+        db.query(Person.canonical_url)
+        .join(Conversation, Conversation.person_id == Person.id)
+        .join(Message, Message.conversation_id == Conversation.id)
+        .filter(
+            Conversation.person_id.isnot(None),
+            func.lower(func.trim(Message.direction)) == "out",
+        )
+        .distinct()
+    )
+    for (u,) in msg_urls:
+        if u and str(u).strip():
+            nu = _norm_profile_url_for_installation_registry(str(u))
+            if not nu:
+                continue
+            if nu not in seen:
+                seen.add(nu)
+                upsert_installation_contacted_profile_url(db, canonical_url=str(u))
+    db.flush()
+
+
+def installation_global_contacted_canonical_urls_set(db) -> set[str]:
+    """Множество канонических URL (нормализованных), по которым нельзя снова ставить в очередь при включённом пропуске."""
+    out: set[str] = set()
+    for (u,) in db.query(InstallationContactedProfileUrl.canonical_url).all():
+        if u:
+            nu = _norm_profile_url_for_installation_registry(str(u))
+            if nu:
+                out.add(nu)
+    return out
+
+
+def canonical_url_in_global_contacted_set(
+    canonical_url: str | None, frozen_norm_urls: set[str]
+) -> bool:
+    """True, если URL профиля совпадает с глобальным реестром (после нормализации)."""
+    if not frozen_norm_urls:
+        return False
+    nu = _norm_profile_url_for_installation_registry(str(canonical_url or ""))
+    return bool(nu) and nu in frozen_norm_urls
 
 
 def upsert_organization_contacted(
@@ -69,6 +460,7 @@ def upsert_organization_contacted(
             )
         )
     db.flush()
+    upsert_installation_contacted_profile_url(db, canonical_url=url, touched_at=now)
 
 
 def upsert_contacted(
@@ -118,6 +510,8 @@ def upsert_contacted(
             last_fb_account_id=int(fb_account_id),
             touched_at=now,
         )
+    else:
+        upsert_installation_contacted_profile_url(db, canonical_url=url, touched_at=now)
 
 
 def preserve_contacted_registry_before_fb_account_delete(
@@ -187,7 +581,8 @@ def prune_organization_contacted_if_no_account_pairs(
 def installation_global_skip_person_ids(db) -> set[int]:
     """
     Все person_id, кому уже уходило исходящее касание в любой организации:
-    реестр «Уже контактировали», успешные строки рассылки (любая кампания), диалоги Messenger.
+    реестр «Уже контактировали», успешные строки рассылки (любая кампания), диалоги Messenger,
+    исходящие сообщения в Messenger и успешные отправки из очереди UI.
     Используется для режима skip_contacted_scope=global.
     """
     out: set[int] = set()
@@ -211,6 +606,55 @@ def installation_global_skip_person_ids(db) -> set[int]:
     ):
         if pid is not None:
             out.add(int(pid))
+    for (pid,) in (
+        db.query(CRMActivity.person_id)
+        .filter(
+            CRMActivity.activity_type.in_(_OUTREACH_SKIP_CRM_TYPES),
+            CRMActivity.person_id.isnot(None),
+        )
+        .distinct()
+    ):
+        if pid is not None:
+            out.add(int(pid))
+    for (pid,) in (
+        db.query(JobEvent.person_id)
+        .filter(
+            JobEvent.event_type == "outreach_row_done",
+            JobEvent.outcome == "ok",
+            JobEvent.person_id.isnot(None),
+        )
+        .distinct()
+    ):
+        if pid is not None:
+            out.add(int(pid))
+    for (pid,) in (
+        db.query(Conversation.person_id)
+        .join(MessengerSendQueue, MessengerSendQueue.conversation_id == Conversation.id)
+        .filter(
+            Conversation.person_id.isnot(None),
+            MessengerSendQueue.status == "sent",
+        )
+        .distinct()
+    ):
+        if pid is not None:
+            out.add(int(pid))
+    for (pid,) in (
+        db.query(Conversation.person_id)
+        .join(Message, Message.conversation_id == Conversation.id)
+        .filter(
+            Conversation.person_id.isnot(None),
+            func.lower(func.trim(Message.direction)) == "out",
+        )
+        .distinct()
+    ):
+        if pid is not None:
+            out.add(int(pid))
+    for camp in db.query(OutreachCampaign).yield_per(100):
+        cfg = camp.config if isinstance(camp.config, dict) else {}
+        if outreach_campaign_kind_normalized(cfg.get("campaign_kind")) not in ("dm", "comment"):
+            continue
+        for pid in outreach_done_person_ids(cfg):
+            out.add(int(pid))
     return out
 
 
@@ -219,7 +663,8 @@ def engaged_person_ids_subquery():
     DISTINCT person_id для людей, с кем уже был контакт:
     1) через глобальный реестр contacted_people,
     2) через учёт на уровне кабинета organization_contacted_people,
-    3) через связанный Messenger-диалог.
+    3) через связанный Messenger-диалог,
+    4) через глобальный URL-реестр installation_contacted_profile_urls (в т.ч. после переимпорта контакта).
     """
     contacted_sel = (
         select(ContactedPerson.person_id.label("person_id"))
@@ -233,4 +678,30 @@ def engaged_person_ids_subquery():
         select(Conversation.person_id.label("person_id"))
         .where(Conversation.person_id.is_not(None))
     )
-    return union(contacted_sel, org_sel, messenger_sel).subquery()
+    inst_url_sq = select(InstallationContactedProfileUrl.canonical_url)
+    installation_sel = select(Person.id.label("person_id")).where(
+        Person.canonical_url.in_(inst_url_sq)
+    )
+    crm_sel = (
+        select(CRMActivity.person_id.label("person_id"))
+        .where(
+            CRMActivity.activity_type.in_(_OUTREACH_SKIP_CRM_TYPES),
+            CRMActivity.person_id.is_not(None),
+        )
+    )
+    job_done_sel = (
+        select(JobEvent.person_id.label("person_id"))
+        .where(
+            JobEvent.event_type == "outreach_row_done",
+            JobEvent.outcome == "ok",
+            JobEvent.person_id.is_not(None),
+        )
+    )
+    return union(
+        contacted_sel,
+        org_sel,
+        messenger_sel,
+        installation_sel,
+        crm_sel,
+        job_done_sel,
+    ).subquery()
