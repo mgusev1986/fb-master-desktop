@@ -87,8 +87,21 @@ jobs:
 
       - name: Upload .exe artifact
         uses: actions/upload-artifact@v4
+        continue-on-error: true  # storage quota — не валим job; .exe всё равно уйдёт в GH Release ниже
         with:
           name: SOCMASTER-${{ steps.ver.outputs.v }}-win
           path: "artifacts-win/*"
           if-no-files-found: error
           retention-days: 30
+
+      - name: Publish .exe to GitHub Release (fallback when artifact storage full)
+        if: always()
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.ver.outputs.v }}
+          name: SOCMASTER ${{ steps.ver.outputs.v }}
+          files: |
+            artifacts-win/*.exe
+            artifacts-win/*.exe.blockmap
+          fail_on_unmatched_files: true
+          token: ${{ secrets.GITHUB_TOKEN }}
