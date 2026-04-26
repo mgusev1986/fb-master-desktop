@@ -13,6 +13,11 @@ on:
     tags:
       - 'v*'
 
+# contents: write нужен softprops/action-gh-release для создания/обновления GitHub Release
+# (fallback, когда квота Actions artifacts исчерпана).
+permissions:
+  contents: write
+
 jobs:
   build-windows:
     runs-on: windows-latest
