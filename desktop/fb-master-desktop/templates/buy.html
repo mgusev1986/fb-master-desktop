@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>FB Master — доступ</title>
+  <title>SOCMASTER — доступ</title>
   <link rel="stylesheet" href="{{ url_for('static', path='css/main.css') }}"/>
   <style>
     .fbm-premium-page {
@@ -128,7 +128,7 @@
 <body>
 <div class="fbm-premium-page">
   <div class="fbm-premium-card">
-    <p class="fbm-premium-eyebrow">FB Master</p>
+    <p class="fbm-premium-eyebrow">SOCMASTER</p>
     <h1>Скачивание и доступ</h1>
 
     {% if buy_error %}
@@ -156,7 +156,7 @@
     <form method="post" action="/billing/nowpayments/create" class="settings-form fbm-premium-form" style="margin:0">
       <input type="hidden" name="billing_source" value="buy"/>
       <input type="hidden" name="duration" value="365"/>
-      <p class="fbm-premium-note" style="margin-bottom:1rem">Подписка на 1 год — <strong>{{ np_price_365 }} USD</strong></p>
+      <p class="fbm-premium-note" style="margin-bottom:1rem">Подписка на 35 дней — <strong>{{ np_price_365 }} USD</strong></p>
       <input type="hidden" name="device_id" id="buy_device_id" value=""/>
       <button type="submit" class="fbm-premium-submit" id="buy-np-submit" disabled>Оплатить</button>
     </form>
