@@ -963,6 +963,31 @@ def scroll_friends_page(
     """
     merged: dict[str, str] = dict(initial_merged) if initial_merged else {}
     restricted: dict[str, bool] = dict(initial_restricted) if initial_restricted else {}
+    # Множитель задержек: fast≈0.35 (1–2с/раунд, без длинных пауз),
+    # normal=1.0 (2.2–5.2с/раунд), gentle=1.3. Читается из Setting /
+    # FB_MASTER_PARSER_SPEED, чтобы клиент мог ускорить парсер, если
+    # его прокси/аккаунт это выдерживают (диагностика: у клиентов на
+    # M1/Windows парсер шёл ~5.5с/раунд, ~1.5ч на 700 раундов).
+    try:
+        from backend.database import SessionLocal
+        from backend.services.parser_speed import (
+            get_parser_scroll_speed,
+            scroll_random_pause_prob,
+            scroll_wait_multiplier,
+        )
+
+        _db_for_speed = SessionLocal()
+        try:
+            _speed_mode = get_parser_scroll_speed(_db_for_speed)
+        finally:
+            _db_for_speed.close()
+        _wait_mult = scroll_wait_multiplier(_speed_mode)
+        _rand_mult = scroll_random_pause_prob(_speed_mode)
+    except Exception:
+        _speed_mode = "normal"
+        _wait_mult = 1.0
+        _rand_mult = 1.0
+    logger.info("friends scroll: speed_mode=%s (wait×%.2f, rand_prob×%.2f)", _speed_mode, _wait_mult, _rand_mult)
     # last_total с 0: иначе при предзаполнении из БД первая итерация даёт «нет новых» и ранняя остановка.
     last_total = 0
     no_new_rounds = 0
@@ -1128,17 +1153,17 @@ def scroll_friends_page(
         if i % end_every == 0:
             page.evaluate(SCROLL_TO_END_ENHANCED_JS)
             lo, hi = (3400, 6800) if quality_slow else (2600, 5200)
-            page.wait_for_timeout(int(random.uniform(lo, hi)))
+            page.wait_for_timeout(int(random.uniform(lo, hi) * _wait_mult))
         else:
             step = max(180, int(vh * random.uniform(0.22, 0.52)))
             page.evaluate(SCROLL_FRIENDS_ENHANCED_JS, step)
             lo, hi = (3000, 6200) if quality_slow else (2200, 4800)
-            page.wait_for_timeout(int(random.uniform(lo, hi)))
+            page.wait_for_timeout(int(random.uniform(lo, hi) * _wait_mult))
 
-        if random.random() < (0.22 if quality_slow else 0.16):
-            page.wait_for_timeout(int(random.uniform(4200, 11000)))
-        if random.random() < 0.12:
-            page.wait_for_timeout(int(random.uniform(800, 2800)))
+        if random.random() < (0.22 if quality_slow else 0.16) * _rand_mult:
+            page.wait_for_timeout(int(random.uniform(4200, 11000) * _wait_mult))
+        if random.random() < 0.12 * _rand_mult:
+            page.wait_for_timeout(int(random.uniform(800, 2800) * _wait_mult))
 
     if merged:
         if live_path:

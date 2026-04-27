@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{% if cabinet_client_mode(request) %}Поиск людей — FB Master{% else %}Парсер друзей — FB Master{% endif %}{% endblock %}
+{% block title %}{% if cabinet_client_mode(request) %}Поиск людей — SOCMASTER{% else %}Парсер друзей — SOCMASTER{% endif %}{% endblock %}
 
 {% block content %}
 <div class="page-header">
@@ -43,6 +43,64 @@
   </div>
 </div>
 {% endif %}
+{% if qp.get('notice') == 'speed_saved' %}
+<div class="card" style="margin-bottom:16px;border-color:var(--success)">
+  <div class="card-body" style="font-size:var(--font-size-sm)">
+    <i class="ti ti-check"></i> Режим скорости парсера обновлён: <strong>{{ qp.get('mode') or 'normal' }}</strong>.
+  </div>
+</div>
+{% endif %}
+<div class="card" style="margin-bottom:16px">
+  <div class="card-body" style="font-size:var(--font-size-sm)">
+    <form method="post" action="/parser/api/scroll-speed" style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;">
+      <label for="parser-scroll-speed" style="font-weight:600;">Скорость сбора:</label>
+      <select id="parser-scroll-speed" name="mode" class="form-input" style="max-width:320px;">
+        <option value="turbo" {% if parser_scroll_speed == 'turbo' %}selected{% endif %}>🚀 TURBO (≈0.2–0.5 с/раунд, как в v1 — самый быстрый, выше риск капчи)</option>
+        <option value="fast" {% if parser_scroll_speed == 'fast' %}selected{% endif %}>⚡ Быстрый (≈1–2 с/раунд)</option>
+        <option value="normal" {% if parser_scroll_speed == 'normal' or not parser_scroll_speed %}selected{% endif %}>🐢 Обычный (≈2–5 с/раунд, дефолт)</option>
+        <option value="gentle" {% if parser_scroll_speed == 'gentle' %}selected{% endif %}>🪶 Мягкий (≈3–7 с/раунд, для слабых аккаунтов)</option>
+      </select>
+      <button type="submit" class="btn btn-secondary">Сохранить</button>
+      <span style="color:var(--text-secondary);font-size:var(--font-size-xs);">🚀 <strong>TURBO</strong> — как в первых версиях парсера, когда «всё летало». Минимум задержек, тысячи контактов за минуту. Если FB начал показывать капчу — верните «Быстрый»/«Обычный».</span>
+    </form>
+    {% if parser_diag_tools_visible %}
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border-color,#2a2a3a);display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <button type="button" id="parser-diag-chromium" class="btn btn-secondary" style="display:inline-flex;align-items:center;gap:6px;">
+        🧪 <span>Диагностика Chromium</span>
+      </button>
+      <span style="font-size:var(--font-size-xs);color:var(--text-secondary);">Если парсер/рассылка не запускают Chromium — нажмите. Покажет точную ошибку или «OK».</span>
+    </div>
+    <pre id="parser-diag-chromium-output" style="display:none;margin-top:10px;padding:12px;background:#0f172a;color:#e2e8f0;font-size:11px;border-radius:6px;max-height:420px;overflow:auto;white-space:pre-wrap;word-break:break-all;"></pre>
+    <script>
+    (function(){
+      var btn = document.getElementById('parser-diag-chromium');
+      var out = document.getElementById('parser-diag-chromium-output');
+      if (!btn || !out) return;
+      btn.addEventListener('click', function(){
+        btn.disabled = true;
+        var old = btn.innerHTML;
+        btn.innerHTML = '⏳ <span>Тестирую…</span>';
+        out.style.display = 'block';
+        out.textContent = 'Запускаю Chromium (до 30с)…';
+        fetch('/parser/api/diag/chromium', { credentials:'same-origin' })
+          .then(function(r){ return r.json(); })
+          .then(function(j){
+            var head = j.chromium_launch_ok ? '✅ Chromium стартовал OK (' + j.chromium_launch_ms + ' мс)' : '❌ Chromium НЕ запустился';
+            out.textContent = head + '\n\n' + JSON.stringify(j, null, 2);
+          })
+          .catch(function(e){
+            out.textContent = 'Ошибка запроса: ' + (e && e.message ? e.message : String(e));
+          })
+          .finally(function(){
+            btn.disabled = false;
+            btn.innerHTML = old;
+          });
+      });
+    })();
+    </script>
+    {% endif %}
+  </div>
+</div>
 {% if qp.get('started') == '1' %}
 <div class="card" style="margin-bottom:16px;border-color:var(--success)">
   <div class="card-body" style="font-size:var(--font-size-sm)">
