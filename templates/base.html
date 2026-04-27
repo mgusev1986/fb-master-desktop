@@ -128,17 +128,25 @@
       <i class="ti ti-user-circle" style="font-size:32px;color:var(--text-sidebar)"></i>
       {% endif %}
       <div class="sidebar-user-info">
-        <div class="sidebar-user-name">{{ user.name or user.email }}</div>
         {% set ak_license = fbm_sidebar_access_key_license(request) %}
         {% if ak_license %}
+        {% if ak_license.forever %}
+          {% set _lic_state = "ok" %}
+        {% elif ak_license.last_calendar_day or (ak_license.days_remaining is not none and ak_license.days_remaining <= 3) %}
+          {% set _lic_state = "danger" %}
+        {% elif ak_license.days_remaining is not none and ak_license.days_remaining <= 7 %}
+          {% set _lic_state = "warn" %}
+        {% else %}
+          {% set _lic_state = "ok" %}
+        {% endif %}
         <div class="sidebar-license-lines" role="status">
           <div class="sidebar-license-line">Оплаченный период: <span class="sidebar-license-paid">{{ ak_license.paid_period_label }}</span></div>
           {% if ak_license.forever %}
-          <div class="sidebar-license-line">Срок действия ключа не ограничен.</div>
+          <div class="sidebar-license-pill" data-license-state="{{ _lic_state }}">Срок действия ключа не ограничен.</div>
           {% elif ak_license.last_calendar_day %}
-          <div class="sidebar-license-line sidebar-license-line--accent">Последний день доступа, до {{ format_dt_madrid(ak_license.expires_at) }}</div>
+          <div class="sidebar-license-pill" data-license-state="{{ _lic_state }}">Последний день доступа, до {{ format_dt_madrid(ak_license.expires_at) }}</div>
           {% else %}
-          <div class="sidebar-license-line" id="fbm-license-countdown" data-expires-at="{{ ak_license.expires_at_iso }}">
+          <div class="sidebar-license-pill" id="fbm-license-countdown" data-license-state="{{ _lic_state }}" data-expires-at="{{ ak_license.expires_at_iso }}">
             Осталось <span id="fbm-license-days">{{ ak_license.days_remaining }}</span> <span id="fbm-license-days-word">{{ ak_license.days_word }}</span>,
             до {{ format_dt_madrid(ak_license.expires_at) }}
           </div>
@@ -150,6 +158,12 @@
           <code style="font-size:11px;word-break:break-all">{{ fbm_client_installation_id() }}</code>
         </div>
       </div>
+      <style>
+        .sidebar-license-pill { display:inline-block; padding:4px 9px; border-radius:7px; font-size:11.5px; line-height:1.35; margin-top:3px; border:1px solid transparent; transition:background .2s,color .2s,border-color .2s; }
+        .sidebar-license-pill[data-license-state="ok"]     { background: rgba(46,160,67,0.16); color:#5cd17a; border-color: rgba(46,160,67,0.45); }
+        .sidebar-license-pill[data-license-state="warn"]   { background: rgba(255,166,0,0.16); color:#ffb547; border-color: rgba(255,166,0,0.50); }
+        .sidebar-license-pill[data-license-state="danger"] { background: rgba(220,80,80,0.18); color:#ff8a8a; border-color: rgba(220,80,80,0.55); font-weight:600; }
+      </style>
     </div>
     {% endif %}
     <div class="sidebar-actions">
@@ -222,12 +236,18 @@
     var t1 = Date.UTC(p1[0], p1[1] - 1, p1[2]);
     return Math.max(0, Math.round((t1 - t0) / 86400000));
   }
+  function licenseState(n) {
+    if (n <= 3) return "danger";
+    if (n <= 7) return "warn";
+    return "ok";
+  }
   function tick() {
     var n = madridCalendarDaysLeft(row.dataset.expiresAt);
     var num = document.getElementById("fbm-license-days");
     var w = document.getElementById("fbm-license-days-word");
     if (num) num.textContent = String(n);
     if (w) w.textContent = ruDaysWord(n);
+    row.setAttribute("data-license-state", licenseState(n));
   }
   tick();
   setInterval(tick, 60000);
