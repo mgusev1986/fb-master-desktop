@@ -8,7 +8,7 @@ import re
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlencode
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import func, or_, select
@@ -620,17 +620,34 @@ async def crm_funnel_remove(
     return JSONResponse({"ok": True, "person_id": body.person_id})
 
 
-def _people_for_export(db: Session, q: str, donor_id: int | None) -> list[Person]:
+def _people_for_export(
+    db: Session,
+    q: str,
+    donor_id: int | None,
+    stages: list[str] | None = None,
+) -> list[Person]:
     engaged_sq = engaged_person_ids_subquery()
     sub = _apply_funnel_people_scope(db.query(Person), q, donor_id, engaged_sq)
+    if stages:
+        clean = [s for s in (str(x).strip() for x in stages) if s]
+        if clean:
+            sub = sub.filter(Person.crm_stage.in_(clean))
     return sub.order_by(Person.crm_stage.asc(), Person.id.asc()).all()
+
+
+def _parse_stages_param(raw: str | None) -> list[str]:
+    """`?stages=new,interested` → ['new', 'interested']. Пусто/None → пустой список (= все стадии)."""
+    if not raw:
+        return []
+    return [s.strip() for s in str(raw).split(",") if s.strip()]
 
 
 @router.get("/crm/funnel/export.csv")
 async def crm_funnel_export_csv(request: Request, db: Session = Depends(get_db)):
     q = (request.query_params.get("q") or "").strip()
     donor_id = _parse_donor_id(request.query_params.get("donor_id", ""))
-    people = _people_for_export(db, q, donor_id)
+    stages = _parse_stages_param(request.query_params.get("stages"))
+    people = _people_for_export(db, q, donor_id, stages=stages)
     donor_labels = _donor_name_map(db)
     labels = {
         slug: workflow_label_for_stage(slug, label)
@@ -682,3 +699,144 @@ async def crm_funnel_export_csv(request: Request, db: Session = Depends(get_db))
         media_type="text/csv; charset=utf-8",
         headers={"Content-Disposition": cd},
     )
+
+
+@router.post("/crm/funnel/import")
+async def crm_funnel_import_post(
+    request: Request,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+):
+    """
+    Импорт CSV-выгрузки воронки CRM с другого клиента.
+
+    Формат — тот же, что отдаёт `/crm/funnel/export.csv`: разделитель `;`, заголовки
+    «ID», «Стадия (код)», «Стадия (название)», «Имя», «Ссылка на профиль», «ID донора»,
+    «Донор», «Заметки CRM», «Дата смены стадии», «Создан», «Обновлён».
+
+    Что делает на каждой строке:
+      1) Нормализует ссылку профиля (`canonical_url`).
+      2) Заносит URL в глобальный реестр `installation_contacted_profile_urls` —
+         после этого рассылка автоматически фильтрует этого получателя как «уже писали»
+         и больше ему не пишет (даже если на этом ПК ему фактически не писали).
+      3) Если в текущем кабинете нет Person с этим URL — создаёт его с указанной
+         стадией CRM и именем. Если есть — обновляет `crm_stage` (только валидный slug)
+         и `crm_notes` (если в файле непусто).
+
+    Главный смысл: клиент №1 экспортирует на одном ПК, переносит файл клиенту №2,
+    тот импортирует — и его рассылка по этой базе **сразу не пишет** тем, кому уже
+    писал клиент №1.
+    """
+    from backend.services.contacted_registry import (
+        upsert_installation_contacted_profile_url,
+    )
+    from backend.services.fb_url_normalize import normalize_facebook_profile_url
+
+    org_id = require_org_id(request, db)
+
+    raw = await file.read()
+    if not raw:
+        return RedirectResponse(
+            "/crm/funnel?import_err=empty_file", status_code=303
+        )
+
+    try:
+        text = raw.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        try:
+            text = raw.decode("cp1251")
+        except UnicodeDecodeError:
+            return RedirectResponse(
+                "/crm/funnel?import_err=bad_encoding", status_code=303
+            )
+
+    valid_stages = _valid_stage_slugs(db)
+
+    reader = csv.reader(io.StringIO(text), delimiter=";")
+    header_skipped = False
+    imported = 0
+    updated = 0
+    skipped = 0
+    url_idx, stage_idx, name_idx = 4, 1, 3
+
+    for row in reader:
+        if not row:
+            continue
+        if not header_skipped:
+            # Если первая ячейка не число — это заголовки.
+            try:
+                int(row[0])
+                header_skipped = True
+            except (ValueError, TypeError):
+                header_skipped = True
+                continue
+        if len(row) <= max(url_idx, stage_idx, name_idx):
+            skipped += 1
+            continue
+        url_raw = (row[url_idx] or "").strip()
+        if not url_raw:
+            skipped += 1
+            continue
+        canonical = normalize_facebook_profile_url(url_raw)
+        if not canonical:
+            skipped += 1
+            continue
+        stage_raw = (row[stage_idx] or "").strip().lower()
+        stage = stage_raw if stage_raw in valid_stages else "new"
+        name = (row[name_idx] or "").strip()[:255] or None
+
+        # 1) Глобальный реестр «уже писали» — независимо от того, есть Person или нет.
+        try:
+            upsert_installation_contacted_profile_url(db, canonical_url=canonical)
+        except Exception:
+            pass
+
+        # 2) Person в текущей организации.
+        existing = (
+            db.query(Person)
+            .filter(Person.canonical_url == canonical)
+            .first()
+        )
+        if existing is not None:
+            if int(existing.organization_id) == int(org_id):
+                changed = False
+                if existing.crm_stage != stage:
+                    existing.crm_stage = stage
+                    existing.crm_stage_changed_at = datetime.now(timezone.utc)
+                    changed = True
+                if name and not existing.display_name:
+                    existing.display_name = name
+                    changed = True
+                if changed:
+                    updated += 1
+                else:
+                    skipped += 1
+            else:
+                # Person с таким URL принадлежит другой организации — пропускаем.
+                skipped += 1
+        else:
+            try:
+                db.add(
+                    Person(
+                        organization_id=int(org_id),
+                        canonical_url=canonical,
+                        display_name=name,
+                        crm_stage=stage,
+                        crm_stage_changed_at=datetime.now(timezone.utc),
+                    )
+                )
+                imported += 1
+            except Exception:
+                skipped += 1
+
+    db.commit()
+
+    params = urlencode(
+        {
+            "import_notice": "ok",
+            "import_added": imported,
+            "import_updated": updated,
+            "import_skipped": skipped,
+        }
+    )
+    return RedirectResponse(f"/crm/funnel?{params}", status_code=303)

@@ -270,13 +270,21 @@ async def donor_save(
 
 @router.post("/{donor_id}/delete")
 async def donor_delete(donor_id: int, request: Request, db: Session = Depends(get_db)):
-    org_id = require_org_id(request, db)
-    donor = (
-        db.query(Donor)
-        .filter(Donor.id == donor_id, Donor.organization_id == org_id)
-        .first()
+    """
+    Каскадно удаляет донора: его партии импорта (ImportBatch) и всех Person'ов,
+    привязанных к ним. URL'ы реально контактированных получателей сохраняются в
+    глобальном реестре `installation_contacted_profile_urls` — на повторной загрузке
+    тех же Facebook-профилей рассылка автоматически их пропустит и не дублирует.
+
+    Без каскада партии донора оставались orphan'ами и продолжали висеть в выпадающем
+    списке источников рассылки.
+    """
+    from backend.services.donor_delete import (
+        delete_donor_cascading_keeping_contacted_history,
     )
-    if donor:
-        db.delete(donor)
-        db.commit()
+
+    org_id = require_org_id(request, db)
+    delete_donor_cascading_keeping_contacted_history(
+        db, donor_id=int(donor_id), organization_id=int(org_id)
+    )
     return RedirectResponse("/donors", status_code=303)

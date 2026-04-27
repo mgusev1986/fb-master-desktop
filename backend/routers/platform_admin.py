@@ -36,15 +36,35 @@ from backend.services.preview_as_user import set_preview_as_user
 
 router = APIRouter(tags=["platform_admin"])
 
-_ACCESS_KEY_DURATION_VALUES = frozenset(("forever", "m3", "30", "90", "180", "365"))
+_ACCESS_KEY_DURATION_VALUES = frozenset(("forever", "m3", "30", "90", "180", "365", "custom"))
 
 
 def _access_key_expires_at_for_duration(duration: str) -> datetime | None:
-    """Срок с момента выдачи; None — бессрочно."""
+    """Срок с момента выдачи; None — бессрочно.
+
+    Поддерживает кастомный формат `custom:<value>:<unit>`, где unit ∈ {m,h,d}
+    (минуты/часы/дни). Например: `custom:40:d` = 40 дней, `custom:90:m` = 90 минут,
+    `custom:12:h` = 12 часов. При невалидном вводе fallback → None (бессрочно).
+    """
     d = (duration or "forever").strip().lower()
+    now = datetime.now(timezone.utc)
+    if d.startswith("custom:"):
+        parts = d.split(":", 2)
+        if len(parts) == 3:
+            try:
+                val = int(parts[1])
+            except (TypeError, ValueError):
+                val = 0
+            unit = (parts[2] or "d").strip().lower()
+            if val > 0 and val <= 1_000_000 and unit in ("m", "h", "d"):
+                if unit == "m":
+                    return now + timedelta(minutes=val)
+                if unit == "h":
+                    return now + timedelta(hours=val)
+                return now + timedelta(days=val)
+        return None
     if d not in _ACCESS_KEY_DURATION_VALUES:
         d = "forever"
-    now = datetime.now(timezone.utc)
     if d == "m3":
         return now + timedelta(minutes=3)
     if d == "30":
@@ -340,6 +360,8 @@ async def platform_access_keys_create(
     db: Session = Depends(get_db),
     label: str = Form(""),
     duration: str = Form("forever"),
+    custom_value: str = Form(""),
+    custom_unit: str = Form("d"),
 ):
     _require_platform_owner(request)
     from backend.services.access_key_crypto import generate_plaintext_key, hash_access_key
@@ -351,11 +373,19 @@ async def platform_access_keys_create(
     if not h:
         raise HTTPException(status_code=500, detail="hash failed")
     enc = encrypt_secret(plain)
+    # Кастомный период (например 40 дней / 90 минут / 12 часов).
+    duration_value = (duration or "forever").strip().lower()
+    if duration_value == "custom":
+        cv = (custom_value or "").strip()
+        cu = (custom_unit or "d").strip().lower()
+        if cu not in ("m", "h", "d"):
+            cu = "d"
+        duration_value = f"custom:{cv}:{cu}"
     row = AccessKey(
         key_hash=h,
         key_plain_enc=enc,
         label=(label or "").strip() or None,
-        expires_at=_access_key_expires_at_for_duration(duration),
+        expires_at=_access_key_expires_at_for_duration(duration_value),
     )
     db.add(row)
     db.commit()

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{% if cabinet_client_mode(request) %}Воронка продаж — FB Master{% else %}Воронка — FB Master{% endif %}{% endblock %}
+{% block title %}{% if cabinet_client_mode(request) %}Воронка продаж — SOCMASTER{% else %}Воронка — SOCMASTER{% endif %}{% endblock %}
 {% block body_class %}funnel-page{% endblock %}
 
 {% block head %}
@@ -541,9 +541,57 @@
       <a class="btn btn-secondary btn-sm" href="/crm/funnel/export.csv?q={{ search_q|urlencode }}{% if donor_id %}&amp;donor_id={{ donor_id }}{% endif %}">
         <i class="ti ti-file-download"></i> Экспорт CSV
       </a>
+      <button type="button" class="btn btn-secondary btn-sm" id="funnel-import-btn">
+        <i class="ti ti-file-upload"></i> Импорт CSV
+      </button>
+      <form method="post" action="/crm/funnel/import" enctype="multipart/form-data" id="funnel-import-form" style="display:none">
+        <input type="file" name="file" id="funnel-import-file" accept=".csv,text/csv"/>
+      </form>
     </div>
   </div>
 </div>
+
+{% set qp_imp = request.query_params %}
+{% if qp_imp.get('import_notice') == 'ok' %}
+<div class="card" style="margin-bottom:12px;border-color:var(--success)">
+  <div class="card-body" style="font-size:var(--font-size-sm)">
+    <i class="ti ti-check"></i>
+    Импорт CRM-выгрузки завершён: добавлено <strong>{{ qp_imp.get('import_added') or 0 }}</strong>,
+    обновлено <strong>{{ qp_imp.get('import_updated') or 0 }}</strong>,
+    пропущено <strong>{{ qp_imp.get('import_skipped') or 0 }}</strong>.
+    Все импортированные ссылки автоматически добавлены в реестр «Уже контактировали»
+    — рассылка по ним больше не пойдёт.
+  </div>
+</div>
+{% elif qp_imp.get('import_err') %}
+<div class="card" style="margin-bottom:12px;border-color:var(--error)">
+  <div class="card-body" style="font-size:var(--font-size-sm);color:var(--error)">
+    <i class="ti ti-alert-circle"></i>
+    Ошибка импорта: <code>{{ qp_imp.get('import_err') }}</code>. Проверьте, что файл —
+    CSV в кодировке UTF-8, формат как у выгрузки «Экспорт CSV» из этой же страницы.
+  </div>
+</div>
+{% endif %}
+
+<script>
+(function(){
+  var btn = document.getElementById('funnel-import-btn');
+  var form = document.getElementById('funnel-import-form');
+  var input = document.getElementById('funnel-import-file');
+  if (!btn || !form || !input) return;
+  btn.addEventListener('click', function(){
+    if (!confirm('Импортировать CSV-выгрузку CRM-воронки с другого клиента?\n\n' +
+      'Все ссылки из файла будут добавлены в реестр «Уже контактировали» — рассылка по ним больше не пойдёт. ' +
+      'Если человек уже в вашей базе — обновится его стадия CRM. Если нет — будет создан новый контакт с указанной стадией.')) {
+      return;
+    }
+    input.click();
+  });
+  input.addEventListener('change', function(){
+    if (input.files && input.files.length > 0) form.submit();
+  });
+})();
+</script>
 
 <div class="card">
   <div class="card-body">

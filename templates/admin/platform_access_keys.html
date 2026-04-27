@@ -91,16 +91,46 @@
       <label class="form-label">Подпись (необязательно)</label>
       <input type="text" name="label" class="form-input" placeholder="Например: клиент Иван, офис №2"/>
       <label class="form-label" style="margin-top:16px">Срок действия (с момента выдачи)</label>
-      <select name="duration" class="form-input">
+      <select name="duration" id="ak-duration-select" class="form-input">
         <option value="forever">Бессрочно</option>
         <option value="m3">Тест — 3 минуты (проверка истечения)</option>
         <option value="30">30 дней</option>
         <option value="90">3 месяца (90 дней)</option>
         <option value="180">6 месяцев (180 дней)</option>
         <option value="365">1 год (365 дней)</option>
+        <option value="custom">Свой период…</option>
       </select>
+      <div id="ak-custom-row" style="display:none;margin-top:10px;padding:12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-surface)">
+        <label class="form-label" style="margin-bottom:6px">Кастомный период</label>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <input type="number" name="custom_value" id="ak-custom-value" min="1" max="1000000" step="1" placeholder="40" class="form-input" style="max-width:140px"/>
+          <select name="custom_unit" id="ak-custom-unit" class="form-input" style="max-width:160px">
+            <option value="d" selected>дней</option>
+            <option value="h">часов</option>
+            <option value="m">минут</option>
+          </select>
+        </div>
+        <p class="form-hint" style="margin:8px 0 0;color:var(--text-muted)">Целое положительное число. Например: <strong>40 дней</strong>, <strong>12 часов</strong>, <strong>90 минут</strong>. Максимум 1 000 000 в выбранной единице.</p>
+      </div>
       <button type="submit" class="btn btn-primary" style="margin-top:12px">Сгенерировать ключ</button>
     </form>
+    <script>
+    (function(){
+      var sel = document.getElementById('ak-duration-select');
+      var row = document.getElementById('ak-custom-row');
+      var val = document.getElementById('ak-custom-value');
+      var unit = document.getElementById('ak-custom-unit');
+      if (!sel || !row || !val || !unit) return;
+      function sync(){
+        var on = sel.value === 'custom';
+        row.style.display = on ? '' : 'none';
+        val.required = on;
+        if (on && !val.value) val.value = '40';
+      }
+      sel.addEventListener('change', sync);
+      sync();
+    })();
+    </script>
   </div>
 </div>
 
