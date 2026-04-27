@@ -598,13 +598,18 @@ def process_outreach_job(job_id: int) -> None:
                             break
 
                         _cfg_send = camp.config if isinstance(camp.config, dict) else {}
+                        if _diag_loop_iter == 1:
+                            logger.info("outreach[%s] DIAG: checking send_window", job_id)
                         if not is_now_within_send_window(db, _cfg_send):
                             delay_sec = seconds_until_send_window_opens(db, _cfg_send)
+                            logger.info("outreach[%s] DIAG: send_window CLOSED, sleep %ss", job_id, delay_sec)
                             if delay_sec > 60:
                                 _close_outreach_account_session(active_pw_session)
                                 active_pw_session = None
                             time.sleep(delay_sec)
                             continue
+                        if _diag_loop_iter == 1:
+                            logger.info("outreach[%s] DIAG: send_window OK, querying queue", job_id)
 
                         row = (
                             db.query(OutreachQueue)
@@ -616,12 +621,17 @@ def process_outreach_job(job_id: int) -> None:
                             .first()
                         )
                         if not row:
+                            logger.info("outreach[%s] DIAG: queue EMPTY, breaking", job_id)
                             break
+                        if _diag_loop_iter == 1:
+                            logger.info("outreach[%s] DIAG: row picked id=%s person=%s fb_acc=%s", job_id, row.id, row.person_id, row.fb_account_id)
 
                         row.status = "running"
                         db.commit()
 
                         person = db.get(Person, row.person_id)
+                        if _diag_loop_iter == 1:
+                            logger.info("outreach[%s] DIAG: person loaded id=%s", job_id, row.person_id)
                         t0 = time.perf_counter()
 
                         if not person:
@@ -649,9 +659,13 @@ def process_outreach_job(job_id: int) -> None:
                             )
                             continue
 
+                        if _diag_loop_iter == 1:
+                            logger.info("outreach[%s] DIAG: calling resolve_outreach_executor", job_id)
                         account, rot_err, new_fb_id = resolve_outreach_executor(
                             db, camp, row.fb_account_id
                         )
+                        if _diag_loop_iter == 1:
+                            logger.info("outreach[%s] DIAG: resolve_outreach_executor done, account=%s rot_err=%s", job_id, account.id if account else None, rot_err)
                         if new_fb_id is not None:
                             row.fb_account_id = new_fb_id
 
@@ -761,7 +775,12 @@ def process_outreach_job(job_id: int) -> None:
 
                         db.commit()
 
+                        if _diag_loop_iter == 1:
+                            _ssj_len = len(account.session_state_json or "") if account.session_state_json else 0
+                            logger.info("outreach[%s] DIAG: parsing storage_state (json_len=%s)", job_id, _ssj_len)
                         storage = parse_storage_state(account.session_state_json)
+                        if _diag_loop_iter == 1:
+                            logger.info("outreach[%s] DIAG: storage parsed", job_id)
                         current_account_id = int(account.id)
                         action_type = "next_person"
 
