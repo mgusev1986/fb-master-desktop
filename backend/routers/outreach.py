@@ -1551,6 +1551,31 @@ async def outreach_detail(request: Request, campaign_id: int, db: Session = Depe
     max_next_slots = _next_batch_capacity(camp)
     candidates_remaining = len(_candidate_person_ids(db, camp, org_id=org_id))
 
+    # 2.91: Send window status — чтобы в UI показывать "Ждёт окна 08:00-22:00"
+    # вместо "Идёт отправка..." когда worker уходит спать (юзер думал что
+    # Chromium не запускается, на самом деле send_window закрыт).
+    from backend.services.sending_window import (
+        is_now_within_send_window,
+        send_window_24h,
+        send_window_bounds,
+        _local_now,
+    )
+    send_window_info: dict[str, Any] = {}
+    try:
+        is_open = is_now_within_send_window(db, cfg)
+        is_24h = send_window_24h(cfg)
+        start_h, end_h = send_window_bounds(cfg)
+        local_h = _local_now(db).hour
+        local_m = _local_now(db).minute
+        send_window_info = {
+            "is_open": is_open,
+            "is_24h": is_24h,
+            "start_hour": start_h,
+            "end_hour": end_h,
+            "local_now": f"{local_h:02d}:{local_m:02d}",
+        }
+    except Exception:
+        pass
     templates = request.app.state.templates
     return templates.TemplateResponse(
         "outreach/detail.html",
@@ -1571,6 +1596,7 @@ async def outreach_detail(request: Request, campaign_id: int, db: Session = Depe
             "donors": donors,
             "templates": all_templates,
             "pf": pf,
+            "send_window_info": send_window_info,
             "done_campaign": done_campaign,
             "done_campaign_people": done_campaign_people,
             "donor_total": donor_total,
