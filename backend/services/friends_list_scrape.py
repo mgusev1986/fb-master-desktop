@@ -1148,6 +1148,17 @@ def scroll_friends_page(
     # вызывается после break, чтобы все собранные люди попали в CRM.
     last_db_flush_i = -1
     last_db_flushed_total = 0
+    # 2.87: накопители timing'ов для summary каждые 10 раундов.
+    # По ним точно видно где затык: extract vs scroll vs wait vs save.
+    _timing_extract_ms: list[int] = []
+    _timing_merge_ms: list[int] = []
+    _timing_list_state_ms: list[int] = []
+    _timing_scroll_ms: list[int] = []
+    _timing_wait_ms: list[int] = []
+    _timing_round_ms: list[int] = []
+    _start_time = _t.monotonic() if False else None  # установится при первом раунде
+    import time as _t_sum
+    _start_wall = _t_sum.monotonic()
     # Crash-safe finalize: safe_final_flush() вызывается ВСЕГДА —
     # и при нормальном выходе, и при крахе Chromium (Page closed,
     # browser closed, OOM, anti-bot kill). Гарантия: всё что собрали
@@ -1324,6 +1335,32 @@ def scroll_friends_page(
                     "friends scroll round %s МЕДЛЕННЫЙ: total=%dms (extract=%dms, merge=%dms) — что-то блокирует",
                     i, _round_total, _t_extract, _t_merge,
                 )
+            _timing_extract_ms.append(_t_extract)
+            _timing_merge_ms.append(_t_merge)
+            _timing_round_ms.append(_round_total)
+            # 2.87 SUMMARY: каждые 10 раундов печатаем сводку — avg по каждому
+            # стейджу + ppl/min + new vs total ratio. По этим строкам видно
+            # ГДЕ затыки и как идёт «рывками» парсер.
+            if i > 0 and i % 10 == 0 and len(_timing_round_ms) >= 5:
+                def _avg(lst, n=10):
+                    last = lst[-n:] if len(lst) >= n else lst
+                    return int(sum(last) / max(1, len(last)))
+                elapsed_min = max(0.01, (_t.monotonic() - _start_wall) / 60.0)
+                ppl_per_min = int(total / elapsed_min)
+                last10_added = total - (_timing_round_ms[-11:-10][0] if False else 0)  # placeholder
+                logger.info(
+                    "friends scroll TIMING-SUMMARY round %s | avg(extract=%dms merge=%dms list=%dms scroll=%dms wait=%dms round=%dms) | total=%d ppl, %d ppl/мин, mode=%s",
+                    i,
+                    _avg(_timing_extract_ms),
+                    _avg(_timing_merge_ms),
+                    _avg(_timing_list_state_ms) if _timing_list_state_ms else 0,
+                    _avg(_timing_scroll_ms) if _timing_scroll_ms else 0,
+                    _avg(_timing_wait_ms) if _timing_wait_ms else 0,
+                    _avg(_timing_round_ms),
+                    total,
+                    ppl_per_min,
+                    _speed_mode,
+                )
 
             if total == last_total:
                 no_new_rounds += 1
@@ -1333,6 +1370,7 @@ def scroll_friends_page(
 
             # Crash-safe: connections_list_state делает page.evaluate внутри.
             # Если Chromium закрылся — выходим и финальный flush сохранит данные.
+            _t_list0 = _t.monotonic()
             try:
                 list_state = connections_list_state(page)
             except Exception as _e:
@@ -1342,6 +1380,8 @@ def scroll_friends_page(
                     _crash_handled = True
                     break
                 raise
+            _t_list_ms = int((_t.monotonic() - _t_list0) * 1000)
+            _timing_list_state_ms.append(_t_list_ms)
             at_bottom = bool(list_state.get("atBottom"))
             if at_bottom and no_new_rounds > 0:
                 bottom_idle_rounds += 1
@@ -1444,23 +1484,33 @@ def scroll_friends_page(
             # Ниже целевого числа — мягче крутим и дольше ждём между шагами.
             quality_slow = below_target or (expected_total is None and total > 300)
 
-            # Crash-safe: scroll-вызовы могут упасть при крахе Chromium
-            # (anti-bot kill, OOM, отвал интернета). Раньше exception летел
-            # мимо финального flush — теряли всё что собрали (101 чел!).
+            # Crash-safe: scroll-вызовы могут упасть при крахе Chromium.
+            # 2.87: timing-замеры scroll-эвал + wait — самые «жирные»
+            # стейджи. Если total round > 5s — тут будет видно куда уходит.
+            _t_scroll0 = _t.monotonic()
+            _t_wait_total = 0
             try:
                 vh = int(page.evaluate("() => window.innerHeight"))
                 end_every = 4 if below_target else 5
                 if i % end_every == 0:
                     page.evaluate(SCROLL_TO_END_ENHANCED_JS)
+                    _t_scroll_ms_partial = int((_t.monotonic() - _t_scroll0) * 1000)
                     lo, hi = (3400, 6800) if quality_slow else (2600, 5200)
+                    _t_w0 = _t.monotonic()
                     if _cancellable_wait_ms(page, int(random.uniform(lo, hi) * _wait_mult), cancelled):
                         break
+                    _t_wait_total += int((_t.monotonic() - _t_w0) * 1000)
                 else:
                     step = max(180, int(vh * random.uniform(0.22, 0.52)))
                     page.evaluate(SCROLL_FRIENDS_ENHANCED_JS, step)
+                    _t_scroll_ms_partial = int((_t.monotonic() - _t_scroll0) * 1000)
                 lo, hi = (3000, 6200) if quality_slow else (2200, 4800)
+                _t_w0 = _t.monotonic()
                 if _cancellable_wait_ms(page, int(random.uniform(lo, hi) * _wait_mult), cancelled):
                     break
+                _t_wait_total += int((_t.monotonic() - _t_w0) * 1000)
+                _timing_scroll_ms.append(_t_scroll_ms_partial)
+                _timing_wait_ms.append(_t_wait_total)
             except Exception as _e:
                 _msg = str(_e).lower()
                 if "closed" in _msg or "target" in _msg or "context" in _msg:
