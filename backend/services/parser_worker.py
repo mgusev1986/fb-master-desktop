@@ -1227,6 +1227,14 @@ def process_parser_job(job_id: int) -> None:
                                                 parser_language_mode=parser_language_mode,
                                             )
                                             if is_cancelled():
+                                                # Сразу закрываем Chromium — клиент нажал «Остановить»,
+                                                # окно браузера должно исчезнуть мгновенно. Сохранение
+                                                # XLSX/БД ниже работает только с in-memory словарями,
+                                                # browser ему не нужен.
+                                                try:
+                                                    ctx.close()
+                                                except Exception:
+                                                    logger.debug("parser cancel: ctx.close() failed", exc_info=True)
                                                 if by_url:
                                                     _throttled_progress_update(
                                                         db,

@@ -934,6 +934,34 @@ def connections_list_state(page: Page) -> dict[str, int | bool]:
     return {"atBottom": False, "linkCount": 0, "hasScrollableContainer": False}
 
 
+def _cancellable_wait_ms(
+    page: Page,
+    ms: int,
+    cancelled: Callable[[], bool] | None,
+) -> bool:
+    """Ждать ms миллисекунд чанками по ~200мс с опросом cancelled().
+
+    Возвращает True, если ожидание было прервано отменой — вызывающий
+    код должен немедленно прекратить работу. Иначе False.
+    Без этого хелпера wait_for_timeout удерживал поток до нескольких
+    секунд и кнопка «Остановить» казалась «зависшей».
+    """
+    if ms <= 0:
+        return bool(cancelled and cancelled())
+    step = 200
+    elapsed = 0
+    while elapsed < ms:
+        if cancelled and cancelled():
+            return True
+        chunk = min(step, ms - elapsed)
+        try:
+            page.wait_for_timeout(chunk)
+        except Exception:
+            return bool(cancelled and cancelled())
+        elapsed += chunk
+    return bool(cancelled and cancelled())
+
+
 def scroll_friends_page(
     page: Page,
     *,
@@ -1087,7 +1115,8 @@ def scroll_friends_page(
                 total,
                 int(list_state.get("linkCount") or 0),
             )
-            page.wait_for_timeout(int(random.uniform(3200, 7600)))
+            if _cancellable_wait_ms(page, int(random.uniform(3200, 7600)), cancelled):
+                break
             no_new_rounds = 0
             bottom_idle_rounds = 0
             recovery_shakes = 0
@@ -1126,16 +1155,24 @@ def scroll_friends_page(
                     total,
                     expected_total or "—",
                 )
+                _shake_cancelled = False
                 try:
                     # Дольше ждём после «толчка», чтобы виртуальный список FB успел дорендерить.
                     page.keyboard.press("End")
-                    page.wait_for_timeout(int(random.uniform(3200, 5600)))
-                    page.evaluate(SCROLL_TO_END_ENHANCED_JS)
-                    page.wait_for_timeout(int(random.uniform(4800, 9000)))
-                    page.keyboard.press("PageDown")
-                    page.wait_for_timeout(int(random.uniform(1800, 3600)))
+                    if _cancellable_wait_ms(page, int(random.uniform(3200, 5600)), cancelled):
+                        _shake_cancelled = True
+                    else:
+                        page.evaluate(SCROLL_TO_END_ENHANCED_JS)
+                        if _cancellable_wait_ms(page, int(random.uniform(4800, 9000)), cancelled):
+                            _shake_cancelled = True
+                        else:
+                            page.keyboard.press("PageDown")
+                            if _cancellable_wait_ms(page, int(random.uniform(1800, 3600)), cancelled):
+                                _shake_cancelled = True
                 except Exception:
                     logger.debug("recovery scroll", exc_info=True)
+                if _shake_cancelled:
+                    break
                 no_new_rounds = 0
             else:
                 if merged:
@@ -1153,17 +1190,21 @@ def scroll_friends_page(
         if i % end_every == 0:
             page.evaluate(SCROLL_TO_END_ENHANCED_JS)
             lo, hi = (3400, 6800) if quality_slow else (2600, 5200)
-            page.wait_for_timeout(int(random.uniform(lo, hi) * _wait_mult))
+            if _cancellable_wait_ms(page, int(random.uniform(lo, hi) * _wait_mult), cancelled):
+                break
         else:
             step = max(180, int(vh * random.uniform(0.22, 0.52)))
             page.evaluate(SCROLL_FRIENDS_ENHANCED_JS, step)
             lo, hi = (3000, 6200) if quality_slow else (2200, 4800)
-            page.wait_for_timeout(int(random.uniform(lo, hi) * _wait_mult))
+            if _cancellable_wait_ms(page, int(random.uniform(lo, hi) * _wait_mult), cancelled):
+                break
 
         if random.random() < (0.22 if quality_slow else 0.16) * _rand_mult:
-            page.wait_for_timeout(int(random.uniform(4200, 11000) * _wait_mult))
+            if _cancellable_wait_ms(page, int(random.uniform(4200, 11000) * _wait_mult), cancelled):
+                break
         if random.random() < 0.12 * _rand_mult:
-            page.wait_for_timeout(int(random.uniform(800, 2800) * _wait_mult))
+            if _cancellable_wait_ms(page, int(random.uniform(800, 2800) * _wait_mult), cancelled):
+                break
 
     if merged:
         if live_path:
