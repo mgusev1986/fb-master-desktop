@@ -126,92 +126,24 @@ def bundled_chromium_executable_for_playwright() -> Path | None:
         return None
 
 
-def system_chrome_executable_path() -> Path | None:
-    """
-    Найти установленный системный Google Chrome. Возвращает None, если не найден или
-    принудительно отключён через env FB_PLAYWRIGHT_FORCE_BUNDLED_CHROMIUM=1.
-
-    Системный Chrome нужен для воспроизведения видео Facebook (Reels, Watch, Stories) — у него
-    есть проприетарные кодеки H.264/AAC. Bundled Chromium из Playwright собран без этих кодеков
-    (open-source build), поэтому FB показывает «К сожалению, воспроизвести это видео не удается»
-    — что блокирует сценарии прогрева, где аккаунт должен смотреть рилс.
-    """
-    import os
-    import platform
-
-    if (os.environ.get("FB_PLAYWRIGHT_FORCE_BUNDLED_CHROMIUM") or "").strip().lower() in (
-        "1",
-        "true",
-        "yes",
-        "on",
-    ):
-        return None
-
-    override = (os.environ.get("FB_PLAYWRIGHT_CHROME_EXECUTABLE") or "").strip()
-    if override:
-        p = Path(override).expanduser()
-        if p.is_file():
-            return p
-
-    candidates: list[str] = []
-    sysname = platform.system()
-    if sysname == "Darwin":
-        candidates.append("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
-        candidates.append(
-            str(
-                Path.home()
-                / "Applications"
-                / "Google Chrome.app"
-                / "Contents"
-                / "MacOS"
-                / "Google Chrome"
-            )
-        )
-    elif sysname == "Windows":
-        for env_key in ("ProgramFiles", "ProgramFiles(x86)", "LocalAppData"):
-            base = os.environ.get(env_key)
-            if base:
-                candidates.append(
-                    str(Path(base) / "Google" / "Chrome" / "Application" / "chrome.exe")
-                )
-    else:
-        candidates.extend(
-            [
-                "/usr/bin/google-chrome",
-                "/usr/bin/google-chrome-stable",
-                "/opt/google/chrome/chrome",
-                "/opt/google/chrome/google-chrome",
-                "/snap/bin/google-chrome",
-            ]
-        )
-    for c in candidates:
-        try:
-            if c and Path(c).is_file():
-                return Path(c)
-        except OSError:
-            continue
-    return None
-
-
 def chromium_launch_kwargs_with_bundle(kwargs: dict[str, Any]) -> dict[str, Any]:
-    """Force Playwright launches to use a real Chrome binary instead of vanilla Chromium.
+    """Force Playwright launches to use the bundled Chromium when it is present.
 
-    Приоритет: системный Google Chrome (с проприетарными кодеками H.264/AAC — нужны для
-    Reels/Watch/Stories на Facebook) → bundled Chromium из Playwright (open-source, без
-    кодеков; видео FB не воспроизводится). На Windows диагностический запуск раньше
-    шёл с channel="chromium", а headed persistent profile мог не разрешить упакованный
-    executable — `executable_path` снимает эту неоднозначность для launch() и
-    launch_persistent_context().
+    Используется для всего: парсера, рассылки, messenger, парсинга мессенджера и прогрева.
+    Это критично потому, что в macOS системный Google Chrome имеет один bundle id
+    `com.google.Chrome` — если бы мы запускали автоматизацию через системный Chrome,
+    клиент при клике по иконке в Dock попадал бы в окно нашего парсера/рассылки и
+    не мог открыть свой личный браузер для работы.
 
-    Откат к старому поведению (только bundled): env FB_PLAYWRIGHT_FORCE_BUNDLED_CHROMIUM=1.
-    Явный путь: env FB_PLAYWRIGHT_CHROME_EXECUTABLE=/path/to/chrome.
+    Bundled Chromium из Playwright не имеет проприетарных кодеков (H.264/AAC), поэтому
+    мы НЕ пытаемся проигрывать видео в прогреве — вместо просмотра Reels прогрев
+    работает по другим, более ценным для антифрода сценариям (см. natural_warmup_actions).
+
+    На Windows диагностический запуск может прийти с `channel="chromium"`, а headed
+    persistent profile иногда не разрешает упакованный executable — `executable_path`
+    снимает эту неоднозначность для launch() и launch_persistent_context().
     """
     out = dict(kwargs)
-    chrome = system_chrome_executable_path()
-    if chrome is not None:
-        out.pop("channel", None)
-        out["executable_path"] = str(chrome)
-        return out
     bundled = bundled_chromium_executable_for_playwright()
     if bundled is not None:
         out.pop("channel", None)
@@ -1018,7 +950,12 @@ def pregrant_facebook_automation_permissions(ctx) -> None:
 
 
 def launch_persistent_context_from_bundle(p, profile_path: str | Path, bundled: dict[str, Any]):
-    """launch_persistent_context с ignore_default_args из bundle (_launch_kwargs_persistent)."""
+    """launch_persistent_context с ignore_default_args из bundle (_launch_kwargs_persistent).
+
+    Используется bundled Chromium для всех сценариев — парсер/рассылка/messenger/прогрев.
+    Это изолирует автоматизацию от личного Google Chrome клиента (один bundle id в macOS),
+    чтобы клиент мог свободно работать в своём браузере параллельно с парсингом.
+    """
     kwargs = chromium_launch_kwargs_with_bundle(dict(bundled["kwargs"]))
     ign = bundled.get("ignore_default_args")
     if ign:

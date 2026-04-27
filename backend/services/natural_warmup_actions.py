@@ -225,35 +225,13 @@ _SHOW_REPLIES_CLICK_JS = """() => {
 #  JS: Reels — mute / play
 # ---------------------------------------------------------------------------
 
-_REELS_MUTE_JS = """() => {
-  document.querySelectorAll('video').forEach(v => {
-    v.muted = true;
-    v.volume = 0;
-  });
-  return true;
-}"""
-
-_REELS_CLICK_PLAY_JS = """() => {
-  const vids = document.querySelectorAll('video');
-  for (const v of vids) {
-    const r = v.getBoundingClientRect();
-    if (r.top > -100 && r.bottom < window.innerHeight + 200 && r.width > 50) {
-      v.muted = true; v.volume = 0;
-      try { v.play(); } catch(e) {}
-      return {ok: true, type: 'video_play'};
-    }
-  }
-  const reelLinks = document.querySelectorAll('a[href*="/reel/"], a[href*="/watch"], [role="link"][href*="reel"]');
-  for (const a of reelLinks) {
-    const r = a.getBoundingClientRect();
-    if (r.top > -50 && r.bottom < window.innerHeight + 300 && r.width > 30) {
-      a.scrollIntoView({block: 'center', behavior: 'smooth'});
-      a.click();
-      return {ok: true, type: 'reel_link'};
-    }
-  }
-  return {ok: false, reason: 'no_reel_target'};
-}"""
+## Reels-просмотр удалён из прогрева: bundled Chromium не имеет проприетарных
+## кодеков H.264/AAC, поэтому видео FB всё равно не воспроизводилось ("К сожалению,
+## не удаётся воспроизвести"). Для антифрода это даже лучше — «человек, который
+## только смотрит рилы» не очень убедителен. Прогрев теперь делает ставку на
+## «социальные» сценарии: профили друзей, посты в группах, лента, marketplace,
+## уведомления — всё то, что реально работает в Chromium и больше похоже на
+## поведение живого пользователя.
 
 # ---------------------------------------------------------------------------
 #  JS: Извлечение текста раскрытого поста (для паузы чтения)
@@ -377,90 +355,6 @@ def _click_show_replies(page: Page, *, deadline_mono: float) -> bool:
 
 
 # ---------------------------------------------------------------------------
-#  Просмотр Reels (без звука)
-# ---------------------------------------------------------------------------
-
-def _watch_reels(page: Page, *, deadline_mono: float, emit: WarmupActionEmit | None = None) -> bool:
-    """Navigate to Reels, watch 3-8 videos (muted), scroll between them."""
-    if not _deadline_ok(deadline_mono):
-        return False
-    reels_urls = [
-        "https://www.facebook.com/reel/",
-        "https://www.facebook.com/watch/reels/",
-    ]
-    loaded = False
-    for url in reels_urls:
-        try:
-            page.goto(url, wait_until="domcontentloaded", timeout=55_000)
-            loaded = True
-            break
-        except Exception:
-            continue
-    if not loaded:
-        return False
-    human_pause(page, 3.0, 6.0)
-    # Mute all videos immediately
-    try:
-        page.evaluate(_REELS_MUTE_JS)
-    except Exception:
-        pass
-    reels_watched = 0
-    target_count = random.randint(3, 8)
-    for i in range(target_count):
-        if not _deadline_ok(deadline_mono):
-            break
-        # Mute again (new videos appear on scroll)
-        try:
-            page.evaluate(_REELS_MUTE_JS)
-        except Exception:
-            pass
-        # Try to click/play a reel
-        try:
-            res = page.evaluate(_REELS_CLICK_PLAY_JS)
-            if isinstance(res, dict) and res.get("ok"):
-                reels_watched += 1
-                # Mute after click
-                page.wait_for_timeout(800)
-                try:
-                    page.evaluate(_REELS_MUTE_JS)
-                except Exception:
-                    pass
-        except Exception:
-            pass
-        # "Watch" the reel for 5-20 seconds
-        watch_time = random.uniform(5.0, 20.0)
-        human_pause(page, watch_time * 0.3, watch_time * 0.5)
-        # Mute again before scrolling
-        try:
-            page.evaluate(_REELS_MUTE_JS)
-        except Exception:
-            pass
-        # Scroll to next reel (vertical scroll or arrow key)
-        scroll_method = random.choice(["scroll", "key"])
-        if scroll_method == "key":
-            try:
-                page.keyboard.press("ArrowDown")
-            except Exception:
-                soft_scroll(page, times=1)
-        else:
-            try:
-                page.mouse.wheel(0, random.randint(500, 800))
-            except Exception:
-                try:
-                    page.evaluate(f"window.scrollBy(0, {random.randint(500, 800)})")
-                except Exception:
-                    pass
-        human_pause(page, 1.5, 4.0)
-    if emit and reels_watched > 0:
-        emit(
-            "natural_warmup_action_watch_reels",
-            {"reels_watched": reels_watched, "target": target_count},
-        )
-    logger.info("Reels watched: %d / %d", reels_watched, target_count)
-    return reels_watched > 0
-
-
-# ---------------------------------------------------------------------------
 #  Заход в отдельную группу из ленты
 # ---------------------------------------------------------------------------
 
@@ -542,12 +436,16 @@ def _visit_profile_tab(page: Page, *, deadline_mono: float, emit: WarmupActionEm
 #  Навигация по разным разделам Facebook
 # ---------------------------------------------------------------------------
 
+## Reels и Watch удалены: bundled Chromium без проприетарных кодеков H.264/AAC,
+## видео FB на нём всё равно не воспроизводится. Зато добавлены реальные «социальные»
+## разделы — saved (сохранённые посты), events (мероприятия) — на которых пользователи
+## действительно проводят время и где скролл собирает текст и картинки.
 _FB_SECTIONS = [
     ("https://www.facebook.com/", "home"),
     ("https://www.facebook.com/groups/feed/", "groups_feed"),
     ("https://www.facebook.com/friends/", "friends"),
-    ("https://www.facebook.com/watch/", "watch"),
-    ("https://www.facebook.com/reel/", "reels"),
+    ("https://www.facebook.com/saved/", "saved"),
+    ("https://www.facebook.com/events/", "events"),
     ("https://www.facebook.com/bookmarks/", "bookmarks"),
     ("https://www.facebook.com/notifications/", "notifications"),
     ("https://www.facebook.com/marketplace/", "marketplace"),
@@ -1041,7 +939,11 @@ def run_natural_warmup_browse_session(
     4) Несколько разных разделов подряд
     5) Просмотр Reels (без звука) + лента
     """
-    scenarios = ["feed_deep", "groups_deep", "friends_explore", "multi_section", "reels_session"]
+    # Reels-сценарий заменён на engagement_session: заход на 3-5 случайных профилей
+    # друзей с глубоким чтением (без видео — bundled Chromium не имеет H.264/AAC).
+    # Это полезнее с точки зрения антифрода Meta: «социальный» паттерн (профили,
+    # фото, посты, реакции) считается более «человечным», чем монотонный скролл рилс.
+    scenarios = ["feed_deep", "groups_deep", "friends_explore", "multi_section", "engagement_session"]
     scenario = random.choice(scenarios)
 
     sections_visited = 0
@@ -1241,67 +1143,80 @@ def run_natural_warmup_browse_session(
             if not logged_ok:
                 continue
             sections_visited += 1
-            # Если попали на Reels — смотрим их
-            if section_name == "reels" and _deadline_ok(deadline_mono):
-                try:
-                    page.evaluate(_REELS_MUTE_JS)
-                except Exception:
-                    pass
-                for _ in range(random.randint(3, 6)):
-                    if not _deadline_ok(deadline_mono):
-                        break
-                    try:
-                        page.evaluate(_REELS_MUTE_JS)
-                        page.evaluate(_REELS_CLICK_PLAY_JS)
-                        page.wait_for_timeout(800)
-                        page.evaluate(_REELS_MUTE_JS)
-                    except Exception:
-                        pass
-                    human_pause(page, 4.0, 12.0)
-                    try:
-                        page.keyboard.press("ArrowDown")
-                    except Exception:
-                        soft_scroll(page, times=1)
-                    human_pause(page, 1.5, 3.0)
-            else:
-                for _ in range(random.randint(6, 14)):
-                    if not _deadline_ok(deadline_mono):
-                        break
-                    soft_scroll(page, times=random.randint(1, 3))
-                    human_pause(page, 2.0, 6.0)
-                    if random.random() < 0.4:
-                        if _deep_read_post(page, deadline_mono=deadline_mono):
-                            posts_read += 1
-                    if random.random() < 0.2:
-                        _click_show_replies(page, deadline_mono=deadline_mono)
+            # Однотипный «человеческий» скролл для любого раздела (Reels-просмотра больше нет —
+            # bundled Chromium всё равно не играет видео FB). На marketplace/events это работает
+            # так же, как и на ленте: скролл, чтение карточек, иногда «вернуться».
+            for _ in range(random.randint(6, 14)):
+                if not _deadline_ok(deadline_mono):
+                    break
+                soft_scroll(page, times=random.randint(1, 3))
+                human_pause(page, 2.0, 6.0)
+                if random.random() < 0.4:
+                    if _deep_read_post(page, deadline_mono=deadline_mono):
+                        posts_read += 1
+                if random.random() < 0.2:
+                    _click_show_replies(page, deadline_mono=deadline_mono)
             # Длинная «задумчивая» пауза между разделами
             if random.random() < 0.3:
                 human_pause(page, 5.0, 12.0)
 
-    elif scenario == "reels_session":
-        # Сначала Reels (без звука), потом лента
-        if _watch_reels(page, deadline_mono=deadline_mono, emit=emit):
-            sections_visited += 1
-        # После Reels — скроллим ленту
-        if _deadline_ok(deadline_mono):
+    elif scenario == "engagement_session":
+        # Замена reels_session: «социальная» сессия с заходом на 3-5 случайных профилей
+        # друзей и глубоким чтением их лент. Это даёт антифроду Meta более «человечный»
+        # паттерн поведения: реальный пользователь ходит по людям, а не сидит в одной ленте.
+        try:
+            page.goto("https://www.facebook.com/", wait_until="domcontentloaded", timeout=60_000)
+        except Exception as e:
+            return False, f"engagement_feed_nav:{e}"[:500], {}
+        human_pause(page, 3.0, 6.0)
+        ok, err = _ensure_logged_in(page)
+        if not ok:
+            return False, err, {}
+        sections_visited += 1
+        # Лёгкий разогрев главной — собрать ссылки на профили из ленты.
+        for _ in range(random.randint(4, 8)):
+            if not _deadline_ok(deadline_mono):
+                break
+            soft_scroll(page, times=random.randint(1, 2))
+            human_pause(page, 1.5, 3.5)
+        # Заход на 3-5 профилей: чтение, иногда переход на «Фото» / «Друзья».
+        target_profiles = random.randint(3, 5)
+        for _ in range(target_profiles):
+            if not _deadline_ok(deadline_mono):
+                break
             try:
-                page.goto("https://www.facebook.com/", wait_until="domcontentloaded", timeout=55_000)
-                human_pause(page, 3.0, 6.0)
-                sections_visited += 1
-                for _ in range(random.randint(8, 18)):
-                    if not _deadline_ok(deadline_mono):
-                        break
-                    soft_scroll(page, times=random.randint(2, 4))
-                    human_pause(page, 2.0, 6.0)
-                    if random.random() < 0.45:
-                        if _deep_read_post(page, deadline_mono=deadline_mono):
-                            posts_read += 1
-                    if random.random() < 0.25:
-                        _click_show_replies(page, deadline_mono=deadline_mono)
-                    if random.random() < 0.15:
-                        human_pause(page, 5.0, 12.0)
+                hrefs = page.evaluate(_PROFILE_LINKS_JS)
             except Exception:
-                pass
+                hrefs = []
+            if not isinstance(hrefs, list) or not hrefs:
+                # Подгрузим ленту ещё, иначе профиль не выбрать.
+                soft_scroll(page, times=random.randint(2, 3))
+                human_pause(page, 2.0, 4.0)
+                continue
+            pick = random.choice(hrefs[:12])
+            try:
+                page.goto(pick, wait_until="domcontentloaded", timeout=55_000)
+            except Exception:
+                continue
+            human_pause(page, 3.0, 7.0)
+            profiles_visited += 1
+            # Глубокий проход по профилю.
+            for _ in range(random.randint(6, 14)):
+                if not _deadline_ok(deadline_mono):
+                    break
+                soft_scroll(page, times=random.randint(1, 3))
+                human_pause(page, 1.5, 4.0)
+                if random.random() < 0.45:
+                    if _deep_read_post(page, deadline_mono=deadline_mono):
+                        posts_read += 1
+                if random.random() < 0.20:
+                    _click_show_replies(page, deadline_mono=deadline_mono)
+            # Иногда заходим на вкладку профиля (Фото / Друзья).
+            if random.random() < 0.55 and _deadline_ok(deadline_mono):
+                _visit_profile_tab(page, deadline_mono=deadline_mono, emit=emit)
+            # «Задумчивая» пауза между профилями — как делает живой человек.
+            if random.random() < 0.4:
+                human_pause(page, 4.0, 10.0)
 
     metrics = {
         "browse_sections_visited": sections_visited,
