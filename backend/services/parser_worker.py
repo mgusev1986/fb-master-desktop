@@ -986,6 +986,17 @@ def process_parser_job(job_id: int) -> None:
                                 db=db,
                             ) as ctx:
                                 page = _parser_pick_work_page(ctx)
+                                # Speed-mode aware hot-path: turbo сжимает фиксированные паузы
+                                # после goto FB ×0.1 и переключает wait_until на 'commit'
+                                # (отдаёт управление сразу после первого ответа сервера),
+                                # чтобы парсер быстро доходил до scroll-цикла.
+                                from backend.services.parser_speed import (
+                                    get_parser_scroll_speed,
+                                    scroll_wait_multiplier,
+                                )
+                                _speed_mode = get_parser_scroll_speed(db)
+                                _wait_mult = scroll_wait_multiplier(_speed_mode)
+                                _goto_wait_until = "commit" if _speed_mode == "turbo" else "domcontentloaded"
                                 scan_page = None
                                 if language_filter != "all" or parser_language_mode == "thorough":
                                     try:
@@ -1087,18 +1098,18 @@ def process_parser_job(job_id: int) -> None:
                                                 pass
                                             page.goto(
                                                 friends_url,
-                                                wait_until="domcontentloaded",
+                                                wait_until=_goto_wait_until,
                                                 timeout=120_000,
                                             )
-                                            page.wait_for_timeout(int(2000))
+                                            page.wait_for_timeout(max(200, int(2000 * _wait_mult)))
                                             dismiss_facebook_dom_overlays(page)
                                             if _parser_settle_facebook_login_gate(page):
                                                 page.goto(
                                                     friends_url,
-                                                    wait_until="domcontentloaded",
+                                                    wait_until=_goto_wait_until,
                                                     timeout=120_000,
                                                 )
-                                                page.wait_for_timeout(1800)
+                                                page.wait_for_timeout(max(200, int(1800 * _wait_mult)))
                                                 dismiss_facebook_dom_overlays(page)
                                             need_login, login_msg = page_requires_facebook_login(page)
                                             if need_login:
