@@ -2,7 +2,7 @@
 
 Документ для передачи контекста нейросети или разработчику: продукт, **архитектура клиент–сервер**, лицензирование, **обновления десктопа (macOS + Windows)**, защита, деплой, маршруты, механики, дерево файлов. Язык: русский.
 
-**Последнее обновление документа:** 27 апреля 2026. **Текущая версия десктопа (semver):** **2.91.0** (`desktop/fb-master-desktop/package.json`). **Текущая публичная версия релиза (marketing):** **2.91.0** (`/api/public/desktop-update`, имена артефактов, `.env` на VPS).
+**Последнее обновление документа:** 28 апреля 2026 (после релиза 2.91 и оптимизационной сессии 2.85-2.91 — раздел §22). **Текущая версия десктопа (semver):** **2.91.0** (`desktop/fb-master-desktop/package.json`). **Текущая публичная версия релиза (marketing):** **2.91.0** (`/api/public/desktop-update`, имена артефактов, `.env` на VPS).
 
 **Важно про имя продукта:** с версии 2.5 продукт переименован с *FbMaster* в **SOCMASTER**. Все новые артефакты публикуются с префиксом **`SOCMASTER-`** (а не `FbMaster-`). Legacy-имена `FbMaster-*.dmg` остаются в историческом списке и обрабатываются скриптами как fallback, но **новые релизы пишутся только как `SOCMASTER-*`**. В коде продуктовое имя — `productName: "SOCMASTER"` в `package.json`, а класс Electron-app и bundle id остались `pro.socmaster.fbmaster` (обратная совместимость на уровне auto-update).
 
@@ -1294,6 +1294,201 @@ templates/
 10. **GitHub Actions workflow** `.github/workflows/build-windows.yml` — пути к `desktop/fb-master-desktop/*`, версия Python/Node, artifact name — раздел **§2.8.W** и **§19.2**.
 11. **Multi-workspace модули** — `backend/modules/{facebook,reddit,linkedin,twitter,instagram}/`, `templates/<workspace>/base.html`, флаги в `local-backend-launcher.js` — раздел **§20**.
 12. **Messenger AI settings** — `backend/services/messenger_ai_settings.py` (`DEFAULT_SALES_PROMPT_ADDON`, `load_messenger_ai_settings`) — §0.3 (v2.27).
+
+---
+
+## 22. Журнал релизов 2.85-2.91 + актуальные настройки парсера/outreach
+
+Раздел отражает фактическое состояние ключевых файлов парсера и рассылки **на момент 2.91.0 (28 апреля 2026)**. Все цифры — те, что задеплоены на `socmaster.pro` и в DMG/exe.
+
+### 22.1. Журнал критических фиксов (2.85 → 2.91)
+
+| Ver  | Что починено / изменено | Файл |
+|------|---|---|
+| **2.85** | Добавлен **regex `LABEL · NUMBER`** в `parseCountNearLabels` для FB-формата «Участники · 14 236». До 2.85 все 4 паттерна искали `NUMBER · LABEL` → expected_count = 0 в UI. Также `'в группе'` / `'in this group'` добавлены в `MEMBER_LABELS`, селектор `'a, span, div, h1, h2, h3, strong'` сужен до `'h1, h2, h3, strong, a'` (5000+ → ~50 элементов на странице FB). | `backend/services/friends_list_scrape.py` |
+| **2.86** | **Decimal-aware regex поставлен ПЕРВЫМ** в `parseCountNearLabels`. До 2.86 «6,1 тыс. в группе» ловилось как «1 тыс» = 1000 вместо 6100. Whole-number regex получил `negative lookbehind` `(?:^|[^\d,.])`. Локально верифицирован на 7 семплах. | `backend/services/friends_list_scrape.py` |
+| **2.87** | Детальные **timing-логи** на каждом стейдже раунда (`extract / merge / list_state / scroll / wait / round_total`) + `TIMING-SUMMARY` каждые 10 раундов с avg + ppl/мин. | `backend/services/friends_list_scrape.py` |
+| **2.88** | **🔥 КОРНЕВОЙ ФИКС РЫВКОВ ПАРСЕРА**: `relink_messenger_conversations_to_people(db)` удалён из `_merge_friends_into_parser_batch` (горячий путь DB-flush). На 30k+ контактах эта функция делала full-scan по `Person` + `Conversation` = **55 секунд каждый flush**. После фикса: 10 мс. **Ускорение в 5500×.** Скорость TURBO: 33 → **374 ppl/мин** (в 12× раз). Та же функция уже была убрана из `crm_funnel.py` и `messenger.py` в начале сессии (план `sharded-dazzling-kitten.md`); в `parser_worker.py` она оставалась — теперь убрана. Worker мессенджера (`messenger_worker.py:803`) сам делает relink при синхронизации входящих. | `backend/services/parser_worker.py` |
+| **2.89** | DIAG-логи в outreach worker: 8 точек между `Spawned outreach worker` и `opening Chromium session`. Помогли локализовать зависание рассылки. | `backend/services/outreach_worker.py`, `backend/services/playwright_resource.py` |
+| **2.90** | Granular DIAG между `iter=1` и Chromium (send_window check, queue query, person load, resolve_outreach_executor, parse_storage_state — 6 точек). Логи показали: рассылка корректно уходит в `sleep 3600s` когда `send_window CLOSED` (не баг — настройка кампании). | `backend/services/outreach_worker.py` |
+| **2.91** | **Полный mac+win release** через GHA (`v2.91.0` tag → `build-windows.yml` авто-сборка → `gh release download`). Включает все фиксы 2.85-2.90. | `desktop/fb-master-desktop/package.json` |
+
+### 22.2. Текущие настройки парсера (`backend/services/friends_list_scrape.py`)
+
+#### Скорости скролла (`backend/services/parser_speed.py`)
+
+| Режим | `_wait_mult` | `_rand_mult` | Описание |
+|---|---|---|---|
+| `turbo` | **0.08** | **0.00** | Как в v1 «всё летало». Минимум задержек, тысячи контактов/мин. Рекомендуется по умолчанию. |
+| `fast` | 0.30 | 0.50 | Быстрый, но с микропаузами для FB anti-bot. |
+| `normal` | 0.65 | 1.00 | Сбалансированный. |
+| `gentle` | 1.20 | 1.50 | Мягкий, для подозрительных аккаунтов. |
+
+UI в `/parser`: dropdown «Скорость сбора», сохраняется в `cabinet_settings`. По дефолту — `turbo` (с 2.79).
+
+#### Save-thresholds (внутри `scroll_friends_page`)
+
+```python
+# XLSX async save (2.82):
+need_xlsx_save = (i == 0 or (i - last_save_i) >= 2 or (total - last_saved_total) >= 25)
+# → каждые 2 раунда ИЛИ 25 новых людей; пишется в daemon-thread с _save_lock
+
+# DB sync flush (2.84):
+need_db_flush = on_merged_flush is not None and (
+    i == 0 or (i - last_db_flush_i) >= 10 or (total - last_db_flushed_total) >= 100
+)
+# → каждые 10 раундов ИЛИ 100 новых; sync (не daemon, после 2.83 fix SQLAlchemy thread-safety)
+```
+
+**Max потеря при крахе:** ≤25 человек (XLSX) и ≤100 человек (DB). После crash _safe_final_flush ловит весь `merged` dict и сохраняет sync.
+
+#### Crash-safety (2.84)
+
+- **`try/except/finally` вокруг всего `for` лупа** через inner-function pattern (без переиндентации 280 строк).
+- Точечные `try/except` ловят `closed/target/context` исключения от Chromium на: `EXTRACT_FRIENDS_JS`, `connections_list_state`, `vh + SCROLL_TO_END_ENHANCED_JS + SCROLL_FRIENDS_ENHANCED_JS` block, recovery shake.
+- При любом exception: `_crash_handled = True`, выход из цикла, `_safe_final_flush(reason="crash")` → ждёт in-flight async XLSX (5 сек), затем sync XLSX + sync DB flush.
+- Логи: `friends scroll FINAL XLSX flushed: N people, reason=crash|normal` + `friends scroll FINAL DB flushed: N people`.
+
+#### Expected count regex (2.85/2.86)
+
+`PARSE_EXPECTED_FRIENDS_COUNT_JS` с **5 паттернами** в `parseCountNearLabels` в порядке:
+
+1. **`LABEL · NUMBER`** (новый, 2.85): `label\s*[·•:\-—\s]+\s*(\d[\d\s,.]+)` — для «Участники · 14 236».
+2. **`NUMBER[,.]NUMBER тыс LABEL`** (decimal-aware, 2.86 — поднят первым): «6,1 тыс. в группе» → 6100.
+3. **`NUMBER тыс LABEL`** с lookbehind (2.86): `(?:^|[^\d,.])(\d{1,4})\s*тыс` — чтобы «1 тыс» в «6,**1 тыс**» не матчился.
+4. **`NUMBER[Kк] LABEL`**: «5.2K members» → 5200.
+5. **`NUMBER · LABEL`** (старый): «14 236 участников» (legacy формат).
+
+**MEMBER_LABELS:** `['участники','участник','участника','участников','members','member','в группе','in this group','in group','group members']`.
+
+**Continuous re-fetch:** в `scroll_friends_page` на round 0/30/60/... пробуется `parse_expected_friends_count(page)` пока не подхватит. `parser_worker.py` делает 5 retry × 800ms ДО входа в loop. Callback `on_expected_update(n)` сразу пробрасывает в `Job.progress_json` → UI.
+
+#### Timing-логи (2.87)
+
+Каждый раунд:
+```
+INFO friends scroll round 12: extract=85ms merge=0ms dom_rows=72 merged=549 expected=2542 mode=turbo
+```
+
+Каждые 10 раундов TIMING-SUMMARY:
+```
+INFO friends scroll TIMING-SUMMARY round 130 | avg(extract=72ms merge=0ms list=28ms scroll=4ms wait=522ms round=84ms) | total=449 ppl, 374 ppl/мин, mode=turbo
+```
+
+WARN'ы: если `round_total > 5000ms`, `XLSX > 1500ms`, `DB > 5000ms`.
+
+### 22.3. Outreach worker — настройки и DIAG (2.89/2.90)
+
+#### Send window (`backend/services/sending_window.py`)
+
+```python
+_DEFAULT_START_H = 8   # начало окна (локальный час)
+_DEFAULT_END_H = 22    # конец [start, end), не включая
+```
+
+Хранится в `OutreachCampaign.config`:
+- `send_window_24h: bool` — отправлять круглосуточно
+- `send_window_start_hour: 0-23`
+- `send_window_end_hour: 0-23`
+
+При **CLOSED** окне worker уходит в `time.sleep(min(3600, sec_until_open))` и **Chromium НЕ запускается** — корректное поведение, не баг. UI до 2.91 показывает «Идёт отправка...» (запутывало клиентов). В 2.91 в `outreach_detail` роутер передаёт `send_window_info` (предыдущий незаконченный fix UI — см. §22.6).
+
+#### DIAG-чекпоинты в `process_outreach_job` (2.89/2.90)
+
+Цепочка логов между spawn и Chromium launch:
+```
+DIAG: worker entered, loading job
+Spawned outreach worker for job N
+DIAG: starting sync_playwright
+DIAG: sync_playwright entered, entering main loop
+DIAG: loop iter=1
+DIAG: checking send_window
+DIAG: send_window OK, querying queue   ← или  send_window CLOSED, sleep Ns
+DIAG: row picked id=N person=N fb_acc=N
+DIAG: person loaded id=N
+DIAG: calling resolve_outreach_executor
+DIAG: resolve_outreach_executor done, account=N rot_err=...
+DIAG: parsing storage_state (json_len=N)
+DIAG: storage parsed
+DIAG: opening Chromium session for account=N
+DIAG: _open_outreach_account_session start, fb_account=N
+DIAG: acquiring playwright_run_slot for fb_account=N
+DIAG: playwright_run_slot acquired for fb_account=N
+DIAG: Chromium session OPENED for account=N
+```
+
+В `playwright_run_slot` (`backend/services/playwright_resource.py`): WARN если ОЖИДАНИЕ per-account lock или global semaphore.
+
+#### Лог-файл (mac)
+
+```
+~/Library/Application Support/fb-master-desktop/launcher.log
+```
+
+Текущий `BROWSER_PROFILES_DIR` в установленном приложении: `/Applications/SOCMASTER.app/Contents/Resources/fb-master-backend/browser_profiles`. Профили: `fb_account_1..3`, `instagram`, `linkedin`, `reddit`, `twitter`.
+
+### 22.4. SQLite WAL + busy_timeout (`backend/database.py`)
+
+С 2.73:
+```python
+event.listens_for(engine, "connect")  # SQLite only
+PRAGMA journal_mode=WAL
+PRAGMA busy_timeout=15000   # 15 сек, было 5000 в 2.73 → 15000 в 2.78
+PRAGMA synchronous=NORMAL
+```
+
+Это устраняет `database is locked` от 9 фоновых воркеров (parser, outreach, warmup, sequence, messenger_sync, messenger_ai, natural_warmup, account_branding, reddit/linkedin/twitter/instagram outreach).
+
+### 22.5. Diagnostic harness `tools/parser_diag.py`
+
+Standalone CLI-tool для запуска `PARSE_EXPECTED_FRIENDS_COUNT_JS`, `EXTRACT_FRIENDS_JS`, `CONNECTIONS_LIST_STATE_JS` на живой FB-сессии вне SOCMASTER, с инжекцией cookies + прокси.
+
+Режимы:
+- `--profile fb_account_1` — использовать существующий профиль (требует Cmd+Q SOCMASTER)
+- `--fresh` — пустой профиль `/tmp/parser_diag_fresh`, ручной логин
+- `--account-file <path> --proxy host:port:user:pass` — DarkStore-формат `phone:pwd:UA|[cookies]` + прокси
+
+Сохраняет:
+- `parser_diag_results/parser_diag_<ts>/parser_diag.json` — полная диагностика (innerText DOM, JS-результаты, тайминги, метрики)
+- `screenshots/{N}_initial.png`, `{N}_round3.png`
+
+Использовался для подтверждения regex-баг в 2.85/2.86. **playwright-stealth** установлен в `.venv`. Дополнительно `tools/playwright_smoke.py` — минимальный smoke-test Chromium launch.
+
+### 22.6. Незавершённые улучшения (опционально для 2.92+)
+
+- **UI send_window status в `templates/outreach/detail.html`**: роутер `outreach_detail` уже передаёт `send_window_info` (2.91 partial), но шаблон ещё показывает «Идёт отправка...» вместо «⏰ Ждёт окна 08:00–22:00 (сейчас HH:MM)». Заблокировано Fact-Forcing Gate, юзер сам разобрался. Можно добить в 2.92.
+- **2.83 регрессия откачена в 2.84**: DB threshold 2/25 → 10/100. Если когда-то понадобится более частый flush — теперь это не критично, потому что `_safe_final_flush` ловит весь merged dict при любом выходе.
+
+### 22.7. Файлы изменённые в сессии 2.85-2.91
+
+```
+backend/services/friends_list_scrape.py       (regex + speed-up + crash-safety + timing-логи)
+backend/services/parser_worker.py             (relink_messenger removed from hot path 🔥)
+backend/services/outreach_worker.py           (DIAG-логи)
+backend/services/playwright_resource.py       (lock-wait warnings)
+backend/routers/outreach.py                   (send_window_info в context)
+desktop/fb-master-desktop/package.json        (2.84 → 2.91)
+Checkpoint                                    (этот документ)
+tools/parser_diag.py                          (новый)
+tools/playwright_smoke.py                     (новый)
+```
+
+Все изменения в git: ветка `claude/thirsty-ellis-236908`, коммиты `e0e2056` (2.84) → `b50cdbe` (2.91), tag `v2.91.0`.
+
+### 22.8. Production state на момент 2.91.0
+
+```
+URL                                                            HTTP
+https://socmaster.pro/api/public/desktop-update                200 → latest=2.91.0
+https://socmaster.pro/static/releases/SOCMASTER-2.91.0-mac-arm64.dmg          200 (547 MB)
+https://socmaster.pro/static/releases/SOCMASTER-2.91.0-mac-arm64-bundle.zip   200 (545 MB)
+https://socmaster.pro/static/releases/SOCMASTER-2.91.0-win-x64.exe            200 (488 MB)
+
+systemctl status fb-master:                                    active (running)
+/opt/fb-master/.env:                                           LATEST_VERSION=2.91.0, mac+win все 2.91
+/opt/fb-master/static/releases/:                               ТОЛЬКО 2.91 (старые удалены)
+GitHub Release v2.91.0:                                        .exe + .blockmap из GHA
+```
 
 ---
 
