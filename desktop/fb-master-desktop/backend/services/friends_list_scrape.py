@@ -1016,6 +1016,33 @@ def scroll_friends_page(
         _wait_mult = 1.0
         _rand_mult = 1.0
     logger.info("friends scroll: speed_mode=%s (wait×%.2f, rand_prob×%.2f)", _speed_mode, _wait_mult, _rand_mult)
+
+    # Cancel watcher: page.evaluate (CDP-вызов синхронного API Playwright) блокирует
+    # поток до возврата JS. Если страница виснет (виртуальный список группы 65k+),
+    # cancel-флаг через _cancellable_wait_ms не доходит до пользователя — кнопка
+    # «Остановить» вроде нажата, но парсер не реагирует. Решение: отдельный поток
+    # каждые 250мс проверяет cancelled() и при срабатывании закрывает context —
+    # любой висящий page.evaluate бросает 'Target closed', который ловит safety-net.
+    import threading as _threading
+    _watcher_stop = _threading.Event()
+
+    def _cancel_watcher():
+        while not _watcher_stop.is_set():
+            try:
+                if cancelled and cancelled():
+                    try:
+                        page.context.close()
+                    except Exception:
+                        pass
+                    return
+            except Exception:
+                pass
+            _watcher_stop.wait(0.25)
+
+    _watcher_thread = _threading.Thread(target=_cancel_watcher, daemon=True)
+    if cancelled is not None:
+        _watcher_thread.start()
+
     # last_total с 0: иначе при предзаполнении из БД первая итерация даёт «нет новых» и ранняя остановка.
     last_total = 0
     no_new_rounds = 0
@@ -1056,17 +1083,28 @@ def scroll_friends_page(
                 if on_merged_flush:
                     on_merged_flush(dict(merged), dict(restricted))
             break
-        dismiss_facebook_dom_overlays(page)
-        rows = page.evaluate(EXTRACT_FRIENDS_JS)
+        # Safety-net: если page/context закрылись (Stop button / Chromium-crash),
+        # выходим из цикла без exception — иначе вылетаем в parser_donor_error
+        # и теряем уже собранное.
+        try:
+            dismiss_facebook_dom_overlays(page)
+            rows = page.evaluate(EXTRACT_FRIENDS_JS)
+        except Exception as e:
+            msg = str(e).lower()
+            if "closed" in msg or "target" in msg or "context" in msg:
+                logger.info("friends scroll: page closed (cancel/crash) at round %s, exiting", i)
+                break
+            raise
         rows_n = len(rows) if isinstance(rows, list) else 0
         if isinstance(rows, list):
             merge_friend_scan_rows(merged, rows, restricted=restricted)
         total = len(merged)
         if on_round and (i % 4 == 0 or i == 0):
             on_round(i, total)
-        # Каждые 8 раундов пишем прогресс в лог — без этого было невозможно понять,
-        # реально ли парсер крутит цикл или завис между шагами.
-        if i % 8 == 0 or i == 0:
+        # Лог каждый раунд для первых 20 (видим ранние этапы), потом каждые 4 —
+        # без этого было невозможно понять, реально ли парсер крутит цикл или завис
+        # между шагами (на 65k-группе FB рендерит виртуальный список не каждый scroll).
+        if i < 20 or i % 4 == 0:
             logger.info(
                 "friends scroll round %s: dom_rows=%s merged_total=%s expected=%s mode=%s",
                 i,
@@ -1219,6 +1257,10 @@ def scroll_friends_page(
         if random.random() < 0.12 * _rand_mult:
             if _cancellable_wait_ms(page, int(random.uniform(800, 2800) * _wait_mult), cancelled):
                 break
+
+    # Остановить cancel-watcher перед выходом — иначе daemon-thread может
+    # закрыть context уже после успешного завершения (race на чужих donor'ах).
+    _watcher_stop.set()
 
     if merged:
         if live_path:

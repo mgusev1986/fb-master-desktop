@@ -34,8 +34,12 @@ DEFAULT_SPEED: SpeedMode = "normal"
 _VALID_MODES: tuple[SpeedMode, ...] = ("turbo", "fast", "normal", "gentle")
 
 # Множители для задержек: 1.0 = как в коде сейчас (normal).
+# Turbo подняли с 0.1 → 0.3: на 0.1 (≈220-500ms) Facebook не успевал
+# подгружать виртуальный список группы (65k участников) — парсер крутил
+# впустую и казался зависшим. На 0.3 (~660-1500ms) FB рендерит свежие
+# DOM-узлы между скроллами и парсер реально продвигается.
 _MULTIPLIERS: dict[SpeedMode, float] = {
-    "turbo": 0.1,
+    "turbo": 0.3,
     "fast": 0.35,
     "normal": 1.0,
     "gentle": 1.3,
