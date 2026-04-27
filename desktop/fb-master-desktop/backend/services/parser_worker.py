@@ -189,10 +189,17 @@ def request_parser_cancel_for_account(db, account_id: int) -> bool:
     return hit
 
 
-def finish_stale_parser_jobs(db) -> int:
+def finish_stale_parser_jobs(db, *, force: bool = False) -> int:
     """
-    Если поток парсера не активен, помечаем задачи donor_friends_parse со статусом
-    running/queued как отменённые (после перезапуска сервера или сбоя воркера).
+    Помечаем задачи donor_friends_parse со статусом running/queued как отменённые.
+
+    force=False (дефолт): только если поток парсера не активен — после
+        перезапуска сервера/сбоя воркера.
+    force=True: даже для живых потоков — клиент нажал «Остановить», а
+        Playwright завис на старте Chromium / page.evaluate и не проверяет
+        cancel-event. Помечаем в БД как cancelled; зависший thread пусть
+        доумирает сам (daemon=True), DB больше не считает job активным.
+        Без этого UI висит в статусе «running», даже если cancel-event set.
     """
     alive = set(parser_worker_slots.running_ids())
     rows = (
@@ -202,18 +209,28 @@ def finish_stale_parser_jobs(db) -> int:
     )
     n = 0
     for j in rows:
-        if j.id in alive:
+        if j.id in alive and not force:
             continue
         finish_job(
             db,
             j,
             status="cancelled",
             error=(
-                "Задача сброшена: активный процесс парсера не найден "
-                "(перезапуск сервера или зависание). Выполните вход в Facebook в разделе «Аккаунты» и запустите снова."
+                "Задача остановлена клиентом (force-cancel: Chromium или Playwright завис на старте)."
+                if force and j.id in alive
+                else "Задача сброшена: активный процесс парсера не найден "
+                     "(перезапуск сервера или зависание). Выполните вход в Facebook в разделе «Аккаунты» и запустите снова."
             ),
             clear_progress=True,
         )
+        # Выбрасываем job_id из active slots: новый запуск не будет ждать этот thread.
+        try:
+            parser_worker_slots.release(j.id)
+        except Exception:
+            pass
+        # Ставим cancel-event, если он ещё есть — может быть Playwright
+        # всё-таки проснётся и выйдет сам.
+        request_parser_cancel(j.id)
         n += 1
     return n
 

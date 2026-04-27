@@ -25,7 +25,11 @@ logger = logging.getLogger(__name__)
 
 EXTRACT_FRIENDS_JS = """
 () => {
-  const root = document.querySelector('[role="main"]') || document.body;
+  // Для public-профилей (creator) список «друзей» по факту отображается как
+  // подписчики внутри другого DOM-контейнера — иногда вне [role="main"].
+  // Поэтому если в main мало ссылок-на-профили, падаем fallback'ом в body.
+  const mainEl = document.querySelector('[role="main"]');
+  const bodyEl = document.body;
   const seen = new Set();
   const rows = [];
 
@@ -127,22 +131,35 @@ EXTRACT_FRIENDS_JS = """
     });
     return urls.size;
   };
+  // Стартовый scope — тот, где больше ссылок на профили.
+  const mainCount = mainEl ? countProfileLinks(mainEl) : 0;
+  const bodyCount = countProfileLinks(bodyEl);
+  const root = mainEl && mainCount >= 4 ? mainEl : bodyEl;
   let scope = root;
-  let bestScore = countProfileLinks(root) * 10;
-  root.querySelectorAll('section, div, ul').forEach((el) => {
-    const rect = el.getBoundingClientRect();
-    if (rect.width < 220 || rect.height < 80) return;
-    const st = getComputedStyle(el);
-    if (st.display === 'none' || st.visibility === 'hidden') return;
-    const n = countProfileLinks(el);
-    if (n < 4) return;
-    const areaPenalty =
-      Math.max(1, Math.min(rect.width, window.innerWidth) * Math.max(80, Math.min(rect.height, window.innerHeight * 2))) / 35000;
-    const score = n * 10 - areaPenalty;
-    if (score > bestScore) {
-      bestScore = score;
-      scope = el;
-    }
+  let bestScore = (root === mainEl ? mainCount : bodyCount) * 10;
+  // Ищем самый «насыщенный ссылками на профили» контейнер — теперь и внутри
+  // body, не только main. Это покрывает public-creator профили и группы, где
+  // список вынесен в отдельный модал/drawer вне [role="main"].
+  const searchRoots = mainEl ? [mainEl, bodyEl] : [bodyEl];
+  const searchSeen = new Set();
+  searchRoots.forEach((searchRoot) => {
+    searchRoot.querySelectorAll('section, div, ul').forEach((el) => {
+      if (searchSeen.has(el)) return;
+      searchSeen.add(el);
+      const rect = el.getBoundingClientRect();
+      if (rect.width < 220 || rect.height < 80) return;
+      const st = getComputedStyle(el);
+      if (st.display === 'none' || st.visibility === 'hidden') return;
+      const n = countProfileLinks(el);
+      if (n < 4) return;
+      const areaPenalty =
+        Math.max(1, Math.min(rect.width, window.innerWidth) * Math.max(80, Math.min(rect.height, window.innerHeight * 2))) / 35000;
+      const score = n * 10 - areaPenalty;
+      if (score > bestScore) {
+        bestScore = score;
+        scope = el;
+      }
+    });
   });
 
   scope.querySelectorAll('a[href]').forEach((a) => {
@@ -1017,6 +1034,16 @@ def scroll_friends_page(
         _rand_mult = 1.0
     logger.info("friends scroll: speed_mode=%s (wait×%.2f, rand_prob×%.2f)", _speed_mode, _wait_mult, _rand_mult)
 
+    # Стартовая пауза: дать FB дорисовать виртуализированный список
+    # подписчиков/друзей/участников до первой экстракции. Для public-creator
+    # профилей и групп с тысячами участников список грузится ~2-4 секунды,
+    # и без этой паузы первые 10-20 раундов extractor возвращал 0 — как
+    # было в 2.78. В 2.64 пауза была, и парсер «летал».
+    try:
+        page.wait_for_timeout(int(3000 * max(_wait_mult, 0.5)))
+    except Exception:
+        pass
+
     # Cancel watcher: page.evaluate (CDP-вызов синхронного API Playwright) блокирует
     # поток до возврата JS. Если страница виснет (виртуальный список группы 65k+),
     # cancel-флаг через _cancellable_wait_ms не доходит до пользователя — кнопка
@@ -1127,15 +1154,14 @@ def scroll_friends_page(
             )
 
         if total > 0:
-            # Реже save: каждый flush_friends_workbook + on_merged_flush делает
-            # XLSX-write на диск и DB-merge в parser_worker. На SQLite WAL это
-            # всё равно блокирует другие writes (proxy_health_guard, presence)
-            # — раунд застревает на 60с из-за database-is-locked retry.
-            # Раз в 10 раундов / 200 новых вместо 3 / 50 — теряем меньше времени.
+            # Save: каждые 3 раунда / 50 новых, как в 2.64. Раньше я выкрутил
+            # на 10/200 из-за database-is-locked, но теперь busy_timeout=15s
+            # сам ждёт lock и проблема ушла. Возвращаем чаще — пользователь
+            # видит свежий прогресс в UI и в XLSX.
             need_save = (
                 i == 0
-                or (i - last_save_i) >= 10
-                or (total - last_saved_total) >= 200
+                or (i - last_save_i) >= 3
+                or (total - last_saved_total) >= 50
             )
             if need_save:
                 if live_path:

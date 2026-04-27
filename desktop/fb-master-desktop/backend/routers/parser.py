@@ -237,7 +237,10 @@ async def parser_progress_json(request: Request, db: Session = Depends(get_db)):
 @router.post("/cancel")
 async def parser_cancel_json(db: Session = Depends(get_db)):
     ok = request_parser_cancel()
-    stale_cleared = 0
-    if not ok:
-        stale_cleared = finish_stale_parser_jobs(db)
+    # Даём 1 секунду на graceful остановку, потом force-cleanup живых jobs.
+    # Без этого UI висит в "running" даже если cancel-event поставлен —
+    # потому что worker может зависнуть на page.evaluate и не возвращаться.
+    import time as _t
+    _t.sleep(1.0)
+    stale_cleared = finish_stale_parser_jobs(db, force=True)
     return JSONResponse({"ok": ok or stale_cleared > 0, "stale_cleared": stale_cleared})
