@@ -488,7 +488,18 @@ PARSE_EXPECTED_FRIENDS_COUNT_JS = """
     const label = labelRe(labels);
     const src = Array.isArray(samples) && samples.length ? samples : variants;
     for (const sample of src) {
-      let m = sample.match(new RegExp('(\\\\d{1,4})\\\\s*тыс\\\\.?\\\\s*(?:[—\\\\-–:]\\\\s*)?' + label, 'i'));
+      // FB сейчас рендерит «Участники · 14 236» (LABEL · NUMBER) — этот
+      // паттерн идёт первым. Раньше его не было — поэтому expected всегда =0.
+      let m = sample.match(new RegExp(label + '\\\\s*[·•:\\\\-—\\\\s]+\\\\s*(\\\\d[\\\\d\\\\s,.]{1,14})', 'i'));
+      if (m) {
+        const rawInt = m[1].replace(/\\s/g, '');
+        if (!/[,.]\\d{3,}/.test(rawInt)) {
+          const n = parseInt(rawInt.replace(/,/g, ''), 10);
+          const ok = pickBound(n, min, max);
+          if (ok) return ok;
+        }
+      }
+      m = sample.match(new RegExp('(\\\\d{1,4})\\\\s*тыс\\\\.?\\\\s*(?:[—\\\\-–:]\\\\s*)?' + label, 'i'));
       if (m) {
         const n = parseInt(m[1], 10) * 1000;
         const ok = pickBound(n, min, max);
@@ -522,7 +533,7 @@ PARSE_EXPECTED_FRIENDS_COUNT_JS = """
   const FRIEND_LABELS = ['друзья', 'друга', 'друзей', 'friends', 'friend'];
   const FOLLOWER_LABELS = ['подписчики', 'подписчик', 'подписчика', 'подписчиков', 'followers', 'follower'];
   const FOLLOWING_LABELS = ['подписки', 'подписок', 'following'];
-  const MEMBER_LABELS = ['участники', 'участник', 'участника', 'участников', 'members', 'member'];
+  const MEMBER_LABELS = ['участники', 'участник', 'участника', 'участников', 'members', 'member', 'в группе', 'in this group', 'in group', 'group members'];
   const topVariants = [];
   const seenTop = new Set();
   const visible = (el) => {
@@ -532,7 +543,11 @@ PARSE_EXPECTED_FRIENDS_COUNT_JS = """
     const r = el.getBoundingClientRect();
     return r.width > 0 && r.height > 0;
   };
-  root.querySelectorAll('a, span, div, h1, h2, h3, strong').forEach((el) => {
+  // Узкий селектор: header'ы группы/профиля содержатся в h1/h2/h3/strong/a.
+  // span/div давали много ложных срабатываний и сильно тормозили
+  // (на странице группы их 5000+, querySelector + getBoundingClientRect
+  // на каждом — 200-500мс на каждый вызов parse_expected_friends_count).
+  root.querySelectorAll('h1, h2, h3, strong, a').forEach((el) => {
     if (!visible(el)) return;
     const r = el.getBoundingClientRect();
     if (r.top > Math.max(window.innerHeight * 1.6, 1200) || r.bottom < -40) return;
@@ -1200,13 +1215,12 @@ def scroll_friends_page(
             total = len(merged)
             if on_round and (i % 4 == 0 or i == 0):
                 on_round(i, total)
-            # Continuous re-fetch expected_total: на странице группы блок
-            # «Участники · 14 236» появляется не сразу — DOM lazy-render.
-            # Пытаемся в первых раундах часто (0,1,3,5,8) и потом каждые 10.
-            # Это критично для UI: клиент сразу видит сколько РЕАЛЬНО людей
-            # у донора, а не ждёт 10+ раундов.
-            _aggressive_fetch_rounds = {0, 1, 3, 5, 8}
-            if expected_total is None and (i in _aggressive_fetch_rounds or (i > 0 and i % 10 == 0)):
+            # Continuous re-fetch expected_total: parser_worker делает 5 retry'ев
+            # ДО входа в этот цикл. Если там не подхватили — пробуем раз в
+            # 30 раундов. Раньше было 0,1,3,5,8 + каждые 10 — слишком часто,
+            # тормозило TURBO: parse_expected_friends_count перебирает огромный
+            # DOM querySelectorAll('a, span, div, h1, h2, h3, strong').
+            if expected_total is None and i > 0 and i % 30 == 0:
                 try:
                     _maybe = parse_expected_friends_count(page)
                     if _maybe and _maybe > 0:
