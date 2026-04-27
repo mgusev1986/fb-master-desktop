@@ -21,6 +21,94 @@ _STORAGE_STATE_TIMEOUT_SEC = 14.0
 # (как во встроенном Messenger). Лента и настройки по-прежнему доступны из меню внутри FB.
 FB_LOGIN_WINDOW_INITIAL_URL = "https://www.facebook.com/messages/"
 
+# Многоязычные подписи кнопки «Продолжить» на remembered-login / session-gate странице FB.
+# FB отдаёт интерфейс по locale прокси → у одного клиента будет русский, у другого латышский
+# (Turpināt) или турецкий (Devam et). В embedded_login.html уже есть такой список (v2.33),
+# теперь тот же набор используется в Playwright-окне «В отдельном окне».
+_FB_CONTINUE_LABELS: tuple[str, ...] = (
+    "Продолжить", "Continue", "Продовжити",
+    "Turpināt",                                   # lv
+    "Tęsti", "Testi",                             # lt
+    "Jätka", "Jatka",                             # et (Jätka) + fi (Jatkaa) upper
+    "Devam et", "Devam",                          # tr
+    "Fortfahren", "Weiter",                       # de
+    "Continuer", "Poursuivre",                    # fr
+    "Continuar", "Seguir", "Prosseguir",          # es/pt
+    "Continua", "Proseguire",                     # it
+    "Doorgaan", "Verdergaan",                     # nl
+    "Dalej", "Kontynuuj",                         # pl
+    "Fortsätt",                                   # sv
+    "Jatkaa",                                     # fi
+    "Folytatás", "Tovább",                        # hu
+    "Pokračovat",                                 # cs/sk
+    "Продължи",                                   # bg
+    "Continuă",                                   # ro
+    "Nastaviti", "Nastavi",                       # hr/sr/sl
+    "继续",                                        # zh
+    "続ける", "続行",                              # ja
+    "계속",                                        # ko
+    "ดำเนินการต่อ", "ต่อไป",                     # th
+    "Tiếp tục",                                   # vi
+    "Lanjutkan", "Teruskan",                      # id/ms
+    "متابعة",                                     # ar
+    "המשך",                                       # he
+    "ادامه",                                       # fa
+)
+
+
+_FB_REMEMBERED_LOGIN_ALT_PROFILE_HINTS: tuple[str, ...] = (
+    "использовать другой профиль",
+    "использовать другой аккаунт",
+    "use another account",
+    "use another profile",
+    "use a different account",
+    "log into another account",
+    "создать новый аккаунт",
+    "create new account",
+    "використовувати інший профіль",
+    "izmantot citu profilu",
+    "naudoti kitą profilį",
+    "kasuta teist profiili",
+    "başka bir profil kullan",
+    "anderes profil verwenden",
+    "utiliser un autre profil",
+    "usar otro perfil",
+    "usar otra cuenta",
+    "usar outro perfil",
+    "utilizzare un altro profilo",
+    "een ander profiel gebruiken",
+    "użyj innego profilu",
+    "använd ett annat konto",
+    "käytä toista profiilia",
+    "másik profil használata",
+    "použít jiný profil",
+    "folosește alt profil",
+    "gunakan akun lain",
+)
+
+
+def _fb_continue_selectors() -> tuple[str, ...]:
+    """Playwright-селекторы для всех локализаций кнопки «Продолжить».
+
+    Для каждой подписи — 5 селекторов (button / div[role=button] / a /
+    input[submit] / input[button]). Итого ~170 селекторов — итерация по ним
+    быстрая, т.к. `locator(sel).count()` отрабатывает за миллисекунды.
+    """
+    out: list[str] = []
+    for label in _FB_CONTINUE_LABELS:
+        esc = label.replace('"', r"\"")
+        out.extend((
+            f'button:has-text("{esc}")',
+            f'div[role="button"]:has-text("{esc}")',
+            f'a:has-text("{esc}")',
+            f'input[type="submit"][value="{esc}"]',
+            f'input[type="button"][value="{esc}"]',
+        ))
+    return tuple(out)
+
+
+_FB_CONTINUE_SELECTORS: tuple[str, ...] = _fb_continue_selectors()
+
 
 def bundled_chromium_executable_for_playwright() -> Path | None:
     """Return the packaged Chromium executable, if this desktop/backend bundle has one."""
@@ -38,15 +126,92 @@ def bundled_chromium_executable_for_playwright() -> Path | None:
         return None
 
 
-def chromium_launch_kwargs_with_bundle(kwargs: dict[str, Any]) -> dict[str, Any]:
-    """Force Playwright launches to use the bundled Chromium when it is present.
+def system_chrome_executable_path() -> Path | None:
+    """
+    Найти установленный системный Google Chrome. Возвращает None, если не найден или
+    принудительно отключён через env FB_PLAYWRIGHT_FORCE_BUNDLED_CHROMIUM=1.
 
-    On Windows the diagnostic launch may pass with `channel="chromium"`, while a
-    headed persistent profile can still fail to resolve the packaged executable.
-    `executable_path` removes that ambiguity for both launch() and
+    Системный Chrome нужен для воспроизведения видео Facebook (Reels, Watch, Stories) — у него
+    есть проприетарные кодеки H.264/AAC. Bundled Chromium из Playwright собран без этих кодеков
+    (open-source build), поэтому FB показывает «К сожалению, воспроизвести это видео не удается»
+    — что блокирует сценарии прогрева, где аккаунт должен смотреть рилс.
+    """
+    import os
+    import platform
+
+    if (os.environ.get("FB_PLAYWRIGHT_FORCE_BUNDLED_CHROMIUM") or "").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    ):
+        return None
+
+    override = (os.environ.get("FB_PLAYWRIGHT_CHROME_EXECUTABLE") or "").strip()
+    if override:
+        p = Path(override).expanduser()
+        if p.is_file():
+            return p
+
+    candidates: list[str] = []
+    sysname = platform.system()
+    if sysname == "Darwin":
+        candidates.append("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
+        candidates.append(
+            str(
+                Path.home()
+                / "Applications"
+                / "Google Chrome.app"
+                / "Contents"
+                / "MacOS"
+                / "Google Chrome"
+            )
+        )
+    elif sysname == "Windows":
+        for env_key in ("ProgramFiles", "ProgramFiles(x86)", "LocalAppData"):
+            base = os.environ.get(env_key)
+            if base:
+                candidates.append(
+                    str(Path(base) / "Google" / "Chrome" / "Application" / "chrome.exe")
+                )
+    else:
+        candidates.extend(
+            [
+                "/usr/bin/google-chrome",
+                "/usr/bin/google-chrome-stable",
+                "/opt/google/chrome/chrome",
+                "/opt/google/chrome/google-chrome",
+                "/snap/bin/google-chrome",
+            ]
+        )
+    for c in candidates:
+        try:
+            if c and Path(c).is_file():
+                return Path(c)
+        except OSError:
+            continue
+    return None
+
+
+def chromium_launch_kwargs_with_bundle(kwargs: dict[str, Any]) -> dict[str, Any]:
+    """Force Playwright launches to use a real Chrome binary instead of vanilla Chromium.
+
+    Приоритет: системный Google Chrome (с проприетарными кодеками H.264/AAC — нужны для
+    Reels/Watch/Stories на Facebook) → bundled Chromium из Playwright (open-source, без
+    кодеков; видео FB не воспроизводится). На Windows диагностический запуск раньше
+    шёл с channel="chromium", а headed persistent profile мог не разрешить упакованный
+    executable — `executable_path` снимает эту неоднозначность для launch() и
     launch_persistent_context().
+
+    Откат к старому поведению (только bundled): env FB_PLAYWRIGHT_FORCE_BUNDLED_CHROMIUM=1.
+    Явный путь: env FB_PLAYWRIGHT_CHROME_EXECUTABLE=/path/to/chrome.
     """
     out = dict(kwargs)
+    chrome = system_chrome_executable_path()
+    if chrome is not None:
+        out.pop("channel", None)
+        out["executable_path"] = str(chrome)
+        return out
     bundled = bundled_chromium_executable_for_playwright()
     if bundled is not None:
         out.pop("channel", None)
@@ -222,6 +387,24 @@ def _has_storage_cookies(storage_state: dict[str, Any] | None) -> bool:
     return isinstance(c, list) and len(c) > 0
 
 
+def _normalize_cookie_domain(raw: str) -> str:
+    """
+    FB cookies иногда приходят с невалидным domain типа `.www.facebook.com` — это
+    ни host-only на `www.facebook.com`, ни wildcard `.facebook.com`. FB server
+    такие cookies отвергает → login gate в бесконечном цикле.
+    Приводим к правильному wildcard: `.www.facebook.com` → `.facebook.com`.
+    """
+    d = (raw or "").strip()
+    if not d:
+        return d
+    low = d.lower()
+    if low.startswith(".www.facebook.com"):
+        return ".facebook.com"
+    if low.startswith(".www.messenger.com"):
+        return ".messenger.com"
+    return d
+
+
 def _sanitize_cookie_for_playwright(c: dict[str, Any]) -> dict[str, Any] | None:
     """Оставляем поля, которые принимает BrowserContext.add_cookies (без partitionKey и пр.)."""
     if not isinstance(c, dict):
@@ -236,7 +419,7 @@ def _sanitize_cookie_for_playwright(c: dict[str, Any]) -> dict[str, Any] | None:
     if url:
         out["url"] = str(url).strip()
     elif domain:
-        out["domain"] = str(domain).strip()
+        out["domain"] = _normalize_cookie_domain(str(domain).strip())
         out["path"] = str(c.get("path") or "/").strip() or "/"
     else:
         return None
@@ -574,20 +757,33 @@ def page_has_facebook_remembered_login_gate(page: Any) -> tuple[bool, str]:
     try:
         url = (page.url or "").lower()
         probe = page.evaluate(
-            """() => {
+            """({ continueLabels, altHints }) => {
               const text = ((document.body && document.body.innerText) || '').slice(0, 12000);
+              const norm = (value) => String(value || '').replace(/\\s+/g, ' ').trim().toLowerCase();
+              const continueSet = new Set((continueLabels || []).map(norm).filter(Boolean));
+              const alt = (altHints || []).map(norm).filter(Boolean);
               const hasPassword = !!document.querySelector(
                 'input[name="pass"], input#pass, input[type="password"]'
               );
               const hasContinue = Array.from(
                 document.querySelectorAll('button, a, div[role="button"], input[type="submit"], input[type="button"]')
               ).some((el) => {
-                const txt = String(el.innerText || el.value || '').trim().toLowerCase();
-                return txt === 'continue' || txt === 'продолжить';
+                const txt = norm(el.innerText || el.value || '');
+                if (!txt || txt.length > 90) return false;
+                if (continueSet.has(txt)) return true;
+                for (const label of continueSet) {
+                  if (label && (txt === label || txt.startsWith(label + ' '))) return true;
+                }
+                return false;
               });
-              const hasAltProfile = /использовать другой профиль|use another account|use another profile|создать новый аккаунт|create new account/i.test(text);
+              const lowText = norm(text);
+              const hasAltProfile = alt.some((hint) => lowText.includes(hint));
               return { hasPassword, hasContinue, hasAltProfile };
-            }"""
+            }""",
+            {
+                "continueLabels": list(_FB_CONTINUE_LABELS),
+                "altHints": list(_FB_REMEMBERED_LOGIN_ALT_PROFILE_HINTS),
+            },
         )
         if not isinstance(probe, dict):
             return False, ""
@@ -651,18 +847,7 @@ def try_click_facebook_remembered_continue(page: Any) -> bool:
     gate, _msg = page_has_facebook_remembered_login_gate(page)
     if not gate:
         return False
-    for sel in (
-        'button:has-text("Продолжить")',
-        'button:has-text("Continue")',
-        'div[role="button"]:has-text("Продолжить")',
-        'div[role="button"]:has-text("Continue")',
-        'a:has-text("Продолжить")',
-        'a:has-text("Continue")',
-        'input[type="submit"][value="Continue"]',
-        'input[type="submit"][value="Продолжить"]',
-        'input[type="button"][value="Continue"]',
-        'input[type="button"][value="Продолжить"]',
-    ):
+    for sel in _FB_CONTINUE_SELECTORS:
         try:
             loc = page.locator(sel).first
             if loc.count() == 0:
@@ -676,6 +861,39 @@ def try_click_facebook_remembered_continue(page: Any) -> bool:
         except Exception:
             continue
     return False
+
+
+def resolve_facebook_remembered_login_gate(
+    page: Any,
+    *,
+    attempts: int = 3,
+    settle_ms: int = 1500,
+) -> bool:
+    """
+    Мягко снимает FB saved-login gate («Продолжить как ...»).
+
+    Для автоматизаций это промежуточное состояние: если после клика Facebook
+    пустит в аккаунт, поиск/парсер продолжают работу; если попросит пароль или
+    checkpoint, обычная проверка `page_requires_facebook_login` вернёт ошибку.
+    """
+    clicked = False
+    for _ in range(max(1, int(attempts or 1))):
+        try:
+            if not try_click_facebook_remembered_continue(page):
+                break
+            clicked = True
+            try:
+                page.wait_for_load_state("domcontentloaded", timeout=10_000)
+            except Exception:
+                pass
+            try:
+                page.wait_for_timeout(max(250, int(settle_ms or 0)))
+            except Exception:
+                pass
+        except Exception:
+            logger.debug("resolve_facebook_remembered_login_gate", exc_info=True)
+            break
+    return clicked
 
 
 def fb_c_user_from_storage_state(storage_state: dict[str, Any] | None) -> str | None:
@@ -1068,6 +1286,23 @@ def check_facebook_session(
                     return False, lim_msg, None
                 need_login, login_msg = page_requires_facebook_login(page)
                 if need_login:
+                    # Если FB показал форму входа / remembered gate, НО в контексте
+                    # уже есть живой c_user cookie — это не «смерть сессии», а
+                    # device verification. SOCMASTER умеет её обходить автоматически
+                    # (Войти в Facebook [beta] + авто-клик «Продолжить» + авто-логин).
+                    # Возвращаем зелёный статус со снимком, чтобы пользователь видел:
+                    # «сессия живая, вход пройдёт автоматически», а не красный.
+                    try:
+                        snap_try = ctx.storage_state()
+                    except Exception:
+                        snap_try = None
+                    c_user_alive = fb_c_user_from_storage_state(snap_try)
+                    if c_user_alive:
+                        verdict_msg = (
+                            "Сессия активна (есть c_user), FB показывает «Продолжить». "
+                            "При входе программа пройдёт верификацию автоматически."
+                        )
+                        return True, verdict_msg, snap_try
                     return False, login_msg, None
 
                 try:
@@ -1527,12 +1762,13 @@ def _try_fill_facebook_2fa(page: Any, totp_secret: str) -> bool:
 
 
 def _try_click_trust_browser(page: Any) -> None:
-    for sel in (
-        'button:has-text("Continue")',
-        'button:has-text("Продолжить")',
+    # Расширенный список локализаций + OK-кнопка для «Trust this browser» диалогов.
+    selectors = _FB_CONTINUE_SELECTORS + (
         'button:has-text("OK")',
-        'div[role="button"]:has-text("Continue")',
-    ):
+        'button:has-text("Ok")',
+        'div[role="button"]:has-text("OK")',
+    )
+    for sel in selectors:
         try:
             page.locator(sel).first.click(timeout=900)
             return
@@ -1631,18 +1867,52 @@ def open_auto_login_window_blocking(
                 pass_loc.click(timeout=2_000)
                 pass_loc.fill((password or "").strip())
                 clicked_submit = False
-                for sel in (
+                # Многоязычный «Войти / Log in / Pieteikties / Giriş yap / ...» +
+                # резерв с «Continue / Turpināt / ...» (на некоторых FB-формах submit
+                # называется как continue).
+                login_labels = (
+                    "Log in", "Войти", "Увійти",
+                    "Pieteikties",                      # lv
+                    "Prisijungti",                      # lt
+                    "Logi sisse",                       # et
+                    "Giriş yap",                        # tr
+                    "Anmelden",                         # de
+                    "Se connecter",                     # fr
+                    "Iniciar sesión",                   # es
+                    "Entrar",                           # pt
+                    "Accedi",                           # it
+                    "Inloggen",                         # nl
+                    "Zaloguj",                          # pl
+                    "Logga in",                         # sv
+                    "Kirjaudu",                         # fi
+                    "Bejelentkezés",                    # hu
+                    "Přihlásit",                        # cs
+                    "Prihlásiť",                        # sk
+                    "Conectare",                        # ro
+                    "Prijavi",                          # hr/sr/sl
+                    "Влез",                             # bg
+                    "登录", "登入",                      # zh
+                    "ログイン",                          # ja
+                    "로그인",                             # ko
+                    "เข้าสู่ระบบ",                       # th
+                    "Đăng nhập",                        # vi
+                    "Masuk", "Log masuk",               # id/ms
+                    "تسجيل الدخول",                    # ar
+                    "להיכנס",                           # he
+                    "ورود",                              # fa
+                )
+                login_selectors: list[str] = [
                     'button[name="login"]',
                     'button[type="submit"]',
-                    'button:has-text("Log in")',
-                    'button:has-text("Войти")',
-                    'button:has-text("Continue")',
-                    'button:has-text("Продолжить")',
-                    'div[role="button"]:has-text("Log in")',
-                    'div[role="button"]:has-text("Войти")',
-                    'div[role="button"]:has-text("Continue")',
-                    'div[role="button"]:has-text("Продолжить")',
-                ):
+                    'button[data-testid="royal_login_button"]',
+                ]
+                for lbl in login_labels:
+                    esc = lbl.replace('"', r"\"")
+                    login_selectors.append(f'button:has-text("{esc}")')
+                    login_selectors.append(f'div[role="button"]:has-text("{esc}")')
+                # Дальше — те же continue-селекторы как резерв (FB иногда называет submit Continue).
+                login_selectors.extend(_FB_CONTINUE_SELECTORS)
+                for sel in login_selectors:
                     try:
                         loc = page.locator(sel).first
                         if loc.count() == 0:
@@ -1720,6 +1990,7 @@ def try_start_auto_login_window(
     stealth_bundle: dict[str, Any],
     *,
     on_closed_storage: Callable[[dict[str, Any] | None], None] | None = None,
+    on_login_blocked: Callable[[str], None] | None = None,
     cdp_endpoint: str | None = None,
 ) -> tuple[bool, str]:
     """Фоновый поток: автоматический вход с TOTP."""
@@ -1739,6 +2010,11 @@ def try_start_auto_login_window(
             )
         except Exception:
             logger.exception("open_auto_login_window account_id=%s", account_id)
+            if on_login_blocked:
+                try:
+                    on_login_blocked("Автовход не завершился: ошибка окна Chromium или Facebook")
+                except Exception:
+                    logger.debug("on_login_blocked callback failed", exc_info=True)
         finally:
             _active_login.discard(account_id)
             _login_threads.pop(account_id, None)
