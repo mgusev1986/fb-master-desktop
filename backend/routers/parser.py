@@ -55,9 +55,15 @@ def _parser_progress_percent(p: dict[str, Any] | None) -> int | None:
         extra = 0.08
     elif ph == "scrolling":
         if exp >= 50 and found > 0:
+            # Реальный прогресс: собрано / по счётчику группы.
             extra = min(0.88, 0.05 + 0.83 * min(1.0, float(found) / float(exp)))
+        elif found > 0:
+            # Без expected (parse_expected_friends_count вернул 0) — оцениваем
+            # по количеству собранных. 5000 как «типичная цель» парсинга;
+            # это лучше старого `sr / 240`, который врал (на 168 раундах = 70%).
+            extra = min(0.88, 0.05 + 0.83 * min(1.0, float(found) / 5000.0))
         else:
-            extra = min(0.88, sr / 240.0)
+            extra = min(0.10, sr / 240.0)
     elif ph == "importing":
         extra = 0.94
     elif ph == "idle":
@@ -236,11 +242,10 @@ async def parser_progress_json(request: Request, db: Session = Depends(get_db)):
 
 @router.post("/cancel")
 async def parser_cancel_json(db: Session = Depends(get_db)):
+    # Stop button: одним вызовом ставим cancel-event И помечаем БД как
+    # cancelled. UI обновляется мгновенно (~200мс), без ожидания graceful
+    # shutdown'а worker'а. Cancel-watcher в scroll_friends_page (100мс
+    # polling) сам закроет Chromium-процесс через browser.close().
     ok = request_parser_cancel()
-    # Даём 1 секунду на graceful остановку, потом force-cleanup живых jobs.
-    # Без этого UI висит в "running" даже если cancel-event поставлен —
-    # потому что worker может зависнуть на page.evaluate и не возвращаться.
-    import time as _t
-    _t.sleep(1.0)
     stale_cleared = finish_stale_parser_jobs(db, force=True)
     return JSONResponse({"ok": ok or stale_cleared > 0, "stale_cleared": stale_cleared})

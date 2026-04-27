@@ -1132,12 +1132,19 @@ def scroll_friends_page(
                 if on_merged_flush:
                     on_merged_flush(dict(merged), dict(restricted))
             break
+        # Детальные тайминг-логи: видно где именно тормозит каждый раунд.
+        # Лог формата `extract=Xms merge=Yms total=Zms dom_rows=N merged=M`.
+        # Без этих таймингов невозможно отличить «FB медленно отдаёт DOM» от
+        # «наш save блокирует на 60с». Если total > 5000ms — печатаем WARN.
+        import time as _t
+        _round_t0 = _t.monotonic()
         # Safety-net: если page/context закрылись (Stop button / Chromium-crash),
-        # выходим из цикла без exception — иначе вылетаем в parser_donor_error
-        # и теряем уже собранное.
+        # выходим из цикла без exception.
         try:
+            _t_extract0 = _t.monotonic()
             dismiss_facebook_dom_overlays(page)
             rows = page.evaluate(EXTRACT_FRIENDS_JS)
+            _t_extract = int((_t.monotonic() - _t_extract0) * 1000)
         except Exception as e:
             msg = str(e).lower()
             if "closed" in msg or "target" in msg or "context" in msg:
@@ -1145,18 +1152,20 @@ def scroll_friends_page(
                 break
             raise
         rows_n = len(rows) if isinstance(rows, list) else 0
+        _t_merge0 = _t.monotonic()
         if isinstance(rows, list):
             merge_friend_scan_rows(merged, rows, restricted=restricted)
+        _t_merge = int((_t.monotonic() - _t_merge0) * 1000)
         total = len(merged)
         if on_round and (i % 4 == 0 or i == 0):
             on_round(i, total)
-        # Лог каждый раунд для первых 20 (видим ранние этапы), потом каждые 4 —
-        # без этого было невозможно понять, реально ли парсер крутит цикл или завис
-        # между шагами (на 65k-группе FB рендерит виртуальный список не каждый scroll).
+        # Лог каждый раунд для первых 20, потом каждые 4 — с таймингами.
         if i < 20 or i % 4 == 0:
             logger.info(
-                "friends scroll round %s: dom_rows=%s merged_total=%s expected=%s mode=%s",
+                "friends scroll round %s: extract=%dms merge=%dms dom_rows=%s merged=%s expected=%s mode=%s",
                 i,
+                _t_extract,
+                _t_merge,
                 rows_n,
                 total,
                 expected_total or "—",
@@ -1173,23 +1182,46 @@ def scroll_friends_page(
             )
             if need_xlsx_save:
                 if live_path:
+                    _t_xlsx0 = _t.monotonic()
                     flush_friends_workbook(live_path, merged)
+                    _t_xlsx = int((_t.monotonic() - _t_xlsx0) * 1000)
+                    if _t_xlsx > 1500:
+                        logger.warning(
+                            "friends scroll save: XLSX flush медленный = %dms (round=%s, total=%s)",
+                            _t_xlsx, i, total,
+                        )
+                    elif i < 20:
+                        logger.info("friends scroll save: xlsx=%dms (round=%s)", _t_xlsx, i)
                 last_save_i = i
                 last_saved_total = total
-            # БД-flush (тяжёлый: _filter_snapshot_by_language + _merge_into_batch +
-            # commit) — каждые 30 раундов / 500 новых. На 9 параллельных воркерах
-            # каждый flush ловит database-is-locked retry до 60с — поэтому редко.
-            # Прогресс в UI не страдает: _throttled_progress_update пишет
-            # friends_found напрямую в Job.progress, без БД-merge.
+            # БД-flush (_filter_snapshot_by_language + _merge_into_batch +
+            # commit) — каждые 30 раундов / 500 новых.
             need_db_flush = on_merged_flush is not None and (
                 i == 0
                 or (i - last_db_flush_i) >= 30
                 or (total - last_db_flushed_total) >= 500
             )
             if need_db_flush:
+                _t_db0 = _t.monotonic()
                 on_merged_flush(dict(merged), dict(restricted))
+                _t_db = int((_t.monotonic() - _t_db0) * 1000)
+                if _t_db > 5000:
+                    logger.warning(
+                        "friends scroll save: DB flush ОЧЕНЬ медленный = %dms (round=%s, total=%s) — возможно language_classify или DB lock",
+                        _t_db, i, total,
+                    )
+                else:
+                    logger.info("friends scroll save: db=%dms (round=%s, total=%s)", _t_db, i, total)
                 last_db_flush_i = i
                 last_db_flushed_total = total
+
+        # Финальный тайминг раунда — если общий round > 5с, явно выделяем WARN.
+        _round_total = int((_t.monotonic() - _round_t0) * 1000)
+        if _round_total > 5000:
+            logger.warning(
+                "friends scroll round %s МЕДЛЕННЫЙ: total=%dms (extract=%dms, merge=%dms) — что-то блокирует",
+                i, _round_total, _t_extract, _t_merge,
+            )
 
         if total == last_total:
             no_new_rounds += 1

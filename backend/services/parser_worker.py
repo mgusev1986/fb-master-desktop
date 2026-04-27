@@ -615,6 +615,14 @@ def _filter_snapshot_by_language(
     if mode == "none":
         return dict(by_url), dict(by_restricted or {}), {}
 
+    # Если фильтр языка == "all", классифицировать каждый профиль НЕ нужно
+    # (всё равно никого не отбрасываем). Раньше функция всё равно ходила
+    # scan_page.goto() в каждый профиль для language detection — это и
+    # давало 60-секундные паузы каждые 30 раундов («парсер работает рывками»).
+    # Возвращаем все URL без classify-цикла.
+    if mode == "fast" and flt == "all":
+        return dict(by_url), dict(by_restricted or {}), {}
+
     accepted_by_url: dict[str, str] = {}
     accepted_restricted: dict[str, bool] = {}
     language_results: dict[str, dict[str, Any]] = {}
@@ -1137,7 +1145,26 @@ def process_parser_job(job_id: int) -> None:
                                                     "и войдите в модальном окне, затем «Проверить сессию». "
                                                     "Не запускайте парсер, пока окно входа видно в Chromium."
                                                 )
-                                            expected_friends_n = parse_expected_friends_count(page)
+                                            # parse_expected_friends_count: retry × 5 c интервалом 800мс,
+                                            # пока DOM группы не отрендерит «Участники · 4 346».
+                                            # На скриншотах user'а видим expected=— (None) —
+                                            # JS возвращал 0, потому что блок ещё не был в DOM.
+                                            expected_friends_n = None
+                                            for _exp_try in range(5):
+                                                expected_friends_n = parse_expected_friends_count(page)
+                                                logger.info(
+                                                    "parser expected_friends try %s: %s (donor=%s url=%s)",
+                                                    _exp_try + 1,
+                                                    expected_friends_n,
+                                                    donor.id,
+                                                    page.url[:100],
+                                                )
+                                                if expected_friends_n and expected_friends_n > 0:
+                                                    break
+                                                try:
+                                                    page.wait_for_timeout(800)
+                                                except Exception:
+                                                    break
                                             _throttled_progress_update(
                                                 db,
                                                 job_id,
