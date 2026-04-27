@@ -1114,6 +1114,16 @@ def scroll_friends_page(
     elif expected_total and expected_total >= 300:
         rounds_cap = max(max_rounds, min(3200, 450 + expected_total // 4))
 
+    # Раздельный счётчик для on_merged_flush (БД-merge): он сильно тяжелее
+    # XLSX-flush, в логах 2.79 видели каждый save-tick = пауза 60с из-за
+    # _filter_snapshot_by_language + _merge_friends_into_parser_batch +
+    # commit (database-is-locked retry от 9 фоновых воркеров). XLSX-flush
+    # быстрый — оставляем 3/50; БД-flush делаем редко (30/500), чтобы
+    # цикл не блокировался каждые 3 раунда. Финальный on_merged_flush
+    # вызывается после break, чтобы все собранные люди попали в CRM.
+    last_db_flush_i = -1
+    last_db_flushed_total = 0
+
     for i in range(rounds_cap):
         if cancelled and cancelled():
             if merged:
@@ -1154,22 +1164,32 @@ def scroll_friends_page(
             )
 
         if total > 0:
-            # Save: каждые 3 раунда / 50 новых, как в 2.64. Раньше я выкрутил
-            # на 10/200 из-за database-is-locked, но теперь busy_timeout=15s
-            # сам ждёт lock и проблема ушла. Возвращаем чаще — пользователь
-            # видит свежий прогресс в UI и в XLSX.
-            need_save = (
+            # XLSX-save (быстрый file write): каждые 3 раунда / 50 новых,
+            # как в 2.64. Не блокирует БД, не ждёт lock'ов от воркеров.
+            need_xlsx_save = (
                 i == 0
                 or (i - last_save_i) >= 3
                 or (total - last_saved_total) >= 50
             )
-            if need_save:
+            if need_xlsx_save:
                 if live_path:
                     flush_friends_workbook(live_path, merged)
-                if on_merged_flush:
-                    on_merged_flush(dict(merged), dict(restricted))
                 last_save_i = i
                 last_saved_total = total
+            # БД-flush (тяжёлый: _filter_snapshot_by_language + _merge_into_batch +
+            # commit) — каждые 30 раундов / 500 новых. На 9 параллельных воркерах
+            # каждый flush ловит database-is-locked retry до 60с — поэтому редко.
+            # Прогресс в UI не страдает: _throttled_progress_update пишет
+            # friends_found напрямую в Job.progress, без БД-merge.
+            need_db_flush = on_merged_flush is not None and (
+                i == 0
+                or (i - last_db_flush_i) >= 30
+                or (total - last_db_flushed_total) >= 500
+            )
+            if need_db_flush:
+                on_merged_flush(dict(merged), dict(restricted))
+                last_db_flush_i = i
+                last_db_flushed_total = total
 
         if total == last_total:
             no_new_rounds += 1

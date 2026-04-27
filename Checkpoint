@@ -2,7 +2,7 @@
 
 Документ для передачи контекста нейросети или разработчику: продукт, **архитектура клиент–сервер**, лицензирование, **обновления десктопа (macOS + Windows)**, защита, деплой, маршруты, механики, дерево файлов. Язык: русский.
 
-**Последнее обновление документа:** 27 апреля 2026. **Текущая версия десктопа (semver):** **2.79.0** (`desktop/fb-master-desktop/package.json`). **Текущая публичная версия релиза (marketing):** **2.79.0** (`/api/public/desktop-update`, имена артефактов, `.env` на VPS).
+**Последнее обновление документа:** 27 апреля 2026. **Текущая версия десктопа (semver):** **2.80.0** (`desktop/fb-master-desktop/package.json`). **Текущая публичная версия релиза (marketing):** **2.80.0** (`/api/public/desktop-update`, имена артефактов, `.env` на VPS).
 
 **Важно про имя продукта:** с версии 2.5 продукт переименован с *FbMaster* в **SOCMASTER**. Все новые артефакты публикуются с префиксом **`SOCMASTER-`** (а не `FbMaster-`). Legacy-имена `FbMaster-*.dmg` остаются в историческом списке и обрабатываются скриптами как fallback, но **новые релизы пишутся только как `SOCMASTER-*`**. В коде продуктовое имя — `productName: "SOCMASTER"` в `package.json`, а класс Electron-app и bundle id остались `pro.socmaster.fbmaster` (обратная совместимость на уровне auto-update).
 
@@ -28,10 +28,10 @@
 - Основной desktop-клиент Electron: **`desktop/fb-master-desktop/`**
 - Legacy-обвязка под отдельный Messenger frame: **`desktop/messenger2-frame/`**
 - Собранное macOS-приложение: **`desktop/fb-master-desktop/dist/mac-arm64/SOCMASTER.app`**
-- Локальный DMG сборки: **`desktop/fb-master-desktop/dist/SOCMASTER-2.79.0-mac-arm64.dmg`**
-- Локальный ZIP bundle для клиентов: **`static/releases/SOCMASTER-2.79.0-mac-arm64-bundle.zip`**
-- Публично-готовый локальный DMG после релиза: **`static/releases/SOCMASTER-2.79.0-mac-arm64.dmg`**
-- **Windows инсталлятор (NSIS)**: **`static/releases/SOCMASTER-2.79.0-win-x64.exe`** (собирается на GitHub Actions, см. §2.8 и §2.9)
+- Локальный DMG сборки: **`desktop/fb-master-desktop/dist/SOCMASTER-2.80.0-mac-arm64.dmg`**
+- Локальный ZIP bundle для клиентов: **`static/releases/SOCMASTER-2.80.0-mac-arm64-bundle.zip`**
+- Публично-готовый локальный DMG после релиза: **`static/releases/SOCMASTER-2.80.0-mac-arm64.dmg`**
+- **Windows инсталлятор (NSIS)**: **`static/releases/SOCMASTER-2.80.0-win-x64.exe`** (собирается на GitHub Actions, см. §2.8 и §2.9)
 
 #### Отдельный git-репозиторий desktop-приложения
 
@@ -51,11 +51,11 @@
 - Публичный манифест desktop-обновлений: **`GET https://socmaster.pro/api/public/desktop-update`**
 - Страница скачивания (две OS-кнопки): **`https://socmaster.pro/auth/unlock`**
 
-#### Актуальные публичные файлы релиза 2.79.0
+#### Актуальные публичные файлы релиза 2.80.0
 
-- **`https://socmaster.pro/static/releases/SOCMASTER-2.79.0-mac-arm64.dmg`** (546 MB)
-- **`https://socmaster.pro/static/releases/SOCMASTER-2.79.0-mac-arm64-bundle.zip`** (545 MB — DMG + HTML-инструкция по первому запуску)
-- **`https://socmaster.pro/static/releases/SOCMASTER-2.79.0-win-x64.exe`** (466 MB — NSIS-installer)
+- **`https://socmaster.pro/static/releases/SOCMASTER-2.80.0-mac-arm64.dmg`** (546 MB)
+- **`https://socmaster.pro/static/releases/SOCMASTER-2.80.0-mac-arm64-bundle.zip`** (545 MB — DMG + HTML-инструкция по первому запуску)
+- **`https://socmaster.pro/static/releases/SOCMASTER-2.80.0-win-x64.exe`** (466 MB — NSIS-installer)
 
 #### Обязательное правило проекта
 
@@ -85,7 +85,7 @@
 - Messenger Old и Messenger 2 (с AI-ответчиком и дефолтным sales-промптом);
 - **Multi-workspace shell (5 продуктовых модулей)**: FB Master + Reddit Master + LinkedIn Master + Twitter/X Master + Instagram Master. Каждый — отдельный модуль в `backend/modules/*/` с собственным sidebar, аккаунтами, очередями и правилами безопасности. На VPS-витрине (`socmaster.pro`) остаётся только FB Master; все остальные модули включаются **только в desktop-сборке** через флаги в `local-backend-launcher.js`;
 - **persistent launcher.log** для диагностики локального старта (критично для Windows-клиентов и удалённой поддержки);
-- текущий release-поток для **macOS + Windows** одновременно: `deploy/publish-desktop-release.sh` определяет наличие `.exe` и автоматически заливает его плюс обновляет `FB_DESKTOP_DOWNLOAD_WIN32_X64` в `.env`. Текущий публичный релиз — **2.79.0**.
+- текущий release-поток для **macOS + Windows** одновременно: `deploy/publish-desktop-release.sh` определяет наличие `.exe` и автоматически заливает его плюс обновляет `FB_DESKTOP_DOWNLOAD_WIN32_X64` в `.env`. Текущий публичный релиз — **2.80.0**.
 
 Зоны, которые остаются наиболее чувствительными и требуют регулярного контроля:
 
@@ -297,7 +297,7 @@
    - `curl -sL https://socmaster.pro/auth/unlock | grep SOCMASTER-X.Y.Z` — показывает обе кнопки с актуальной версией
    - `ssh root@46.62.230.106 'grep FB_DESKTOP /opt/fb-master/.env'` — все 4 URL и версия обновлены
 
-**Актуальная версия десктопа в документе:** package **`2.79.0`**, public release **`2.79.0`**.
+**Актуальная версия десктопа в документе:** package **`2.80.0`**, public release **`2.80.0`**.
 
 ---
 
