@@ -42,7 +42,6 @@ from backend.services.job_logging import (
     start_job,
     update_job_progress,
 )
-from backend.services.messenger_person_link import relink_messenger_conversations_to_people
 from backend.services.person_language import (
     LANG_SEGMENT_UNKNOWN,
     apply_language_result_to_person,
@@ -753,10 +752,13 @@ def _merge_friends_into_parser_batch(
             len(by_url),
         )
 
-    try:
-        relink_messenger_conversations_to_people(db)
-    except Exception:
-        logger.exception("parser: relink messenger conversations after people merge")
+    # 2.88 FIX: relink_messenger_conversations_to_people удалён с горячего пути.
+    # При 30k+ контактах эта функция занимала 55+ секунд каждый DB flush —
+    # ИМЕННО ОНА давала «рывки» парсера и пропадание собранных людей при Stop
+    # (юзер ждал минуту, думал что данные потеряны, закрывал прогу).
+    # Worker мессенджера (messenger_worker.py:803) сам делает relink при каждой
+    # синхронизации входящих — повторять здесь избыточно. Тот же фикс уже
+    # применён в роутере CRM Funnel и messenger в начале этой работы.
 
 
 def _crm_ids_by_canonical_for_urls(
