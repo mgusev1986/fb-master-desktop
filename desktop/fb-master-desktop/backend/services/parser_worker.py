@@ -1262,6 +1262,20 @@ def process_parser_job(job_id: int) -> None:
                                                     )
                                                     db.rollback()
 
+                                            # on_expected_update: scroll_friends_page вызывает,
+                                            # как только подхватит «Участники · N» в DOM группы.
+                                            # Сразу обновляем Job.progress — пользователь видит
+                                            # реальное число подписчиков донора в UI.
+                                            def _on_expected(n: int) -> None:
+                                                try:
+                                                    _throttled_progress_update(
+                                                        db,
+                                                        job_id,
+                                                        {"expected_friends": int(n)},
+                                                        force=True,
+                                                    )
+                                                except Exception:
+                                                    logger.debug("on_expected_update failed", exc_info=True)
                                             by_url, by_restricted, _scroll_meta = scroll_friends_page(
                                                 page,
                                                 live_path=live_path,
@@ -1273,6 +1287,7 @@ def process_parser_job(job_id: int) -> None:
                                                 if seed_restricted
                                                 else None,
                                                 on_merged_flush=_flush_people,
+                                                on_expected_update=_on_expected,
                                             )
                                             by_url, by_restricted, lang_results = _filter_snapshot_by_language(
                                                 scan_page,

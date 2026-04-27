@@ -1,6 +1,6 @@
 {
   "name": "fb-master-desktop",
-  "version": "2.81.0",
+  "version": "2.82.0",
   "description": "SOCMASTER: полный back-office в Electron + встроенный Messenger (webview).",
   "main": "main.js",
   "author": "Socmaster",

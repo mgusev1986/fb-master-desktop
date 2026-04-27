@@ -990,6 +990,7 @@ def scroll_friends_page(
     initial_merged: dict[str, str] | None = None,
     initial_restricted: dict[str, bool] | None = None,
     on_merged_flush: Callable[[dict[str, str], dict[str, bool]], None] | None = None,
+    on_expected_update: Callable[[int], None] | None = None,
 ) -> tuple[dict[str, str], dict[str, bool], dict[str, int | None]]:
     """
     Сливаем уникальные профили на каждом шаге (виртуальный список FB).
@@ -1082,6 +1083,11 @@ def scroll_friends_page(
     if cancelled is not None:
         _watcher_thread.start()
 
+    # Locks для async save: один XLSX-save и один DB-flush одновременно max.
+    # Если уже идёт save — следующий tick пропускается (он попадёт в очередной).
+    _save_lock = _threading.Lock()
+    _db_save_lock = _threading.Lock()
+
     # last_total с 0: иначе при предзаполнении из БД первая итерация даёт «нет новых» и ранняя остановка.
     last_total = 0
     no_new_rounds = 0
@@ -1159,6 +1165,31 @@ def scroll_friends_page(
         total = len(merged)
         if on_round and (i % 4 == 0 or i == 0):
             on_round(i, total)
+        # Continuous re-fetch expected_total: на странице группы блок
+        # «Участники · 1 789» появляется не сразу. Пытаемся каждые 10 раундов
+        # пока expected не подхватится. Это критично для UI — клиент видит
+        # сколько РЕАЛЬНО людей у донора (раньше показывалось «—»).
+        if expected_total is None and i > 0 and i % 10 == 0:
+            try:
+                _maybe = parse_expected_friends_count(page)
+                if _maybe and _maybe > 0:
+                    expected_total = _maybe
+                    logger.info(
+                        "friends scroll: expected_total ПОДХВАЧЕН на round %s = %s",
+                        i, expected_total,
+                    )
+                    # Пересчитать target_floor на основе нового expected.
+                    if expected_total > 0:
+                        target_floor = min(expected_total, max(1, int(expected_total * _TARGET_FRAC)))
+                    # Сразу обновить UI: пользователь видит «по счётчику ~N чел.»
+                    if on_expected_update is not None:
+                        try:
+                            on_expected_update(int(expected_total))
+                        except Exception:
+                            pass
+            except Exception:
+                pass
+
         # Лог каждый раунд для первых 20, потом каждые 4 — с таймингами.
         if i < 20 or i % 4 == 0:
             logger.info(
@@ -1173,45 +1204,69 @@ def scroll_friends_page(
             )
 
         if total > 0:
-            # XLSX-save (быстрый file write): каждые 3 раунда / 50 новых,
-            # как в 2.64. Не блокирует БД, не ждёт lock'ов от воркеров.
+            # XLSX-save (async через thread): каждые 2 раунда / 25 новых.
+            # Уменьшено с 3/50 — пользователь жаловался что при Stop теряются
+            # уже собранные люди. Теперь max потери ≈25 человек (между
+            # последним save'ом и Stop). XLSX async-thread не блокирует scroll.
             need_xlsx_save = (
                 i == 0
-                or (i - last_save_i) >= 3
-                or (total - last_saved_total) >= 50
+                or (i - last_save_i) >= 2
+                or (total - last_saved_total) >= 25
             )
-            if need_xlsx_save:
-                if live_path:
-                    _t_xlsx0 = _t.monotonic()
-                    flush_friends_workbook(live_path, merged)
-                    _t_xlsx = int((_t.monotonic() - _t_xlsx0) * 1000)
-                    if _t_xlsx > 1500:
-                        logger.warning(
-                            "friends scroll save: XLSX flush медленный = %dms (round=%s, total=%s)",
-                            _t_xlsx, i, total,
-                        )
-                    elif i < 20:
-                        logger.info("friends scroll save: xlsx=%dms (round=%s)", _t_xlsx, i)
+            # Async save: XLSX и БД-flush идут в отдельном daemon-thread,
+            # scroll-цикл не блокируется. Это убирает «рывки» —
+            # пользователь видел паузы 30-60с каждые 3 раунда из-за sync save.
+            # _save_lock не даёт двум save'ам идти одновременно (defer next).
+            if need_xlsx_save and live_path:
+                _xlsx_snap = dict(merged)
+                _xlsx_path = live_path
+                def _async_xlsx(snap=_xlsx_snap, p=_xlsx_path, round_i=i):
+                    if not _save_lock.acquire(blocking=False):
+                        return  # уже идёт save — пропускаем, будет следующий tick
+                    try:
+                        _t0 = _t.monotonic()
+                        flush_friends_workbook(p, snap)
+                        _ms = int((_t.monotonic() - _t0) * 1000)
+                        if _ms > 1500:
+                            logger.warning("friends scroll async XLSX flush медленный = %dms (round=%s, total=%s)", _ms, round_i, len(snap))
+                        elif round_i < 20:
+                            logger.info("friends scroll async xlsx=%dms (round=%s)", _ms, round_i)
+                    except Exception:
+                        logger.debug("async XLSX flush failed", exc_info=True)
+                    finally:
+                        _save_lock.release()
+                _threading.Thread(target=_async_xlsx, daemon=True).start()
                 last_save_i = i
                 last_saved_total = total
-            # БД-flush (_filter_snapshot_by_language + _merge_into_batch +
-            # commit) — каждые 30 раундов / 500 новых.
+            # БД-flush: каждые 10 раундов / 100 новых. После моего fix
+            # (skip _classify при flt='all') БД-flush стал быстрым, можно
+            # часто. Это важно для Stop / выключения интернета — данные в
+            # CRM попадают регулярно, не теряются. Async-thread не блокирует.
             need_db_flush = on_merged_flush is not None and (
                 i == 0
-                or (i - last_db_flush_i) >= 30
-                or (total - last_db_flushed_total) >= 500
+                or (i - last_db_flush_i) >= 10
+                or (total - last_db_flushed_total) >= 100
             )
             if need_db_flush:
-                _t_db0 = _t.monotonic()
-                on_merged_flush(dict(merged), dict(restricted))
-                _t_db = int((_t.monotonic() - _t_db0) * 1000)
-                if _t_db > 5000:
-                    logger.warning(
-                        "friends scroll save: DB flush ОЧЕНЬ медленный = %dms (round=%s, total=%s) — возможно language_classify или DB lock",
-                        _t_db, i, total,
-                    )
-                else:
-                    logger.info("friends scroll save: db=%dms (round=%s, total=%s)", _t_db, i, total)
+                _db_snap = dict(merged)
+                _db_restr = dict(restricted)
+                _cb = on_merged_flush
+                def _async_db(snap=_db_snap, restr=_db_restr, cb=_cb, round_i=i):
+                    if not _db_save_lock.acquire(blocking=False):
+                        return
+                    try:
+                        _t0 = _t.monotonic()
+                        cb(snap, restr)
+                        _ms = int((_t.monotonic() - _t0) * 1000)
+                        if _ms > 5000:
+                            logger.warning("friends scroll async DB flush ОЧЕНЬ медленный = %dms (round=%s, total=%s)", _ms, round_i, len(snap))
+                        else:
+                            logger.info("friends scroll async db=%dms (round=%s, total=%s)", _ms, round_i, len(snap))
+                    except Exception:
+                        logger.debug("async DB flush failed", exc_info=True)
+                    finally:
+                        _db_save_lock.release()
+                _threading.Thread(target=_async_db, daemon=True).start()
                 last_db_flush_i = i
                 last_db_flushed_total = total
 
