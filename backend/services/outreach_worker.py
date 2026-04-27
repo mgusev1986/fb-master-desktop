@@ -184,8 +184,11 @@ def _open_outreach_account_session(
     Держим живой Chromium-контекст для текущего аккаунта кампании и переиспользуем его
     между отправками, пока аккаунт не сменился или задача не завершилась.
     """
+    logger.info("outreach[%s] DIAG: _open_outreach_account_session start, fb_account=%s", job_id, account.id)
     slot_cm = playwright_run_slot(fb_account_id=account.id)
+    logger.info("outreach[%s] DIAG: acquiring playwright_run_slot for fb_account=%s", job_id, account.id)
     slot_cm.__enter__()
+    logger.info("outreach[%s] DIAG: playwright_run_slot acquired for fb_account=%s", job_id, account.id)
     profile_cm = None
     ctx = None
     profile_entered = False
@@ -531,6 +534,7 @@ def process_outreach_job(job_id: int) -> None:
     try:
         db = SessionLocal()
         try:
+            logger.info("outreach[%s] DIAG: worker entered, loading job", job_id)
             job = db.get(Job, job_id)
             if not job or job.job_type != JOB_TYPE:
                 logger.error("Outreach job %s not found", job_id)
@@ -577,13 +581,20 @@ def process_outreach_job(job_id: int) -> None:
             total_actions = max(1, queued_n)
 
             job_cancel_reason: str | None = None
+            logger.info("outreach[%s] DIAG: starting sync_playwright", job_id)
             with sync_playwright() as p:
+                logger.info("outreach[%s] DIAG: sync_playwright entered, entering main loop", job_id)
                 active_pw_session: dict[str, Any] | None = None
                 try:
+                    _diag_loop_iter = 0
                     while True:
+                        _diag_loop_iter += 1
+                        if _diag_loop_iter <= 3 or _diag_loop_iter % 20 == 0:
+                            logger.info("outreach[%s] DIAG: loop iter=%s", job_id, _diag_loop_iter)
                         db.expire_all()
                         camp = db.get(OutreachCampaign, campaign.id)
                         if not camp or camp.status != "running":
+                            logger.info("outreach[%s] DIAG: campaign not running (status=%s), breaking loop", job_id, camp.status if camp else None)
                             break
 
                         _cfg_send = camp.config if isinstance(camp.config, dict) else {}
@@ -763,6 +774,7 @@ def process_outreach_job(job_id: int) -> None:
                                 _close_outreach_account_session(active_pw_session)
                                 active_pw_session = None
                             if active_pw_session is None:
+                                logger.info("outreach[%s] DIAG: opening Chromium session for account=%s", job_id, account.id)
                                 active_pw_session = _open_outreach_account_session(
                                     p,
                                     account=account,
@@ -770,6 +782,7 @@ def process_outreach_job(job_id: int) -> None:
                                     db=db,
                                     job_id=job_id,
                                 )
+                                logger.info("outreach[%s] DIAG: Chromium session OPENED for account=%s", job_id, account.id)
                             page = active_pw_session.get("page")
                             if page is None or page.is_closed():
                                 _close_outreach_account_session(active_pw_session)

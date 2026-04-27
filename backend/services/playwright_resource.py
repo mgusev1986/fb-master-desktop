@@ -56,11 +56,22 @@ def playwright_run_slot(*, fb_account_id: int | None = None) -> Iterator[None]:
         finally:
             db_chk.close()
 
+    import logging as _log
+    _logger = _log.getLogger(__name__)
     acc_lock = _lock_for_fb_account(fb_account_id)
     if acc_lock:
-        acc_lock.acquire()
+        # 2.89 DIAG: лог если lock не получился сразу — значит другой воркер
+        # держит этот аккаунт. Это типичная причина зависания outreach
+        # после parser run (lock не отпустился).
+        if not acc_lock.acquire(blocking=False):
+            _logger.warning("playwright_run_slot: ОЖИДАНИЕ per-account lock fb_account=%s (другой воркер держит)", fb_account_id)
+            acc_lock.acquire()
+            _logger.info("playwright_run_slot: per-account lock получен fb_account=%s", fb_account_id)
     try:
-        _slots.acquire()
+        if not _slots.acquire(blocking=False):
+            _logger.warning("playwright_run_slot: ОЖИДАНИЕ global semaphore (max_concurrent занят)")
+            _slots.acquire()
+            _logger.info("playwright_run_slot: global semaphore получен")
         try:
             yield
         finally:
