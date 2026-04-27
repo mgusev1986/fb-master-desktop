@@ -897,3 +897,174 @@ def profile_url_from_person(canonical_url: str) -> str:
     if re.match(r"^https?://", u, re.I):
         return u
     return _normalize_profile_url(u)
+
+
+_REEL_REACTION_JS = r"""
+() => {
+  // Кандидаты на «реакцию» внутри открытого reel-viewer / video-viewer:
+  // 1) кнопка с aria-label, содержащим like / нравится / love / heart / реакц
+  // 2) роль кнопки рядом с видео (правая панель действий)
+  function score(el) {
+    if (!el || el.disabled) return -1;
+    const r = el.getBoundingClientRect();
+    if (r.width < 16 || r.height < 16) return -1;
+    if (r.bottom < 0 || r.top > window.innerHeight) return -1;
+    const al = (
+      (el.getAttribute('aria-label') || '') + ' ' +
+      (el.getAttribute('aria-roledescription') || '') + ' ' +
+      (el.getAttribute('title') || '') + ' ' +
+      (el.textContent || '')
+    ).toLowerCase().slice(0, 320);
+    let s = 0;
+    if (/(\blike\b|\bhearts?\b|\blove\b|нравится|поставить.*реакц|реакц)/.test(al)) s += 800;
+    if (/(remove like|убрать.*нравит|отменить.*нравит)/.test(al)) return -1;
+    // на правой стороне reel-viewer
+    if (r.right > window.innerWidth * 0.55) s += 200;
+    if (r.bottom > window.innerHeight * 0.30 && r.bottom < window.innerHeight * 0.95) s += 120;
+    return s;
+  }
+  // 1) первый клик — на видео-тайл (если ещё не в viewer'е), чтобы открыть reel-viewer
+  let inViewer = false;
+  try {
+    const dlg = document.querySelector('[role="dialog"][aria-modal="true"]');
+    if (dlg) {
+      const v = dlg.querySelector('video');
+      if (v) inViewer = true;
+    }
+    if (!inViewer) {
+      const v = document.querySelector('video');
+      if (v) {
+        const r = v.getBoundingClientRect();
+        if (r.width >= 240 && r.height >= 240) inViewer = true;
+      }
+    }
+  } catch (e) {}
+  if (!inViewer) {
+    // ищем первую кликабельную карточку Reel/Видео в feed
+    const tiles = document.querySelectorAll(
+      'a[href*="/reel/"], a[href*="/videos/"], a[href*="/watch/"]'
+    );
+    for (const a of tiles) {
+      const r = a.getBoundingClientRect();
+      if (r.width >= 80 && r.height >= 80 && r.top >= -200) {
+        a.scrollIntoView({block: 'center', behavior: 'instant'});
+        a.click();
+        return {clicked: 'tile', href: a.getAttribute('href') || ''};
+      }
+    }
+    return {clicked: 'none', reason: 'no_video_tiles'};
+  }
+  // 2) уже в viewer'е — ищем кнопку реакции
+  let best = null, bestScore = -1;
+  for (const el of document.querySelectorAll('div[role="button"], button, [aria-label]')) {
+    const s = score(el);
+    if (s > bestScore) {bestScore = s; best = el;}
+  }
+  if (best && bestScore > 300) {
+    best.scrollIntoView({block: 'center', behavior: 'instant'});
+    best.click();
+    return {clicked: 'reaction', score: bestScore, label: (best.getAttribute('aria-label') || '').slice(0, 120)};
+  }
+  return {clicked: 'none', reason: 'reaction_btn_not_found'};
+}
+"""
+
+
+def try_react_to_recipient_reel(
+    page: Page,
+    canonical_url: str,
+    *,
+    throttle_preset: str | None = None,
+    timeout_ms: int = 25_000,
+) -> tuple[bool, str]:
+    """
+    «Реакция на Reel/Story получателя перед ЛС» — открывает Reels-вкладку профиля, проигрывает
+    первое видео и ставит реакцию. Push-уведомление в Messenger получателю помогает «разбудить»
+    E2EE-pending пары (когда получатель ещё не открывал новый Messenger).
+
+    Возвращает:
+        (True, "reacted_via_reels")            — реакция поставлена через Reels-вкладку
+        (True, "reacted_via_videos")           — реакция через videos
+        (True, "no_reels_skipped:<reason>")    — у получателя нет публичных Reels/Videos —
+                                                  это **не** ошибка, ЛС всё равно должен идти
+        (False, "<reason>")                    — попытка не удалась (страница недоступна и т.п.)
+    """
+    url = (canonical_url or "").strip()
+    if not url:
+        return True, "no_reels_skipped:empty_url"
+    base_url = profile_url_from_person(url)
+    if not base_url:
+        return True, "no_reels_skipped:bad_url"
+    base_url = base_url.rstrip("/")
+
+    # Список вкладок в порядке «качества push-уведомления» — Reels приоритетнее.
+    candidates = (
+        ("reels", base_url + "/reels"),
+        ("videos", base_url + "/videos"),
+        ("videos_by", base_url + "/videos_by"),
+    )
+
+    last_reason = "no_video_tiles"
+    for label, target in candidates:
+        try:
+            page.goto(target, wait_until="domcontentloaded", timeout=min(45_000, int(timeout_ms) * 2))
+        except Exception as e:
+            last_reason = f"nav:{e!s}"[:160]
+            continue
+        try:
+            page.wait_for_load_state("networkidle", timeout=min(8_000, int(timeout_ms)))
+        except Exception:
+            pass
+        try:
+            page.keyboard.press("Escape")
+        except Exception:
+            pass
+        # Лёгкий скролл — чтобы reels-карточки попали в viewport.
+        try:
+            page.mouse.wheel(0, 480)
+            page.wait_for_timeout(700)
+            page.mouse.wheel(0, 320)
+            page.wait_for_timeout(500)
+        except Exception:
+            pass
+
+        # 1-я попытка: открыть тайл (если ещё не в viewer'е).
+        try:
+            res1 = page.evaluate(_REEL_REACTION_JS)
+        except Exception as e:
+            last_reason = f"js_open:{e!s}"[:160]
+            continue
+        if isinstance(res1, dict) and res1.get("clicked") == "none":
+            last_reason = str(res1.get("reason") or "no_video_tiles")[:160]
+            continue
+        # Дать viewer'у открыться и видео — стартануть.
+        page.wait_for_timeout(random.randint(2200, 4200))
+        # 2-я попытка: уже в viewer'е, нажать реакцию.
+        try:
+            res2 = page.evaluate(_REEL_REACTION_JS)
+        except Exception as e:
+            last_reason = f"js_react:{e!s}"[:160]
+            continue
+        if isinstance(res2, dict) and res2.get("clicked") == "reaction":
+            page.wait_for_timeout(random.randint(800, 1600))
+            # Закрыть viewer (Esc) — чтобы дальше DM-flow открыл профиль чисто.
+            try:
+                page.keyboard.press("Escape")
+                page.wait_for_timeout(400)
+                page.keyboard.press("Escape")
+                page.wait_for_timeout(300)
+            except Exception:
+                pass
+            return True, f"reacted_via_{label}"
+        if isinstance(res2, dict):
+            last_reason = str(res2.get("reason") or "reaction_btn_not_found")[:160]
+        # Если реакция не нашлась — закроем viewer и попробуем следующий путь.
+        try:
+            page.keyboard.press("Escape")
+            page.wait_for_timeout(250)
+        except Exception:
+            pass
+
+    # Ни одна вкладка не дала реакции — это нормальный путь (у получателя может не быть Reels/Videos).
+    # Возвращаем True, чтобы DM-flow продолжился: задачу-минимум (попытаться разбудить) выполнили.
+    return True, f"no_reels_skipped:{last_reason}"

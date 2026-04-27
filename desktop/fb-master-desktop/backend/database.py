@@ -155,6 +155,15 @@ def _migrate_outreach_queue_campaign_id() -> None:
                  (("outreach_campaign_id", "INTEGER REFERENCES outreach_campaigns(id)"),))
 
 
+def _migrate_outreach_queue_react_reel_first() -> None:
+    """Колонка `react_reel_first` (Boolean) — «реакция на Reel/Story перед ЛС» в кампании."""
+    _add_columns(
+        "outreach_queue",
+        (("react_reel_first", "BOOLEAN DEFAULT 0"),),
+        (("react_reel_first", "BOOLEAN DEFAULT FALSE"),),
+    )
+
+
 def _migrate_ai_agent_run_previews() -> None:
     _add_columns("ai_agent_runs",
                  (("input_preview", "TEXT"), ("output_preview", "TEXT")),
@@ -1411,6 +1420,7 @@ def init_db() -> None:
     _migrate_warmup_queue_campaign_id()
     _migrate_sequence_enrollment_fb_account()
     _migrate_outreach_queue_campaign_id()
+    _migrate_outreach_queue_react_reel_first()
     _migrate_ai_agent_run_previews()
     _migrate_ai_agent_runs_conversation_id()
     _migrate_jobs_progress_json()

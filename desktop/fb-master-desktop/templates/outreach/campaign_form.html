@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "macros/hints.html" import mailing_warmup_placeholders %}
-{% block title %}{% if campaign_kind == 'comment' %}{{ 'Редактировать комментинг' if campaign else 'Новая кампания комментинг' }}{% else %}{{ 'Редактировать рассылку' if campaign else 'Новая кампания рассылка в ЛС' }}{% endif %} — FB Master{% endblock %}
+{% block title %}{% if campaign_kind == 'comment' %}{{ 'Редактировать комментинг' if campaign else 'Новая кампания комментинг' }}{% else %}{{ 'Редактировать рассылку' if campaign else 'Новая кампания рассылка в ЛС' }}{% endif %} — SOCMASTER{% endblock %}
 
 {% block content %}
 {% set cfg = campaign.config if campaign and campaign.config is mapping else {} %}
@@ -348,6 +348,12 @@
           <div id="outreach_skip_scope_block" style="margin:-2px 0 12px 28px;padding:10px 12px;border-left:2px solid var(--border);background:var(--bg-surface)">
             <p class="form-hint" style="margin:0;line-height:1.45">Учёт всегда <strong>глобальный по базе</strong> — отдельные режимы «только кабинет» и «только аккаунт» отключены, чтобы клиенты и вы не получали повторы одному и тому же человеку по ошибке.</p>
           </div>
+          <input type="hidden" name="skip_previously_failed" value="0"/>
+          <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;cursor:pointer">
+            <input type="checkbox" name="skip_previously_failed" value="1" style="margin-top:3px"
+                   {% if not campaign or cfg.get('skip_previously_failed', true) %}checked{% endif %}/>
+            <span>Не ставить в очередь людей, которым <strong>ранее не удалось отправить</strong> сообщение (ошибка, закрытый профиль, нет кнопки «Сообщение» и т.д.) — в любой предыдущей рассылке. Снимите галочку, если хотите повторить попытку для таких контактов.</span>
+          </label>
           <label class="form-check" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;cursor:pointer">
             <input type="checkbox" name="like_first" value="1" id="outreach_like_first_cb"
                    {% if cfg.get('like_first') %}checked{% endif %}/>
@@ -396,6 +402,16 @@
             <input type="checkbox" name="add_friend_first" value="1" id="outreach_add_friend_cb" {% if cfg.get('add_friend_first') %}checked{% endif %}/>
             <span>Перед ЛС: заявка в друзья</span>
           </label>
+          <label class="form-check" style="display:flex;align-items:center;gap:8px;margin-top:6px;cursor:pointer">
+            <input type="checkbox" name="react_reel_first" value="1" id="outreach_react_reel_cb" {% if cfg.get('react_reel_first') %}checked{% endif %}/>
+            <span>Перед ЛС: реакция на Reel/Story получателя</span>
+          </label>
+          <p class="form-hint" style="margin:4px 0 0 28px;color:var(--text-muted)">
+            Откроет вкладку Reels/Видео на профиле получателя, проиграет первое видео и поставит реакцию (heart/like) — это
+            генерирует push-уведомление в Messenger получателя. Помогает «разбудить» E2EE-pending получателей: после открытия
+            ими Messenger пара отправитель ↔ получатель разблокируется и ЛС начинают доходить. Если у получателя нет Reels —
+            шаг тихо пропускается, ЛС всё равно отправляется.
+          </p>
           {% endif %}
         </div>
       </div>

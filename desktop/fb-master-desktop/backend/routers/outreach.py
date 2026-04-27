@@ -45,6 +45,8 @@ from backend.services.ai_agent_service import (
     try_begin_ai_agent,
 )
 from backend.services.contacted_registry import (
+    canonical_url_in_global_contacted_set,
+    installation_global_contacted_canonical_urls_set,
     installation_global_skip_person_ids,
     prune_organization_contacted_if_no_account_pairs,
     upsert_contacted,
@@ -104,6 +106,34 @@ def _form_bool_last_wins(form: Any, key: str, *, default: bool = True) -> bool:
 def _parse_skip_contacted_scope(_form: Any) -> str:
     """Всегда глобально по всей БД: один человек (один canonical_url) не получит повтор без ручного снятия."""
     return "global"
+
+
+def _truthy_skip_contacted_enabled(cfg: Any) -> bool:
+    """
+    Галочка «пропуск уже писали» из JSON конфигурации кампании.
+    По умолчанию True. Не использовать голый bool(x): в SQLite/JSON часто приходит 0/1,
+    а bool(0) отключил бы пропуск по ошибке.
+    """
+    if not isinstance(cfg, dict) or "skip_contacted" not in cfg:
+        return True
+    raw = cfg["skip_contacted"]
+    if raw is True:
+        return True
+    if raw is False:
+        return False
+    if raw is None:
+        return True
+    if isinstance(raw, (int, float)):
+        try:
+            return int(raw) != 0
+        except (TypeError, ValueError):
+            return True
+    s = str(raw).strip().lower()
+    if s in ("0", "false", "no", "off", "none", "нет"):
+        return False
+    if s in ("1", "true", "yes", "on", "да"):
+        return True
+    return True
 
 
 def _outreach_message_mode(raw: Any) -> str:
@@ -308,9 +338,11 @@ def _merge_config(
     time_budget_minutes: str,
     skip_contacted: bool,
     skip_contacted_scope: str = "global",
+    skip_previously_failed: bool = True,
     record_contacted_after_any_dm_attempt: bool = False,
     like_first: bool,
     add_friend_first: bool,
+    react_reel_first: bool,
     like_mode: str,
     like_pool_size: str,
     like_count: str,
@@ -375,6 +407,7 @@ def _merge_config(
     if kind in ("dm", "comment"):
         base["skip_contacted"] = bool(skip_contacted)
         base["skip_contacted_scope"] = "global"
+        base["skip_previously_failed"] = bool(skip_previously_failed)
         if kind == "dm":
             base["record_contacted_after_any_dm_attempt"] = bool(
                 record_contacted_after_any_dm_attempt
@@ -384,11 +417,13 @@ def _merge_config(
     else:
         base["skip_contacted"] = False
         base.pop("skip_contacted_scope", None)
+        base["skip_previously_failed"] = bool(skip_previously_failed)
         base.pop("record_contacted_after_any_dm_attempt", None)
     base["batch_from_donor"] = True
     base.pop("dm_messenger_only", None)
     base["like_first"] = like_first
     base["add_friend_first"] = add_friend_first if kind == "dm" else False
+    base["react_reel_first"] = bool(react_reel_first) if kind == "dm" else False
     base["like_mode"] = _parse_like_mode(like_mode)
     base["like_pool_size"] = _parse_like_pool_size(like_pool_size)
     base["like_count"] = _parse_like_count(like_count)
@@ -627,10 +662,39 @@ def _next_batch_capacity(camp: OutreachCampaign) -> int:
     return cap * acc_n if acc_n else 0
 
 
+def _previously_failed_person_ids(db: Session) -> set[int]:
+    """person_id с хотя бы одной failed-строкой в OutreachQueue (из любой кампании)."""
+    rows = (
+        db.query(OutreachQueue.person_id)
+        .filter(OutreachQueue.status == "failed")
+        .distinct()
+        .all()
+    )
+    return {r[0] for r in rows}
+
+
+def _truthy_skip_previously_failed(cfg: Any) -> bool:
+    if not isinstance(cfg, dict) or "skip_previously_failed" not in cfg:
+        return True
+    raw = cfg["skip_previously_failed"]
+    if raw is True:
+        return True
+    if raw is False:
+        return False
+    if raw is None:
+        return True
+    if isinstance(raw, (int, float)):
+        try:
+            return int(raw) != 0
+        except (TypeError, ValueError):
+            return True
+    return bool(raw)
+
+
 def _distribute_outreach_queue(
     db: Session, camp: OutreachCampaign, *, org_id: int
-) -> tuple[int, int, str | None]:
-    """Возвращает (создано, пропущено как уже контактировали, код причины если создано=0)."""
+) -> tuple[int, int, int, str | None]:
+    """Возвращает (создано, пропущено_contacted, пропущено_failed, код причины если создано=0)."""
     acc_ids: list[int] = []
     for x in camp.fb_account_ids or []:
         try:
@@ -641,21 +705,23 @@ def _distribute_outreach_queue(
     cap = max(1, min(int(camp.messages_per_account or 20), 500))
     cfg = camp.config if isinstance(camp.config, dict) else {}
     kind = _outreach_campaign_kind(cfg.get("campaign_kind"))
-    skip = bool(cfg.get("skip_contacted", True)) if kind in ("dm", "comment") else False
+    skip = _truthy_skip_contacted_enabled(cfg) if kind in ("dm", "comment") else False
+    skip_failed = _truthy_skip_previously_failed(cfg) if kind in ("dm", "comment") else False
     like_first = bool(cfg.get("like_first", False))
     add_friend = bool(cfg.get("add_friend_first", False)) if kind == "dm" else False
+    react_reel = bool(cfg.get("react_reel_first", False)) if kind == "dm" else False
     tid = camp.template_id
     message_mode = _outreach_message_mode(cfg.get("message_mode"))
     comment_mode = _outreach_comment_mode(cfg.get("comment_mode"))
 
     if not acc_ids:
-        return 0, 0, "no_accounts"
+        return 0, 0, 0, "no_accounts"
     if not person_ids:
-        return 0, 0, "no_people"
+        return 0, 0, 0, "no_people"
     if kind == "dm" and message_mode == "template" and not tid:
-        return 0, 0, "need_template"
+        return 0, 0, 0, "need_template"
     if kind == "comment" and comment_mode == "template" and not tid:
-        return 0, 0, "need_template"
+        return 0, 0, 0, "need_template"
 
     _persist_done_from_queue(db, camp)
     db.query(OutreachQueue).filter(OutreachQueue.outreach_campaign_id == camp.id).delete()
@@ -664,10 +730,17 @@ def _distribute_outreach_queue(
     skip_person_ids: set[int] | None = (
         installation_global_skip_person_ids(db) if skip else None
     )
+    skip_url_norms: set[str] | None = (
+        installation_global_contacted_canonical_urls_set(db) if skip else None
+    )
+    failed_person_ids: set[int] | None = (
+        _previously_failed_person_ids(db) if skip_failed else None
+    )
 
     counts = {aid: 0 for aid in acc_ids}
     created = 0
     skipped = 0
+    skipped_failed = 0
     for pid in person_ids:
         acc_sorted = sorted(acc_ids, key=lambda a: counts.get(a, 0))
         picked = None
@@ -677,13 +750,21 @@ def _distribute_outreach_queue(
                 break
         if picked is None:
             break
+        person = db.get(Person, pid)
         if skip:
             hit = int(pid) in (skip_person_ids or set())
+            if not hit and canonical_url_in_global_contacted_set(
+                person.canonical_url if person else None,
+                skip_url_norms or set(),
+            ):
+                hit = True
             if hit:
                 skipped += 1
                 continue
+        if skip_failed and int(pid) in (failed_person_ids or set()):
+            skipped_failed += 1
+            continue
         counts[picked] += 1
-        person = db.get(Person, pid)
         if not person:
             continue
         body = _render_outreach_queue_body(db, camp, person)
@@ -701,6 +782,7 @@ def _distribute_outreach_queue(
                 message_text=body or None,
                 like_first=like_first,
                 add_friend_first=add_friend,
+                react_reel_first=react_reel,
                 status="queued",
                 job_id=None,
             )
@@ -709,13 +791,15 @@ def _distribute_outreach_queue(
     db.commit()
     if created == 0:
         if skipped > 0:
-            return 0, skipped, "all_contacted"
+            return 0, skipped, skipped_failed, "all_contacted"
+        if skipped_failed > 0:
+            return 0, skipped, skipped_failed, "all_previously_failed"
         if kind == "dm" and message_mode == "template" and tid:
-            return 0, 0, "empty_template_body"
+            return 0, 0, 0, "empty_template_body"
         if kind == "comment" and comment_mode == "template" and tid:
-            return 0, 0, "empty_template_body"
-        return 0, 0, "no_valid_rows"
-    return created, skipped, None
+            return 0, 0, 0, "empty_template_body"
+        return 0, 0, 0, "no_valid_rows"
+    return created, skipped, skipped_failed, None
 
 
 def _norm_fb_account_id_set(ids: list[int]) -> set[int]:
@@ -1136,9 +1220,11 @@ async def outreach_new_save(request: Request, db: Session = Depends(get_db)):
         time_budget_minutes=str(form.get("time_budget_minutes") or ""),
         skip_contacted=_form_bool_last_wins(form, "skip_contacted", default=True),
         skip_contacted_scope=_parse_skip_contacted_scope(form),
+        skip_previously_failed=_form_bool_last_wins(form, "skip_previously_failed", default=True),
         record_contacted_after_any_dm_attempt=record_any,
         like_first=bool(form.get("like_first")),
         add_friend_first=bool(form.get("add_friend_first")),
+        react_reel_first=bool(form.get("react_reel_first")),
         like_mode=str(form.get("like_mode") or "first"),
         like_pool_size=str(form.get("like_pool_size") or "5"),
         like_count=str(form.get("like_count") or "1"),
@@ -1616,9 +1702,11 @@ async def outreach_edit_save(request: Request, campaign_id: int, db: Session = D
         time_budget_minutes=str(form.get("time_budget_minutes") or ""),
         skip_contacted=_form_bool_last_wins(form, "skip_contacted", default=True),
         skip_contacted_scope=_parse_skip_contacted_scope(form),
+        skip_previously_failed=_form_bool_last_wins(form, "skip_previously_failed", default=True),
         record_contacted_after_any_dm_attempt=record_any,
         like_first=bool(form.get("like_first")),
         add_friend_first=bool(form.get("add_friend_first")),
+        react_reel_first=bool(form.get("react_reel_first")),
         like_mode=str(form.get("like_mode") or "first"),
         like_pool_size=str(form.get("like_pool_size") or "5"),
         like_count=str(form.get("like_count") or "1"),
@@ -1653,13 +1741,13 @@ async def outreach_build_queue(
     camp = _outreach_campaign_for_org(db, campaign_id, org_id)
     if not camp or camp.status == "running":
         return RedirectResponse(f"/outreach/{campaign_id}" if camp else "/outreach", status_code=303)
-    n, skipped, why = _distribute_outreach_queue(db, camp, org_id=org_id)
+    n, skipped, skipped_failed, why = _distribute_outreach_queue(db, camp, org_id=org_id)
     if n:
         camp.status = "ready"
     else:
         camp.status = "draft"
     db.commit()
-    q = f"built={n}&skipped={skipped}"
+    q = f"built={n}&skipped={skipped}&skipped_failed={skipped_failed}"
     if why:
         q += "&why=" + quote(why, safe="")
     return RedirectResponse(f"/outreach/{campaign_id}?{q}", status_code=303)
@@ -1717,7 +1805,7 @@ async def outreach_start(request: Request, campaign_id: int, db: Session = Depen
     why_empty: str | None = None
     if not queued:
         # Очередь ещё не собирали — собираем сами (как «Собрать очередь»), затем запускаем.
-        n_built, _sk, why_empty = _distribute_outreach_queue(db, camp, org_id=org_id)
+        n_built, _sk, _skf, why_empty = _distribute_outreach_queue(db, camp, org_id=org_id)
         camp.status = "ready" if n_built else "draft"
         db.commit()
         queued = _queued_outreach_rows()

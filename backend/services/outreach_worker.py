@@ -941,6 +941,7 @@ def process_outreach_job(job_id: int) -> None:
                                     message_text=msg,
                                     like_first=bool(row.like_first),
                                     add_friend_first=bool(row.add_friend_first),
+                                    react_reel_first=bool(row.react_reel_first),
                                     like_mode=_lm,
                                     like_pool_size=_lp,
                                     like_count=_lc,

@@ -339,6 +339,22 @@ class OrganizationContactedPerson(Base):
     )
 
 
+class InstallationContactedProfileUrl(Base):
+    """
+    Глобальный по установке (вся БД) реестр канонических URL профиля FB, которым уже уходил исходящий контакт.
+    Не ссылается на people.id: сохраняет пропуски после удаления/переимпорта контактов (новый person_id).
+    """
+
+    __tablename__ = "installation_contacted_profile_urls"
+
+    id = Column(Integer, primary_key=True)
+    canonical_url = Column(String(512), nullable=False, unique=True, index=True)
+    first_contacted_at = Column(DateTime, default=_utcnow)
+    last_message_at = Column(DateTime, nullable=True)
+
+    __table_args__ = ()
+
+
 # ── Суточные лимиты действий по FB-аккаунту (ротация рассылки / прогрева / сценариев) ──
 
 
@@ -455,6 +471,10 @@ class OutreachQueue(Base):
     message_text = Column(Text, nullable=True)
     like_first = Column(Boolean, default=False)
     add_friend_first = Column(Boolean, default=False)
+    # «Реакция на Reel/Story получателя перед ЛС» — генерирует уведомление в Messenger
+    # получателя; используется в т.ч. как мягкий обход E2EE-pending (пара отправитель ↔
+    # получатель, где получатель ещё не открывал новый Messenger).
+    react_reel_first = Column(Boolean, default=False)
     status = Column(String(20), default="queued")
     job_id = Column(Integer, ForeignKey("jobs.id"), nullable=True)
     error = Column(Text, nullable=True)
@@ -664,6 +684,49 @@ class AIAgentRun(Base):
     input_preview = Column(Text, nullable=True)
     output_preview = Column(Text, nullable=True)
     created_at = Column(DateTime, default=_utcnow)
+
+
+# ── Автопоиск аудитории (Discovery) ───────────────────
+
+class DiscoveryTask(Base):
+    __tablename__ = "discovery_tasks"
+
+    id = Column(Integer, primary_key=True)
+    organization_id = Column(Integer, ForeignKey("organizations.id"), nullable=False, index=True)
+    job_id = Column(Integer, ForeignKey("jobs.id"), nullable=True, index=True)
+    keywords = Column(Text, nullable=False)
+    search_types = Column(JSON, nullable=False)
+    max_results_per_type = Column(Integer, default=50)
+    language_hint = Column(String(10), nullable=True)
+    status = Column(String(20), default="pending")
+    results_count = Column(Integer, default=0)
+    created_at = Column(DateTime, default=_utcnow)
+    ended_at = Column(DateTime, nullable=True)
+
+    results = relationship("DiscoveryResult", back_populates="task", cascade="all, delete-orphan")
+
+
+class DiscoveryResult(Base):
+    __tablename__ = "discovery_results"
+    __table_args__ = (
+        Index("ix_disc_res_task_type", "task_id", "result_type"),
+    )
+
+    id = Column(Integer, primary_key=True)
+    task_id = Column(Integer, ForeignKey("discovery_tasks.id", ondelete="CASCADE"), nullable=False, index=True)
+    organization_id = Column(Integer, ForeignKey("organizations.id"), nullable=False, index=True)
+    result_type = Column(String(20), nullable=False)
+    url = Column(String(512), nullable=False)
+    name = Column(String(512), nullable=True)
+    description = Column(Text, nullable=True)
+    member_count = Column(Integer, nullable=True)
+    category = Column(String(255), nullable=True)
+    relevance_score = Column(Integer, nullable=True)
+    is_approved = Column(Boolean, default=False)
+    donor_id = Column(Integer, ForeignKey("donors.id"), nullable=True)
+    created_at = Column(DateTime, default=_utcnow)
+
+    task = relationship("DiscoveryTask", back_populates="results")
 
 
 # ── Настройки (key-value JSON) ────────────────────────
