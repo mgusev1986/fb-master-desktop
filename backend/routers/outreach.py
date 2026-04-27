@@ -342,6 +342,7 @@ def _merge_config(
     record_contacted_after_any_dm_attempt: bool = False,
     like_first: bool,
     add_friend_first: bool,
+    react_reel_first: bool,
     like_mode: str,
     like_pool_size: str,
     like_count: str,
@@ -422,6 +423,7 @@ def _merge_config(
     base.pop("dm_messenger_only", None)
     base["like_first"] = like_first
     base["add_friend_first"] = add_friend_first if kind == "dm" else False
+    base["react_reel_first"] = bool(react_reel_first) if kind == "dm" else False
     base["like_mode"] = _parse_like_mode(like_mode)
     base["like_pool_size"] = _parse_like_pool_size(like_pool_size)
     base["like_count"] = _parse_like_count(like_count)
@@ -707,6 +709,7 @@ def _distribute_outreach_queue(
     skip_failed = _truthy_skip_previously_failed(cfg) if kind in ("dm", "comment") else False
     like_first = bool(cfg.get("like_first", False))
     add_friend = bool(cfg.get("add_friend_first", False)) if kind == "dm" else False
+    react_reel = bool(cfg.get("react_reel_first", False)) if kind == "dm" else False
     tid = camp.template_id
     message_mode = _outreach_message_mode(cfg.get("message_mode"))
     comment_mode = _outreach_comment_mode(cfg.get("comment_mode"))
@@ -779,6 +782,7 @@ def _distribute_outreach_queue(
                 message_text=body or None,
                 like_first=like_first,
                 add_friend_first=add_friend,
+                react_reel_first=react_reel,
                 status="queued",
                 job_id=None,
             )
@@ -1220,6 +1224,7 @@ async def outreach_new_save(request: Request, db: Session = Depends(get_db)):
         record_contacted_after_any_dm_attempt=record_any,
         like_first=bool(form.get("like_first")),
         add_friend_first=bool(form.get("add_friend_first")),
+        react_reel_first=bool(form.get("react_reel_first")),
         like_mode=str(form.get("like_mode") or "first"),
         like_pool_size=str(form.get("like_pool_size") or "5"),
         like_count=str(form.get("like_count") or "1"),
@@ -1701,6 +1706,7 @@ async def outreach_edit_save(request: Request, campaign_id: int, db: Session = D
         record_contacted_after_any_dm_attempt=record_any,
         like_first=bool(form.get("like_first")),
         add_friend_first=bool(form.get("add_friend_first")),
+        react_reel_first=bool(form.get("react_reel_first")),
         like_mode=str(form.get("like_mode") or "first"),
         like_pool_size=str(form.get("like_pool_size") or "5"),
         like_count=str(form.get("like_count") or "1"),

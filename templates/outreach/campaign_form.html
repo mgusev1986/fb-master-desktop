@@ -402,6 +402,16 @@
             <input type="checkbox" name="add_friend_first" value="1" id="outreach_add_friend_cb" {% if cfg.get('add_friend_first') %}checked{% endif %}/>
             <span>Перед ЛС: заявка в друзья</span>
           </label>
+          <label class="form-check" style="display:flex;align-items:center;gap:8px;margin-top:6px;cursor:pointer">
+            <input type="checkbox" name="react_reel_first" value="1" id="outreach_react_reel_cb" {% if cfg.get('react_reel_first') %}checked{% endif %}/>
+            <span>Перед ЛС: реакция на Reel/Story получателя</span>
+          </label>
+          <p class="form-hint" style="margin:4px 0 0 28px;color:var(--text-muted)">
+            Откроет вкладку Reels/Видео на профиле получателя, проиграет первое видео и поставит реакцию (heart/like) — это
+            генерирует push-уведомление в Messenger получателя. Помогает «разбудить» E2EE-pending получателей: после открытия
+            ими Messenger пара отправитель ↔ получатель разблокируется и ЛС начинают доходить. Если у получателя нет Reels —
+            шаг тихо пропускается, ЛС всё равно отправляется.
+          </p>
           {% endif %}
         </div>
       </div>

@@ -25,6 +25,7 @@ from backend.services.warmup_actions import (
     profile_url_from_person,
     try_comment_on_timeline,
     try_like_posts_on_profile,
+    try_react_to_recipient_reel,
 )
 
 logger = logging.getLogger(__name__)
@@ -37,6 +38,7 @@ def run_outreach_on_profile(
     message_text: str,
     like_first: bool,
     add_friend_first: bool,
+    react_reel_first: bool = False,
     throttle_preset: str = "medium",
     like_mode: str = "first",
     like_pool_size: int = 5,
@@ -45,7 +47,7 @@ def run_outreach_on_profile(
     person_raw_meta: dict[str, object] | None = None,
 ) -> tuple[bool, str]:
     """
-    Успех = отправлено ЛС. Лайк/друзья — опциональные шаги перед этим (через страницу профиля).
+    Успех = отправлено ЛС. Лайк/друзья/реакция-на-Reel — опциональные шаги перед этим (через страницу профиля).
     """
     url = profile_url_from_person(canonical_url)
     if not url:
@@ -67,6 +69,14 @@ def run_outreach_on_profile(
         humanize_after_profile_open(page, tp)
         if not profile_page_has_dm_entry_visible(page):
             return False, "message_button_not_found"
+        if react_reel_first:
+            # Реакция на Reel/Video получателя — генерирует push в Messenger.
+            # Помогает «разбудить» E2EE-pending пары (когда получатель ещё не открывал новый Messenger).
+            rk, rmsg = try_react_to_recipient_reel(
+                page, canonical_url, throttle_preset=tp
+            )
+            parts.append(f"reel_react={'ok' if rk else 'fail'}:{rmsg}")
+            page.wait_for_timeout(800)
         if like_first:
             humanize_before_like(page, tp)
             lm = (like_mode or "first").strip().lower()
@@ -88,7 +98,7 @@ def run_outreach_on_profile(
             parts.append(f"friend={'ok' if fk else 'fail'}:{msg}")
             page.wait_for_timeout(800)
 
-        if like_first or add_friend_first:
+        if like_first or add_friend_first or react_reel_first:
             _goto_profile()
             humanize_after_profile_open(page, tp)
 

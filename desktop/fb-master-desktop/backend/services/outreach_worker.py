@@ -43,6 +43,7 @@ from backend.services.outreach_job_wait import (
     record_outreach_wait,
     should_abort_due_to_wait,
 )
+from backend.services.proxy_health_guard import ProxyTunnelBlockedError
 from backend.services.sequence_ai_comment import (
     extract_timeline_post_text,
     generate_dm_message_sync,
@@ -52,7 +53,7 @@ from backend.services.sequence_ai_comment import (
 from backend.services.throttle import is_valid_throttle_preset, resolve_delay
 from backend.services.parallel_automation_slots import outreach_worker_slots
 from backend.services.playwright_resource import playwright_run_slot
-from backend.services.proxy_health_guard import ProxyTunnelBlockedError, pause_all_automation_for_fb_account
+from backend.services.proxy_health_guard import pause_all_automation_for_fb_account
 from backend.services.warmup_actions import parse_storage_state, profile_url_from_person
 from backend.services.outreach_shared_profile import (
     outreach_shared_disk_profile_eligible,
@@ -664,6 +665,7 @@ def process_outreach_job(job_id: int) -> None:
                                     outcome="deferred",
                                     payload={"reason": rot_err},
                                 )
+                                # Показываем причину ожидания в progress_json + circuit breaker.
                                 wait_count = record_outreach_wait(db, job_id, rot_err)
                                 if should_abort_due_to_wait(wait_count):
                                     job_cancel_reason = reason_humanize(rot_err)[:1000]
@@ -939,6 +941,7 @@ def process_outreach_job(job_id: int) -> None:
                                     message_text=msg,
                                     like_first=bool(row.like_first),
                                     add_friend_first=bool(row.add_friend_first),
+                                    react_reel_first=bool(row.react_reel_first),
                                     like_mode=_lm,
                                     like_pool_size=_lp,
                                     like_count=_lc,
@@ -953,7 +956,29 @@ def process_outreach_job(job_id: int) -> None:
                                     increment_usage(db, account.id, "outreach")
                                 row.status = "done"
                                 row.error = None
+                                # Есть прогресс → гасим баннер «ждём …», если он был выставлен defer'ом.
                                 clear_outreach_wait(db, job_id)
+                                # Сначала глобальный реестр «уже писали», затем логи — чтобы при сбое CRM/job
+                                # не терять факт контакта для пропусков в новых кампаниях.
+                                if campaign_kind == "dm":
+                                    _record_contacted(
+                                        db,
+                                        person_id=person.id,
+                                        fb_account_id=account.id,
+                                        canonical_url=person.canonical_url,
+                                    )
+                                    person.crm_stage = "new"
+                                    person.crm_stage_changed_at = datetime.now(timezone.utc)
+                                elif campaign_kind == "comment":
+                                    _record_contacted(
+                                        db,
+                                        person_id=person.id,
+                                        fb_account_id=account.id,
+                                        canonical_url=person.canonical_url,
+                                    )
+                                    person.crm_stage = "new"
+                                    person.crm_stage_changed_at = datetime.now(timezone.utc)
+                                outreach_append_done_person(db, camp, person.id)
                                 log_job_event(
                                     db,
                                     job_id=job_id,
@@ -971,16 +996,7 @@ def process_outreach_job(job_id: int) -> None:
                                     activity_type="outreach_comment" if campaign_kind == "comment" else "outreach_dm",
                                     detail=detail[:500],
                                 )
-                                outreach_append_done_person(db, camp, person.id)
                                 if campaign_kind == "dm":
-                                    _record_contacted(
-                                        db,
-                                        person_id=person.id,
-                                        fb_account_id=account.id,
-                                        canonical_url=person.canonical_url,
-                                    )
-                                    person.crm_stage = "new"
-                                    person.crm_stage_changed_at = datetime.now(timezone.utc)
                                     try:
                                         record_outbound_dm_in_cabinet(
                                             db,
@@ -992,15 +1008,6 @@ def process_outreach_job(job_id: int) -> None:
                                         logger.exception(
                                             "record_outbound_dm_in_cabinet (outreach)"
                                         )
-                                elif campaign_kind == "comment":
-                                    _record_contacted(
-                                        db,
-                                        person_id=person.id,
-                                        fb_account_id=account.id,
-                                        canonical_url=person.canonical_url,
-                                    )
-                                    person.crm_stage = "new"
-                                    person.crm_stage_changed_at = datetime.now(timezone.utc)
                             else:
                                 row.status = "failed"
                                 row_error_ru = humanize_outreach_row_error(detail)
@@ -1087,6 +1094,8 @@ def process_outreach_job(job_id: int) -> None:
                             db.expire_all()
                             camp_now = db.get(OutreachCampaign, campaign.id)
                             user_paused = bool(camp_now and camp_now.status == "paused")
+                            # Прокси-блок: не оформляем это как «ошибка строки» — оставляем
+                            # row в queued, выставляем баннер причины и включаем circuit breaker.
                             is_proxy_blocked = isinstance(e, ProxyTunnelBlockedError)
                             if user_paused:
                                 row.status = "queued"

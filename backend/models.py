@@ -471,6 +471,10 @@ class OutreachQueue(Base):
     message_text = Column(Text, nullable=True)
     like_first = Column(Boolean, default=False)
     add_friend_first = Column(Boolean, default=False)
+    # «Реакция на Reel/Story получателя перед ЛС» — генерирует уведомление в Messenger
+    # получателя; используется в т.ч. как мягкий обход E2EE-pending (пара отправитель ↔
+    # получатель, где получатель ещё не открывал новый Messenger).
+    react_reel_first = Column(Boolean, default=False)
     status = Column(String(20), default="queued")
     job_id = Column(Integer, ForeignKey("jobs.id"), nullable=True)
     error = Column(Text, nullable=True)
