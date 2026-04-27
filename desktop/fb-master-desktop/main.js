@@ -1,6 +1,44 @@
 'use strict';
 
-const { app, BrowserWindow, ipcMain, session, dialog, shell, screen } = require('electron');
+const { app, BrowserWindow, Menu, clipboard, ipcMain, session, dialog, shell, screen } = require('electron');
+
+// Нативное контекстное меню (правый клик): Cut / Copy / Paste / Select All
+// + «Открыть ссылку», если клик пришёлся на <a>. Без этого Electron по
+// умолчанию ничего не показывает на правый клик и пользователь не может
+// скопировать выделенный текст в textarea (например, в редакторе шаблонов).
+function attachContextMenu(wc) {
+  if (!wc || typeof wc.on !== 'function' || wc.__ctxMenuAttached) return;
+  wc.__ctxMenuAttached = true;
+  wc.on('context-menu', (_event, params) => {
+    const items = [];
+    const isEditable = !!params.isEditable;
+    const hasSelection = !!(params.selectionText && params.selectionText.length);
+    const linkURL = (params.linkURL || '').trim();
+
+    if (linkURL) {
+      items.push(
+        { label: 'Открыть ссылку в браузере', click: () => { try { shell.openExternal(linkURL); } catch (_) {} } },
+        { label: 'Скопировать ссылку', click: () => { try { clipboard.writeText(linkURL); } catch (_) {} } },
+        { type: 'separator' },
+      );
+    }
+    if (isEditable) {
+      items.push(
+        { role: 'cut', label: 'Вырезать', enabled: hasSelection },
+        { role: 'copy', label: 'Копировать', enabled: hasSelection },
+        { role: 'paste', label: 'Вставить' },
+        { type: 'separator' },
+        { role: 'selectAll', label: 'Выделить всё' },
+      );
+    } else if (hasSelection) {
+      items.push({ role: 'copy', label: 'Копировать' });
+    }
+    if (!items.length) return;
+    try {
+      Menu.buildFromTemplate(items).popup({ window: BrowserWindow.fromWebContents(wc) || undefined });
+    } catch (_) {}
+  });
+}
 const {
   startEmbeddedBackend,
   stopEmbeddedBackend,
@@ -1362,6 +1400,8 @@ function createMainWindow() {
     title: 'SOCMASTER',
   });
 
+  attachContextMenu(mainWindow.webContents);
+
   mainWindow.webContents.on('will-attach-webview', (_event, webPreferences, params) => {
     delete webPreferences.preload;
     webPreferences.nodeIntegration = false;
@@ -1391,6 +1431,7 @@ function createMainWindow() {
   });
 
   mainWindow.webContents.on('did-attach-webview', (_event, guestContents) => {
+    try { attachContextMenu(guestContents); } catch (_) {}
     const skipMessengerCookieAutoclick = () => {
       try {
         const u = (guestContents.getURL() || '').toLowerCase();
