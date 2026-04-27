@@ -1129,6 +1129,34 @@ def scroll_friends_page(
     # вызывается после break, чтобы все собранные люди попали в CRM.
     last_db_flush_i = -1
     last_db_flushed_total = 0
+    # Crash-safe finalize: safe_final_flush() вызывается ВСЕГДА —
+    # и при нормальном выходе, и при крахе Chromium (Page closed,
+    # browser closed, OOM, anti-bot kill). Гарантия: всё что собрали
+    # в `merged` — попадает в XLSX И в БД до return/raise.
+    def _safe_final_flush(reason: str = "normal") -> None:
+        try:
+            # Дать в-полёте async XLSX-save завершиться (≤5с)
+            if _save_lock.acquire(timeout=5.0):
+                _save_lock.release()
+        except Exception:
+            pass
+        if not merged:
+            return
+        if live_path:
+            try:
+                flush_friends_workbook(live_path, merged)
+                logger.info("friends scroll FINAL XLSX flushed: %d people, reason=%s", len(merged), reason)
+            except Exception:
+                logger.exception("FINAL XLSX flush failed (reason=%s)", reason)
+        if on_merged_flush:
+            try:
+                on_merged_flush(dict(merged), dict(restricted))
+                logger.info("friends scroll FINAL DB flushed: %d people, reason=%s", len(merged), reason)
+            except Exception:
+                logger.exception("FINAL DB flush failed (reason=%s)", reason)
+
+    _crash_handled = False
+    i = 0
 
     for i in range(rounds_cap):
         if cancelled and cancelled():
@@ -1238,35 +1266,27 @@ def scroll_friends_page(
                 _threading.Thread(target=_async_xlsx, daemon=True).start()
                 last_save_i = i
                 last_saved_total = total
-            # БД-flush: каждые 10 раундов / 100 новых. После моего fix
-            # (skip _classify при flt='all') БД-flush стал быстрым, можно
-            # часто. Это важно для Stop / выключения интернета — данные в
-            # CRM попадают регулярно, не теряются. Async-thread не блокирует.
+            # БД-flush: SYNCHRONOUS (НЕ async-thread!). Async-version в 2.82
+            # вызывала SQLAlchemy Session race — `db` session общий с главным
+            # потоком worker'а, не thread-safe. Симптом: silent rollback,
+            # «0 новых» в Импорте при крахе Chromium. Sync безопасен.
+            # Порог 2/25 (как у XLSX) — max потеря 25 человек при крахе.
             need_db_flush = on_merged_flush is not None and (
                 i == 0
-                or (i - last_db_flush_i) >= 10
-                or (total - last_db_flushed_total) >= 100
+                or (i - last_db_flush_i) >= 2
+                or (total - last_db_flushed_total) >= 25
             )
             if need_db_flush:
-                _db_snap = dict(merged)
-                _db_restr = dict(restricted)
-                _cb = on_merged_flush
-                def _async_db(snap=_db_snap, restr=_db_restr, cb=_cb, round_i=i):
-                    if not _db_save_lock.acquire(blocking=False):
-                        return
-                    try:
-                        _t0 = _t.monotonic()
-                        cb(snap, restr)
-                        _ms = int((_t.monotonic() - _t0) * 1000)
-                        if _ms > 5000:
-                            logger.warning("friends scroll async DB flush ОЧЕНЬ медленный = %dms (round=%s, total=%s)", _ms, round_i, len(snap))
-                        else:
-                            logger.info("friends scroll async db=%dms (round=%s, total=%s)", _ms, round_i, len(snap))
-                    except Exception:
-                        logger.debug("async DB flush failed", exc_info=True)
-                    finally:
-                        _db_save_lock.release()
-                _threading.Thread(target=_async_db, daemon=True).start()
+                _t0 = _t.monotonic()
+                try:
+                    on_merged_flush(dict(merged), dict(restricted))
+                    _ms = int((_t.monotonic() - _t0) * 1000)
+                    if _ms > 5000:
+                        logger.warning("friends scroll sync DB flush ОЧЕНЬ медленный = %dms (round=%s, total=%s)", _ms, i, total)
+                    elif i < 20:
+                        logger.info("friends scroll sync db=%dms (round=%s, total=%s)", _ms, i, total)
+                except Exception:
+                    logger.exception("sync DB flush failed at round %s", i)
                 last_db_flush_i = i
                 last_db_flushed_total = total
 
@@ -1284,7 +1304,17 @@ def scroll_friends_page(
             no_new_rounds = 0
         last_total = total
 
-        list_state = connections_list_state(page)
+        # Crash-safe: connections_list_state делает page.evaluate внутри.
+        # Если Chromium закрылся — выходим и финальный flush сохранит данные.
+        try:
+            list_state = connections_list_state(page)
+        except Exception as _e:
+            _msg = str(_e).lower()
+            if "closed" in _msg or "target" in _msg or "context" in _msg:
+                logger.warning("friends scroll: page closed at list_state round %s, salvaging %d", i, len(merged))
+                _crash_handled = True
+                break
+            raise
         at_bottom = bool(list_state.get("atBottom"))
         if at_bottom and no_new_rounds > 0:
             bottom_idle_rounds += 1
@@ -1387,19 +1417,30 @@ def scroll_friends_page(
         # Ниже целевого числа — мягче крутим и дольше ждём между шагами.
         quality_slow = below_target or (expected_total is None and total > 300)
 
-        vh = int(page.evaluate("() => window.innerHeight"))
-        end_every = 4 if below_target else 5
-        if i % end_every == 0:
-            page.evaluate(SCROLL_TO_END_ENHANCED_JS)
-            lo, hi = (3400, 6800) if quality_slow else (2600, 5200)
-            if _cancellable_wait_ms(page, int(random.uniform(lo, hi) * _wait_mult), cancelled):
-                break
-        else:
-            step = max(180, int(vh * random.uniform(0.22, 0.52)))
-            page.evaluate(SCROLL_FRIENDS_ENHANCED_JS, step)
+        # Crash-safe: scroll-вызовы могут упасть при крахе Chromium
+        # (anti-bot kill, OOM, отвал интернета). Раньше exception летел
+        # мимо финального flush — теряли всё что собрали (101 чел!).
+        try:
+            vh = int(page.evaluate("() => window.innerHeight"))
+            end_every = 4 if below_target else 5
+            if i % end_every == 0:
+                page.evaluate(SCROLL_TO_END_ENHANCED_JS)
+                lo, hi = (3400, 6800) if quality_slow else (2600, 5200)
+                if _cancellable_wait_ms(page, int(random.uniform(lo, hi) * _wait_mult), cancelled):
+                    break
+            else:
+                step = max(180, int(vh * random.uniform(0.22, 0.52)))
+                page.evaluate(SCROLL_FRIENDS_ENHANCED_JS, step)
             lo, hi = (3000, 6200) if quality_slow else (2200, 4800)
             if _cancellable_wait_ms(page, int(random.uniform(lo, hi) * _wait_mult), cancelled):
                 break
+        except Exception as _e:
+            _msg = str(_e).lower()
+            if "closed" in _msg or "target" in _msg or "context" in _msg:
+                logger.warning("friends scroll: page closed at scroll-eval round %s, salvaging %d people", i, len(merged))
+                _crash_handled = True
+                break
+            raise
 
         if random.random() < (0.22 if quality_slow else 0.16) * _rand_mult:
             if _cancellable_wait_ms(page, int(random.uniform(4200, 11000) * _wait_mult), cancelled):
@@ -1412,11 +1453,10 @@ def scroll_friends_page(
     # закрыть context уже после успешного завершения (race на чужих donor'ах).
     _watcher_stop.set()
 
-    if merged:
-        if live_path:
-            flush_friends_workbook(live_path, merged)
-        if on_merged_flush:
-            on_merged_flush(dict(merged), dict(restricted))
+    # Финальный flush через crash-safe helper: ждёт in-flight async XLSX-save,
+    # потом синхронно сохраняет XLSX и БД. Гарантия — все собранные люди
+    # попадают в базу даже при краше Chromium / выключении света / Stop.
+    _safe_final_flush(reason="crash" if _crash_handled else "normal")
     meta: dict[str, int | None] = {
         "rounds": min(rounds_cap, i + 1),
         "expected": expected_total,
