@@ -28,8 +28,7 @@ from backend.services.crm_stages_registry import (
     workflow_label_for_stage,
 )
 from backend.services.messenger_person_link import (
-    build_messenger_person_id_index,
-    relink_conversations_missing_person,
+    relink_messenger_conversations_to_people,
 )
 from backend.services.tenancy import require_org_id
 from backend.services.active_fb_account import get_active_fb_account_id
@@ -164,12 +163,6 @@ async def crm_funnel_page(request: Request, db: Session = Depends(get_db)):
     view = (request.query_params.get("view") or "kanban").strip().lower()
     if view not in ("kanban", "tabs"):
         view = "kanban"
-
-    relinked = relink_conversations_missing_person(
-        db, build_messenger_person_id_index(db, organization_id=org_id)
-    )
-    if relinked:
-        db.commit()
 
     engaged_sq = engaged_person_ids_subquery()
 
@@ -830,6 +823,13 @@ async def crm_funnel_import_post(
                 skipped += 1
 
     db.commit()
+
+    if imported or updated:
+        try:
+            relink_messenger_conversations_to_people(db)
+            db.commit()
+        except Exception:
+            db.rollback()
 
     params = urlencode(
         {

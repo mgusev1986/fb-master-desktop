@@ -23,9 +23,7 @@ from backend.services.messenger_send_queue import (
 from backend.services.cabinet_settings import effective_messenger_sync_display_name_from_messenger
 from backend.services.messenger_person_link import (
     apply_messenger_crm_stage_to_conversation,
-    build_messenger_person_id_index,
     ensure_conversation_person,
-    relink_conversations_missing_person,
 )
 from backend.services.messenger_settings import (
     MESSENGER_AWAY_INTERVAL_FLOOR_SEC,
@@ -444,12 +442,6 @@ def build_messenger_router(url_prefix: str, page_id: str) -> APIRouter:
             }
             for c, lbl in rows
         ]
-
-        relinked = relink_conversations_missing_person(
-            db, build_messenger_person_id_index(db, organization_id=org_id)
-        )
-        if relinked:
-            db.commit()
 
         active_conv = None
         active_account = None
