@@ -1030,14 +1030,26 @@ def scroll_friends_page(
         while not _watcher_stop.is_set():
             try:
                 if cancelled and cancelled():
+                    # Тройной залп — закрываем сразу всё, что может блокировать
+                    # Chromium: browser → context → page. browser.close()
+                    # терминирует процесс Chromium мгновенно — пользователь видит
+                    # как окно браузера исчезает в течение ~100мс после клика Stop.
+                    try:
+                        page.context.browser.close()
+                    except Exception:
+                        pass
                     try:
                         page.context.close()
+                    except Exception:
+                        pass
+                    try:
+                        page.close()
                     except Exception:
                         pass
                     return
             except Exception:
                 pass
-            _watcher_stop.wait(0.25)
+            _watcher_stop.wait(0.10)
 
     _watcher_thread = _threading.Thread(target=_cancel_watcher, daemon=True)
     if cancelled is not None:
@@ -1115,10 +1127,15 @@ def scroll_friends_page(
             )
 
         if total > 0:
+            # Реже save: каждый flush_friends_workbook + on_merged_flush делает
+            # XLSX-write на диск и DB-merge в parser_worker. На SQLite WAL это
+            # всё равно блокирует другие writes (proxy_health_guard, presence)
+            # — раунд застревает на 60с из-за database-is-locked retry.
+            # Раз в 10 раундов / 200 новых вместо 3 / 50 — теряем меньше времени.
             need_save = (
                 i == 0
-                or (i - last_save_i) >= 3
-                or (total - last_saved_total) >= 50
+                or (i - last_save_i) >= 10
+                or (total - last_saved_total) >= 200
             )
             if need_save:
                 if live_path:

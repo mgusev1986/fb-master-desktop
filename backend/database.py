@@ -76,7 +76,11 @@ if _is_sqlite():
         cur = dbapi_conn.cursor()
         try:
             cur.execute("PRAGMA journal_mode=WAL")
-            cur.execute("PRAGMA busy_timeout=5000")
+            # busy_timeout 15s (вместо 5s): на больших парсингах ловим
+            # database-is-locked при parallel writes (parser progress +
+            # proxy_health_guard + client_presence + module workers). 15с
+            # перекрывают типичный peak нагрузки на SQLite в десктопе.
+            cur.execute("PRAGMA busy_timeout=15000")
             cur.execute("PRAGMA synchronous=NORMAL")
         finally:
             cur.close()
