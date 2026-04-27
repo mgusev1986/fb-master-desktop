@@ -133,7 +133,10 @@ async def billing_nowpayments_create(
         )
     d = (duration or "").strip()
     if d == "365":
-        days, price = 365, app_config.NOWPAYMENTS_PRICE_USD_365
+        # 2.69: тариф изменён на «35 дней — 100 USD». Значение поля формы остаётся "365"
+        # для обратной совместимости (в шаблоне purchase.html и старых ссылках).
+        # NOWPAYMENTS_PRICE_USD_365 теперь содержит цену 35-дневного тарифа (100 USD).
+        days, price = 35, app_config.NOWPAYMENTS_PRICE_USD_365
     elif d == "test":
         if not app_config.nowpayments_test_tariff_enabled():
             return RedirectResponse(
@@ -144,7 +147,7 @@ async def billing_nowpayments_create(
         price = app_config.NOWPAYMENTS_PRICE_USD_TEST
     else:
         return RedirectResponse(
-            err_path + "?error=" + quote("Доступна только подписка на 1 год."),
+            err_path + "?error=" + quote("Доступен только тариф 35 дней."),
             status_code=303,
         )
     base = app_config.public_app_base_url()
