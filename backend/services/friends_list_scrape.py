@@ -499,15 +499,19 @@ PARSE_EXPECTED_FRIENDS_COUNT_JS = """
           if (ok) return ok;
         }
       }
-      m = sample.match(new RegExp('(\\\\d{1,4})\\\\s*тыс\\\\.?\\\\s*(?:[—\\\\-–:]\\\\s*)?' + label, 'i'));
-      if (m) {
-        const n = parseInt(m[1], 10) * 1000;
-        const ok = pickBound(n, min, max);
-        if (ok) return ok;
-      }
+      // ВАЖНО: decimal-aware идёт ПЕРВЫМ. Иначе на "6,1 тыс. в группе" нижний
+      // regex (\\d{1,4})\\s*тыс матчил "1 тыс" → 1000 вместо 6100. Старая
+      // версия 2.85 показывала "~1000" в UI на группе с 6091 участником.
       m = sample.match(new RegExp('(\\\\d+)[,.](\\\\d+)\\\\s*тыс[^\\\\n]{0,120}' + label, 'i'));
       if (m) {
         const n = Math.round(parseFloat(m[1] + '.' + m[2]) * 1000);
+        const ok = pickBound(n, min, max);
+        if (ok) return ok;
+      }
+      // Целое число тыс. С lookbehind: чтобы "6,1 тыс" не дало "1 тыс"=1000.
+      m = sample.match(new RegExp('(?:^|[^\\\\d,.])(\\\\d{1,4})\\\\s*тыс\\\\.?\\\\s*(?:[—\\\\-–:]\\\\s*)?' + label, 'i'));
+      if (m) {
+        const n = parseInt(m[1], 10) * 1000;
         const ok = pickBound(n, min, max);
         if (ok) return ok;
       }

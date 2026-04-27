@@ -302,21 +302,53 @@ def main():
     # Используем дефолтный Playwright Chromium — он автоматически выбирает
     # правильную архитектуру (arm64 на Apple Silicon, x64 на Intel).
     print(">>> используем дефолтный Playwright Chromium (auto-arch)", flush=True)
+
+    # Stealth-патчи чтобы FB не банил headless Chromium как бот.
+    # На headless: navigator.webdriver=true, navigator.plugins=[],
+    # отсутствует chrome.runtime, и т.д. → FB показывает login page
+    # вместо реальной страницы группы (то что мы получали в прошлый раз).
+    STEALTH_INIT = """
+    // 1. Прячем navigator.webdriver
+    Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+    // 2. Эмулируем plugins (FB проверяет!)
+    Object.defineProperty(navigator, 'plugins', {
+        get: () => [{name:'Chrome PDF Plugin'},{name:'Chrome PDF Viewer'},{name:'Native Client'}]
+    });
+    // 3. Эмулируем languages
+    Object.defineProperty(navigator, 'languages', { get: () => ['ru-RU', 'ru', 'en-US', 'en'] });
+    // 4. Прячем automation от Chrome.runtime checks
+    window.chrome = window.chrome || { runtime: {} };
+    // 5. Permissions query → notification (как в реальном Chrome)
+    const origQuery = navigator.permissions && navigator.permissions.query;
+    if (origQuery) {
+        navigator.permissions.query = (p) =>
+            p && p.name === 'notifications'
+                ? Promise.resolve({ state: Notification.permission })
+                : origQuery.call(navigator.permissions, p);
+    }
+    """
+
     with sync_playwright() as p:
         if is_account_mode:
             browser = p.chromium.launch(
                 headless=args.headless,
                 proxy=proxy_dict,
-                args=["--disable-blink-features=AutomationControlled"],
+                args=[
+                    "--disable-blink-features=AutomationControlled",
+                    "--disable-features=IsolateOrigins,site-per-process",
+                    "--no-sandbox",
+                ],
             )
             ctx = browser.new_context(
                 user_agent=account_user_agent or None,
                 viewport={"width": 1280, "height": 900},
                 locale="ru-RU",
+                timezone_id="Europe/Istanbul",  # совпадает с TR прокси
             )
+            ctx.add_init_script(STEALTH_INIT)
             try:
                 ctx.add_cookies(account_cookies)
-                print(f">>> Cookies injected: {len(account_cookies)}", flush=True)
+                print(f">>> Cookies injected: {len(account_cookies)} + stealth patches", flush=True)
             except Exception as e:
                 print(f"!!! cookie injection error: {e}", flush=True)
         else:
