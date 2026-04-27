@@ -106,6 +106,14 @@ def _map_dm_body(rest: str) -> str:
         if sub == "low_confidence":
             return "поле для текста сообщения на странице не распознано (попробуйте обновить страницу)."
         return f"не найдено поле ввода сообщения ({sub})."
+    if r.startswith("dm_recipient_e2ee_pending:"):
+        sub = r.split(":", 1)[1].strip() if ":" in r else ""
+        return (
+            "получатель не доступен для ЛС с этого аккаунта: ему нужно один раз войти в "
+            "Messenger в новом приложении (попарная E2EE-миграция Meta — обычно с других "
+            "ваших аккаунтов этот же человек получает ЛС). Контакт пропущен, аккаунт "
+            f"рассылки не ограничен ({sub})."
+        )
     if r.startswith("dm_restricted_or_no_access:"):
         sub = r.split(":", 1)[1].strip() if ":" in r else ""
         return (
@@ -206,7 +214,11 @@ def humanize_outreach_row_error(raw: str) -> str:
             chunks.append("Комментарий: " + _map_comment_fail(part[14:]))
         elif part.startswith("err:"):
             chunks.append("Сбой: " + _map_err_payload(part[4:]))
-        elif part.startswith("dm_composer_not_found:") or part.startswith("dm_restricted"):
+        elif (
+            part.startswith("dm_composer_not_found:")
+            or part.startswith("dm_restricted")
+            or part.startswith("dm_recipient_e2ee_pending:")
+        ):
             chunks.append("ЛС: " + _map_dm_body(part))
         elif part.startswith("message_button_not_found"):
             chunks.append("ЛС: " + _map_dm_body(part))

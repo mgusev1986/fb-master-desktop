@@ -1548,46 +1548,107 @@ def _messages_new_recipient_ready(page: Page) -> bool:
 
 
 def _dm_page_looks_restricted(page: Page) -> bool:
-    """Recipient/chat-specific restriction. This is not an account-wide Messenger request limit."""
+    """Recipient/chat-specific restriction. This is not an account-wide Messenger request limit.
+
+    Сканируем не только [role="main"], но и popup-чат Messenger (dock, dialog, aria-modal),
+    и document.body как fallback — иначе плашка «У X пока нет доступа к этому чату» рендерится
+    в чат-доке (он сосед <main>, не его потомок) и не попадает в детект, ситуация ошибочно
+    превращается в `popup_composer_not_found`.
+    """
     try:
         return bool(
             page.evaluate(
                 """() => {
-          const root =
-            document.querySelector('[role="main"]') ||
-            document.querySelector('[data-pagelet="MWPage"]') ||
-            document.body;
-          const t = (root && root.innerText) ? root.innerText.toLowerCase() : '';
-          return (
-            t.includes("doesn't have access to this chat") ||
-            t.includes("can't reply to this conversation") ||
-            t.includes("can't message this person") ||
-            t.includes("can't send a message to this person") ||
-            t.includes("can't send a message request to this person") ||
-            t.includes("can't message") ||
-            t.includes("this person is unavailable") ||
-            t.includes("this person isn't available") ||
-            t.includes("this person isn't receiving messages") ||
-            t.includes("some people limit who can message them") ||
-            t.includes("can't send messages to this account") ||
-            t.includes("logs into messenger") ||
-            t.includes("you will be able to send") ||
-            t.includes('нет доступа к этому чату') ||
-            t.includes('пока нет доступа') ||
-            t.includes('войдет в messenger') ||
-            t.includes('войдёт в messenger') ||
-            t.includes('сможете отправлять') ||
-            t.includes('у вас нет доступа к этому чату') ||
-            t.includes('вы не можете писать в этот чат') ||
-            t.includes('вы не можете отправить сообщение этому человеку') ||
-            t.includes('нельзя отправить сообщение этому человеку') ||
-            t.includes('невозможно отправить сообщение этому человеку') ||
-            t.includes('невозможно ответить в этом чате') ||
-            t.includes('некоторые люди ограничивают') ||
-            t.includes('кто может отправлять им сообщения') ||
-            t.includes('человек не принимает сообщения') ||
-            t.includes('не может получать сообщения')
-          );
+          function matches(s) {
+            const t = String(s || '').toLowerCase();
+            if (!t) return false;
+            return (
+              t.includes("doesn't have access to this chat") ||
+              t.includes("can't reply to this conversation") ||
+              t.includes("can't message this person") ||
+              t.includes("can't send a message to this person") ||
+              t.includes("can't send a message request to this person") ||
+              t.includes("can't message") ||
+              t.includes("this person is unavailable") ||
+              t.includes("this person isn't available") ||
+              t.includes("this person isn't receiving messages") ||
+              t.includes("some people limit who can message them") ||
+              t.includes("can't send messages to this account") ||
+              t.includes("logs into messenger") ||
+              t.includes("you will be able to send") ||
+              t.includes('нет доступа к этому чату') ||
+              t.includes('пока нет доступа') ||
+              t.includes('войдет в messenger') ||
+              t.includes('войдёт в messenger') ||
+              t.includes('сможете отправлять') ||
+              t.includes('у вас нет доступа к этому чату') ||
+              t.includes('вы не можете писать в этот чат') ||
+              t.includes('вы не можете отправить сообщение этому человеку') ||
+              t.includes('нельзя отправить сообщение этому человеку') ||
+              t.includes('невозможно отправить сообщение этому человеку') ||
+              t.includes('невозможно ответить в этом чате') ||
+              t.includes('некоторые люди ограничивают') ||
+              t.includes('кто может отправлять им сообщения') ||
+              t.includes('человек не принимает сообщения') ||
+              t.includes('не может получать сообщения')
+            );
+          }
+          const roots = [];
+          document.querySelectorAll(
+            '[role="main"], [data-pagelet="MWPage"], [data-pagelet="ChatDock"], ' +
+            '[data-pagelet*="Messenger"], [role="dialog"], [aria-modal="true"]'
+          ).forEach(el => roots.push(el));
+          for (const r of roots) {
+            if (r && matches(r.innerText)) return true;
+          }
+          // Fallback: весь body. Чат-док / диалог иногда монтируются вне явных pagelet-контейнеров.
+          if (document.body && matches(document.body.innerText)) return true;
+          return false;
+        }"""
+            )
+        )
+    except Exception:
+        return False
+
+
+def _dm_recipient_e2ee_pending_login(page: Page) -> bool:
+    """
+    True для конкретного экрана E2EE-миграции получателя в чат-доке Messenger:
+    «У X пока нет доступа к этому чату. Вы сможете отправлять сообщения, когда X войдёт
+    в Messenger ещё раз». Это попарная (sender ↔ recipient) раскатка Meta нового E2EE-Messenger:
+    пара уже мигрирована, но получатель ни разу не открывал новый Messenger — поэтому
+    отправка в этом чате недоступна (с другого аккаунта-отправителя пара ещё может быть в
+    старом режиме и тот же получатель остаётся доступен).
+
+    Отделяется от общего «закрыты ЛС у получателя», чтобы в отчёте писать осмысленную причину
+    (E2EE), а не «нестандартный экран Messenger» / popup_composer_not_found.
+    """
+    try:
+        return bool(
+            page.evaluate(
+                """() => {
+          function matches(s) {
+            const t = String(s || '').toLowerCase();
+            if (!t) return false;
+            // RU: «пока нет доступа к этому чату» / «когда X войдёт в Messenger ещё раз / сможете отправлять».
+            if (t.includes('пока нет доступа') && t.includes('чат')) return true;
+            if ((t.includes('войдет в messenger') || t.includes('войдёт в messenger')) &&
+                t.includes('сможете')) return true;
+            // EN: "you will be able to send" + "logs into Messenger".
+            if (t.includes('logs into messenger') && t.includes('you will be able to send')) return true;
+            if (t.includes("doesn't have access to this chat")) return true;
+            return false;
+          }
+          const roots = [];
+          document.querySelectorAll(
+            '[role="dialog"], [aria-modal="true"], [data-pagelet="ChatDock"], ' +
+            '[data-pagelet*="Messenger"]'
+          ).forEach(el => roots.push(el));
+          for (const r of roots) {
+            if (r && matches(r.innerText)) return true;
+          }
+          if (document.body && matches(document.body.innerText)) return true;
+          return false;
         }"""
             )
         )
@@ -2481,6 +2542,11 @@ def send_dm_via_profile_popup_chat(
 
     logger.info("popup-dm: ожидаем popup-окно чата")
     if not _find_popup_chat_composer(page):
+        if _dm_recipient_e2ee_pending_login(page):
+            logger.info(
+                "popup-dm: получатель в E2EE-миграции (нужен повторный вход в Messenger) — пропуск"
+            )
+            return False, "dm_recipient_e2ee_pending:popup_none"
         if _dm_page_looks_restricted(page):
             logger.info("popup-dm: ЛС недоступны у получателя — пропуск контакта")
             return False, "dm_restricted_or_no_access:popup_none"
@@ -2519,6 +2585,8 @@ def send_dm_via_profile_popup_chat(
         _dismiss_profile_share_or_post_composer_dialog(page)
         page.wait_for_timeout(600)
         if not _find_popup_chat_composer(page):
+            if _dm_recipient_e2ee_pending_login(page):
+                return False, "dm_recipient_e2ee_pending:popup_wrong_context"
             if _dm_page_looks_restricted(page):
                 return False, "dm_restricted_or_no_access:popup_wrong_context"
             if page_shows_messenger_message_request_limit(page):
@@ -2652,6 +2720,11 @@ def _try_send_via_profile_popup_chat(
     page.wait_for_timeout(500)
 
     if not _find_popup_chat_composer(page):
+        if _dm_recipient_e2ee_pending_login(page):
+            logger.info(
+                "popup-chat fallback: получатель в E2EE-миграции — пропуск контакта"
+            )
+            return False, "dm_recipient_e2ee_pending:popup_fallback_none"
         if _dm_page_looks_restricted(page):
             return False, "dm_restricted_or_no_access:popup_fallback_none"
         if page_shows_messenger_message_request_limit(page):
