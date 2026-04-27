@@ -165,6 +165,33 @@ def fulfill_order_after_payment(db: Session, order: BillingRenewalOrder, np_stat
     logger.info("NOWPayments: ключ выдан в очередь order_id=%s access_key_id=%s", order.np_order_id, row.id)
 
 
+def _underpayment_within_tolerance(data: dict) -> tuple[bool, float]:
+    """
+    Проверяет, попадает ли недоплата в допуск NOWPAYMENTS_UNDERPAYMENT_TOLERANCE_PCT.
+    Возвращает (within_tolerance, ratio_paid). ratio = actually_paid / pay_amount.
+
+    Применяется только для статуса partially_paid: если получатель прислал чуть меньше
+    из-за проскальзывания курса USDT/USD или комиссии сети — это всё ещё считается
+    успешной оплатой. По умолчанию граница 0.5%.
+    """
+    try:
+        pay_amount = float(data.get("pay_amount") or 0)
+        actually_paid = float(
+            data.get("actually_paid")
+            or data.get("pay_amount_received")
+            or data.get("outcome_amount")
+            or 0
+        )
+    except (TypeError, ValueError):
+        return False, 0.0
+    if pay_amount <= 0 or actually_paid <= 0:
+        return False, 0.0
+    ratio = actually_paid / pay_amount
+    tolerance = float(getattr(app_config, "NOWPAYMENTS_UNDERPAYMENT_TOLERANCE_PCT", 0.5))
+    min_ratio = max(0.0, 1.0 - tolerance / 100.0)
+    return ratio >= min_ratio, ratio
+
+
 def apply_ipn_to_order(db: Session, data: dict) -> None:
     order = find_order_for_ipn(db, data)
     if not order:
@@ -177,6 +204,26 @@ def apply_ipn_to_order(db: Session, data: dict) -> None:
         order.np_payment_id = str(pid).strip() or order.np_payment_id
     if st == "finished":
         fulfill_order_after_payment(db, order, st)
+    elif st == "partially_paid":
+        ok, ratio = _underpayment_within_tolerance(data)
+        if ok:
+            logger.info(
+                "NOWPayments: partially_paid в пределах допуска (получено %.4f%% от суммы, "
+                "порог %.2f%%) — считаем как finished, order_id=%s",
+                ratio * 100.0,
+                float(getattr(app_config, "NOWPAYMENTS_UNDERPAYMENT_TOLERANCE_PCT", 0.5)),
+                order.np_order_id,
+            )
+            fulfill_order_after_payment(db, order, st)
+        else:
+            logger.warning(
+                "NOWPayments: partially_paid вне допуска (получено %.4f%% от суммы) — "
+                "ключ не выдан, order_id=%s",
+                ratio * 100.0,
+                order.np_order_id,
+            )
+            db.add(order)
+            db.commit()
     elif st in ("failed", "expired", "refunded"):
         order.status = "failed"
         db.add(order)

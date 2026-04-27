@@ -408,8 +408,9 @@ SEQUENCE_TIMEZONE: str = (os.getenv("SEQUENCE_TIMEZONE", "UTC") or "UTC").strip(
 
 # ── Централизованные обновления десктопа (GET /api/public/desktop-update) ──
 # Заполните на прод-сервере: пользователи с FB_MASTER_APP_URL на этот хост получат уведомление
-# о новой версии и ссылку на установщик. Версия в desktop/fb-master-desktop/package.json должна
-# совпадать с логикой семантического сравнения на клиенте (1.0.0 < 1.0.1).
+# о новой версии и ссылку на установщик. Версия в desktop/fb-master-desktop/package.json и
+# FB_DESKTOP_LATEST_VERSION — в формате «2.14», «2.15» (два числовых сегмента; без обязательного .0).
+# Сравнение на клиенте — покомпонентно по целым частям (2.1.3 < 2.14; 2.14 < 2.15).
 # Версия установленного приложения (Electron): local-backend-launcher выставляет из package.json.
 FB_DESKTOP_APP_VERSION: str = (os.getenv("FB_DESKTOP_APP_VERSION") or "").strip()
 FB_DESKTOP_LATEST_VERSION: str = (os.getenv("FB_DESKTOP_LATEST_VERSION") or "").strip()
@@ -503,20 +504,22 @@ def _dev_buy_page_auto_bundle_url() -> str:
     ver = FB_DESKTOP_DEV_LATEST_VERSION.strip()
     if not ver:
         return ""
-    fn = f"FbMaster-{ver}-mac-arm64-bundle.zip"
-    if not _static_dev_release_file_path(fn).is_file():
-        return ""
-    return f"{public_app_base_url().rstrip('/')}/static/releases/dev/{fn}"
+    for prefix in ("SOCMASTER", "FbMaster"):
+        fn = f"{prefix}-{ver}-mac-arm64-bundle.zip"
+        if _static_dev_release_file_path(fn).is_file():
+            return f"{public_app_base_url().rstrip('/')}/static/releases/dev/{fn}"
+    return ""
 
 
 def _dev_buy_page_auto_dmg_url() -> str:
     ver = FB_DESKTOP_DEV_LATEST_VERSION.strip()
     if not ver:
         return ""
-    fn = f"FbMaster-{ver}-mac-arm64.dmg"
-    if not _static_dev_release_file_path(fn).is_file():
-        return ""
-    return f"{public_app_base_url().rstrip('/')}/static/releases/dev/{fn}"
+    for prefix in ("SOCMASTER", "FbMaster"):
+        fn = f"{prefix}-{ver}-mac-arm64.dmg"
+        if _static_dev_release_file_path(fn).is_file():
+            return f"{public_app_base_url().rstrip('/')}/static/releases/dev/{fn}"
+    return ""
 
 
 def desktop_dev_update_download_urls() -> dict[str, str]:
@@ -595,26 +598,41 @@ def _static_release_file_path(filename: str) -> Path:
 def _buy_page_auto_bundle_url() -> str:
     """
     Если в .env задана FB_DESKTOP_LATEST_VERSION и в static/releases лежит
-    FbMaster-<версия>-mac-arm64-bundle.zip — подставить публичный URL без FB_DESKTOP_DOWNLOAD_DARWIN_ARM64_BUNDLE.
+    SOCMASTER-<версия>-mac-arm64-bundle.zip (или legacy FbMaster-…) —
+    подставить публичный URL без FB_DESKTOP_DOWNLOAD_DARWIN_ARM64_BUNDLE.
     """
     ver = FB_DESKTOP_LATEST_VERSION.strip()
     if not ver:
         return ""
-    fn = f"FbMaster-{ver}-mac-arm64-bundle.zip"
-    if not _static_release_file_path(fn).is_file():
-        return ""
-    return f"{public_app_base_url().rstrip('/')}/static/releases/{fn}"
+    for prefix in ("SOCMASTER", "FbMaster"):
+        fn = f"{prefix}-{ver}-mac-arm64-bundle.zip"
+        if _static_release_file_path(fn).is_file():
+            return f"{public_app_base_url().rstrip('/')}/static/releases/{fn}"
+    return ""
 
 
 def _buy_page_auto_dmg_url() -> str:
-    """Аналогично — FbMaster-<версия>-mac-arm64.dmg, если нет явных URL в .env."""
+    """Аналогично — SOCMASTER/FbMaster-<версия>-mac-arm64.dmg, если нет явных URL в .env."""
     ver = FB_DESKTOP_LATEST_VERSION.strip()
     if not ver:
         return ""
-    fn = f"FbMaster-{ver}-mac-arm64.dmg"
-    if not _static_release_file_path(fn).is_file():
+    for prefix in ("SOCMASTER", "FbMaster"):
+        fn = f"{prefix}-{ver}-mac-arm64.dmg"
+        if _static_release_file_path(fn).is_file():
+            return f"{public_app_base_url().rstrip('/')}/static/releases/{fn}"
+    return ""
+
+
+def _buy_page_auto_exe_url() -> str:
+    """Авто‑ссылка на Windows‑инсталлятор SOCMASTER‑<версия>‑win‑x64.exe в static/releases/."""
+    ver = FB_DESKTOP_LATEST_VERSION.strip()
+    if not ver:
         return ""
-    return f"{public_app_base_url().rstrip('/')}/static/releases/{fn}"
+    for prefix in ("SOCMASTER", "FbMaster"):
+        fn = f"{prefix}-{ver}-win-x64.exe"
+        if _static_release_file_path(fn).is_file():
+            return f"{public_app_base_url().rstrip('/')}/static/releases/{fn}"
+    return ""
 
 
 def desktop_buy_page_download_urls(*, for_paid_flow: bool = False) -> dict[str, str]:
@@ -637,6 +655,12 @@ def desktop_buy_page_download_urls(*, for_paid_flow: bool = False) -> dict[str, 
             full["darwin_arm64"] = auto_dmg
     if "darwin_arm64" in full:
         out["darwin_arm64"] = full["darwin_arm64"]
+    if "win32_x64" not in full:
+        auto_exe = _buy_page_auto_exe_url()
+        if auto_exe:
+            full["win32_x64"] = auto_exe
+    if "win32_x64" in full:
+        out["win32_x64"] = full["win32_x64"]
 
     from backend.services.release_download import sign_url_dict
 
@@ -649,16 +673,27 @@ def unlock_page_desktop_download_href() -> str:
     Ссылка для кнопки «Скачать приложение» на /auth/unlock, когда в браузере нет формы ключа.
     Прямой скачивание (как после оплаты), без marketing_buy_page_url — он может указывать на /purchase.
     """
-    du = desktop_buy_page_download_urls(for_paid_flow=False)
-    if du:
-        for k in ("darwin_arm64_bundle", "darwin_arm64"):
-            v = du.get(k)
-            if isinstance(v, str) and v.strip():
-                return v.strip()
-        for v in du.values():
-            if isinstance(v, str) and v.strip():
-                return v.strip()
-    return f"{public_app_base_url().rstrip('/')}/buy"
+    hrefs = unlock_page_desktop_download_hrefs()
+    return hrefs.get("mac") or hrefs.get("win") or f"{public_app_base_url().rstrip('/')}/buy"
+
+
+def unlock_page_desktop_download_hrefs() -> dict[str, str]:
+    """
+    Ссылки для двух кнопок «Скачать» (Windows и macOS) на /auth/unlock.
+    Возвращает словарь с ключами 'mac' и/или 'win', значения — подписанные URL.
+    Ключ может отсутствовать, если для платформы ещё нет сборки.
+    """
+    out: dict[str, str] = {}
+    du = desktop_buy_page_download_urls(for_paid_flow=False) or {}
+    for k in ("darwin_arm64_bundle", "darwin_arm64"):
+        v = du.get(k)
+        if isinstance(v, str) and v.strip():
+            out["mac"] = v.strip()
+            break
+    win = du.get("win32_x64")
+    if isinstance(win, str) and win.strip():
+        out["win"] = win.strip()
+    return out
 
 
 # ── NOWPayments (продление ключа доступа) ─────────────
@@ -672,6 +707,19 @@ NOWPAYMENTS_PRICE_USD_180: str = (os.getenv("NOWPAYMENTS_PRICE_USD_180") or "139
 NOWPAYMENTS_PRICE_USD_365: str = (os.getenv("NOWPAYMENTS_PRICE_USD_365") or "2000").strip()
 # Тестовый тариф ($10 и короткий срок) — показывается в формах только при NOWPAYMENTS_TEST_TARIFF_ENABLED=true
 NOWPAYMENTS_PRICE_USD_TEST: str = (os.getenv("NOWPAYMENTS_PRICE_USD_TEST") or "10").strip()
+# Допуск на недоплату (в %): если получатель прислал чуть меньше указанной суммы из-за
+# проскальзывания курса USDT/USD или комиссии сети — считаем платёж успешным. По умолчанию
+# 0.5% (0.50 USDT с $100 — типичный «хвост» NOWPayments). 0 = строгое равенство.
+def _nowpayments_underpayment_tolerance_pct() -> float:
+    raw = (os.getenv("NOWPAYMENTS_UNDERPAYMENT_TOLERANCE_PCT") or "0.5").strip().replace(",", ".")
+    try:
+        v = float(raw)
+    except (TypeError, ValueError):
+        v = 0.5
+    return max(0.0, min(v, 50.0))
+
+
+NOWPAYMENTS_UNDERPAYMENT_TOLERANCE_PCT: float = _nowpayments_underpayment_tolerance_pct()
 
 
 def _nowpayments_test_duration_minutes() -> int:

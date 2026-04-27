@@ -707,6 +707,19 @@ NOWPAYMENTS_PRICE_USD_180: str = (os.getenv("NOWPAYMENTS_PRICE_USD_180") or "139
 NOWPAYMENTS_PRICE_USD_365: str = (os.getenv("NOWPAYMENTS_PRICE_USD_365") or "2000").strip()
 # Тестовый тариф ($10 и короткий срок) — показывается в формах только при NOWPAYMENTS_TEST_TARIFF_ENABLED=true
 NOWPAYMENTS_PRICE_USD_TEST: str = (os.getenv("NOWPAYMENTS_PRICE_USD_TEST") or "10").strip()
+# Допуск на недоплату (в %): если получатель прислал чуть меньше указанной суммы из-за
+# проскальзывания курса USDT/USD или комиссии сети — считаем платёж успешным. По умолчанию
+# 0.5% (0.50 USDT с $100 — типичный «хвост» NOWPayments). 0 = строгое равенство.
+def _nowpayments_underpayment_tolerance_pct() -> float:
+    raw = (os.getenv("NOWPAYMENTS_UNDERPAYMENT_TOLERANCE_PCT") or "0.5").strip().replace(",", ".")
+    try:
+        v = float(raw)
+    except (TypeError, ValueError):
+        v = 0.5
+    return max(0.0, min(v, 50.0))
+
+
+NOWPAYMENTS_UNDERPAYMENT_TOLERANCE_PCT: float = _nowpayments_underpayment_tolerance_pct()
 
 
 def _nowpayments_test_duration_minutes() -> int:
