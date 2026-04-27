@@ -1158,255 +1158,221 @@ def scroll_friends_page(
     _crash_handled = False
     i = 0
 
-    for i in range(rounds_cap):
-        if cancelled and cancelled():
-            if merged:
-                if live_path:
-                    flush_friends_workbook(live_path, merged)
-                if on_merged_flush:
-                    on_merged_flush(dict(merged), dict(restricted))
-            break
-        # Детальные тайминг-логи: видно где именно тормозит каждый раунд.
-        # Лог формата `extract=Xms merge=Yms total=Zms dom_rows=N merged=M`.
-        # Без этих таймингов невозможно отличить «FB медленно отдаёт DOM» от
-        # «наш save блокирует на 60с». Если total > 5000ms — печатаем WARN.
-        import time as _t
-        _round_t0 = _t.monotonic()
-        # Safety-net: если page/context закрылись (Stop button / Chromium-crash),
-        # выходим из цикла без exception.
-        try:
-            _t_extract0 = _t.monotonic()
-            dismiss_facebook_dom_overlays(page)
-            rows = page.evaluate(EXTRACT_FRIENDS_JS)
-            _t_extract = int((_t.monotonic() - _t_extract0) * 1000)
-        except Exception as e:
-            msg = str(e).lower()
-            if "closed" in msg or "target" in msg or "context" in msg:
-                logger.info("friends scroll: page closed (cancel/crash) at round %s, exiting", i)
+    # Crash-safe wrapper: _safe_final_flush ВСЕГДА вызывается, даже если
+    # exception вылетел из любой строки лупа (Chromium crash, OOM,
+    # anti-bot kill, выкл. света). Финальный sync-flush сохраняет ВСЁ
+    # что собрали в `merged` — гарантия "ни одного потерянного человека".
+    _loop_completed = False
+    _loop_exception: Exception | None = None
+    try:
+        for i in range(rounds_cap):
+            if cancelled and cancelled():
+                if merged:
+                    if live_path:
+                        flush_friends_workbook(live_path, merged)
+                    if on_merged_flush:
+                        on_merged_flush(dict(merged), dict(restricted))
                 break
-            raise
-        rows_n = len(rows) if isinstance(rows, list) else 0
-        _t_merge0 = _t.monotonic()
-        if isinstance(rows, list):
-            merge_friend_scan_rows(merged, rows, restricted=restricted)
-        _t_merge = int((_t.monotonic() - _t_merge0) * 1000)
-        total = len(merged)
-        if on_round and (i % 4 == 0 or i == 0):
-            on_round(i, total)
-        # Continuous re-fetch expected_total: на странице группы блок
-        # «Участники · 1 789» появляется не сразу. Пытаемся каждые 10 раундов
-        # пока expected не подхватится. Это критично для UI — клиент видит
-        # сколько РЕАЛЬНО людей у донора (раньше показывалось «—»).
-        if expected_total is None and i > 0 and i % 10 == 0:
+            # Детальные тайминг-логи: видно где именно тормозит каждый раунд.
+            # Лог формата `extract=Xms merge=Yms total=Zms dom_rows=N merged=M`.
+            # Без этих таймингов невозможно отличить «FB медленно отдаёт DOM» от
+            # «наш save блокирует на 60с». Если total > 5000ms — печатаем WARN.
+            import time as _t
+            _round_t0 = _t.monotonic()
+            # Safety-net: если page/context закрылись (Stop button / Chromium-crash),
+            # выходим из цикла без exception.
             try:
-                _maybe = parse_expected_friends_count(page)
-                if _maybe and _maybe > 0:
-                    expected_total = _maybe
-                    logger.info(
-                        "friends scroll: expected_total ПОДХВАЧЕН на round %s = %s",
-                        i, expected_total,
-                    )
-                    # Пересчитать target_floor на основе нового expected.
-                    if expected_total > 0:
-                        target_floor = min(expected_total, max(1, int(expected_total * _TARGET_FRAC)))
-                    # Сразу обновить UI: пользователь видит «по счётчику ~N чел.»
-                    if on_expected_update is not None:
-                        try:
-                            on_expected_update(int(expected_total))
-                        except Exception:
-                            pass
-            except Exception:
-                pass
-
-        # Лог каждый раунд для первых 20, потом каждые 4 — с таймингами.
-        if i < 20 or i % 4 == 0:
-            logger.info(
-                "friends scroll round %s: extract=%dms merge=%dms dom_rows=%s merged=%s expected=%s mode=%s",
-                i,
-                _t_extract,
-                _t_merge,
-                rows_n,
-                total,
-                expected_total or "—",
-                _speed_mode,
-            )
-
-        if total > 0:
-            # XLSX-save (async через thread): каждые 2 раунда / 25 новых.
-            # Уменьшено с 3/50 — пользователь жаловался что при Stop теряются
-            # уже собранные люди. Теперь max потери ≈25 человек (между
-            # последним save'ом и Stop). XLSX async-thread не блокирует scroll.
-            need_xlsx_save = (
-                i == 0
-                or (i - last_save_i) >= 2
-                or (total - last_saved_total) >= 25
-            )
-            # Async save: XLSX и БД-flush идут в отдельном daemon-thread,
-            # scroll-цикл не блокируется. Это убирает «рывки» —
-            # пользователь видел паузы 30-60с каждые 3 раунда из-за sync save.
-            # _save_lock не даёт двум save'ам идти одновременно (defer next).
-            if need_xlsx_save and live_path:
-                _xlsx_snap = dict(merged)
-                _xlsx_path = live_path
-                def _async_xlsx(snap=_xlsx_snap, p=_xlsx_path, round_i=i):
-                    if not _save_lock.acquire(blocking=False):
-                        return  # уже идёт save — пропускаем, будет следующий tick
-                    try:
-                        _t0 = _t.monotonic()
-                        flush_friends_workbook(p, snap)
-                        _ms = int((_t.monotonic() - _t0) * 1000)
-                        if _ms > 1500:
-                            logger.warning("friends scroll async XLSX flush медленный = %dms (round=%s, total=%s)", _ms, round_i, len(snap))
-                        elif round_i < 20:
-                            logger.info("friends scroll async xlsx=%dms (round=%s)", _ms, round_i)
-                    except Exception:
-                        logger.debug("async XLSX flush failed", exc_info=True)
-                    finally:
-                        _save_lock.release()
-                _threading.Thread(target=_async_xlsx, daemon=True).start()
-                last_save_i = i
-                last_saved_total = total
-            # БД-flush: SYNCHRONOUS (НЕ async-thread!). Async-version в 2.82
-            # вызывала SQLAlchemy Session race — `db` session общий с главным
-            # потоком worker'а, не thread-safe. Симптом: silent rollback,
-            # «0 новых» в Импорте при крахе Chromium. Sync безопасен.
-            # Порог 2/25 (как у XLSX) — max потеря 25 человек при крахе.
-            need_db_flush = on_merged_flush is not None and (
-                i == 0
-                or (i - last_db_flush_i) >= 2
-                or (total - last_db_flushed_total) >= 25
-            )
-            if need_db_flush:
-                _t0 = _t.monotonic()
+                _t_extract0 = _t.monotonic()
+                dismiss_facebook_dom_overlays(page)
+                rows = page.evaluate(EXTRACT_FRIENDS_JS)
+                _t_extract = int((_t.monotonic() - _t_extract0) * 1000)
+            except Exception as e:
+                msg = str(e).lower()
+                if "closed" in msg or "target" in msg or "context" in msg:
+                    logger.info("friends scroll: page closed (cancel/crash) at round %s, exiting", i)
+                    break
+                raise
+            rows_n = len(rows) if isinstance(rows, list) else 0
+            _t_merge0 = _t.monotonic()
+            if isinstance(rows, list):
+                merge_friend_scan_rows(merged, rows, restricted=restricted)
+            _t_merge = int((_t.monotonic() - _t_merge0) * 1000)
+            total = len(merged)
+            if on_round and (i % 4 == 0 or i == 0):
+                on_round(i, total)
+            # Continuous re-fetch expected_total: на странице группы блок
+            # «Участники · 14 236» появляется не сразу — DOM lazy-render.
+            # Пытаемся в первых раундах часто (0,1,3,5,8) и потом каждые 10.
+            # Это критично для UI: клиент сразу видит сколько РЕАЛЬНО людей
+            # у донора, а не ждёт 10+ раундов.
+            _aggressive_fetch_rounds = {0, 1, 3, 5, 8}
+            if expected_total is None and (i in _aggressive_fetch_rounds or (i > 0 and i % 10 == 0)):
                 try:
-                    on_merged_flush(dict(merged), dict(restricted))
-                    _ms = int((_t.monotonic() - _t0) * 1000)
-                    if _ms > 5000:
-                        logger.warning("friends scroll sync DB flush ОЧЕНЬ медленный = %dms (round=%s, total=%s)", _ms, i, total)
-                    elif i < 20:
-                        logger.info("friends scroll sync db=%dms (round=%s, total=%s)", _ms, i, total)
+                    _maybe = parse_expected_friends_count(page)
+                    if _maybe and _maybe > 0:
+                        expected_total = _maybe
+                        logger.info(
+                            "friends scroll: expected_total ПОДХВАЧЕН на round %s = %s",
+                            i, expected_total,
+                        )
+                        # Пересчитать target_floor на основе нового expected.
+                        if expected_total > 0:
+                            target_floor = min(expected_total, max(1, int(expected_total * _TARGET_FRAC)))
+                        # Сразу обновить UI: пользователь видит «по счётчику ~N чел.»
+                        if on_expected_update is not None:
+                            try:
+                                on_expected_update(int(expected_total))
+                            except Exception:
+                                pass
                 except Exception:
-                    logger.exception("sync DB flush failed at round %s", i)
-                last_db_flush_i = i
-                last_db_flushed_total = total
+                    pass
 
-        # Финальный тайминг раунда — если общий round > 5с, явно выделяем WARN.
-        _round_total = int((_t.monotonic() - _round_t0) * 1000)
-        if _round_total > 5000:
-            logger.warning(
-                "friends scroll round %s МЕДЛЕННЫЙ: total=%dms (extract=%dms, merge=%dms) — что-то блокирует",
-                i, _round_total, _t_extract, _t_merge,
-            )
-
-        if total == last_total:
-            no_new_rounds += 1
-        else:
-            no_new_rounds = 0
-        last_total = total
-
-        # Crash-safe: connections_list_state делает page.evaluate внутри.
-        # Если Chromium закрылся — выходим и финальный flush сохранит данные.
-        try:
-            list_state = connections_list_state(page)
-        except Exception as _e:
-            _msg = str(_e).lower()
-            if "closed" in _msg or "target" in _msg or "context" in _msg:
-                logger.warning("friends scroll: page closed at list_state round %s, salvaging %d", i, len(merged))
-                _crash_handled = True
-                break
-            raise
-        at_bottom = bool(list_state.get("atBottom"))
-        if at_bottom and no_new_rounds > 0:
-            bottom_idle_rounds += 1
-        else:
-            bottom_idle_rounds = 0
-
-        below_target = target_floor is not None and total < target_floor
-        at_or_past_target = target_floor is not None and total >= target_floor
-        if below_target:
-            idle_need = _IDLE_BELOW_TARGET
-        elif at_or_past_target:
-            idle_need = _IDLE_NEAR_OR_ABOVE_TARGET
-        else:
-            idle_need = _IDLE_NO_EXPECTED
-
-        max_shakes = _MAX_SHAKES_BELOW if below_target else _MAX_SHAKES_FALLBACK
-
-        should_try_see_all = (
-            see_all_clicks < _SEE_ALL_MAX_CLICKS
-            and (no_new_rounds >= 8 or bottom_idle_rounds >= 6)
-        )
-        if should_try_see_all and click_connections_see_all(page):
-            see_all_clicks += 1
-            logger.info(
-                "friends scroll: клик по 'Посмотреть все' %s/%s (собрано %s, ссылок в списке %s)",
-                see_all_clicks,
-                _SEE_ALL_MAX_CLICKS,
-                total,
-                int(list_state.get("linkCount") or 0),
-            )
-            if _cancellable_wait_ms(page, int(random.uniform(3200, 7600) * _wait_mult), cancelled):
-                break
-            no_new_rounds = 0
-            bottom_idle_rounds = 0
-            recovery_shakes = 0
-            continue
-
-        bottom_idle_need = _BOTTOM_IDLE_BELOW if below_target else _BOTTOM_IDLE_FALLBACK
-        if (
-            i >= _MIN_ROUNDS_BEFORE_IDLE_STOP
-            and at_bottom
-            and bottom_idle_rounds >= bottom_idle_need
-        ):
-            logger.info(
-                "friends scroll: достигнут низ списка без новых людей %s раундов подряд (собрано %s, ожидалось %s)",
-                bottom_idle_rounds,
-                total,
-                expected_total or "—",
-            )
-            if merged:
-                if live_path:
-                    flush_friends_workbook(live_path, merged)
-                if on_merged_flush:
-                    on_merged_flush(dict(merged), dict(restricted))
-            break
-
-        if i >= _MIN_ROUNDS_BEFORE_IDLE_STOP and no_new_rounds >= idle_need:
-            can_shake = recovery_shakes < max_shakes and (
-                below_target
-                or (expected_total is None and total > 0)
-            )
-            if can_shake:
-                recovery_shakes += 1
+            # Лог каждый раунд для первых 20, потом каждые 4 — с таймингами.
+            if i < 20 or i % 4 == 0:
                 logger.info(
-                    "friends scroll: толчок %s/%s (собрано %s, ожидалось на странице %s)",
-                    recovery_shakes,
-                    max_shakes,
+                    "friends scroll round %s: extract=%dms merge=%dms dom_rows=%s merged=%s expected=%s mode=%s",
+                    i,
+                    _t_extract,
+                    _t_merge,
+                    rows_n,
+                    total,
+                    expected_total or "—",
+                    _speed_mode,
+                )
+
+            if total > 0:
+                # XLSX-save (async через thread): каждые 2 раунда / 25 новых.
+                # Уменьшено с 3/50 — пользователь жаловался что при Stop теряются
+                # уже собранные люди. Теперь max потери ≈25 человек (между
+                # последним save'ом и Stop). XLSX async-thread не блокирует scroll.
+                need_xlsx_save = (
+                    i == 0
+                    or (i - last_save_i) >= 2
+                    or (total - last_saved_total) >= 25
+                )
+                # Async save: XLSX и БД-flush идут в отдельном daemon-thread,
+                # scroll-цикл не блокируется. Это убирает «рывки» —
+                # пользователь видел паузы 30-60с каждые 3 раунда из-за sync save.
+                # _save_lock не даёт двум save'ам идти одновременно (defer next).
+                if need_xlsx_save and live_path:
+                    _xlsx_snap = dict(merged)
+                    _xlsx_path = live_path
+                    def _async_xlsx(snap=_xlsx_snap, p=_xlsx_path, round_i=i):
+                        if not _save_lock.acquire(blocking=False):
+                            return  # уже идёт save — пропускаем, будет следующий tick
+                        try:
+                            _t0 = _t.monotonic()
+                            flush_friends_workbook(p, snap)
+                            _ms = int((_t.monotonic() - _t0) * 1000)
+                            if _ms > 1500:
+                                logger.warning("friends scroll async XLSX flush медленный = %dms (round=%s, total=%s)", _ms, round_i, len(snap))
+                            elif round_i < 20:
+                                logger.info("friends scroll async xlsx=%dms (round=%s)", _ms, round_i)
+                        except Exception:
+                            logger.debug("async XLSX flush failed", exc_info=True)
+                        finally:
+                            _save_lock.release()
+                    _threading.Thread(target=_async_xlsx, daemon=True).start()
+                    last_save_i = i
+                    last_saved_total = total
+                # БД-flush: SYNC, threshold 10/100 (вернул из 2.82 для скорости).
+                # 2.83 был 2/25 — слишком часто, тормозило TURBO-режим.
+                # Crash safety обеспечивает _safe_final_flush() в try/finally
+                # ниже: при ЛЮБОМ exception все собранные люди попадают в БД.
+                # Поэтому промежуточные flushes можно делать редко.
+                need_db_flush = on_merged_flush is not None and (
+                    i == 0
+                    or (i - last_db_flush_i) >= 10
+                    or (total - last_db_flushed_total) >= 100
+                )
+                if need_db_flush:
+                    _t0 = _t.monotonic()
+                    try:
+                        on_merged_flush(dict(merged), dict(restricted))
+                        _ms = int((_t.monotonic() - _t0) * 1000)
+                        if _ms > 5000:
+                            logger.warning("friends scroll sync DB flush ОЧЕНЬ медленный = %dms (round=%s, total=%s)", _ms, i, total)
+                        elif i < 20:
+                            logger.info("friends scroll sync db=%dms (round=%s, total=%s)", _ms, i, total)
+                    except Exception:
+                        logger.exception("sync DB flush failed at round %s", i)
+                    last_db_flush_i = i
+                    last_db_flushed_total = total
+
+            # Финальный тайминг раунда — если общий round > 5с, явно выделяем WARN.
+            _round_total = int((_t.monotonic() - _round_t0) * 1000)
+            if _round_total > 5000:
+                logger.warning(
+                    "friends scroll round %s МЕДЛЕННЫЙ: total=%dms (extract=%dms, merge=%dms) — что-то блокирует",
+                    i, _round_total, _t_extract, _t_merge,
+                )
+
+            if total == last_total:
+                no_new_rounds += 1
+            else:
+                no_new_rounds = 0
+            last_total = total
+
+            # Crash-safe: connections_list_state делает page.evaluate внутри.
+            # Если Chromium закрылся — выходим и финальный flush сохранит данные.
+            try:
+                list_state = connections_list_state(page)
+            except Exception as _e:
+                _msg = str(_e).lower()
+                if "closed" in _msg or "target" in _msg or "context" in _msg:
+                    logger.warning("friends scroll: page closed at list_state round %s, salvaging %d", i, len(merged))
+                    _crash_handled = True
+                    break
+                raise
+            at_bottom = bool(list_state.get("atBottom"))
+            if at_bottom and no_new_rounds > 0:
+                bottom_idle_rounds += 1
+            else:
+                bottom_idle_rounds = 0
+
+            below_target = target_floor is not None and total < target_floor
+            at_or_past_target = target_floor is not None and total >= target_floor
+            if below_target:
+                idle_need = _IDLE_BELOW_TARGET
+            elif at_or_past_target:
+                idle_need = _IDLE_NEAR_OR_ABOVE_TARGET
+            else:
+                idle_need = _IDLE_NO_EXPECTED
+
+            max_shakes = _MAX_SHAKES_BELOW if below_target else _MAX_SHAKES_FALLBACK
+
+            should_try_see_all = (
+                see_all_clicks < _SEE_ALL_MAX_CLICKS
+                and (no_new_rounds >= 8 or bottom_idle_rounds >= 6)
+            )
+            if should_try_see_all and click_connections_see_all(page):
+                see_all_clicks += 1
+                logger.info(
+                    "friends scroll: клик по 'Посмотреть все' %s/%s (собрано %s, ссылок в списке %s)",
+                    see_all_clicks,
+                    _SEE_ALL_MAX_CLICKS,
+                    total,
+                    int(list_state.get("linkCount") or 0),
+                )
+                if _cancellable_wait_ms(page, int(random.uniform(3200, 7600) * _wait_mult), cancelled):
+                    break
+                no_new_rounds = 0
+                bottom_idle_rounds = 0
+                recovery_shakes = 0
+                continue
+
+            bottom_idle_need = _BOTTOM_IDLE_BELOW if below_target else _BOTTOM_IDLE_FALLBACK
+            if (
+                i >= _MIN_ROUNDS_BEFORE_IDLE_STOP
+                and at_bottom
+                and bottom_idle_rounds >= bottom_idle_need
+            ):
+                logger.info(
+                    "friends scroll: достигнут низ списка без новых людей %s раундов подряд (собрано %s, ожидалось %s)",
+                    bottom_idle_rounds,
                     total,
                     expected_total or "—",
                 )
-                _shake_cancelled = False
-                try:
-                    # Дольше ждём после «толчка», чтобы виртуальный список FB успел дорендерить.
-                    # На turbo множитель сокращает паузы пропорционально, чтобы recovery
-                    # не съедал скорость в режиме «как в v1».
-                    page.keyboard.press("End")
-                    if _cancellable_wait_ms(page, int(random.uniform(3200, 5600) * _wait_mult), cancelled):
-                        _shake_cancelled = True
-                    else:
-                        page.evaluate(SCROLL_TO_END_ENHANCED_JS)
-                        if _cancellable_wait_ms(page, int(random.uniform(4800, 9000) * _wait_mult), cancelled):
-                            _shake_cancelled = True
-                        else:
-                            page.keyboard.press("PageDown")
-                            if _cancellable_wait_ms(page, int(random.uniform(1800, 3600) * _wait_mult), cancelled):
-                                _shake_cancelled = True
-                except Exception:
-                    logger.debug("recovery scroll", exc_info=True)
-                if _shake_cancelled:
-                    break
-                no_new_rounds = 0
-            else:
                 if merged:
                     if live_path:
                         flush_friends_workbook(live_path, merged)
@@ -1414,49 +1380,100 @@ def scroll_friends_page(
                         on_merged_flush(dict(merged), dict(restricted))
                 break
 
-        # Ниже целевого числа — мягче крутим и дольше ждём между шагами.
-        quality_slow = below_target or (expected_total is None and total > 300)
+            if i >= _MIN_ROUNDS_BEFORE_IDLE_STOP and no_new_rounds >= idle_need:
+                can_shake = recovery_shakes < max_shakes and (
+                    below_target
+                    or (expected_total is None and total > 0)
+                )
+                if can_shake:
+                    recovery_shakes += 1
+                    logger.info(
+                        "friends scroll: толчок %s/%s (собрано %s, ожидалось на странице %s)",
+                        recovery_shakes,
+                        max_shakes,
+                        total,
+                        expected_total or "—",
+                    )
+                    _shake_cancelled = False
+                    try:
+                        # Дольше ждём после «толчка», чтобы виртуальный список FB успел дорендерить.
+                        # На turbo множитель сокращает паузы пропорционально, чтобы recovery
+                        # не съедал скорость в режиме «как в v1».
+                        page.keyboard.press("End")
+                        if _cancellable_wait_ms(page, int(random.uniform(3200, 5600) * _wait_mult), cancelled):
+                            _shake_cancelled = True
+                        else:
+                            page.evaluate(SCROLL_TO_END_ENHANCED_JS)
+                            if _cancellable_wait_ms(page, int(random.uniform(4800, 9000) * _wait_mult), cancelled):
+                                _shake_cancelled = True
+                            else:
+                                page.keyboard.press("PageDown")
+                                if _cancellable_wait_ms(page, int(random.uniform(1800, 3600) * _wait_mult), cancelled):
+                                    _shake_cancelled = True
+                    except Exception:
+                        logger.debug("recovery scroll", exc_info=True)
+                    if _shake_cancelled:
+                        break
+                    no_new_rounds = 0
+                else:
+                    if merged:
+                        if live_path:
+                            flush_friends_workbook(live_path, merged)
+                        if on_merged_flush:
+                            on_merged_flush(dict(merged), dict(restricted))
+                    break
 
-        # Crash-safe: scroll-вызовы могут упасть при крахе Chromium
-        # (anti-bot kill, OOM, отвал интернета). Раньше exception летел
-        # мимо финального flush — теряли всё что собрали (101 чел!).
-        try:
-            vh = int(page.evaluate("() => window.innerHeight"))
-            end_every = 4 if below_target else 5
-            if i % end_every == 0:
-                page.evaluate(SCROLL_TO_END_ENHANCED_JS)
-                lo, hi = (3400, 6800) if quality_slow else (2600, 5200)
+            # Ниже целевого числа — мягче крутим и дольше ждём между шагами.
+            quality_slow = below_target or (expected_total is None and total > 300)
+
+            # Crash-safe: scroll-вызовы могут упасть при крахе Chromium
+            # (anti-bot kill, OOM, отвал интернета). Раньше exception летел
+            # мимо финального flush — теряли всё что собрали (101 чел!).
+            try:
+                vh = int(page.evaluate("() => window.innerHeight"))
+                end_every = 4 if below_target else 5
+                if i % end_every == 0:
+                    page.evaluate(SCROLL_TO_END_ENHANCED_JS)
+                    lo, hi = (3400, 6800) if quality_slow else (2600, 5200)
+                    if _cancellable_wait_ms(page, int(random.uniform(lo, hi) * _wait_mult), cancelled):
+                        break
+                else:
+                    step = max(180, int(vh * random.uniform(0.22, 0.52)))
+                    page.evaluate(SCROLL_FRIENDS_ENHANCED_JS, step)
+                lo, hi = (3000, 6200) if quality_slow else (2200, 4800)
                 if _cancellable_wait_ms(page, int(random.uniform(lo, hi) * _wait_mult), cancelled):
                     break
-            else:
-                step = max(180, int(vh * random.uniform(0.22, 0.52)))
-                page.evaluate(SCROLL_FRIENDS_ENHANCED_JS, step)
-            lo, hi = (3000, 6200) if quality_slow else (2200, 4800)
-            if _cancellable_wait_ms(page, int(random.uniform(lo, hi) * _wait_mult), cancelled):
-                break
-        except Exception as _e:
-            _msg = str(_e).lower()
-            if "closed" in _msg or "target" in _msg or "context" in _msg:
-                logger.warning("friends scroll: page closed at scroll-eval round %s, salvaging %d people", i, len(merged))
-                _crash_handled = True
-                break
-            raise
+            except Exception as _e:
+                _msg = str(_e).lower()
+                if "closed" in _msg or "target" in _msg or "context" in _msg:
+                    logger.warning("friends scroll: page closed at scroll-eval round %s, salvaging %d people", i, len(merged))
+                    _crash_handled = True
+                    break
+                raise
 
-        if random.random() < (0.22 if quality_slow else 0.16) * _rand_mult:
-            if _cancellable_wait_ms(page, int(random.uniform(4200, 11000) * _wait_mult), cancelled):
-                break
-        if random.random() < 0.12 * _rand_mult:
-            if _cancellable_wait_ms(page, int(random.uniform(800, 2800) * _wait_mult), cancelled):
-                break
+            if random.random() < (0.22 if quality_slow else 0.16) * _rand_mult:
+                if _cancellable_wait_ms(page, int(random.uniform(4200, 11000) * _wait_mult), cancelled):
+                    break
+            if random.random() < 0.12 * _rand_mult:
+                if _cancellable_wait_ms(page, int(random.uniform(800, 2800) * _wait_mult), cancelled):
+                    break
 
-    # Остановить cancel-watcher перед выходом — иначе daemon-thread может
-    # закрыть context уже после успешного завершения (race на чужих donor'ах).
-    _watcher_stop.set()
-
-    # Финальный flush через crash-safe helper: ждёт in-flight async XLSX-save,
-    # потом синхронно сохраняет XLSX и БД. Гарантия — все собранные люди
-    # попадают в базу даже при краше Chromium / выключении света / Stop.
-    _safe_final_flush(reason="crash" if _crash_handled else "normal")
+        _loop_completed = True
+    except Exception as _outer_e:
+        _loop_exception = _outer_e
+        _msg = str(_outer_e).lower()
+        if "closed" in _msg or "target" in _msg or "context" in _msg:
+            logger.warning("friends scroll: outer Chromium crash at round %s, salvaging %d people", i, len(merged))
+            _crash_handled = True
+        else:
+            logger.exception("friends scroll: UNEXPECTED outer exception at round %s", i)
+            _crash_handled = True
+    finally:
+        _watcher_stop.set()
+        _safe_final_flush(reason="crash" if _crash_handled else "normal")
+        if _loop_exception is not None and not _crash_handled:
+            # Незнакомое исключение — пробрасываем дальше после flush
+            raise _loop_exception
     meta: dict[str, int | None] = {
         "rounds": min(rounds_cap, i + 1),
         "expected": expected_total,
