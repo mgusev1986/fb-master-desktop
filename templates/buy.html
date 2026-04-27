@@ -130,43 +130,42 @@
   <div class="fbm-premium-card">
     <p class="fbm-premium-eyebrow">SOCMASTER</p>
     <h1>Лиды из Facebook — на автомате</h1>
-    <p class="fbm-premium-sub" style="margin-top:0.6rem;font-size:1.05rem;line-height:1.55;color:rgba(229,231,235,0.85)">
-      Программа сама находит клиентов в Facebook, пишет им первой, ведёт переписку и доводит до заявки.
-      Без рекламы, без сложных воронок, без менеджера на телефоне.
+    <p class="fbm-premium-sub" style="margin-top:0.45rem;margin-bottom:1.05rem;font-size:1rem;line-height:1.5;color:rgba(229,231,235,0.85)">
+      Программа сама находит целевую аудиторию в Facebook, отправляет ваше сообщение в личку
+      и ведёт каждого получателя по стадиям CRM-воронки — от первого касания до сделки.
     </p>
 
     {% if buy_error %}
     <div class="buy-error">{{ buy_error }}</div>
     {% endif %}
 
-    <ul class="fbm-premium-dl" style="list-style:none;padding:0;margin:1.4rem 0 1.6rem;display:flex;flex-direction:column;gap:0.7rem">
-      <li style="display:flex;gap:0.7rem;align-items:flex-start"><span style="color:#f5d06e;font-size:1.1rem;flex-shrink:0">✓</span><span><strong>Парсер аудитории</strong> — собирает целевых людей из групп, подписок и друзей конкурентов; до 1000+ контактов в день с одного аккаунта.</span></li>
-      <li style="display:flex;gap:0.7rem;align-items:flex-start"><span style="color:#f5d06e;font-size:1.1rem;flex-shrink:0">✓</span><span><strong>Рассылка в личку</strong> — естественные паузы и темп, обход E2EE-блокировок, фильтр «уже писали» по всему вашему пулу аккаунтов.</span></li>
-      <li style="display:flex;gap:0.7rem;align-items:flex-start"><span style="color:#f5d06e;font-size:1.1rem;flex-shrink:0">✓</span><span><strong>ИИ ведёт переписку до заявки</strong> — отвечает по вашему сценарию, обрабатывает возражения, переводит в горячую стадию воронки CRM.</span></li>
-      <li style="display:flex;gap:0.7rem;align-items:flex-start"><span style="color:#f5d06e;font-size:1.1rem;flex-shrink:0">✓</span><span><strong>Прогрев аккаунтов</strong> — имитация живого пользователя (лента, профили, лайки), чтобы FB не банил рассылочные аккаунты.</span></li>
-      <li style="display:flex;gap:0.7rem;align-items:flex-start"><span style="color:#f5d06e;font-size:1.1rem;flex-shrink:0">✓</span><span><strong>CRM-воронка</strong> — стадии «контактировали / заинтересован / конверсия / отказ», экспорт между устройствами, история «уже писали» переносится с компьютера на компьютер.</span></li>
-    </ul>
-
+    {# Блок оплаты — сразу под подзаголовком, чтобы кнопка была видна без скролла. #}
     {% if nowpayments_enabled %}
-    <hr class="fbm-premium-divider"/>
-    <p class="fbm-premium-section-label" style="margin-bottom:0.5rem">Тестовый запуск</p>
-    <p class="fbm-premium-note" style="margin-bottom:1rem;line-height:1.5">
-      35 дней доступа — за это время вы успеете запустить парсер, собрать первую базу и получить первые заявки.
-      Дальше продлеваете только если работает. Криптовалюта — ключ выдаётся на экране сразу после оплаты.
-    </p>
-    <form method="post" action="/billing/nowpayments/create" class="settings-form fbm-premium-form" style="margin:0">
+    <form method="post" action="/billing/nowpayments/create" class="settings-form fbm-premium-form" style="margin:0 0 1.1rem">
       <input type="hidden" name="billing_source" value="buy"/>
       <input type="hidden" name="duration" value="365"/>
-      <p class="fbm-premium-note" style="margin-bottom:1rem;font-size:1.1rem">Подписка на 35 дней — <strong>{{ np_price_365 }} USD</strong></p>
+      <p class="fbm-premium-note" style="margin:0 0 0.4rem;font-size:1.05rem">Подписка на 35 дней — <strong>{{ np_price_365 }} USD</strong></p>
+      <p class="fbm-premium-note" style="margin:0 0 0.85rem;font-size:0.9rem;color:rgba(229,231,235,0.7);line-height:1.45">
+        Криптовалюта · ключ выдаётся на экране сразу после оплаты · дальше продлеваете доступ по желанию.
+      </p>
       <input type="hidden" name="device_id" id="buy_device_id" value=""/>
       <button type="submit" class="fbm-premium-submit" id="buy-np-submit" disabled>Получить доступ</button>
     </form>
     {% else %}
-    <p class="fbm-premium-note" style="margin-top:1rem;color:rgba(251,191,36,0.9)">Оплата на сайте скоро будет доступна.</p>
+    <p class="fbm-premium-note" style="margin:0 0 1.2rem;color:rgba(251,191,36,0.9)">Оплата на сайте скоро будет доступна.</p>
     {% endif %}
 
+    <hr class="fbm-premium-divider"/>
+    <p class="fbm-premium-section-label" style="margin-bottom:0.6rem">Что внутри</p>
+    <ul class="fbm-premium-dl" style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:0.55rem">
+      <li style="display:flex;gap:0.6rem;align-items:flex-start;font-size:0.95rem;line-height:1.45"><span style="color:#f5d06e;flex-shrink:0">✓</span><span><strong>Парсер аудитории</strong> — собирает целевых людей из групп, подписок и друзей конкурентов; до 1000+ контактов в день с одного аккаунта.</span></li>
+      <li style="display:flex;gap:0.6rem;align-items:flex-start;font-size:0.95rem;line-height:1.45"><span style="color:#f5d06e;flex-shrink:0">✓</span><span><strong>Рассылка в личку</strong> — естественные паузы и темп, обход E2EE-блокировок, фильтр «уже писали» по всему пулу аккаунтов.</span></li>
+      <li style="display:flex;gap:0.6rem;align-items:flex-start;font-size:0.95rem;line-height:1.45"><span style="color:#f5d06e;flex-shrink:0">✓</span><span><strong>Прогрев аккаунтов</strong> — имитация живого пользователя (лента, профили, лайки), чтобы FB не банил рассылочные аккаунты.</span></li>
+      <li style="display:flex;gap:0.6rem;align-items:flex-start;font-size:0.95rem;line-height:1.45"><span style="color:#f5d06e;flex-shrink:0">✓</span><span><strong>CRM-система с воронкой</strong> — стадии «контактировали / заинтересован / конверсия / отказ», экспорт между устройствами, история «уже писали» переносится с компьютера на компьютер.</span></li>
+    </ul>
+
     {% if access_key_required %}
-    <a class="fbm-premium-link-muted" href="/auth/unlock">Уже есть ключ</a>
+    <a class="fbm-premium-link-muted" href="/auth/unlock" style="margin-top:1rem;display:inline-block">Уже есть ключ</a>
     {% endif %}
   </div>
 </div>
