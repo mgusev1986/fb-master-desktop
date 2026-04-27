@@ -1058,11 +1058,23 @@ def scroll_friends_page(
             break
         dismiss_facebook_dom_overlays(page)
         rows = page.evaluate(EXTRACT_FRIENDS_JS)
+        rows_n = len(rows) if isinstance(rows, list) else 0
         if isinstance(rows, list):
             merge_friend_scan_rows(merged, rows, restricted=restricted)
         total = len(merged)
         if on_round and (i % 4 == 0 or i == 0):
             on_round(i, total)
+        # Каждые 8 раундов пишем прогресс в лог — без этого было невозможно понять,
+        # реально ли парсер крутит цикл или завис между шагами.
+        if i % 8 == 0 or i == 0:
+            logger.info(
+                "friends scroll round %s: dom_rows=%s merged_total=%s expected=%s mode=%s",
+                i,
+                rows_n,
+                total,
+                expected_total or "—",
+                _speed_mode,
+            )
 
         if total > 0:
             need_save = (

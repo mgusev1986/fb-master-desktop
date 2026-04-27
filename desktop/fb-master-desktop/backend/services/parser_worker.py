@@ -987,16 +987,17 @@ def process_parser_job(job_id: int) -> None:
                             ) as ctx:
                                 page = _parser_pick_work_page(ctx)
                                 # Speed-mode aware hot-path: turbo сжимает фиксированные паузы
-                                # после goto FB ×0.1 и переключает wait_until на 'commit'
-                                # (отдаёт управление сразу после первого ответа сервера),
-                                # чтобы парсер быстро доходил до scroll-цикла.
+                                # после goto FB ×0.1, чтобы парсер быстро доходил до scroll-цикла.
+                                # wait_until="domcontentloaded" оставляем всегда: 'commit' оказался
+                                # слишком ранним — DOM не успевает сложиться, parse_expected_friends_count
+                                # и dismiss_overlays получают пустую страницу и парсер крутил впустую.
                                 from backend.services.parser_speed import (
                                     get_parser_scroll_speed,
                                     scroll_wait_multiplier,
                                 )
                                 _speed_mode = get_parser_scroll_speed(db)
                                 _wait_mult = scroll_wait_multiplier(_speed_mode)
-                                _goto_wait_until = "commit" if _speed_mode == "turbo" else "domcontentloaded"
+                                _goto_wait_until = "domcontentloaded"
                                 scan_page = None
                                 if language_filter != "all" or parser_language_mode == "thorough":
                                     try:
