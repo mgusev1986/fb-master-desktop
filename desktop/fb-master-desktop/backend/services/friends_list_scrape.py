@@ -1115,7 +1115,7 @@ def scroll_friends_page(
                 total,
                 int(list_state.get("linkCount") or 0),
             )
-            if _cancellable_wait_ms(page, int(random.uniform(3200, 7600)), cancelled):
+            if _cancellable_wait_ms(page, int(random.uniform(3200, 7600) * _wait_mult), cancelled):
                 break
             no_new_rounds = 0
             bottom_idle_rounds = 0
@@ -1158,16 +1158,18 @@ def scroll_friends_page(
                 _shake_cancelled = False
                 try:
                     # Дольше ждём после «толчка», чтобы виртуальный список FB успел дорендерить.
+                    # На turbo множитель сокращает паузы пропорционально, чтобы recovery
+                    # не съедал скорость в режиме «как в v1».
                     page.keyboard.press("End")
-                    if _cancellable_wait_ms(page, int(random.uniform(3200, 5600)), cancelled):
+                    if _cancellable_wait_ms(page, int(random.uniform(3200, 5600) * _wait_mult), cancelled):
                         _shake_cancelled = True
                     else:
                         page.evaluate(SCROLL_TO_END_ENHANCED_JS)
-                        if _cancellable_wait_ms(page, int(random.uniform(4800, 9000)), cancelled):
+                        if _cancellable_wait_ms(page, int(random.uniform(4800, 9000) * _wait_mult), cancelled):
                             _shake_cancelled = True
                         else:
                             page.keyboard.press("PageDown")
-                            if _cancellable_wait_ms(page, int(random.uniform(1800, 3600)), cancelled):
+                            if _cancellable_wait_ms(page, int(random.uniform(1800, 3600) * _wait_mult), cancelled):
                                 _shake_cancelled = True
                 except Exception:
                     logger.debug("recovery scroll", exc_info=True)

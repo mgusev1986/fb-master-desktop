@@ -61,6 +61,25 @@ if _is_sqlite():
         echo=False,
         connect_args={"check_same_thread": False},
     )
+
+    # WAL + busy_timeout: критично для desktop-сборки, где параллельно работают
+    # ~9 фоновых воркеров (parser, proxy_health_guard, client_presence, reddit/
+    # twitter/linkedin/instagram outreach + inbox + autoresponder и т.д.). Без
+    # WAL каждый write эксклюзивно лочит БД, а busy_timeout=0 даёт мгновенный
+    # `database is locked` вместо ожидания. Парсер на каждом раунде делает
+    # progress-commit и тонул на этих локах — отсюда жалобы на «медленный
+    # turbo, раньше летало».
+    from sqlalchemy import event as _sa_event
+
+    @_sa_event.listens_for(engine, "connect")
+    def _sqlite_pragmas(dbapi_conn, _):
+        cur = dbapi_conn.cursor()
+        try:
+            cur.execute("PRAGMA journal_mode=WAL")
+            cur.execute("PRAGMA busy_timeout=5000")
+            cur.execute("PRAGMA synchronous=NORMAL")
+        finally:
+            cur.close()
 else:
     _pg_connect = _postgres_connect_args(DATABASE_URL)
     engine = create_engine(
