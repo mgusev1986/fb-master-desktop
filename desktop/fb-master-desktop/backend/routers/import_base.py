@@ -302,6 +302,9 @@ def _delete_import_batch(db: Session, batch_id: int) -> int:
     remove = set(person_ids)
 
     if person_ids:
+        from backend.services.contacted_registry import mirror_installation_contacted_urls_for_person_ids
+
+        mirror_installation_contacted_urls_for_person_ids(db, person_ids)
         db.query(ContactedPerson).filter(ContactedPerson.person_id.in_(person_ids)).delete(
             synchronize_session=False
         )
@@ -501,10 +504,16 @@ async def import_batch_skipped_json(
 async def import_page(request: Request, db: Session = Depends(get_db)):
     org_id = require_org_id(request, db)
     _merge_duplicate_parser_batches_if_any(db)
+    # Сортировка по последнему прогону парсера: parser:<донор> обновляет updated_at,
+    # ручной CSV/XLSX-импорт оставляет updated_at пустым — там используем created_at.
+    # Так клиент сверху всегда видит самую свежую партию.
     batches = (
         db.query(ImportBatch)
         .filter(ImportBatch.organization_id == org_id)
-        .order_by(ImportBatch.created_at.desc())
+        .order_by(
+            func.coalesce(ImportBatch.updated_at, ImportBatch.created_at).desc(),
+            ImportBatch.id.desc(),
+        )
         .limit(20)
         .all()
     )
