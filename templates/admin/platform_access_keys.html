@@ -180,7 +180,7 @@
             <td>{{ k.label or '—' }}</td>
             <td style="min-width:160px;max-width:240px">
               <form method="post" action="/admin/platform/access-keys/{{ k.id }}/note" class="ak-note-form" data-key-id="{{ k.id }}" style="display:flex;flex-direction:column;gap:6px">
-                <textarea name="note" rows="2" class="form-input ak-note-input" placeholder="Например: Петя или Вася" maxlength="500" style="font-size:0.85rem;resize:vertical;min-height:42px">{{ k.admin_note or '' }}</textarea>
+                <textarea name="note" rows="2" class="form-input ak-note-input" placeholder="Например: Иван Иванов" maxlength="500" style="font-size:0.85rem;resize:vertical;min-height:42px">{{ k.admin_note or '' }}</textarea>
                 <button type="submit" class="btn btn-sm btn-secondary" style="align-self:flex-start">Сохранить</button>
               </form>
             </td>
@@ -250,7 +250,16 @@
               <div class="ak-np-card">
                 <div class="ak-np-card__header">
                   <span class="ak-np-card__title"><i class="ti ti-receipt"></i> NOWPayments — заказ #{{ bo.id }}</span>
-                  <span class="badge {% if bo.status == 'fulfilled' %}badge-success{% elif bo.status == 'paid_ready' %}badge-success{% elif bo.status == 'failed' %}badge-error{% else %}badge-default{% endif %}">{{ bo.status or '—' }}</span>
+                  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                    <span class="badge {% if bo.status == 'fulfilled' %}badge-success{% elif bo.status == 'paid_ready' %}badge-success{% elif bo.status == 'failed' %}badge-error{% else %}badge-default{% endif %}">{{ bo.status or '—' }}</span>
+                    {% if bo.np_payment_id %}
+                    <form method="post" action="/admin/platform/access-keys/{{ k.id }}/refresh-np" style="display:inline" title="Заново получить детали платежа от NOWPayments API (полезно если IPN не дошёл или заказ старый и поля пустые)">
+                      <button type="submit" class="btn btn-sm btn-secondary">
+                        <i class="ti ti-refresh"></i> Обновить из NP
+                      </button>
+                    </form>
+                    {% endif %}
+                  </div>
                 </div>
                 <div class="ak-np-card__grid">
                   <div class="ak-np-card__field">

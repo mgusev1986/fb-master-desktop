@@ -107,6 +107,55 @@ def _np_payment_status(data: dict) -> str:
     )
 
 
+def fetch_payment_status(payment_id: str) -> dict | None:
+    """v3.0.5+: GET /v1/payment/{payment_id} через NOWPayments API.
+
+    Возвращает payload в той же форме, что и IPN (subset полей: pay_amount,
+    actually_paid, payin_address, payin_hash, payout_address, payout_hash,
+    network_fee, service_fee, outcome_amount, outcome_currency, status, etc).
+
+    Используется для backfill np_* деталей в старых заказах (создан ДО появления
+    _save_np_payment_details), либо если IPN не дошёл.
+    """
+    pid = (payment_id or "").strip()
+    if not pid:
+        return None
+    url = f"{app_config.nowpayments_api_base()}/v1/payment/{pid}"
+    headers = {"x-api-key": app_config.NOWPAYMENTS_API_KEY}
+    try:
+        with httpx.Client(timeout=30.0) as client:
+            r = client.get(url, headers=headers)
+            if r.status_code >= 400:
+                logger.warning("NOWPayments GET payment %s: %s", r.status_code, r.text[:300])
+                return None
+            return r.json()
+    except Exception:
+        logger.exception("NOWPayments GET payment HTTP error payment_id=%s", pid)
+        return None
+
+
+def backfill_payment_details(db: Session, order: BillingRenewalOrder) -> bool:
+    """v3.0.5+: подтянуть детали платежа из NOWPayments и сохранить в order.
+
+    Идемпотентно — повторный вызов перезаписывает поля свежими значениями.
+    Возвращает True если данные получены и сохранены, False при ошибке.
+    """
+    pid = (order.np_payment_id or "").strip()
+    if not pid:
+        return False
+    data = fetch_payment_status(pid)
+    if not data:
+        return False
+    _save_np_payment_details(order, data)
+    # Также обновим last_np_status и status, если приходит свежее значение.
+    new_status = _np_payment_status(data)
+    if new_status:
+        order.last_np_status = new_status
+    db.add(order)
+    db.commit()
+    return True
+
+
 def find_order_for_ipn(db: Session, data: dict) -> BillingRenewalOrder | None:
     oid = str(data.get("order_id") or "").strip()
     if oid:

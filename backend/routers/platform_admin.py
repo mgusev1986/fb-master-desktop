@@ -398,6 +398,50 @@ async def platform_access_keys_set_note(
     )
 
 
+@router.post("/admin/platform/access-keys/{key_id}/refresh-np")
+async def platform_access_keys_refresh_np(
+    request: Request,
+    key_id: int,
+    db: Session = Depends(get_db),
+):
+    """v3.0.5+: backfill NP-details через GET /v1/payment/{payment_id}.
+
+    Используется когда заказ создавался ДО релиза _save_np_payment_details
+    (поля np_pay_amount/np_payin_address/etc пустые), либо когда IPN не дошёл.
+    Прокликивается вручную для нужного ключа в карточке заказа.
+    """
+    _require_platform_owner(request)
+    row = db.get(AccessKey, key_id)
+    if row is None:
+        raise HTTPException(status_code=404, detail="access_key_not_found")
+    bo = (
+        db.query(BillingRenewalOrder)
+        .filter(BillingRenewalOrder.access_key_id == key_id)
+        .order_by(BillingRenewalOrder.id.desc())
+        .first()
+    )
+    referer = request.headers.get("referer") or "/admin/platform/access-keys"
+    sep = "&" if "?" in referer else "?"
+    if bo is None or not bo.np_payment_id:
+        return RedirectResponse(
+            f"{referer}{sep}msg=" + quote(
+                "Этот ключ не связан с NOWPayments-заказом (нет payment_id)."
+            ),
+            status_code=303,
+        )
+    from backend.services.nowpayments_billing import backfill_payment_details
+    ok = backfill_payment_details(db, bo)
+    msg = (
+        f"Детали NOWPayments-заказа #{bo.id} обновлены."
+        if ok
+        else f"Не удалось получить данные от NOWPayments для заказа #{bo.id}. Проверьте API key."
+    )
+    return RedirectResponse(
+        f"{referer}{sep}msg=" + quote(msg),
+        status_code=303,
+    )
+
+
 @router.post("/admin/platform/access-keys/create")
 async def platform_access_keys_create(
     request: Request,
