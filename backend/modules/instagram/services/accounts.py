@@ -105,6 +105,10 @@ def create_from_credentials(
 
     final_label = (label or "").strip() or (handle or user_s)[:64]
 
+    # 2.95: автоматически парсим прокси формата host:port:user:pass или URL с embedded auth
+    from backend.services.fb_account_import_parse import normalize_proxy_fields
+    px_url, px_user, px_pass = normalize_proxy_fields(proxy_url, proxy_username, proxy_password)
+
     acc = InstagramAccount(
         organization_id=organization_id,
         label=final_label[:255],
@@ -114,10 +118,10 @@ def create_from_credentials(
         profile_dir=_make_profile_dir(final_label),
         cookies_json=None,
         cookies_imported_at=None,
-        proxy_enabled=bool((proxy_url or "").strip()),
-        proxy_url=(proxy_url or "").strip() or None,
-        proxy_username=(proxy_username or "").strip() or None,
-        proxy_password=(proxy_password or "").strip() or None,
+        proxy_enabled=bool(px_url),
+        proxy_url=px_url,
+        proxy_username=px_user,
+        proxy_password=px_pass,
         status="needs_login",
         session_ok=None,
         login_username=user_s,
@@ -157,9 +161,12 @@ def update_proxy(db: Session, account_id: int, *, proxy_url: str | None, proxy_u
     acc = get_account(db, account_id)
     if acc is None:
         return None
-    acc.proxy_url = (proxy_url or "").strip() or None
-    acc.proxy_username = (proxy_username or "").strip() or None
-    acc.proxy_password = (proxy_password or "").strip() or None
+    # 2.95: автоматически парсим формат host:port:user:pass или URL с embedded auth
+    from backend.services.fb_account_import_parse import normalize_proxy_fields
+    clean_url, clean_user, clean_pass = normalize_proxy_fields(proxy_url, proxy_username, proxy_password)
+    acc.proxy_url = clean_url
+    acc.proxy_username = clean_user
+    acc.proxy_password = clean_pass
     acc.proxy_enabled = bool(acc.proxy_url) if proxy_enabled is None else bool(proxy_enabled)
     db.commit()
     return acc

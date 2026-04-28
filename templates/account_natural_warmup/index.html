@@ -77,8 +77,8 @@
       {% for a in accounts %}
       {% set st = a.natural_warmup_json if a.natural_warmup_json is mapping else none %}
       {% set rs = (a.readiness_status or 'cold') %}
-      <article class="card nw-account-card" role="listitem">
-        <div class="card-body">
+      <details class="card nw-account-card nw-account-card--collapsible" role="listitem" id="nw-acc-{{ a.id }}">
+        <summary class="nw-account-card__summary" title="Развернуть или свернуть карточку аккаунта">
           <header class="nw-account-card__header">
             <div class="nw-account-card__title">
               <strong class="nw-account-card__name">{{ a.label }}</strong>
@@ -105,6 +105,9 @@
               </div>
             </div>
           </header>
+          <span class="nw-account-card__chevron" aria-hidden="true"><i class="ti ti-chevron-down"></i></span>
+        </summary>
+        <div class="card-body nw-account-card__body">
           <div class="nw-account-card__grid">
             <div class="nw-account-card__plan nw-col-plan">
               <div class="nw-account-card__sec-label">План прогрева</div>
@@ -179,7 +182,7 @@
           </div>
           {% endif %}
         </div>
-      </article>
+      </details>
       {% endfor %}
 </div>
 {% endif %}

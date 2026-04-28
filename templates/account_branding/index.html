@@ -68,8 +68,8 @@
   {% set pl = branding_pipelines.get(a.id, {}) if branding_pipelines is defined else {} %}
   {% set job = branding_jobs_by_account.get(a.id) %}
   {% set pl_status = (pl.get('status') or '') %}
-  <article class="card nw-account-card" role="listitem">
-    <div class="card-body">
+  <details class="card nw-account-card nw-account-card--collapsible" role="listitem" id="ab-acc-{{ a.id }}">
+    <summary class="nw-account-card__summary" title="Развернуть или свернуть карточку аккаунта">
       <header class="nw-account-card__header">
         <div class="nw-account-card__title">
           <strong class="nw-account-card__name">{{ a.label }}</strong>
@@ -95,6 +95,9 @@
           </div>
         </div>
       </header>
+      <span class="nw-account-card__chevron" aria-hidden="true"><i class="ti ti-chevron-down"></i></span>
+    </summary>
+    <div class="card-body nw-account-card__body">
 
       {% if pl_status %}
       <div class="card" style="margin:12px 0;background:color-mix(in srgb,var(--bg-surface) 92%, var(--border));border:1px solid var(--border)">
@@ -215,7 +218,7 @@
         Кнопка «Запустить оформление» отправляет <strong>текущие значения полей</strong> этой формы (отдельное сохранение черновика не обязательно перед каждым запуском).
       </p>
     </div>
-  </article>
+  </details>
   {% endfor %}
 </div>
 {% endif %}

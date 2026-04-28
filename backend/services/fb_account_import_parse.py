@@ -115,6 +115,73 @@ def proxy_url_for_playwright(p: ParsedProxyLine) -> str:
     return f"{p.scheme}://{p.host}:{p.port}"
 
 
+def normalize_proxy_fields(
+    proxy_url: str | None,
+    proxy_username: str | None = None,
+    proxy_password: str | None = None,
+    *,
+    default_scheme: str = "http",
+) -> tuple[str | None, str | None, str | None]:
+    """Универсальная нормализация прокси-полей для IG/Twitter аккаунтов (v2.95+).
+
+    Юзер часто вставляет прокси в формате DarkStore/маркетплейса:
+        host:port:user:pass     → split into 4 поля
+        http://user:pass@host:port → standard URL
+        host:port               → без auth
+        user:pass@host:port     → без scheme
+
+    Если в `proxy_url` обнаружено embedded user:pass — они извлекаются и
+    подставляются в proxy_username/proxy_password (только если те ещё пустые).
+    Возвращает (clean_url, username, password) — все strip'нутые, None если пусто.
+    """
+    raw = (proxy_url or "").strip()
+    user_in = (proxy_username or "").strip() or None
+    pass_in = (proxy_password or "").strip() or None
+    if not raw:
+        return None, user_in, pass_in
+
+    # Сначала пробуем как маркетплейс-формат host:port:user:pass
+    parsed = parse_proxy_line(raw, default_scheme=default_scheme)
+    if parsed is not None:
+        clean_url = proxy_url_for_playwright(parsed)
+        # Embedded user/pass → используем если поля пустые (юзер не указал отдельно)
+        out_user = user_in or parsed.username
+        out_pass = pass_in or parsed.password
+        return clean_url, out_user, out_pass
+
+    # Неудачный парс — пробуем стандартный URL с auth: scheme://user:pass@host:port
+    from urllib.parse import urlparse, urlunparse, unquote
+
+    candidate = raw
+    if "://" not in candidate:
+        candidate = f"{default_scheme}://{candidate}"
+    try:
+        u = urlparse(candidate)
+    except Exception:  # noqa: BLE001
+        return raw, user_in, pass_in
+
+    if not u.hostname or not u.port:
+        return raw, user_in, pass_in
+
+    # Embedded auth?
+    embedded_user = unquote(u.username or "") or None
+    embedded_pass = unquote(u.password or "") or None
+    out_user = user_in or embedded_user
+    out_pass = pass_in or embedded_pass
+
+    # Пересобираем URL без auth (Playwright proxy.server не должен содержать user:pass)
+    netloc = f"{u.hostname}:{u.port}"
+    scheme = (u.scheme or default_scheme).lower()
+    if scheme not in ("http", "https", "socks5"):
+        scheme = default_scheme
+    if scheme == "https":
+        scheme = "http"
+    clean_url = urlunparse((scheme, netloc, u.path or "", "", "", ""))
+    if clean_url.endswith("/"):
+        clean_url = clean_url[:-1]
+    return clean_url, out_user, out_pass
+
+
 def normalize_fb_account_proxy_form(
     proxy_url: str,
     proxy_username: str,

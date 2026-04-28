@@ -89,6 +89,54 @@
           });
         });
       });
+
+      // 2.95: auto-split прокси формата host:port:user:pass при paste/blur.
+      function splitProxyLine(raw) {
+        var s = String(raw || '').trim();
+        if (!s) return null;
+        var scheme = 'http';
+        var lo = s.toLowerCase();
+        if (lo.indexOf('socks5://') === 0) { scheme = 'socks5'; s = s.slice(9); }
+        else if (lo.indexOf('http://') === 0) { scheme = 'http'; s = s.slice(7); }
+        else if (lo.indexOf('https://') === 0) { scheme = 'http'; s = s.slice(8); }
+        var atIdx = s.lastIndexOf('@');
+        if (atIdx > 0) {
+          var auth = s.slice(0, atIdx);
+          var hostport = s.slice(atIdx + 1);
+          var ac = auth.split(':');
+          var hp = hostport.split(':');
+          if (hp.length >= 2 && ac.length >= 1) {
+            return { url: scheme + '://' + hp[0] + ':' + hp[1], user: ac[0] || '', pass: ac.slice(1).join(':') || '' };
+          }
+        }
+        var parts = s.split(':');
+        if (parts.length >= 2 && /^\d+$/.test(parts[1])) {
+          return {
+            url: scheme + '://' + parts[0] + ':' + parts[1],
+            user: parts[2] || '',
+            pass: parts.slice(3).join(':') || '',
+          };
+        }
+        return null;
+      }
+      function attachProxyAutoSplit(form) {
+        var url = form.querySelector('input[name="proxy_url"]');
+        var user = form.querySelector('input[name="proxy_username"]');
+        var pass = form.querySelector('input[name="proxy_password"]');
+        if (!url) return;
+        function apply() {
+          var sp = splitProxyLine(url.value);
+          if (!sp) return;
+          var changed = false;
+          if (url.value !== sp.url) { url.value = sp.url; changed = true; }
+          if (user && !user.value && sp.user) { user.value = sp.user; changed = true; }
+          if (pass && !pass.value && sp.pass) { pass.value = sp.pass; changed = true; }
+          if (changed) { url.dispatchEvent(new Event('change', { bubbles: true })); }
+        }
+        url.addEventListener('paste', function () { setTimeout(apply, 10); });
+        url.addEventListener('blur', apply);
+      }
+      document.querySelectorAll('form[action*="/instagram/accounts/import-credentials"], form[action*="/instagram/accounts/"][action*="/proxy"]').forEach(attachProxyAutoSplit);
     })();
   </script>
 

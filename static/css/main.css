@@ -298,6 +298,58 @@ body.m2-desktop-page .m2-desktop-root > .page-header .subtitle {
   margin-bottom: 4px;
 }
 
+/* 2.95: гармошка для карточек аккаунтов в "Оформление аккаунтов" и
+ * "Прогрев аккаунтов" — по запросу пользователя, аналогично fb-accounts. */
+.nw-account-card--collapsible {
+  padding: 0;
+}
+.nw-account-card--collapsible > .nw-account-card__summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  user-select: none;
+  border-radius: inherit;
+  transition: background 0.15s ease;
+}
+.nw-account-card--collapsible > .nw-account-card__summary:hover {
+  background: color-mix(in srgb, var(--bg-surface, transparent) 92%, var(--border, #e4e6eb));
+}
+.nw-account-card--collapsible > .nw-account-card__summary::-webkit-details-marker {
+  display: none;
+}
+.nw-account-card--collapsible > .nw-account-card__summary::marker {
+  display: none;
+  content: '';
+}
+.nw-account-card__summary > .nw-account-card__header {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.nw-account-card__chevron {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--bg-surface, #fff) 88%, var(--border, #e4e6eb));
+  color: var(--text-secondary, #888);
+  transition: transform 0.2s ease, color 0.15s ease;
+}
+.nw-account-card--collapsible[open] > .nw-account-card__summary .nw-account-card__chevron {
+  transform: rotate(180deg);
+  color: var(--text-primary);
+}
+.nw-account-card--collapsible > .nw-account-card__body {
+  border-top: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+  padding: 16px;
+}
+
 .sidebar-logo-version {
   font-size: 0.72em;
   font-weight: 600;
