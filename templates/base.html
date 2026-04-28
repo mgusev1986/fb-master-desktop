@@ -20,15 +20,11 @@
     <div class="sidebar-logo">
       <span class="sidebar-logo__mark sidebar-logo__mark--facebook">SOC</span>MASTER{% if fbm_desktop_app_version %}<span class="sidebar-logo__version" title="Версия программы">v{{ fbm_desktop_app_version }}</span>{% endif %}
     </div>
-    {# 2.92: блок с лицензией и ID перенесён из sidebar-footer наверх под логотип
-       по запросу пользователя. Footer теперь содержит только theme-toggle и logout. #}
+    {# 2.92: блок с лицензией и ID перенесён из sidebar-footer наверх под логотип.
+       2.93: убраны значок аватара и строка "Оплаченный период: ..." — оставлены
+       только ID и pill со статусом ключа (по запросу пользователя). #}
     {% if user and not fb_master_no_auth() %}
-    <div class="sidebar-user sidebar-user--top">
-      {% if user.picture %}
-      <img src="{{ user.picture }}" alt=""/>
-      {% else %}
-      <i class="ti ti-user-circle" style="font-size:32px;color:var(--text-sidebar)"></i>
-      {% endif %}
+    <div class="sidebar-user sidebar-user--top sidebar-user--compact">
       <div class="sidebar-user-info">
         {% set ak_license = fbm_sidebar_access_key_license(request) %}
         {% if ak_license %}
@@ -42,7 +38,6 @@
           {% set _lic_state = "ok" %}
         {% endif %}
         <div class="sidebar-license-lines" role="status">
-          <div class="sidebar-license-line">Оплаченный период: <span class="sidebar-license-paid">{{ ak_license.paid_period_label }}</span></div>
           {% if ak_license.forever %}
           <div class="sidebar-license-pill" data-license-state="{{ _lic_state }}">Срок действия ключа не ограничен.</div>
           {% elif ak_license.last_calendar_day %}
