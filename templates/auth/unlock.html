@@ -274,14 +274,14 @@
   {% endif %}
   <div class="fbm-premium-card{% if unlock_desktop_app %} fbm-premium-card--desktop{% endif %}">
     <p class="fbm-premium-eyebrow">SOCMASTER</p>
-    <h1>{% if show_unlock_key_form %}Ключ доступа{% else %}Ввод ключа{% endif %}</h1>
+    <h1>{% if show_unlock_key_form %}Ключ доступа{% else %}Скачать SOCMASTER{% endif %}</h1>
 
     {% if not show_unlock_key_form %}
     <p class="fbm-premium-sub">
-      На этом сайте вход по ключу для браузера не настроен. Ключ вы вводите в <strong>установленном приложении</strong> SOCMASTER после оплаты.
+      Выберите свою операционную систему и скачайте установщик.
     </p>
     <div class="unlock-banner-info">
-      Если вы нажали «Уже есть ключ» со страницы оплаты: откройте программу SOCMASTER на компьютере и вставьте ключ там. Сайт нужен для оплаты и скачивания установщика.
+      После установки откройте приложение SOCMASTER на компьютере — ключ доступа вставляется прямо в программе.
     </div>
     <div class="fbm-premium-os-row">
       {% set win_href = unlock_app_download_hrefs.get('win') %}

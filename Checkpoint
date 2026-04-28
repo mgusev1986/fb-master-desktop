@@ -2,7 +2,7 @@
 
 Документ для передачи контекста нейросети или разработчику: продукт, **архитектура клиент–сервер**, лицензирование, **обновления десктопа (macOS + Windows)**, защита, деплой, маршруты, механики, дерево файлов. Язык: русский.
 
-**Последнее обновление документа:** 28 апреля 2026 (после релиза 2.91 и оптимизационной сессии 2.85-2.91 — раздел §22). **Текущая версия десктопа (semver):** **2.92.0** (`desktop/fb-master-desktop/package.json`). **Текущая публичная версия релиза (marketing):** **2.92.0** (`/api/public/desktop-update`, имена артефактов, `.env` на VPS).
+**Последнее обновление документа:** 28 апреля 2026 (после релиза **3.0.5**: license protection + Mac x64 cross-arch + NOWPayments admin — раздел §23). **Текущая версия десктопа (semver):** **3.0.5** (`desktop/fb-master-desktop/package.json`). **Текущая публичная версия релиза (marketing):** **3.0.5** (`/api/public/desktop-update`, имена артефактов, `.env` на VPS).
 
 **Важно про имя продукта:** с версии 2.5 продукт переименован с *FbMaster* в **SOCMASTER**. Все новые артефакты публикуются с префиксом **`SOCMASTER-`** (а не `FbMaster-`). Legacy-имена `FbMaster-*.dmg` остаются в историческом списке и обрабатываются скриптами как fallback, но **новые релизы пишутся только как `SOCMASTER-*`**. В коде продуктовое имя — `productName: "SOCMASTER"` в `package.json`, а класс Electron-app и bundle id остались `pro.socmaster.fbmaster` (обратная совместимость на уровне auto-update).
 
@@ -1492,4 +1492,512 @@ GitHub Release v2.92.0:                                        .exe + .blockmap 
 
 ---
 
-*Конец документа Checkpoint.*
+## 23. SOCMASTER 3.0.x — License protection + Mac x64 cross-arch + NOWPayments admin
+
+Большой релизный цикл 3.0.0 → 3.0.5 (28 апр 2026), охватывает 4 крупных направления:
+1. **Защита лицензий** — Ed25519-подписи + DRP (Daily Rotating Probes) + 12 слоёв защиты
+2. **Mac x64 (Intel) сборка** — переход с deprecated macos-13 на macos-14 + cross-arch через Rosetta 2
+3. **NOWPayments админ-панель** — карточка платежа с 14 деталями + редактируемая Пометка + backfill старых заказов
+4. **UX правки** — адаптивная раскладка 3-х кнопок скачивания, client mode gating, Mac Intel в покупке/после оплаты
+
+### 23.1. Защита лицензий: Ed25519 + DRP
+
+**Корень проблемы:** клиент мог заблокировать `socmaster.pro` через `/etc/hosts`, фиктивно «обмануть» проверку и пользоваться программой бессрочно.
+
+**Решение — 12 слоёв защиты:**
+
+1. **Ed25519 публичный ключ в bundle** (`desktop/fb-master-desktop/license-public.pem`)
+   - Генерация на VPS: один раз `python -m backend.services.license_keygen`
+   - Приватный ключ — ТОЛЬКО на VPS в `/opt/fb-master/data/license-private.pem` (chmod 600 fbmaster)
+   - Публичный — в bundle клиента, без него `license_watcher` не запускается
+
+2. **DRP (Daily Rotating Probes)** — каждый день VPS отдаёт client'у новый «эталонный challenge», подписанный приватным ключом. Client локально:
+   - Хранит challenge в `~/Library/Application Support/fb-master-desktop/license_state.json`
+   - Каждые 30 мин шлёт probe на `/api/license/check` с `device_fingerprint` (HWID)
+   - Если за 6 проверок 4+ FAIL → `license_watcher.is_active_on_this_machine() == True && is_valid() == False` → middleware блокирует все роуты кроме whitelist (`/auth/, /static/, /api/public/, /internal/, /webhooks/, /billing/, /download/`)
+
+3. **Quorum 4/6** — допускается до 2 fails (флаки сети, кратковременный downtime VPS), но 4+ означают преднамеренную блокировку
+
+4. **Suspect counter** — каждый fail инкрементит, успех сбрасывает; persisted в license_state.json
+
+5. **VPS-downtime grace** — если 502/503/timeout от socmaster.pro: предохранитель не считает как fail, использует quorum окно
+
+6. **HWID lock at first activation** — `device_fingerprint` (sha256 от machine-id + cpu-info + mac-address); первая успешная активация вписывает `AccessKey.device_fingerprint` в БД на VPS, дальнейшие probes от другой машины — мгновенный fail
+
+7. **HMAC SHA256 для access_key** — VPS не хранит plaintext, только `key_hash`. Client отправляет hash при probe, VPS сравнивает с базой
+   - **ВАЖНО:** SECRET_KEY на VPS и в client'е РАЗНЫЕ. Поэтому на VPS `/check` ищет по `device_fingerprint`, не по `key_hash` (фикс в 3.0.4)
+
+8. **Encrypted local key copy** — после первого ввода ключ шифруется через Fernet (с production-grade key derivation от machine-id) и хранится в local_state.json. При перезапуске app не требует повторного ввода ключа
+
+9. **license_watcher async loop** — фоновый поток в Electron-app:
+   - `is_active_on_this_machine()` — есть ли активированная копия?
+   - `is_valid()` — последние probe-ы успешны?
+   - `force_check_now()` — синхронный probe (используется после первого ввода ключа в 3.0.3)
+
+10. **Middleware whitelist** — `backend/app_factory.py:_license_check_middleware()`:
+    ```python
+    allowed_prefixes = ("/auth/", "/static/", "/api/public/", "/internal/", "/webhooks/", "/billing/", "/download/")
+    ```
+
+11. **`/auth/unlock` UX** — если local key valid но watcher invalid → НЕ редиректить (3.0.2 fix; раньше был loop)
+
+12. **Race condition fix** — между `try_activate` и watcher cycle (30 сек). 3.0.3: добавлен `force_check_now()` сразу после успешной активации
+
+#### Файлы:
+
+```
+backend/services/license_watcher.py          ← async monitoring loop
+backend/services/license_keygen.py           ← Ed25519 keypair generator (одноразово на VPS)
+backend/services/license_signer.py           ← подпись challenges на VPS
+backend/services/license_verifier.py         ← проверка подписи в client'е
+backend/services/access_key_crypto.py        ← HMAC SHA256 hash + plain key generator
+backend/routers/license.py                   ← /api/license/check endpoint
+backend/app_factory.py                       ← middleware integration
+desktop/fb-master-desktop/license-public.pem ← публичный ключ в bundle (verify only)
+backend/routers/auth.py                      ← /auth/unlock с force_check_now
+```
+
+#### Локальные пути на client'е:
+
+```
+macOS:  ~/Library/Application Support/fb-master-desktop/license_state.json
+        ~/Library/Application Support/fb-master-desktop/launcher.log
+Windows: %APPDATA%\fb-master-desktop\license_state.json
+```
+
+#### Важные подводные камни (не повторять в будущем):
+
+- **VPS — ОТДЕЛЬНЫЙ instance** программы. На нём `LICENSE_DISABLE=1` (через service env), он НЕ должен запускать `license_watcher`. См. логи: `license_watcher: skipped (vps or no public key)`.
+- **Backup public key** — если потеряете `license-public.pem`, все client'ы инвалидируются после следующего DRP. Храните копию (например в шифрованном vault).
+- **Spending limit на GitHub** — публичный ключ генерится из приватного через `cryptography.hazmat.primitives.asymmetric.ed25519`. Не из openssl — формат отличается.
+
+### 23.2. Mac x64 (Intel) сборка через GitHub Actions cross-arch
+
+#### 23.2.1. Корень проблемы: macos-13 deprecated
+
+**GitHub deprecated `macos-13` runner** 22 сен 2025, fully unsupported с 4 дек 2025 (issue [#13046](https://github.com/actions/runner-images/issues/13046) в `actions/runner-images`).
+
+**Симптомы (28 апр 2026):**
+- Workflow с `runs-on: macos-13` принимается GitHub'ом
+- Job уходит в `queued` навсегда — runner_name пустой 1+ час
+- HTTP API status: `queued`, conclusion: null
+- Никакой явной ошибки про deprecation
+
+**Что НЕ помогало:** smen `private → public` (capacity issue ≠ billing); cancel + retrigger (тот же queue).
+
+#### 23.2.2. Решение: macos-14 (arm64) + Rosetta 2 cross-arch для x86_64
+
+**Принцип:**
+- `macos-14` runner — Apple Silicon (arm64), активно поддерживается, capacity OK
+- На macos-14 предустановлена Rosetta 2 (`arch -x86_64 /usr/bin/true` работает)
+- Запускаем x86_64 binaries под Rosetta — `platform.machine() == "x86_64"`
+- electron-builder с `--x64` качает pre-built x64 Electron из npm (не зависит от host arch)
+- Embedded Python качается explicitly как x86_64 tarball
+
+#### 23.2.3. Изменения в workflow (`.github/workflows/build-mac-x64.yml`)
+
+```yaml
+runs-on: macos-14   # был macos-13
+env:
+  FBM_TARGET_ARCH: x86_64       # для ensure-macos-embedded-python.sh
+  MACOSX_DEPLOYMENT_TARGET: '12.0'  # совместимость с Monterey 12.7.6 (MacBook Air 2017)
+
+steps:
+  - uses: actions/setup-node@v4
+    with:
+      node-version: '20'
+      architecture: 'x64'   # x86_64 node, запустится через Rosetta
+
+  # ⚠️ НЕ используйте actions/setup-python@v5 с architecture: x64 на macos-14 —
+  # она кладёт arm64 binary в каталог "x64", platform.machine() возвращает arm64.
+  # Embedded Python качает prepare-bundle сам через FBM_TARGET_ARCH.
+
+  - name: Verify cross-arch
+    run: |
+      if [[ "$(node -p 'process.arch')" != "x64" ]]; then exit 1; fi
+
+  - name: Verify built DMG architecture
+    run: |
+      hdiutil attach DMG → file .app/Contents/MacOS/SOCMASTER → grep x86_64
+```
+
+#### 23.2.4. Изменения в `scripts/ensure-macos-embedded-python.sh`
+
+```bash
+# Было:
+ARCH="$(uname -m)"
+
+# Стало (3.0.5+):
+ARCH="${FBM_TARGET_ARCH:-$(uname -m)}"
+```
+
+`FBM_TARGET_ARCH=x86_64` форсит загрузку `cpython-3.12.8+20241219-x86_64-apple-darwin-install_only.tar.gz` независимо от host arch. Плюс этот же x86_64 Python потом запускается под Rosetta для `pip install` и `playwright install chromium` — Playwright детектит x86_64 и качает x64 Chromium.
+
+#### 23.2.5. Файлы x64 release-цепочки
+
+```
+.github/workflows/build-mac-x64.yml                      ← cross-arch на macos-14
+scripts/ensure-macos-embedded-python.sh                  ← FBM_TARGET_ARCH override
+scripts/zip-mac-x64-bundle.sh                            ← packer bundle.zip (новый)
+static/downloads/fb-master-macos-first-run-intel-ru.html ← русская инструкция Intel (новая, попадает в bundle.zip)
+```
+
+#### 23.2.6. Тайминг билда (для будущих циклов)
+
+```
+Setup job + checkout         2 sec
+Setup Node x64 (Rosetta)    16 sec
+Verify cross-arch            1 sec
+Prepare backend bundle      71 sec  ← скачивает Python + Chromium через Rosetta
+npm ci                      19 sec
+electron-builder --x64       4-6 min ← основное время
+Verify .app x86_64          15 sec
+Upload + Release publish    30 sec
+─────────────────────────────────────
+Total                       ~9-10 min  (vs. native macos-13: 30-40 min, но deprecated)
+```
+
+#### 23.2.7. Известный hack: репо public during build
+
+GitHub Free для PRIVATE repos: 2000 GHA-минут/мес, macOS считается ×10 → 200 macOS-мин/мес. При spending limit = $0 (default) macOS-runs могут тихо queue without runner allocation.
+
+**Solution path:**
+- Settings → Danger Zone → Make public (на ~30-60 мин)
+- Запустить workflow_dispatch — runner подхватит за 6-30 сек
+- После успеха: Settings → Danger Zone → Make private снова
+
+Это законно: код 30 мин виден публично, никаких секретов в `.env` (он `.gitignored`), `license-public.pem` дизайнерски public, private key только на VPS.
+
+### 23.3. NOWPayments админ-панель: карточка + Пометка + Backfill
+
+#### 23.3.1. 14 новых полей в `BillingRenewalOrder` (`backend/models.py`)
+
+```python
+np_pay_amount         = Column(String(64), nullable=True)   # "100.0"
+np_actually_paid      = Column(String(64), nullable=True)   # "100.05"
+np_outcome_amount     = Column(String(64), nullable=True)
+np_outcome_currency   = Column(String(32), nullable=True)
+np_pay_currency       = Column(String(32), nullable=True)   # "usdttrc20"
+np_network_fee        = Column(String(64), nullable=True)
+np_service_fee        = Column(String(64), nullable=True)
+np_payin_address      = Column(String(128), nullable=True)  # куда платил клиент
+np_payin_hash         = Column(String(256), nullable=True)  # tx клиента
+np_payout_hash        = Column(String(256), nullable=True)  # tx нашей выплаты
+np_payout_address     = Column(String(128), nullable=True)  # наш кошелёк
+np_purchase_id        = Column(String(64), nullable=True)
+np_ipn_payload_json   = Column(JSON, nullable=True)         # snapshot последнего IPN
+np_updated_at         = Column(DateTime, nullable=True)
+```
+
+Плюс `AccessKey.admin_note: Column(Text, nullable=True)` для свободной заметки (≤500 chars).
+
+#### 23.3.2. Idempotent миграции (`backend/database.py`)
+
+```python
+def _migrate_billing_renewal_orders_np_details():
+    _add_columns(...)  # SQLite/PG type mappings, NULL ок
+
+def _migrate_access_keys_admin_note():
+    _add_columns({"admin_note": "TEXT"})
+```
+
+Регистрируются в boot sequence сервиса; повторный запуск idempotent (`_add_columns` проверяет `information_schema`).
+
+#### 23.3.3. `_save_np_payment_details()` в `backend/services/nowpayments_billing.py`
+
+Парсит IPN-payload и пишет 12 строковых полей + полный snapshot в `np_ipn_payload_json` + `np_updated_at`. Вызывается из `apply_ipn_to_order()` для каждого статуса (waiting → confirming → confirmed → finished → fulfilled).
+
+#### 23.3.4. `fetch_payment_status()` + `backfill_payment_details()`
+
+Для backfill старых заказов (созданных до релиза `_save_np_payment_details`):
+
+```python
+def fetch_payment_status(payment_id):
+    # GET https://api.nowpayments.io/v1/payment/{payment_id}
+    # headers: {"x-api-key": NOWPAYMENTS_API_KEY}
+    return r.json()
+
+def backfill_payment_details(db, order):
+    data = fetch_payment_status(order.np_payment_id)
+    _save_np_payment_details(order, data)
+    db.commit()
+    return True
+```
+
+Endpoint: `POST /admin/platform/access-keys/{key_id}/refresh-np` (`backend/routers/platform_admin.py`).
+
+UI: кнопка «🔄 Обновить из NP» в шапке развёрнутой карточки (`templates/admin/platform_access_keys.html`).
+
+Bulk-скрипт: `scripts/backfill_nowpayments_details.py` (опции `--dry-run`, `--all`, `--rate`).
+
+#### 23.3.5. Шаблон админки (`templates/admin/platform_access_keys.html`)
+
+10 колонок (было 8):
+
+| ID | Подпись | **Пометка** | Ключ | Создан | Действует до | Устройство | Статус | **Оплата** | (actions) |
+
+- **Подпись** (`label`) — статика, проставляется при создании
+- **Пометка** (`admin_note`) — inline `<textarea>` с placeholder «Например: Иван Иванов», POST `/note`
+- **Оплата** — кнопка `NP #{bo.id}` toggle'ит карточку с 18 полями (Order ID, Invoice ID, Payment ID, Purchase ID, тариф, статусы, pay/actually_paid/outcome, fees, click-to-copy адресов и хешей, timestamps, device fingerprint)
+- На карточке: кнопка «🔄 Обновить из NP» если есть `np_payment_id`
+
+CSS: BEM-классы `.ak-np-card__*` в `static/css/main.css`.
+
+#### 23.3.6. Backfill результат (28 апр 2026, прод)
+
+```
+$ python scripts/backfill_nowpayments_details.py
+Найдено заказов: 11
+Готово: 11 обновлено, 0 с ошибкой из 11
+```
+
+Заказы #6, #7, #8, #9, #25, #28, #29, #30, #31, #32, #33 — все получили pay-in адреса, hashes, fees.
+
+### 23.4. Адаптивная раскладка 3-х кнопок скачивания
+
+`templates/auth/unlock.html`:
+
+```css
+.fbm-premium-os-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));   /* десктоп: 3 в ряд */
+  gap: 0.6rem;
+}
+@media (max-width: 720px) {
+  .fbm-premium-os-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fbm-premium-os-row > a:nth-child(3) {
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: calc(50% - 0.3rem);  /* 3-я кнопка центрирована снизу */
+  }
+}
+@media (max-width: 520px) {
+  .fbm-premium-os-row { grid-template-columns: 1fr; }  /* столбиком на мобиле */
+}
+```
+
+3-я Intel кнопка появляется автоматически если выполнено:
+- `FB_DESKTOP_LATEST_VERSION` задана в `.env`
+- Файл `static/releases/SOCMASTER-{VER}-mac-x64.dmg` присутствует на VPS
+- → `_buy_page_auto_dmg_x64_url()` (`backend/config.py`) подставит URL
+
+См. `unlock_page_desktop_download_hrefs()` → возвращает dict `{mac, mac_x64, win}`.
+
+### 23.5. Client mode gating
+
+В `desktop/fb-master-desktop/main.js` устанавливается `cabinet_client_mode=1` (или подобное в env), это отслеживается в backend.
+
+`backend/core/workspace/launcher_view.py`:
+
+```python
+_CLIENT_OPENABLE_MODULE_IDS = frozenset({"facebook"})
+```
+
+Только Facebook Master доступен клиентам. Остальные модули (Instagram, Twitter, LinkedIn, Reddit) — только в developer-режиме (есть кнопка переключения в админке).
+
+`backend/routers/workspaces.py:select` блокирует попытку клиента открыть модуль не из whitelist.
+
+`backend/app_factory.py` пробрасывает `is_client_mode` в Jinja через `build_switcher_view`.
+
+### 23.6. Production publish process (финальный, проверенный)
+
+#### 23.6.1. Reusable release prompt (для будущих релизов)
+
+```
+Сделай полный продакшен релиз SOCMASTER версии X.Y.Z для всех 3 платформ
+(mac arm64 + mac x64 Intel + win x64), используя эту же версию везде:
+package.json, git tag, имена артефактов, ссылки в .env на VPS, GitHub Release.
+
+Release notes: <одна строка изменений>.
+
+Делай весь цикл сам:
+1. Bump версии в desktop/fb-master-desktop/package.json + commit + push
+2. git tag vX.Y.Z + push (триггерит build-mac-x64.yml + build-windows.yml)
+3. Локально mac arm64: bash scripts/prepare-desktop-backend-bundle.sh
+   + cd desktop/fb-master-desktop && npm run dist:mac:arm64 (SKIP_NOTARIZE=1 если нет cred)
+4. Жди GHA. Если репо private и queued >5 мин — попроси меня сделать
+   public, после успеха верну в private
+5. Скачай GHA-артефакты из v<версия> Release в локальный static/releases/
+6. bash scripts/zip-mac-arm64-bundle.sh <версия>
+   bash scripts/zip-mac-x64-bundle.sh <версия>
+7. rsync 7 файлов на root@46.62.230.106:/opt/fb-master/static/releases/
+8. chown fbmaster:fbmaster новые
+9. Удали старые SOCMASTER-* предыдущих версий на VPS
+10. Обнови .env через sed (с backup): FB_DESKTOP_LATEST_VERSION,
+    FB_DESKTOP_DOWNLOAD_DARWIN_ARM64, _ARM64_BUNDLE, _WIN32_X64,
+    FB_DESKTOP_RELEASE_NOTES
+11. Если backend/templates изменились со времён прошлого релиза —
+    rsync с теми же excludes как deploy/from-mac.sh
+12. systemctl restart fb-master.service
+13. Verify: curl /api/public/desktop-update + HEAD каждого URL = 200
+14. /auth/unlock показывает 3 кликабельные кнопки
+15. Краткий отчёт: версия, hash, локальные пути, публичные URL,
+    что удалено, состояние репо public/private
+```
+
+#### 23.6.2. Команды для каждого шага (cheatsheet)
+
+```bash
+# 1. Bump
+sed -i "" 's/"version":.*/"version": "X.Y.Z",/' desktop/fb-master-desktop/package.json
+
+# 2. Tag
+git tag vX.Y.Z && git push origin vX.Y.Z
+
+# 3. Local arm64
+bash scripts/prepare-desktop-backend-bundle.sh
+cd desktop/fb-master-desktop && SKIP_NOTARIZE=1 npm run dist:mac:arm64
+cd ../..
+
+# 5. Download GHA artifacts
+gh release download vX.Y.Z --repo mgusev1986/fb-master-desktop \
+  --pattern "SOCMASTER-X.Y.Z-mac-x64.*" --dir static/releases/
+gh release download vX.Y.Z --repo mgusev1986/fb-master-desktop \
+  --pattern "SOCMASTER-X.Y.Z-win-x64.*" --dir static/releases/
+
+# 6. Bundles
+bash scripts/zip-mac-arm64-bundle.sh X.Y.Z
+bash scripts/zip-mac-x64-bundle.sh X.Y.Z
+
+# 7. rsync
+rsync -avz --no-perms --no-owner --no-group \
+  static/releases/SOCMASTER-X.Y.Z-* \
+  root@46.62.230.106:/opt/fb-master/static/releases/
+
+# 8. chown + 9. delete old + 10. .env + 12. restart (одной ssh-сессией)
+ssh root@46.62.230.106 '
+  chown fbmaster:fbmaster /opt/fb-master/static/releases/SOCMASTER-X.Y.Z-*
+  cd /opt/fb-master/static/releases &&
+    ls SOCMASTER-* | grep -v X.Y.Z | xargs -r rm
+  cp /opt/fb-master/.env /opt/fb-master/.env.bak.$(date +%Y%m%d-%H%M%S)
+  sed -i "s|^FB_DESKTOP_LATEST_VERSION=.*|FB_DESKTOP_LATEST_VERSION=X.Y.Z|" /opt/fb-master/.env
+  # ... те же для DARWIN_ARM64, _BUNDLE, WIN32_X64, RELEASE_NOTES
+  systemctl restart fb-master.service
+'
+
+# 13. Verify
+curl https://socmaster.pro/api/public/desktop-update | python3 -m json.tool
+for f in arm64.dmg arm64-bundle.zip mac-x64.dmg mac-x64-bundle.zip win-x64.exe; do
+  curl -fsS -o /dev/null -w "%{http_code}  $f\n" -I "https://socmaster.pro/static/releases/SOCMASTER-X.Y.Z-${f}"
+done
+```
+
+#### 23.6.3. Список 7 артефактов в каждом релизе
+
+```
+SOCMASTER-X.Y.Z-mac-arm64.dmg              (~547 MB)  ← локальный билд на M-Mac
+SOCMASTER-X.Y.Z-mac-arm64-bundle.zip       (~545 MB)  ← локально через zip-mac-arm64-bundle.sh
+SOCMASTER-X.Y.Z-mac-x64.dmg                (~547 MB)  ← GHA workflow build-mac-x64.yml
+SOCMASTER-X.Y.Z-mac-x64-bundle.zip         (~546 MB)  ← локально через zip-mac-x64-bundle.sh после скачивания DMG
+SOCMASTER-X.Y.Z-mac-x64.dmg.blockmap       (~600 KB)  ← GHA (для electron-updater дельт)
+SOCMASTER-X.Y.Z-win-x64.exe                (~488 MB)  ← GHA workflow build-windows.yml
+SOCMASTER-X.Y.Z-win-x64.exe.blockmap       (~510 KB)  ← GHA
+```
+
+### 23.7. Файлы изменённые в 3.0.x релизе
+
+```
+backend/models.py                                       ← AccessKey.admin_note + 14 NP-полей в BRO
+backend/database.py                                     ← 2 idempotent миграции
+backend/services/nowpayments_billing.py                 ← _save_np_payment_details + fetch + backfill
+backend/services/license_watcher.py                     ← async DRP loop (3.0.0)
+backend/services/license_signer.py                      ← Ed25519 signing на VPS
+backend/services/license_verifier.py                    ← Ed25519 verify на client'е
+backend/services/license_keygen.py                      ← одноразовый keygen
+backend/services/access_key_crypto.py                   ← HMAC + plain key gen
+backend/routers/license.py                              ← /api/license/check
+backend/routers/platform_admin.py                       ← endpoints /note, /refresh-np + eager-load
+backend/routers/auth.py                                 ← force_check_now после try_activate (3.0.3)
+backend/app_factory.py                                  ← middleware whitelist + is_client_mode
+backend/core/workspace/launcher_view.py                 ← _CLIENT_OPENABLE_MODULE_IDS
+backend/routers/workspaces.py                           ← gate /workspaces/select для клиентов
+backend/config.py                                       ← _buy_page_auto_dmg_x64_url + unlock_page_desktop_download_hrefs
+
+templates/admin/platform_access_keys.html               ← 2 новых колонки + NP-карточка + refresh-NP
+templates/auth/unlock.html                              ← 3 адаптивных кнопки + Intel
+templates/billing/nowpayments_return.html               ← 3 кнопки на странице после оплаты
+
+static/css/main.css                                     ← .ak-np-card__* BEM
+static/downloads/fb-master-macos-first-run-intel-ru.html ← Russian Intel инструкция (новый)
+
+scripts/ensure-macos-embedded-python.sh                 ← FBM_TARGET_ARCH override
+scripts/zip-mac-x64-bundle.sh                           ← packer x64 bundle (новый)
+scripts/backfill_nowpayments_details.py                 ← bulk backfill (новый)
+
+.github/workflows/build-mac-x64.yml                     ← macos-14 cross-arch (полный refactor)
+
+desktop/fb-master-desktop/package.json                  ← 2.92.0 → 3.0.5
+desktop/fb-master-desktop/license-public.pem            ← Ed25519 публичный ключ (новый)
+desktop/fb-master-desktop/main.js                       ← cabinet_client_mode passing
+```
+
+### 23.8. Production state на момент 3.0.5 (28 апр 2026)
+
+```
+URL                                                                            HTTP   Size
+https://socmaster.pro/api/public/desktop-update                                200    latest=3.0.5
+https://socmaster.pro/static/releases/SOCMASTER-3.0.5-mac-arm64.dmg            200    546 MB
+https://socmaster.pro/static/releases/SOCMASTER-3.0.5-mac-arm64-bundle.zip     200    545 MB
+https://socmaster.pro/static/releases/SOCMASTER-3.0.5-mac-x64.dmg              200    548 MB
+https://socmaster.pro/static/releases/SOCMASTER-3.0.5-mac-x64-bundle.zip       200    546 MB
+https://socmaster.pro/static/releases/SOCMASTER-3.0.5-mac-x64.dmg.blockmap     200    586 KB
+https://socmaster.pro/static/releases/SOCMASTER-3.0.5-win-x64.exe              200    466 MB
+https://socmaster.pro/static/releases/SOCMASTER-3.0.5-win-x64.exe.blockmap     200    499 KB
+
+systemctl status fb-master:                              active (running) на UTC 21:05:17
+/opt/fb-master/.env:                                     LATEST_VERSION=3.0.5, все DARWIN_ARM64* + WIN32_X64
+/opt/fb-master/static/releases/:                         3.0.5 + 2.92.0 (старые ещё не удалены — TODO)
+GitHub Release v3.0.5:                                   .dmg + .blockmap + .exe + .blockmap из GHA
+GitHub repo mgusev1986/fb-master-desktop:                public (на момент 3.0.5 билда; нужно вернуть в private)
+```
+
+#### Backfill-результат NOWPayments:
+
+```
+11 заказов обновлено (#6, #7, #8, #9, #25, #28, #29, #30, #31, #32, #33)
+0 ошибок
+```
+
+#### Git ветка `claude/thirsty-ellis-236908` финальные коммиты:
+
+```
+76c7714 feat(admin): backfill NOWPayments-деталей для старых заказов + UX правки
+d5ce5a7 style(auth/unlock): 3 кнопки скачивания — адаптивная раскладка
+28f1b84 feat(admin+release): NOWPayments карточка платежа + Пометка + x64 release-файлы
+bcad988 fix(ci): убрать actions/setup-python (на macos-14 он arm64, не x64)
+a4b727c fix(ci): mac x64 build на macos-14 cross-arch (macos-13 deprecated)
+9626bc3 release 3.0.5: Ed25519 license system + Mac x64 build + client gating
+```
+
+### 23.9. Подводные камни и нерешённые вопросы 3.0.x
+
+1. **Repo visibility public-during-build trick** — workflow_dispatch достаёт runner за секунды на public, но на private с FREE plan + spending limit $0 могут быть длительные queues. Если хотим всегда-private с GHA — нужен либо paid plan + spending limit $5-10/мес (~$5/билд), либо self-hosted Intel Mac runner.
+
+2. **macOS notarization** — APPLE_ID/APPLE_APP_PASSWORD/APPLE_TEAM_ID не настроены в GHA secrets. Локальный arm64-билд требует их (или `SKIP_NOTARIZE=1` для unsigned). x64 GHA сейчас без notarize (`SKIP_NOTARIZE=1` в workflow). Клиент при первом запуске должен дать `xattr -d com.apple.quarantine /Applications/SOCMASTER.app` (см. `static/downloads/fb-master-macos-first-run-intel-ru.html`).
+
+3. **license-public.pem backup** — критический файл (отзыв = инвалидация всех клиентов). Хранится в репо, в bundle, в `~/.config/socmaster-license/` на dev-Mac (рекомендация). Дублировать в encrypted vault (Bitwarden / 1Password).
+
+4. **macos-13 future** — если GitHub в будущем уберёт macos-13 label полностью (сейчас всё ещё принимает workflow), нужно готовиться к переходу на macos-15 для arm64 + cross-arch. Текущий workflow на macos-14 совместим.
+
+5. **NP `purchase_id`** — у некоторых заказов `np_purchase_id is None` после backfill — это поле не всегда возвращается в `/v1/payment/{payment_id}`. Не критично, но надо знать.
+
+6. **`/api/public/desktop-update` НЕ возвращает `darwin_x64`** — это by design, потому что `FB_DESKTOP_DOWNLOAD_DARWIN_X64` не задан в `.env` (полагаемся на auto-detect через `_buy_page_auto_dmg_x64_url()` для buy/unlock страниц). Если в будущем понадобится явный URL — добавить в .env.
+
+7. **`.env` backup файлы** на VPS (`/opt/fb-master/.env.bak.YYYYMMDD-HHMMSS`) накапливаются. Раз в 6 месяцев почистить через ssh.
+
+8. **Hook safety при будущих релизах** — Fact-Forcing Gate + Production Reads/Writes блокируют:
+   - Чтение `.env` через `grep` или `cat` (любое чтение содержимого)
+   - rsync кода в /opt/fb-master/ без явного "да"
+   - cancel/retrigger GHA workflow без подтверждения
+   - Удаление файлов на prod
+   - Создание новых файлов в репо без fact-presentation
+
+   В release-промпте есть инструкция «спрашивай явное "да" если hook блокирует».
+
+9. **TODO 3.0.6+:** удалить старые SOCMASTER-2.92.0-* файлы с VPS (`/opt/fb-master/static/releases/`). Это безопасно так как .env уже указывает на 3.0.5.
+
+10. **TODO operator action:** GitHub Settings → Danger Zone → Make `mgusev1986/fb-master-desktop` private (был сделан public для прохождения GHA билда macos-14 cross-arch).
+
+---
+
+*Конец документа Checkpoint. Последнее обновление: 28 апреля 2026 — релиз 3.0.5.*
