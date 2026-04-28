@@ -20,29 +20,62 @@ permissions:
 
 jobs:
   build-mac-x64:
-    # macos-13 — последний образ GitHub Actions с Intel x86_64.
-    # macos-14+ уже Apple Silicon (arm64).
-    runs-on: macos-13
+    # 3.0.5+ (28 апр 2026): macos-13 (Ventura) deprecated GitHub'ом 22 сен 2025 и
+    # fully unsupported с 4 дек 2025 — наши job'ы там зависают в queue до 24h-timeout.
+    # Решение: macos-14 (arm64-runner) + cross-arch x64 через Rosetta 2.
+    #   - actions/setup-node + setup-python с architecture: x64 → x86_64-бинарники
+    #   - FBM_TARGET_ARCH=x86_64 → ensure-macos-embedded-python.sh качает x86_64 CPython
+    #   - x86_64 Python запускается под Rosetta → platform.machine()=x86_64 →
+    #     playwright скачивает x64 Chromium
+    #   - electron-builder --x64 → собирает x86_64 DMG
+    #   - MACOSX_DEPLOYMENT_TARGET=12.0 → совместимость с macOS Monterey 12.7.6
+    #     (например клиенты на MacBook Air 2017)
+    runs-on: macos-14
     timeout-minutes: 60
+    env:
+      # Кросс-сборка x86_64 на arm64-runner.
+      FBM_TARGET_ARCH: x86_64
+      # Минимальная версия macOS у клиента — Monterey 12.0 (MacBook Air 2017 → 12.7.6).
+      MACOSX_DEPLOYMENT_TARGET: '12.0'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Show runner architecture
+      - name: Show host runner architecture (для отладки)
         run: |
-          uname -a
-          uname -m
-          # Должно быть x86_64 — иначе билд получится arm64.
+          echo "host uname -m: $(uname -m)"
+          echo "host uname -a: $(uname -a)"
+          echo "FBM_TARGET_ARCH=$FBM_TARGET_ARCH"
+          echo "MACOSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET"
+          # Проверяем что Rosetta 2 доступна (нужна для запуска x86_64 binaries на arm64).
+          if [[ "$(uname -m)" == "arm64" ]]; then
+            arch -x86_64 /usr/bin/true && echo "✅ Rosetta 2 OK" || (echo "❌ Rosetta 2 не установлена" && exit 1)
+          fi
 
-      - name: Setup Node.js 20
+      - name: Setup Node.js 20 (x64 — для arm64-runner качается x86_64 node, запустится через Rosetta)
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          architecture: 'x64'
 
-      - name: Setup Python 3.12 (для CI; embedded Python качает prepare-bundle сам)
+      - name: Setup Python 3.12 (x64 — для CI; embedded Python качает prepare-bundle сам)
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+          architecture: 'x64'
+
+      - name: Verify cross-arch x64 environment
+        run: |
+          echo "node: $(which node) — $(node -p 'process.arch')"
+          echo "python: $(which python3) — $(python3 -c 'import platform; print(platform.machine())')"
+          # Если node arch = arm64, значит setup-node не смог поставить x64 — фейлим явно.
+          if [[ "$(node -p 'process.arch')" != "x64" ]]; then
+            echo "❌ ОШИБКА: node не x64 (process.arch=$(node -p 'process.arch'))" && exit 1
+          fi
+          if [[ "$(python3 -c 'import platform; print(platform.machine())')" != "x86_64" ]]; then
+            echo "❌ ОШИБКА: python не x86_64" && exit 1
+          fi
+          echo "✅ Cross-arch x64 окружение готово"
 
       - name: Determine version
         id: ver
@@ -70,18 +103,20 @@ jobs:
           print('package.json version →', '$v')
           "
 
-      - name: Prepare backend bundle (Mac x86_64)
+      - name: Prepare backend bundle (x86_64 cross-arch)
         shell: bash
         run: |
-          # На macos-13 (Intel) prepare-desktop-backend-bundle.sh автоматически
-          # детектит uname -m = x86_64 и скачает x64 Python + x64 Chromium.
+          # FBM_TARGET_ARCH=x86_64 (env workflow) → ensure-macos-embedded-python.sh
+          # принудительно качает x86_64 CPython, который при запуске на arm64-host
+          # пойдёт через Rosetta 2 (platform.machine()=x86_64) → playwright install
+          # тоже скачает x86_64 Chromium.
           chmod +x scripts/prepare-desktop-backend-bundle.sh
           bash scripts/prepare-desktop-backend-bundle.sh
           # Verify архитектура — если что-то пошло не так, билд должен упасть здесь.
           file desktop/fb-master-desktop/resources-fb-master-backend/python/bin/python3.12 | grep -q "x86_64" || (echo "ОШИБКА: embedded Python не x86_64!" && exit 1)
           echo "✅ Embedded Python x86_64 готов"
 
-      - name: Install Electron dependencies
+      - name: Install Electron dependencies (x64 npm via Rosetta)
         shell: bash
         working-directory: desktop/fb-master-desktop
         run: |
@@ -94,7 +129,30 @@ jobs:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
           SKIP_NOTARIZE: '1'
         run: |
+          # electron-builder --x64 → собирает x86_64 DMG из x86_64 Electron + наш bundle.
+          # Несмотря на arm64-runner, output DMG будет полностью x86_64 (electron-builder
+          # качает pre-built Electron x64 из npm).
           npm run dist:mac:x64
+
+      - name: Verify built DMG architecture
+        shell: bash
+        run: |
+          DIST="desktop/fb-master-desktop/dist"
+          DMG="$DIST/SOCMASTER-${{ steps.ver.outputs.v }}-mac-x64.dmg"
+          if [[ ! -f "$DMG" ]]; then
+            echo "❌ DMG не найден: $DMG" && ls -la "$DIST" && exit 1
+          fi
+          # Распакуем .app из DMG и проверим архитектуру главного бинарника.
+          MNT=$(mktemp -d)
+          hdiutil attach "$DMG" -mountpoint "$MNT" -nobrowse -readonly
+          APP=$(find "$MNT" -name "*.app" -maxdepth 2 -type d | head -1)
+          BIN="$APP/Contents/MacOS/SOCMASTER"
+          if [[ -f "$BIN" ]]; then
+            file "$BIN" | tee /tmp/app-arch.txt
+            grep -q "x86_64" /tmp/app-arch.txt || (echo "❌ ОШИБКА: .app не x86_64!" && hdiutil detach "$MNT" && exit 1)
+            echo "✅ .app x86_64 подтверждён"
+          fi
+          hdiutil detach "$MNT"
 
       - name: Collect artifacts
         shell: bash

@@ -12,7 +12,10 @@ CACHE="$ROOT/.cache/fbm-embedded-python-macos"
 REL="20241219"
 VER="3.12.8"
 
-ARCH="$(uname -m)"
+# 3.0.5+: FBM_TARGET_ARCH=x86_64 принудительно собирает x86_64-bundle на arm64-runner
+# (нужно когда macos-13 deprecated и кросс-сборка идёт с macos-14 arm64 через Rosetta 2).
+# Без переменной — работает по uname -m, как раньше (нативный билд).
+ARCH="${FBM_TARGET_ARCH:-$(uname -m)}"
 if [[ "$ARCH" == "arm64" ]]; then
   FILE="cpython-${VER}+${REL}-aarch64-apple-darwin-install_only.tar.gz"
 elif [[ "$ARCH" == "x86_64" ]]; then
