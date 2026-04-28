@@ -58,24 +58,20 @@ jobs:
           node-version: '20'
           architecture: 'x64'
 
-      - name: Setup Python 3.12 (x64 — для CI; embedded Python качает prepare-bundle сам)
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-          architecture: 'x64'
+      # actions/setup-python@v5 на macos-14 кладёт arm64 binary в каталог "x64"
+      # (известная проблема: architecture: x64 не даёт настоящий x86_64 Python).
+      # Нам он и не нужен — embedded Python для bundle качается через
+      # ensure-macos-embedded-python.sh с FBM_TARGET_ARCH=x86_64.
+      # Системный /usr/bin/python3 хватит для тривиальных скриптов CI (jq-style).
 
-      - name: Verify cross-arch x64 environment
+      - name: Verify cross-arch x64 environment (только node — единственное что нужно для билда)
         run: |
           echo "node: $(which node) — $(node -p 'process.arch')"
-          echo "python: $(which python3) — $(python3 -c 'import platform; print(platform.machine())')"
-          # Если node arch = arm64, значит setup-node не смог поставить x64 — фейлим явно.
+          echo "system python3: $(which python3) — $(python3 -c 'import platform; print(platform.machine())')"
           if [[ "$(node -p 'process.arch')" != "x64" ]]; then
             echo "❌ ОШИБКА: node не x64 (process.arch=$(node -p 'process.arch'))" && exit 1
           fi
-          if [[ "$(python3 -c 'import platform; print(platform.machine())')" != "x86_64" ]]; then
-            echo "❌ ОШИБКА: python не x86_64" && exit 1
-          fi
-          echo "✅ Cross-arch x64 окружение готово"
+          echo "✅ Node.js x64 готов (Python для bundle качает prepare-bundle сам через FBM_TARGET_ARCH)"
 
       - name: Determine version
         id: ver
