@@ -1680,6 +1680,54 @@ app.whenReady().then(async () => {
   attachDesktopIdentityHeaders(session.defaultSession);
   startHealthServer();
   createMainWindow();
+
+  // 3.0+: License watcher trigger при появлении интернета и при старте.
+  // Best-effort POST на loopback /internal/license/recheck-now — будит
+  // фоновый watcher, чтобы не ждать 30-секундный цикл.
+  function triggerLicenseRecheck(reason) {
+    if (!embeddedBackendBaseUrl) return;
+    try {
+      const url = embeddedBackendBaseUrl.replace(/\/$/, '') + '/internal/license/recheck-now';
+      const http = require('http');
+      const u = new URL(url);
+      const req = http.request(
+        {
+          method: 'POST',
+          hostname: u.hostname,
+          port: u.port,
+          path: u.pathname,
+          headers: { 'content-type': 'application/json', 'content-length': '0' },
+          timeout: 3000,
+        },
+        (res) => { res.on('data', () => {}); res.on('end', () => {}); }
+      );
+      req.on('error', () => {});
+      req.end();
+      console.log('[fb-master] license recheck triggered:', reason || 'startup');
+    } catch (_e) { /* ignore */ }
+  }
+  // Старт.
+  setTimeout(() => triggerLicenseRecheck('startup'), 2000);
+  // Вернулся интернет (опрос net.isOnline каждые 15 сек).
+  try {
+    const { net, powerMonitor } = require('electron');
+    if (net && typeof net.isOnline === 'function') {
+      let wasOnline = false;
+      setInterval(() => {
+        try {
+          const online = net.isOnline();
+          if (online && !wasOnline) {
+            triggerLicenseRecheck('back_online');
+          }
+          wasOnline = online;
+        } catch (_e) { /* ignore */ }
+      }, 15000);
+    }
+    if (powerMonitor && powerMonitor.on) {
+      powerMonitor.on('resume', () => triggerLicenseRecheck('resume_from_sleep'));
+    }
+  } catch (_e) { /* ignore */ }
+
   setTimeout(() => {
     maybeCheckDesktopUpdate().catch(() => {});
   }, 4000);

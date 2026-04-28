@@ -42,7 +42,12 @@ async def launcher(request: Request):
     if (request.query_params.get("reset") or "").strip() == "1":
         clear_current_workspace(request)
 
-    view = build_launcher_view(current_workspace_id=get_current_workspace_id(request))
+    # v3.0.5+: для клиентского билда серым становится всё кроме Facebook.
+    is_client = _is_cabinet_client_mode(request)
+    view = build_launcher_view(
+        current_workspace_id=get_current_workspace_id(request),
+        is_client_mode=is_client,
+    )
     ctx = {
         "request": request,
         "user": request.session.get("user"),
@@ -50,6 +55,17 @@ async def launcher(request: Request):
         "launcher_view": view,
     }
     return _templates(request).TemplateResponse("launcher/index.html", ctx)
+
+
+def _is_cabinet_client_mode(request: Request) -> bool:
+    """Прокси к Jinja global cabinet_client_mode, зарегистрированному в app_factory."""
+    try:
+        fn = request.app.state.templates.env.globals.get("cabinet_client_mode")
+        if callable(fn):
+            return bool(fn(request))
+    except Exception:
+        pass
+    return False
 
 
 @router.post("/workspaces/select/{module_id}")
@@ -66,6 +82,13 @@ async def select_workspace(module_id: str, request: Request):
     status = module.status()
     if status not in (ModuleStatus.READY, ModuleStatus.BETA):
         # Не даём "открыть" coming-soon / disabled — вернуть на launcher.
+        return RedirectResponse("/workspaces", status_code=303)
+
+    # v3.0.5+: клиентский билд — открываем только whitelist (пока — Facebook).
+    # Защита от прямого URL: если клиент попытается /workspaces/select/twitter
+    # в адресной строке, всё равно редиректим обратно на launcher.
+    from backend.core.workspace.launcher_view import _CLIENT_OPENABLE_MODULE_IDS
+    if _is_cabinet_client_mode(request) and module.id not in _CLIENT_OPENABLE_MODULE_IDS:
         return RedirectResponse("/workspaces", status_code=303)
 
     set_current_workspace_id(request, module.id)

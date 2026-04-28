@@ -60,6 +60,10 @@ class TwitterAccount(Base):
     proxy_url = Column(String(512), nullable=True)
     proxy_username = Column(String(255), nullable=True)
     proxy_password = Column(String(255), nullable=True)
+    # 2.96+: дата/время окончания аренды прокси у провайдера (UTC).
+    # Аналог FBAccount.proxy_lease_ends_at — вводится в Europe/Madrid, остановка
+    # автоматизации за 1 ч до этого момента (см. backend.services.proxy_lease).
+    proxy_lease_ends_at = Column(DateTime(timezone=True), nullable=True)
 
     stealth_user_agent = Column(String(512), nullable=True)
     stealth_locale = Column(String(32), nullable=True)

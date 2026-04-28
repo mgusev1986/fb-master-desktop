@@ -30,9 +30,17 @@ def probe_account(db: Session, account_id: int, *, headless: bool = True) -> dic
         now = datetime.now(timezone.utc)
         acc.session_ok = False
         acc.last_login_check_at = now
-        acc.login_blocked_at = now
-        acc.login_blocked_reason = "Нет cookies — импортируйте аккаунт заново"
-        acc.status = "needs_attention"
+        # 2.96+: «свой личный (логин+пароль)» — cookies появятся после первого
+        # автологина. Не пугаем пользователя статусом needs_attention, а оставляем
+        # needs_login (с подсказкой запустить кнопку «Войти»).
+        if acc.login_username and acc.enc_password:
+            acc.login_blocked_at = None
+            acc.login_blocked_reason = "Нужен первый вход — нажмите «Войти», система откроет Chromium и сохранит cookies."
+            acc.status = "needs_login"
+        else:
+            acc.login_blocked_at = now
+            acc.login_blocked_reason = "Нет cookies — импортируйте аккаунт заново"
+            acc.status = "needs_attention"
         db.commit()
         return {"ok": False, "reason_code": "no_cookies"}
 

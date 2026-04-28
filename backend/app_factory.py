@@ -113,6 +113,15 @@ async def lifespan(app: FastAPI):
 
     from backend.services.automation_switch import playwright_workers_enabled
 
+    # 3.0+: License watcher (только на десктопе клиента). Проверяет ключ
+    # на VPS каждые 30 сек, защищён Ed25519-подписями + DRP probes.
+    # На VPS — автоматический no-op (есть приватный ключ).
+    try:
+        from backend.services.license_watcher import start_watcher as _start_license_watcher
+        _start_license_watcher()
+    except Exception:
+        logger.exception("license_watcher: failed to start (non-fatal)")
+
     if playwright_workers_enabled():
         _start_sequence_autotick_thread()
     else:
@@ -289,6 +298,10 @@ def create_app() -> FastAPI:
     templates.env.globals["format_dt_madrid"] = format_dt_madrid
     templates.env.globals["proxy_lease_datetime_local_value"] = proxy_lease_datetime_local_value
     templates.env.globals["proxy_lease_ends_at_form_value"] = proxy_lease_ends_at_form_value
+    # 2.96+: stealth_region_choices доступен в шаблонах IG/X для селекта региона
+    # на форме «Свой личный (логин+пароль)» (как в FB Master).
+    from backend.services.fb_stealth_profile import stealth_region_choices as _stealth_region_choices
+    templates.env.globals["stealth_region_choices"] = _stealth_region_choices
     templates.env.globals["access_key_expiry_expired"] = expires_at_is_past
     templates.env.globals["messenger_fb_account_label"] = messenger_fb_account_label
     templates.env.globals["is_platform_owner"] = is_platform_owner_user
@@ -329,7 +342,12 @@ def create_app() -> FastAPI:
     def fbm_available_workspaces(request: Request):
         if not multi_workspace_enabled():
             return None
-        return build_switcher_view(get_current_workspace_id(request))
+        # v3.0.5+: клиентам показываем только Facebook как активный, остальные
+        # модули — disabled (build_switcher_view ставит .openable=False).
+        return build_switcher_view(
+            get_current_workspace_id(request),
+            is_client_mode=cabinet_client_mode(request),
+        )
 
     def fbm_current_workspace_id(request: Request) -> str | None:
         if not multi_workspace_enabled():
@@ -459,6 +477,9 @@ def create_app() -> FastAPI:
 
         if request.method == "POST" and path == "/api/public/desktop-license/activate":
             return await call_next(request)
+        # 3.0+: атомарная проверка валидности ключа с подписями Ed25519.
+        if request.method == "POST" and path == "/api/public/desktop-license/check":
+            return await call_next(request)
         if request.method == "POST" and path == "/api/public/client-presence":
             return await call_next(request)
         if request.method == "POST" and path == "/api/public/promo-chat":
@@ -488,6 +509,44 @@ def create_app() -> FastAPI:
 
         ak_required = fb_master_access_key_required()
         auth_without_user = path == "/auth/unlock" or path == "/auth/access-key/activate"
+
+        # 3.0+: License watcher (DRP + Ed25519). Если на этой машине активен
+        # watcher и он сказал invalid/blocked — редиректим на /auth/unlock.
+        # Whitelist путей — пропускаем БЕЗ редиректа (иначе redirect-loop):
+        #   /auth/* — страница ввода ключа сама должна работать.
+        #   /static/* — CSS/JS/шрифты.
+        #   /api/public/* — публичные API (включая /desktop-license/*).
+        #   /internal/* — loopback от Electron.
+        #   /webhooks/*, /billing/*, /download/* — публичные внешние интеграции.
+        #   /, /buy, /promo, /promo2, /landing — публичные страницы.
+        _LICENSE_WATCHER_WHITELIST_PREFIXES = (
+            "/auth/", "/static/", "/api/public/", "/internal/",
+            "/webhooks/", "/billing/", "/download/",
+        )
+        _LICENSE_WATCHER_WHITELIST_EXACT = ("/", "/buy", "/purchase", "/promo", "/promo2", "/landing")
+        if (
+            not path.startswith(_LICENSE_WATCHER_WHITELIST_PREFIXES)
+            and path not in _LICENSE_WATCHER_WHITELIST_EXACT
+        ):
+            try:
+                from backend.services.license_watcher import (
+                    block_reason as _lic_reason,
+                    is_active_on_this_machine as _lic_active,
+                    is_valid as _lic_valid,
+                )
+                if _lic_active() and not _lic_valid():
+                    reason = _lic_reason() or "invalid"
+                    # state=init/checking — первая проверка watcher ещё в полёте,
+                    # не блокируем (даём 5-30 сек на установку).
+                    if reason in ("init", "checking"):
+                        return await call_next(request)
+                    return RedirectResponse(
+                        append_fbm_app_to_url(f"/auth/unlock?reason={reason}", request),
+                        status_code=303,
+                    )
+            except Exception:
+                logger.exception("license_watcher: middleware check failed (non-fatal)")
+
         # Десктоп открывает /auth/unlock первым — восстановление ключа по железу должно сработать и здесь.
         if ak_required:
             db_rh = SessionLocal()
@@ -614,6 +673,7 @@ def create_app() -> FastAPI:
         faq,
         fb_accounts,
         import_base,
+        license_internal,
         message_templates,
         messenger,
         messenger2,
@@ -641,6 +701,7 @@ def create_app() -> FastAPI:
     app.include_router(dashboard.router)
     app.include_router(desktop_public.router)
     app.include_router(desktop_license_public.router)
+    app.include_router(license_internal.router)
     app.include_router(faq.router)
     app.include_router(donors.router)
     app.include_router(discovery.router)

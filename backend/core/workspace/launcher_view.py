@@ -75,12 +75,25 @@ def _openable(status: ModuleStatus) -> bool:
     return status in (ModuleStatus.READY, ModuleStatus.BETA)
 
 
-def _card_for_module(module: "INetworkModule") -> WorkspaceCardView:
+# v3.0.5+: для клиентского билда (cabinet_client_mode=True) разрешаем
+# открывать только этот модуль. Остальные beta-модули показываются как
+# серые/disabled — карточка видна, но кнопка «Открыть» неактивна.
+# Список можно расширять по мере доведения других модулей до релиза.
+_CLIENT_OPENABLE_MODULE_IDS: frozenset[str] = frozenset({"facebook"})
+
+
+def _card_for_module(module: "INetworkModule", *, is_client_mode: bool = False) -> WorkspaceCardView:
     status = module.status()
     label, tone, description = _STATUS_LABELS.get(
         status, ("—", "muted", "")
     )
     nav = module.navigation()
+    base_openable = _openable(status)
+    # В клиентском режиме открываем только модули из whitelist (пока — Facebook).
+    if is_client_mode and module.id not in _CLIENT_OPENABLE_MODULE_IDS:
+        openable = False
+    else:
+        openable = base_openable
     return WorkspaceCardView(
         id=module.id,
         display_name=module.display_name,
@@ -92,19 +105,34 @@ def _card_for_module(module: "INetworkModule") -> WorkspaceCardView:
         status_description=description,
         status_badge=_STATUS_BADGES.get(status),
         default_route=nav.default_route,
-        openable=_openable(status),
+        openable=openable,
     )
 
 
-def build_launcher_view(current_workspace_id: str | None = None) -> LauncherView:
-    """Собрать данные для главного /workspaces-экрана."""
-    cards = tuple(_card_for_module(m) for m in module_registry.visible())
+def build_launcher_view(
+    current_workspace_id: str | None = None,
+    *,
+    is_client_mode: bool = False,
+) -> LauncherView:
+    """Собрать данные для главного /workspaces-экрана.
+
+    is_client_mode=True — клиентский билд: только Facebook Master доступен,
+    остальные карточки показываются как серые/disabled.
+    """
+    cards = tuple(_card_for_module(m, is_client_mode=is_client_mode) for m in module_registry.visible())
     return LauncherView(cards=cards, current_workspace_id=current_workspace_id)
 
 
-def build_switcher_view(current_workspace_id: str | None) -> tuple[WorkspaceCardView, ...]:
-    """Список карточек для dropdown switcher в header."""
-    return tuple(_card_for_module(m) for m in module_registry.visible())
+def build_switcher_view(
+    current_workspace_id: str | None,
+    *,
+    is_client_mode: bool = False,
+) -> tuple[WorkspaceCardView, ...]:
+    """Список карточек для dropdown switcher в header.
+
+    is_client_mode=True — табы остальных модулей рендерятся как disabled.
+    """
+    return tuple(_card_for_module(m, is_client_mode=is_client_mode) for m in module_registry.visible())
 
 
 __all__ = [

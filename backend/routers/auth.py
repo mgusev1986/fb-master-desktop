@@ -147,7 +147,22 @@ async def access_key_unlock_page(request: Request, db: Session = Depends(get_db)
         from backend.services.access_keys import session_access_valid
         from backend.services.local_operator_session import ensure_no_auth_session_user
 
-        if session_access_valid(db, request):
+        # 3.0+: если license_watcher активен и сказал invalid/blocked,
+        # не редиректим на /home — показываем форму ввода нового ключа.
+        # Иначе redirect-loop: handler редирект на /home, middleware
+        # редирект назад на /auth/unlock.
+        _watcher_blocks = False
+        try:
+            from backend.services.license_watcher import (
+                is_active_on_this_machine as _lic_active,
+                is_valid as _lic_valid,
+            )
+            if _lic_active() and not _lic_valid():
+                _watcher_blocks = True
+        except Exception:
+            pass
+
+        if not _watcher_blocks and session_access_valid(db, request):
             if not request.session.get("user"):
                 ensure_no_auth_session_user(request, db)
             if request.session.get("user"):
@@ -242,6 +257,15 @@ async def access_key_activate(
     ok, err_msg = try_activate(db, request, plaintext=key, device_fingerprint=fp)
     if not ok:
         return RedirectResponse("/auth/unlock?error=" + quote(err_msg[:300]), status_code=303)
+    # 3.0+: синхронно дёргаем license_watcher, чтобы он обновил state на
+    # 'valid' ПЕРЕД редиректом на /home. Иначе middleware с state=invalid
+    # моментально завернёт обратно на /auth/unlock.
+    try:
+        from backend.services.license_watcher import force_check_now, is_active_on_this_machine
+        if is_active_on_this_machine():
+            await force_check_now()
+    except Exception:
+        logger.exception("license_watcher.force_check_now after activate (non-fatal)")
     return RedirectResponse("/home", status_code=303)
 
 

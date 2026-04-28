@@ -31,6 +31,15 @@ rsync -a --delete \
 cp "$ROOT/main.py" "$OUT/"
 cp "$ROOT/requirements.txt" "$OUT/"
 
+# 3.0+: Ed25519 публичный ключ для верификации license-подписей (DRP).
+# Приватный ключ остаётся ТОЛЬКО на VPS — в bundle не копируется.
+if [[ -f "$ROOT/desktop/fb-master-desktop/license-public.pem" ]]; then
+  cp "$ROOT/desktop/fb-master-desktop/license-public.pem" "$OUT/license-public.pem"
+  echo ">>> Скопирован license-public.pem (Ed25519) для проверки подписей лицензии"
+else
+  echo "!!! WARNING: license-public.pem не найден — license_watcher не сможет верифицировать подписи!"
+fi
+
 cat > "$OUT/launch.json" << 'JSON'
 {
   "executable": "venv/bin/python3",

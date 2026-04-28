@@ -623,6 +623,21 @@ def _buy_page_auto_dmg_url() -> str:
     return ""
 
 
+def _buy_page_auto_dmg_x64_url() -> str:
+    """v3.0+: Авто-ссылка на Mac Intel (x64) DMG, если нет явного FB_DESKTOP_DOWNLOAD_DARWIN_X64.
+
+    Ищет SOCMASTER-<версия>-mac-x64.dmg в static/releases/.
+    """
+    ver = FB_DESKTOP_LATEST_VERSION.strip()
+    if not ver:
+        return ""
+    for prefix in ("SOCMASTER", "FbMaster"):
+        fn = f"{prefix}-{ver}-mac-x64.dmg"
+        if _static_release_file_path(fn).is_file():
+            return f"{public_app_base_url().rstrip('/')}/static/releases/{fn}"
+    return ""
+
+
 def _buy_page_auto_exe_url() -> str:
     """Авто‑ссылка на Windows‑инсталлятор SOCMASTER‑<версия>‑win‑x64.exe в static/releases/."""
     ver = FB_DESKTOP_LATEST_VERSION.strip()
@@ -655,6 +670,13 @@ def desktop_buy_page_download_urls(*, for_paid_flow: bool = False) -> dict[str, 
             full["darwin_arm64"] = auto_dmg
     if "darwin_arm64" in full:
         out["darwin_arm64"] = full["darwin_arm64"]
+    # v3.0+: Mac Intel (x64) — для клиентов с MacBook на Intel CPU (2017-2020).
+    if "darwin_x64" not in full:
+        auto_dmg_x64 = _buy_page_auto_dmg_x64_url()
+        if auto_dmg_x64:
+            full["darwin_x64"] = auto_dmg_x64
+    if "darwin_x64" in full:
+        out["darwin_x64"] = full["darwin_x64"]
     if "win32_x64" not in full:
         auto_exe = _buy_page_auto_exe_url()
         if auto_exe:
@@ -679,8 +701,8 @@ def unlock_page_desktop_download_href() -> str:
 
 def unlock_page_desktop_download_hrefs() -> dict[str, str]:
     """
-    Ссылки для двух кнопок «Скачать» (Windows и macOS) на /auth/unlock.
-    Возвращает словарь с ключами 'mac' и/или 'win', значения — подписанные URL.
+    Ссылки для трёх кнопок «Скачать» (Windows, macOS Apple Silicon, macOS Intel) на /auth/unlock.
+    Возвращает словарь с ключами 'mac' (Apple Silicon), 'mac_x64' (Intel) и/или 'win'.
     Ключ может отсутствовать, если для платформы ещё нет сборки.
     """
     out: dict[str, str] = {}
@@ -690,6 +712,10 @@ def unlock_page_desktop_download_hrefs() -> dict[str, str]:
         if isinstance(v, str) and v.strip():
             out["mac"] = v.strip()
             break
+    # v3.0+: Mac Intel (x64) для MacBook на Intel CPU (2017-2020).
+    mac_x64 = du.get("darwin_x64")
+    if isinstance(mac_x64, str) and mac_x64.strip():
+        out["mac_x64"] = mac_x64.strip()
     win = du.get("win32_x64")
     if isinstance(win, str) and win.strip():
         out["win"] = win.strip()

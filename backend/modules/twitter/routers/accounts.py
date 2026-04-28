@@ -66,11 +66,16 @@ async def accounts_import_credentials(
     proxy_url: str = Form(default=""),
     proxy_username: str = Form(default=""),
     proxy_password: str = Form(default=""),
+    proxy_lease_ends_at: str = Form(default=""),
+    stealth_region: str = Form(default=""),
 ):
     """Свой личный X/Twitter-аккаунт через логин + пароль (v2.93+).
 
     Cookies появятся после первого Playwright-логина (кнопка «Войти»
     на карточке аккаунта). Аналог IG accounts_import_credentials.
+
+    v2.96+: новые поля `proxy_lease_ends_at` (DD.MM.YY, HH:MM Europe/Madrid)
+    и `stealth_region` (ключ пресета locale/TZ из fb_stealth_profile).
     """
     from urllib.parse import quote
 
@@ -87,6 +92,8 @@ async def accounts_import_credentials(
                 proxy_url=proxy_url or None,
                 proxy_username=proxy_username or None,
                 proxy_password=proxy_password or None,
+                proxy_lease_ends_at=proxy_lease_ends_at or None,
+                stealth_region=stealth_region or None,
             )
             qs = f"?notice=credentials_imported&label={quote((acc.label or '')[:80], safe='')}"
         except ValueError as e:
@@ -97,6 +104,28 @@ async def accounts_import_credentials(
     finally:
         db.close()
     return RedirectResponse(f"/twitter/accounts{qs}", status_code=303)
+
+
+@router.post("/proxy-geo")
+async def accounts_proxy_geo(request: Request, proxy_line: str = Form(default="")):
+    """JSON: страна выхода по прокси и рекомендуемый пресет stealth (через прокси).
+
+    Зеркало `/fb-accounts/proxy-geo` для X-формы импорта credentials (v2.96+).
+    Принимает строку host:port:user:pass или scheme://user:pass@host:port,
+    делает HTTP-запрос к ip-api / ipwho через прокси и возвращает страну/IP/пресет.
+    """
+    import asyncio
+    from backend.services.fb_account_import_parse import parse_proxy_line
+    from backend.services.proxy_geo_lookup import lookup_geo_through_proxy
+
+    parsed = parse_proxy_line((proxy_line or "").strip())
+    if not parsed:
+        return JSONResponse(
+            {"ok": False, "error": "Не удалось разобрать прокси (host:port:user:pass или socks5://…)"},
+            status_code=400,
+        )
+    data = await asyncio.to_thread(lookup_geo_through_proxy, parsed)
+    return JSONResponse(data)
 
 
 @router.post("/{account_id}/proxy")
@@ -121,14 +150,52 @@ async def accounts_set_proxy(
     return RedirectResponse("/twitter/accounts?notice=proxy_saved", status_code=303)
 
 
+@router.post("/{account_id}/login")
+async def accounts_login(account_id: int, request: Request):
+    """Запуск Playwright-автологина для «своего личного» X-аккаунта (v2.96+).
+
+    Открывает Chromium через прокси аккаунта, вводит сохранённые логин/пароль
+    (Fernet-расшифровка), при необходимости — TOTP. На успехе сохраняет
+    cookies + storage_state и переводит status → 'connected'.
+
+    v2.97+: вызов sync Playwright обёрнут в asyncio.to_thread, чтобы не
+    блокировать FastAPI event loop (иначе ошибка "Sync API inside asyncio loop").
+    """
+    import asyncio
+    from backend.modules.twitter.services.playwright_login import run_twitter_login
+
+    db = SessionLocal()
+    try:
+        acc = accounts_svc.get_account(db, account_id)
+        if acc is None:
+            return RedirectResponse("/twitter/accounts?notice=login_failed_not_found", status_code=303)
+        if not (acc.login_username and acc.enc_password):
+            return RedirectResponse("/twitter/accounts?notice=login_failed_no_credentials", status_code=303)
+        ok, detail = await asyncio.to_thread(run_twitter_login, acc)
+        if ok:
+            db.commit()
+            qs = "login_ok"
+        else:
+            from datetime import datetime, timezone
+            acc.login_blocked_at = datetime.now(timezone.utc)
+            acc.login_blocked_reason = f"Автологин: {detail}"[:500]
+            db.commit()
+            qs = f"login_failed_{detail}"
+    finally:
+        db.close()
+    return RedirectResponse(f"/twitter/accounts?notice={qs}", status_code=303)
+
+
 @router.post("/{account_id}/probe")
 async def accounts_probe(account_id: int, request: Request):
+    """v2.97+: sync Playwright обёрнут в asyncio.to_thread."""
+    import asyncio
     from backend.modules.twitter.runtime.readiness_probe import probe_account
 
     db = SessionLocal()
     try:
         try:
-            res = probe_account(db, account_id, headless=True)
+            res = await asyncio.to_thread(probe_account, db, account_id, headless=True)
             code = res.get("reason_code") or ("ok" if res.get("ok") else "failed")
         except Exception as e:  # noqa: BLE001
             code = "exception"
@@ -140,12 +207,14 @@ async def accounts_probe(account_id: int, request: Request):
 
 @router.post("/{account_id}/inbox-sync")
 async def accounts_inbox_sync(account_id: int, request: Request):
+    """v2.97+: sync Playwright обёрнут в asyncio.to_thread."""
+    import asyncio
     from backend.modules.twitter.runtime.inbox_sync_browser import sync_inbox
 
     db = SessionLocal()
     try:
         try:
-            res = sync_inbox(db, account_id, headless=True)
+            res = await asyncio.to_thread(sync_inbox, db, account_id, headless=True)
             if res.get("ok"):
                 qs = f"sync_ok&new={res.get('new_messages',0)}"
             else:

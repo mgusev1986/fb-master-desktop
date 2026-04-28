@@ -212,10 +212,18 @@
       </div>
       <p class="np-instruction">Скопируйте ключ и вставьте на экране «Ключ доступа», затем нажмите «Войти». <strong>Один ключ — один компьютер</strong> (в программе SOCMASTER — привязка к железу).</p>
       <div id="np-dl-block" class="np-dl-stack" hidden>
-        <a id="np-dl-btn" class="np-premium-cta" href="#" rel="noopener">Скачать установщик и материалы</a>
+        <p class="np-dl-cap-line" style="margin:0 0 0.5rem;font-weight:600">Скачать установщик SOCMASTER:</p>
+        <a id="np-dl-win" class="np-premium-cta" href="#" rel="noopener" hidden>
+          <span>Windows</span> <small style="opacity:.85;margin-left:.5rem">x64 · .exe</small>
+        </a>
+        <a id="np-dl-mac-arm64" class="np-premium-cta" href="#" rel="noopener" hidden>
+          <span>macOS Apple Silicon</span> <small style="opacity:.85;margin-left:.5rem">M1+ · .dmg</small>
+        </a>
+        <a id="np-dl-mac-x64" class="np-premium-cta" href="#" rel="noopener" hidden>
+          <span>macOS Intel</span> <small style="opacity:.85;margin-left:.5rem">2017–2020 · .dmg</small>
+        </a>
         <div class="np-dl-captions">
-          <span class="np-dl-cap-line">Download the program</span>
-          <span class="np-dl-cap-sub">MacOS, Apple Silicon</span>
+          <span class="np-dl-cap-sub">Выберите версию для вашего компьютера</span>
         </div>
       </div>
       <a href="/purchase" class="np-premium-outline">Оформить ещё один доступ</a>
@@ -232,7 +240,9 @@
   const keyEl = document.getElementById('np-key');
   const copyBtn = document.getElementById('np-key-copy');
   const dlBlock = document.getElementById('np-dl-block');
-  const dlBtn = document.getElementById('np-dl-btn');
+  const dlWin = document.getElementById('np-dl-win');
+  const dlMacArm64 = document.getElementById('np-dl-mac-arm64');
+  const dlMacX64 = document.getElementById('np-dl-mac-x64');
   let copyResetTimer = null;
   if (copyBtn && keyEl) {
     copyBtn.addEventListener('click', function () {
@@ -280,19 +290,35 @@
     msg.textContent = 'Не передан токен заказа. Откройте ссылку из письма/редиректа после оплаты.';
     return;
   }
-  function pickPrimaryDownloadUrl(du) {
+  function pickUrlByKeys(du, keys) {
     if (!du || typeof du !== 'object') return '';
-    const order = ['darwin_arm64_bundle', 'darwin_arm64'];
-    for (let i = 0; i < order.length; i += 1) {
-      const href = du[order[i]];
-      if (typeof href === 'string' && href.trim()) return href.trim();
-    }
-    const keys = Object.keys(du);
     for (let i = 0; i < keys.length; i += 1) {
       const href = du[keys[i]];
       if (typeof href === 'string' && href.trim()) return href.trim();
     }
     return '';
+  }
+  function setupPlatformButtons(du) {
+    let any = false;
+    const macArm = pickUrlByKeys(du, ['darwin_arm64_bundle', 'darwin_arm64']);
+    if (macArm && dlMacArm64) {
+      dlMacArm64.href = macArm;
+      dlMacArm64.hidden = false;
+      any = true;
+    }
+    const macX64 = pickUrlByKeys(du, ['darwin_x64']);
+    if (macX64 && dlMacX64) {
+      dlMacX64.href = macX64;
+      dlMacX64.hidden = false;
+      any = true;
+    }
+    const win = pickUrlByKeys(du, ['win32_x64']);
+    if (win && dlWin) {
+      dlWin.href = win;
+      dlWin.hidden = false;
+      any = true;
+    }
+    return any;
   }
   let n = 0;
   const max = 200;
@@ -319,9 +345,7 @@
         msg.hidden = true;
         wrap.hidden = false;
         keyEl.textContent = j.access_key;
-        const href = pickPrimaryDownloadUrl(j.download_urls);
-        if (href) {
-          dlBtn.href = href;
+        if (setupPlatformButtons(j.download_urls)) {
           dlBlock.hidden = false;
         }
         return;

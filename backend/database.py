@@ -1481,6 +1481,8 @@ def init_db() -> None:
     _migrate_reddit_accounts_browser_mode()
     _migrate_instagram_accounts_credentials()
     _migrate_twitter_accounts_credentials()
+    _migrate_instagram_accounts_proxy_lease_ends_at()
+    _migrate_twitter_accounts_proxy_lease_ends_at()
 
 
 def _migrate_reddit_accounts_browser_mode() -> None:
@@ -1569,4 +1571,32 @@ def _migrate_twitter_accounts_credentials() -> None:
             ("enc_password", "TEXT"),
             ("enc_totp_secret", "TEXT"),
         ),
+    )
+
+
+def _migrate_instagram_accounts_proxy_lease_ends_at() -> None:
+    """Добавить proxy_lease_ends_at к `instagram_accounts` (v2.96+).
+
+    Аналог FBAccount.proxy_lease_ends_at: UTC datetime окончания аренды у
+    провайдера. Существующие строки получают NULL → отслеживание lease
+    отключено (тот же контракт, что у FB-аккаунтов до миграции).
+    """
+    _add_columns(
+        "instagram_accounts",
+        (("proxy_lease_ends_at", "DATETIME"),),
+        (("proxy_lease_ends_at", "TIMESTAMP WITH TIME ZONE"),),
+    )
+
+
+def _migrate_twitter_accounts_proxy_lease_ends_at() -> None:
+    """Добавить proxy_lease_ends_at к `twitter_accounts` (v2.96+).
+
+    Аналог FBAccount.proxy_lease_ends_at: UTC datetime окончания аренды у
+    провайдера. Существующие строки получают NULL → отслеживание lease
+    отключено (тот же контракт, что у FB-аккаунтов до миграции).
+    """
+    _add_columns(
+        "twitter_accounts",
+        (("proxy_lease_ends_at", "DATETIME"),),
+        (("proxy_lease_ends_at", "TIMESTAMP WITH TIME ZONE"),),
     )

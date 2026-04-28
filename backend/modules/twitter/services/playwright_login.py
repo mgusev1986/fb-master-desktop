@@ -30,7 +30,11 @@ logger = logging.getLogger(__name__)
 LOGIN_URL = "https://x.com/i/flow/login"
 HOME_URL = "https://x.com/home"
 ESSENTIAL_COOKIES = ("auth_token", "ct0")
-MANUAL_WAIT_SEC = 180  # 3 минуты на ручное решение captcha / email-challenge
+# v2.99+: 15 минут на ручной вход. Окно НЕ закрываем сами — ждём, пока
+# пользователь либо введёт данные (и появятся cookies), либо сам закроет
+# вкладку. Это критично если автоматический ввод селекторов промахнулся
+# или X показал capcha / e-mail challenge.
+MANUAL_WAIT_SEC = 900
 
 
 def _has_session_cookies(cookies: list[dict[str, Any]]) -> bool:
@@ -98,10 +102,13 @@ def run_twitter_login(acc: TwitterAccount) -> tuple[bool, str]:
             except Exception:
                 pass
 
-            # Шаг 3 — password.
+            # Шаг 3 — password (v2.99+: при неудаче не закрываем окно, а
+            # передаём управление пользователю — он введёт сам).
+            password_filled = False
             try:
                 page.wait_for_selector('input[name="password"]', timeout=20_000)
                 page.fill('input[name="password"]', password)
+                password_filled = True
                 for sel in (
                     'button[data-testid="LoginForm_Login_Button"]',
                     'button:has-text("Log in")',
@@ -114,8 +121,13 @@ def run_twitter_login(acc: TwitterAccount) -> tuple[bool, str]:
                     except Exception:
                         pass
             except Exception:
-                return False, "password_field_not_found"
-            page.wait_for_timeout(4000)
+                logger.warning(
+                    "twitter login: поле пароля не найдено за 20с — оставляем окно "
+                    "открытым на %s сек, пользователь введёт вручную.",
+                    MANUAL_WAIT_SEC,
+                )
+            if password_filled:
+                page.wait_for_timeout(4000)
 
             # Шаг 4 — опциональный 2FA.
             if totp:
@@ -133,11 +145,14 @@ def run_twitter_login(acc: TwitterAccount) -> tuple[bool, str]:
                     pass
 
             # Ждём появления критичных cookies. Если не пришли за 15с —
-            # возможно captcha / email challenge — даём клиенту время
-            # дорешать вручную.
-            deadline = time.time() + 15.0
+            # возможно captcha / e-mail / phone challenge — даём клиенту
+            # время дорешать вручную (до MANUAL_WAIT_SEC = 15 минут).
+            # v2.99+: чувствительны к закрытию вкладки — если пользователь
+            # сам закрыл окно, ловим cookies в момент закрытия.
             cookies_list: list[dict[str, Any]] = []
-            while time.time() < deadline:
+            user_closed = False
+            quick_deadline = time.time() + 15.0
+            while time.time() < quick_deadline:
                 try:
                     cookies_list = sess.context.cookies()
                     if _has_session_cookies(cookies_list):
@@ -148,20 +163,48 @@ def run_twitter_login(acc: TwitterAccount) -> tuple[bool, str]:
 
             if not _has_session_cookies(cookies_list):
                 logger.info(
-                    "twitter login: нужен ручной шаг (captcha/challenge?) — окно открыто на %s сек",
+                    "twitter login: ждём ручной вход (вы можете ввести данные "
+                    "и пройти captcha) — окно открыто на %s сек.",
                     MANUAL_WAIT_SEC,
                 )
                 manual_deadline = time.time() + MANUAL_WAIT_SEC
                 while time.time() < manual_deadline:
                     try:
+                        if page.is_closed():
+                            user_closed = True
+                            logger.info("twitter login: пользователь закрыл вкладку")
+                            break
+                    except Exception:
+                        user_closed = True
+                        break
+                    try:
                         cookies_list = sess.context.cookies()
                         if _has_session_cookies(cookies_list):
                             break
                     except Exception:
-                        pass
-                    page.wait_for_timeout(3000)
+                        # context уже закрыт пользователем — выходим из цикла
+                        user_closed = True
+                        break
+                    # 2-секундный pulse через page.wait_for_timeout (если
+                    # page жив); если page закрыт — следующая итерация
+                    # сработает is_closed() и выйдет.
+                    try:
+                        page.wait_for_timeout(2000)
+                    except Exception:
+                        user_closed = True
+                        break
+
+            # Финальный read cookies — на случай если пользователь успел
+            # залогиниться прямо перед закрытием окна.
+            if not _has_session_cookies(cookies_list):
+                try:
+                    cookies_list = sess.context.cookies()
+                except Exception:
+                    pass
 
             if not _has_session_cookies(cookies_list):
+                if user_closed:
+                    return False, "closed_by_user_no_cookies"
                 return False, "no_auth_token_after_wait"
 
             # Успех — экспортируем storage_state и кладём в БД.

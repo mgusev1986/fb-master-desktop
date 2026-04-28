@@ -85,12 +85,18 @@ def create_from_credentials(
     proxy_username: str | None = None,
     proxy_password: str | None = None,
     handle_hint: str | None = None,
+    proxy_lease_ends_at: str | None = None,
+    stealth_region: str | None = None,
 ) -> TwitterAccount:
     """Импорт «своего» X/Twitter-аккаунта через логин + пароль.
 
     Cookies ещё нет — они появятся после первого Playwright-логина
     (кнопка «Войти» на карточке аккаунта). Статус — `needs_login`.
     Аналог `InstagramAccount.create_from_credentials` (v2.93+).
+
+    v2.96+: добавлены поля как в Facebook Master:
+    - `proxy_lease_ends_at` — DD.MM.YY, HH:MM (Europe/Madrid) или ISO → UTC.
+    - `stealth_region` — ключ пресета locale/TZ/UA.
     """
     user_s = (username or "").strip()
     pwd_s = (password or "").strip()
@@ -110,6 +116,10 @@ def create_from_credentials(
     from backend.services.fb_account_import_parse import normalize_proxy_fields
     px_url, px_user, px_pass = normalize_proxy_fields(proxy_url, proxy_username, proxy_password)
 
+    # 2.96: lease + stealth-пресет (порт из FB Master).
+    from backend.services.proxy_lease import parse_proxy_lease_ends_at_from_form
+    lease_at = parse_proxy_lease_ends_at_from_form(proxy_lease_ends_at or "")
+
     acc = TwitterAccount(
         organization_id=organization_id,
         label=final_label[:255],
@@ -123,19 +133,30 @@ def create_from_credentials(
         proxy_url=px_url,
         proxy_username=px_user,
         proxy_password=px_pass,
+        proxy_lease_ends_at=lease_at,
         status="needs_login",
         session_ok=None,
         login_username=user_s,
         enc_password=encrypt_secret(pwd_s),
         enc_totp_secret=encrypt_secret(totp_secret.strip()) if (totp_secret or "").strip() else None,
     )
+
+    # 2.96: применяем пресет региона к stealth_* (если задан и отличен от 'custom')
+    region_key = (stealth_region or "").strip()
+    if region_key and region_key != "custom":
+        from backend.services.fb_stealth_profile import apply_region_preset_to_account
+        # Duck-typed: обновляет .stealth_locale/_timezone_id/_user_agent/_viewport_*
+        apply_region_preset_to_account(acc, region_key)
+
     db.add(acc)
     db.flush()
     acc.profile_dir = _make_profile_dir(final_label, acc.id)
     Path(acc.profile_dir).mkdir(parents=True, exist_ok=True)
     log_event(
         db, organization_id, acc.id, "account_imported_credentials", "info",
-        {"label": acc.label, "handle": handle, "username": user_s},
+        {"label": acc.label, "handle": handle, "username": user_s,
+         "lease": lease_at.isoformat() if lease_at else None,
+         "stealth_region": region_key or None},
     )
     db.commit()
     return acc

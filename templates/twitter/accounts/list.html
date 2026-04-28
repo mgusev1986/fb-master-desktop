@@ -87,16 +87,33 @@
         <input type="text" name="label" autocomplete="off" placeholder="Мой основной X" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 14px/1.2 Inter,sans-serif;"/>
       </label>
       <label style="display:flex;flex-direction:column;gap:4px;grid-column:span 2;">
-        <span style="font:500 12px/1 Inter,sans-serif;color:var(--text-secondary);">Прокси URL (рекомендуется residential / mobile)</span>
-        <input type="text" name="proxy_url" autocomplete="off" placeholder="http://host:port" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 13px/1.2 ui-monospace,monospace;"/>
+        <span style="font:500 12px/1 Inter,sans-serif;color:var(--text-secondary);">Прокси <small style="color:var(--text-muted,#888);font-weight:400;">(residential / mobile рекомендуется)</small></span>
+        <input id="x-imp-proxy" type="text" name="proxy_url" autocomplete="off" placeholder="host:port:user:pass или http://user:pass@host:port" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 13px/1.2 ui-monospace,monospace;"/>
+        <input type="hidden" name="proxy_username"/>
+        <input type="hidden" name="proxy_password"/>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:6px;">
+          <button type="button" id="x-imp-geo-btn" class="x-btn" style="padding:6px 10px;font-size:12px;">
+            <i class="ti ti-map-pin"></i> Страна по прокси
+          </button>
+          <span style="color:var(--text-secondary);font:400 12px/1.4 Inter,sans-serif;">Страна определяется <strong>через ваш прокси</strong>, как при работе с Facebook Master.</span>
+        </div>
+        <div id="x-imp-geo-result" style="display:none;margin-top:6px;font:400 12px/1.45 Inter,sans-serif;color:var(--text-secondary);max-width:48rem;"></div>
       </label>
-      <label style="display:flex;flex-direction:column;gap:4px;">
-        <span style="font:500 12px/1 Inter,sans-serif;color:var(--text-secondary);">Прокси-логин</span>
-        <input type="text" name="proxy_username" autocomplete="off" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 13px/1.2 ui-monospace,monospace;"/>
+      <label style="display:flex;flex-direction:column;gap:4px;grid-column:span 2;">
+        <span style="font:500 12px/1 Inter,sans-serif;color:var(--text-secondary);">Дата и время окончания прокси у провайдера (необязательно)</span>
+        <input type="text" name="proxy_lease_ends_at" autocomplete="off" placeholder="18.04.26, 16:12" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 13px/1.2 ui-monospace,monospace;"/>
+        <p style="margin:4px 0 0;color:var(--text-muted,#888);font:400 12px/1.45 Inter,sans-serif;">Можно <strong>вставить из кабинета</strong> как у продавца (например <code>18.04.26, 16:12</code>) или ISO <code>2026-04-18T16:12</code>. Часовой пояс ввода — <strong>Europe/Madrid</strong>. Пустое поле — не отслеживать. Автоостановка — за <strong>1 ч</strong> до этого момента.</p>
       </label>
-      <label style="display:flex;flex-direction:column;gap:4px;">
-        <span style="font:500 12px/1 Inter,sans-serif;color:var(--text-secondary);">Прокси-пароль</span>
-        <input type="password" name="proxy_password" autocomplete="off" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 13px/1.2 ui-monospace,monospace;"/>
+      <label style="display:flex;flex-direction:column;gap:4px;grid-column:span 2;">
+        <span style="font:500 12px/1 Inter,sans-serif;color:var(--text-secondary);">Страна / язык в браузере</span>
+        <select id="x-imp-region" name="stealth_region" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 13px/1.2 Inter,sans-serif;">
+          {% for key, label in stealth_region_choices() %}
+            {% if key != 'custom' %}
+              {# 2.99+: default = Россия (ru-RU). Хотите страну по прокси — нажмите кнопку «Страна по прокси» выше. #}
+              <option value="{{ key }}" {% if key == 'ru' %}selected{% endif %}>{{ label }}</option>
+            {% endif %}
+          {% endfor %}
+        </select>
       </label>
       <div style="display:flex;justify-content:flex-end;grid-column:span 2;"><button type="submit" class="x-btn x-btn--primary"><i class="ti ti-key"></i> Сохранить и войти позже</button></div>
     </form>
@@ -171,6 +188,53 @@
         url.addEventListener('blur', apply);
       }
       document.querySelectorAll('form[action*="/twitter/accounts/import-credentials"], form[action*="/twitter/accounts/"][action*="/proxy"]').forEach(attachProxyAutoSplit);
+
+      // 2.96: «Страна по прокси» — geo lookup через прокси (как в FB Master).
+      var geoBtn = document.getElementById('x-imp-geo-btn');
+      var geoIn = document.getElementById('x-imp-proxy');
+      var geoOut = document.getElementById('x-imp-geo-result');
+      var geoSel = document.getElementById('x-imp-region');
+      if (geoBtn && geoIn && geoOut) {
+        geoBtn.addEventListener('click', function () {
+          var line = (geoIn.value || '').trim();
+          if (!line) {
+            geoOut.style.display = 'block';
+            geoOut.style.color = '#c33';
+            geoOut.textContent = 'Сначала вставьте строку прокси.';
+            return;
+          }
+          geoBtn.disabled = true;
+          geoOut.style.display = 'block';
+          geoOut.style.color = 'var(--text-secondary)';
+          geoOut.textContent = 'Запрос через прокси…';
+          fetch('/twitter/accounts/proxy-geo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ proxy_line: line }),
+            credentials: 'same-origin',
+          })
+            .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+            .then(function (x) {
+              geoBtn.disabled = false;
+              var d = x.j || {};
+              if (!d.ok) {
+                geoOut.style.color = '#c33';
+                geoOut.textContent = d.error || 'Ошибка геолокации';
+                return;
+              }
+              geoOut.style.color = 'var(--text-secondary)';
+              geoOut.textContent =
+                'Страна: ' + (d.country || '?') + ' (' + (d.country_code || '?') + ') · IP ' +
+                (d.ip || '?') + (d.hint ? ' · ' + d.hint : '');
+              if (geoSel && d.stealth_region) geoSel.value = d.stealth_region;
+            })
+            .catch(function (e) {
+              geoBtn.disabled = false;
+              geoOut.style.color = '#c33';
+              geoOut.textContent = 'Сеть: ' + (e && e.message ? e.message : e);
+            });
+        });
+      }
     })();
   </script>
 
@@ -216,6 +280,11 @@
             </form>
           </details>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            {% if a.status == 'needs_login' and a.login_username %}
+            <form method="post" action="/twitter/accounts/{{ a.id }}/login" style="margin:0;" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Войти…';">
+              <button class="x-btn x-btn--primary" type="submit" style="font-size:12px;padding:6px 10px;"><i class="ti ti-login"></i> Войти</button>
+            </form>
+            {% endif %}
             <form method="post" action="/twitter/accounts/{{ a.id }}/probe" style="margin:0;" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Проверяю…';">
               <button class="x-btn" type="submit" style="font-size:12px;padding:6px 10px;"><i class="ti ti-refresh"></i> Проверить</button>
             </form>

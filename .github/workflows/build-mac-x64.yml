@@ -1,0 +1,129 @@
+name: Build Mac x64 (Intel) SOCMASTER
+
+on:
+  # Запуск вручную из вкладки Actions с указанием версии
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Версия сборки (например 3.0.5)'
+        required: true
+        default: '3.0.5'
+  # Автозапуск на git tag v*
+  push:
+    tags:
+      - 'v*'
+
+# contents: write нужен softprops/action-gh-release для создания/обновления GitHub Release
+# (fallback, когда квота Actions artifacts исчерпана).
+permissions:
+  contents: write
+
+jobs:
+  build-mac-x64:
+    # macos-13 — последний образ GitHub Actions с Intel x86_64.
+    # macos-14+ уже Apple Silicon (arm64).
+    runs-on: macos-13
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show runner architecture
+        run: |
+          uname -a
+          uname -m
+          # Должно быть x86_64 — иначе билд получится arm64.
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Python 3.12 (для CI; embedded Python качает prepare-bundle сам)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Determine version
+        id: ver
+        shell: bash
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            echo "v=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "v=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          else
+            echo "v=0.0.0-dev" >> $GITHUB_OUTPUT
+          fi
+          cat $GITHUB_OUTPUT
+
+      - name: Set package.json version
+        shell: bash
+        run: |
+          v="${{ steps.ver.outputs.v }}"
+          python3 -c "
+          import json
+          p = 'desktop/fb-master-desktop/package.json'
+          with open(p) as f: d = json.load(f)
+          d['version'] = '$v'
+          with open(p, 'w') as f: json.dump(d, f, indent=2, ensure_ascii=False)
+          print('package.json version →', '$v')
+          "
+
+      - name: Prepare backend bundle (Mac x86_64)
+        shell: bash
+        run: |
+          # На macos-13 (Intel) prepare-desktop-backend-bundle.sh автоматически
+          # детектит uname -m = x86_64 и скачает x64 Python + x64 Chromium.
+          chmod +x scripts/prepare-desktop-backend-bundle.sh
+          bash scripts/prepare-desktop-backend-bundle.sh
+          # Verify архитектура — если что-то пошло не так, билд должен упасть здесь.
+          file desktop/fb-master-desktop/resources-fb-master-backend/python/bin/python3.12 | grep -q "x86_64" || (echo "ОШИБКА: embedded Python не x86_64!" && exit 1)
+          echo "✅ Embedded Python x86_64 готов"
+
+      - name: Install Electron dependencies
+        shell: bash
+        working-directory: desktop/fb-master-desktop
+        run: |
+          npm ci --no-audit --no-fund
+
+      - name: Build Mac x64 DMG
+        shell: bash
+        working-directory: desktop/fb-master-desktop
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+          SKIP_NOTARIZE: '1'
+        run: |
+          npm run dist:mac:x64
+
+      - name: Collect artifacts
+        shell: bash
+        run: |
+          DIST="desktop/fb-master-desktop/dist"
+          ls -la "$DIST"
+          mkdir -p artifacts-mac-x64
+          # Берём только x64 файлы (после dist:mac:x64 там должен быть только x64)
+          cp "$DIST"/SOCMASTER-*-mac-x64.dmg artifacts-mac-x64/ 2>/dev/null || true
+          cp "$DIST"/SOCMASTER-*-mac-x64.dmg.blockmap artifacts-mac-x64/ 2>/dev/null || true
+          ls -lh artifacts-mac-x64/
+
+      - name: Upload Mac x64 artifact
+        uses: actions/upload-artifact@v4
+        continue-on-error: true  # storage quota — не валим job; DMG всё равно уйдёт в GH Release ниже
+        with:
+          name: SOCMASTER-${{ steps.ver.outputs.v }}-mac-x64
+          path: artifacts-mac-x64/*
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish Mac x64 DMG to GitHub Release
+        if: always()
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.ver.outputs.v }}
+          name: SOCMASTER ${{ steps.ver.outputs.v }}
+          files: |
+            artifacts-mac-x64/*.dmg
+            artifacts-mac-x64/*.dmg.blockmap
+          fail_on_unmatched_files: true
+          token: ${{ secrets.GITHUB_TOKEN }}
