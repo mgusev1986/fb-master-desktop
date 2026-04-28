@@ -84,6 +84,9 @@ class AccessKey(Base):
     revoked_at = Column(DateTime, nullable=True, index=True)
     # UTC; NULL — без срока. Считается от момента выдачи ключа (создания записи).
     expires_at = Column(DateTime, nullable=True, index=True)
+    # 3.0.5+: admin-пометка (свободный текст) — например «Петя из VK», «вернуть деньги»,
+    # «созвон 5 мая». Видна только владельцу платформы в админке.
+    admin_note = Column(Text, nullable=True)
 
 
 # ── Экземпляры программы (десктоп / кабинет): ID установки и последняя активность ──
@@ -129,6 +132,24 @@ class BillingRenewalOrder(Base):
     access_key_id = Column(Integer, ForeignKey("access_keys.id"), nullable=True)
     # Одноразовая выдача ключа после оплаты (Fernet), очищается после первого успешного /status
     pending_plain_key_enc = Column(Text, nullable=True)
+
+    # 3.0.5+: детали платежа из последнего IPN — для карточки в админке
+    # access-keys (как в кабинете NOWPayments). Все поля nullable.
+    np_pay_amount = Column(String(64), nullable=True)         # "99.63077342"
+    np_actually_paid = Column(String(64), nullable=True)      # фактически получено
+    np_outcome_amount = Column(String(64), nullable=True)     # за вычетом сетевой комиссии
+    np_outcome_currency = Column(String(32), nullable=True)   # "usdtbsc"
+    np_pay_currency = Column(String(32), nullable=True)       # "usdtbsc"
+    np_network_fee = Column(String(64), nullable=True)        # 0.036056 USDT
+    np_service_fee = Column(String(64), nullable=True)        # 0.497974 USDT
+    np_payin_address = Column(String(128), nullable=True)     # 0x055166347d...
+    np_payin_hash = Column(String(256), nullable=True)        # 0x1e6902b2d3...
+    np_payout_hash = Column(String(256), nullable=True)       # partner_liab...
+    np_payout_address = Column(String(128), nullable=True)    # "Balance" / wallet
+    np_purchase_id = Column(String(64), nullable=True)        # 5025310405
+    # Полный JSON-snapshot последнего IPN — для отладки если что-то странное.
+    np_ipn_payload_json = Column(JSON, nullable=True)
+    np_updated_at = Column(DateTime, nullable=True)
 
 
 # ── Доноры ───────────────────────────────────────────

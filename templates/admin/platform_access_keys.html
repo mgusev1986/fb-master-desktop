@@ -162,19 +162,28 @@
           <tr>
             <th>ID</th>
             <th>Подпись</th>
+            <th>Пометка</th>
             <th>Ключ</th>
             <th>Создан</th>
             <th>Действует до</th>
             <th>Устройство</th>
             <th>Статус</th>
+            <th>Оплата</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
           {% for k in keys %}
+          {% set bo = billing_orders.get(k.id) %}
           <tr>
             <td>{{ k.id }}</td>
             <td>{{ k.label or '—' }}</td>
+            <td style="min-width:160px;max-width:240px">
+              <form method="post" action="/admin/platform/access-keys/{{ k.id }}/note" class="ak-note-form" data-key-id="{{ k.id }}" style="display:flex;flex-direction:column;gap:6px">
+                <textarea name="note" rows="2" class="form-input ak-note-input" placeholder="Например: Петя или Вася" maxlength="500" style="font-size:0.85rem;resize:vertical;min-height:42px">{{ k.admin_note or '' }}</textarea>
+                <button type="submit" class="btn btn-sm btn-secondary" style="align-self:flex-start">Сохранить</button>
+              </form>
+            </td>
             <td style="min-width:200px;max-width:360px">
               {% if k.key_plain_enc %}
               <code class="ak-masked" style="display:block;word-break:break-all">FBM-••••••••••••••••••••••</code>
@@ -215,6 +224,15 @@
               {% endif %}
             </td>
             <td>
+              {% if bo %}
+              <button type="button" class="btn btn-sm btn-secondary ak-np-toggle" data-key-id="{{ k.id }}" aria-expanded="false" aria-controls="ak-np-row-{{ k.id }}">
+                <i class="ti ti-chevron-down"></i> NP&nbsp;#{{ bo.id }}
+              </button>
+              {% else %}
+              <span class="settings-note" title="Этот ключ не связан с заказом NOWPayments">—</span>
+              {% endif %}
+            </td>
+            <td>
               <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
               {% if not k.revoked_at %}
               <form method="post" action="/admin/platform/access-keys/{{ k.id }}/revoke" style="display:inline" onsubmit="return confirm('Отозвать этот ключ? Клиент потеряет доступ.');">
@@ -226,6 +244,96 @@
               </div>
             </td>
           </tr>
+          {% if bo %}
+          <tr id="ak-np-row-{{ k.id }}" class="ak-np-row" hidden>
+            <td colspan="10" style="padding:0;background:var(--bg-surface)">
+              <div class="ak-np-card">
+                <div class="ak-np-card__header">
+                  <span class="ak-np-card__title"><i class="ti ti-receipt"></i> NOWPayments — заказ #{{ bo.id }}</span>
+                  <span class="badge {% if bo.status == 'fulfilled' %}badge-success{% elif bo.status == 'paid_ready' %}badge-success{% elif bo.status == 'failed' %}badge-error{% else %}badge-default{% endif %}">{{ bo.status or '—' }}</span>
+                </div>
+                <div class="ak-np-card__grid">
+                  <div class="ak-np-card__field">
+                    <span class="ak-np-card__label">Order ID (наш)</span>
+                    <code class="ak-np-card__value">{{ bo.np_order_id or '—' }}</code>
+                  </div>
+                  <div class="ak-np-card__field">
+                    <span class="ak-np-card__label">Invoice ID</span>
+                    <code class="ak-np-card__value">{{ bo.np_invoice_id or '—' }}</code>
+                  </div>
+                  <div class="ak-np-card__field">
+                    <span class="ak-np-card__label">Payment ID</span>
+                    <code class="ak-np-card__value">{{ bo.np_payment_id or '—' }}</code>
+                  </div>
+                  <div class="ak-np-card__field">
+                    <span class="ak-np-card__label">Purchase ID</span>
+                    <code class="ak-np-card__value">{{ bo.np_purchase_id or '—' }}</code>
+                  </div>
+                  <div class="ak-np-card__field">
+                    <span class="ak-np-card__label">Тариф</span>
+                    <span class="ak-np-card__value">{{ bo.price_amount or '—' }} {{ (bo.price_currency or '') | upper }} · {{ bo.duration_days or '—' }} дн.</span>
+                  </div>
+                  <div class="ak-np-card__field">
+                    <span class="ak-np-card__label">Статус NP (последний)</span>
+                    <span class="ak-np-card__value">{{ bo.last_np_status or '—' }}</span>
+                  </div>
+                  <div class="ak-np-card__field">
+                    <span class="ak-np-card__label">К оплате (pay_amount)</span>
+                    <span class="ak-np-card__value">{{ bo.np_pay_amount or '—' }} {{ (bo.np_pay_currency or '') | upper }}</span>
+                  </div>
+                  <div class="ak-np-card__field">
+                    <span class="ak-np-card__label">Получено (actually_paid)</span>
+                    <span class="ak-np-card__value">{{ bo.np_actually_paid or '—' }} {{ (bo.np_pay_currency or '') | upper }}</span>
+                  </div>
+                  <div class="ak-np-card__field">
+                    <span class="ak-np-card__label">Outcome</span>
+                    <span class="ak-np-card__value">{{ bo.np_outcome_amount or '—' }} {{ (bo.np_outcome_currency or '') | upper }}</span>
+                  </div>
+                  <div class="ak-np-card__field">
+                    <span class="ak-np-card__label">Комиссия сети (network_fee)</span>
+                    <span class="ak-np-card__value">{{ bo.np_network_fee or '—' }}</span>
+                  </div>
+                  <div class="ak-np-card__field">
+                    <span class="ak-np-card__label">Комиссия NP (service_fee)</span>
+                    <span class="ak-np-card__value">{{ bo.np_service_fee or '—' }}</span>
+                  </div>
+                  <div class="ak-np-card__field ak-np-card__field--wide">
+                    <span class="ak-np-card__label">Pay-in адрес (куда платил клиент)</span>
+                    <code class="ak-np-card__value ak-np-card__value--copy" data-copy="{{ bo.np_payin_address or '' }}">{{ bo.np_payin_address or '—' }}</code>
+                  </div>
+                  <div class="ak-np-card__field ak-np-card__field--wide">
+                    <span class="ak-np-card__label">Pay-in hash (tx клиента)</span>
+                    <code class="ak-np-card__value ak-np-card__value--copy" data-copy="{{ bo.np_payin_hash or '' }}">{{ bo.np_payin_hash or '—' }}</code>
+                  </div>
+                  <div class="ak-np-card__field ak-np-card__field--wide">
+                    <span class="ak-np-card__label">Payout адрес (наш кошелёк)</span>
+                    <code class="ak-np-card__value ak-np-card__value--copy" data-copy="{{ bo.np_payout_address or '' }}">{{ bo.np_payout_address or '—' }}</code>
+                  </div>
+                  <div class="ak-np-card__field ak-np-card__field--wide">
+                    <span class="ak-np-card__label">Payout hash (tx выплаты)</span>
+                    <code class="ak-np-card__value ak-np-card__value--copy" data-copy="{{ bo.np_payout_hash or '' }}">{{ bo.np_payout_hash or '—' }}</code>
+                  </div>
+                  <div class="ak-np-card__field">
+                    <span class="ak-np-card__label">Создан</span>
+                    <span class="ak-np-card__value">{{ format_dt_madrid(bo.created_at) if bo.created_at else '—' }}</span>
+                  </div>
+                  <div class="ak-np-card__field">
+                    <span class="ak-np-card__label">IPN обновлён</span>
+                    <span class="ak-np-card__value">{{ format_dt_madrid(bo.np_updated_at) if bo.np_updated_at else '—' }}</span>
+                  </div>
+                  <div class="ak-np-card__field">
+                    <span class="ak-np-card__label">Device fingerprint (preset)</span>
+                    {% if bo.device_fingerprint %}
+                    <code class="ak-np-card__value" title="{{ bo.device_fingerprint }}">{{ bo.device_fingerprint[:16] }}…</code>
+                    {% else %}
+                    <span class="ak-np-card__value">—</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+          {% endif %}
           {% endfor %}
         </tbody>
       </table>
@@ -360,6 +468,55 @@
   });
   dlg.addEventListener("close", function () {
     try { form.reset(); } catch (e) {}
+  });
+})();
+</script>
+<script>
+// NOWPayments: разворачивание карточки заказа + click-to-copy для адресов/хешей.
+(function () {
+  document.querySelectorAll(".ak-np-toggle").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var id = btn.getAttribute("data-key-id");
+      if (!id) return;
+      var row = document.getElementById("ak-np-row-" + id);
+      if (!row) return;
+      var isOpen = !row.hasAttribute("hidden");
+      if (isOpen) {
+        row.setAttribute("hidden", "");
+        btn.setAttribute("aria-expanded", "false");
+        btn.innerHTML = '<i class="ti ti-chevron-down"></i> NP&nbsp;#' + (row.id.split("-").pop() ? btn.textContent.trim().split("#").pop() : "");
+        // Восстанавливаем оригинальный текст из data-атрибута если был.
+        var orig = btn.getAttribute("data-orig-html");
+        if (orig) btn.innerHTML = orig;
+      } else {
+        if (!btn.getAttribute("data-orig-html")) {
+          btn.setAttribute("data-orig-html", btn.innerHTML);
+        }
+        row.removeAttribute("hidden");
+        btn.setAttribute("aria-expanded", "true");
+        btn.innerHTML = '<i class="ti ti-chevron-up"></i> Скрыть';
+      }
+    });
+  });
+  document.querySelectorAll(".ak-np-card__value--copy").forEach(function (el) {
+    el.addEventListener("click", function () {
+      var text = (el.getAttribute("data-copy") || "").trim();
+      if (!text) return;
+      var orig = el.textContent;
+      function flash(msg) {
+        el.textContent = msg;
+        setTimeout(function () { el.textContent = orig; }, 1400);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () {
+          flash("✓ скопировано");
+        }).catch(function () {
+          flash("× не вышло");
+        });
+      } else {
+        flash("× нет clipboard API");
+      }
+    });
   });
 })();
 </script>

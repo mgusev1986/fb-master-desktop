@@ -205,6 +205,41 @@ def _underpayment_within_tolerance(data: dict) -> tuple[bool, float]:
     return ratio >= min_ratio, ratio
 
 
+def _save_np_payment_details(order: BillingRenewalOrder, data: dict) -> None:
+    """v3.0.5+: сохраняем детали платежа из IPN-payload в order для админ-карточки.
+
+    Названия полей в IPN от NOWPayments:
+      pay_amount, actually_paid, outcome_amount, outcome_currency,
+      pay_currency, network_fee, service_fee, pay_address, payin_hash,
+      payout_hash, payout_address, purchase_id.
+    Все хранятся как строки (избегаем round-off float).
+    """
+    def _s(key: str) -> str | None:
+        v = data.get(key)
+        if v is None:
+            return None
+        s = str(v).strip()
+        return s or None
+    if (v := _s("pay_amount")): order.np_pay_amount = v
+    if (v := _s("actually_paid")): order.np_actually_paid = v
+    if (v := _s("outcome_amount")): order.np_outcome_amount = v
+    if (v := _s("outcome_currency")): order.np_outcome_currency = v
+    if (v := _s("pay_currency")): order.np_pay_currency = v
+    if (v := _s("network_fee")): order.np_network_fee = v
+    if (v := _s("service_fee")): order.np_service_fee = v
+    if (v := _s("pay_address")): order.np_payin_address = v
+    if (v := _s("payin_hash")): order.np_payin_hash = v
+    if (v := _s("payout_hash")): order.np_payout_hash = v
+    if (v := _s("payout_address")): order.np_payout_address = v
+    if (v := _s("purchase_id")): order.np_purchase_id = v
+    # Полный snapshot последнего IPN — для отладки.
+    try:
+        order.np_ipn_payload_json = data
+    except Exception:  # noqa: BLE001
+        pass
+    order.np_updated_at = datetime.now(timezone.utc)
+
+
 def apply_ipn_to_order(db: Session, data: dict) -> None:
     order = find_order_for_ipn(db, data)
     if not order:
@@ -215,6 +250,8 @@ def apply_ipn_to_order(db: Session, data: dict) -> None:
     pid = data.get("payment_id")
     if pid is not None and not order.np_payment_id:
         order.np_payment_id = str(pid).strip() or order.np_payment_id
+    # v3.0.5+: сохраняем все детали для карточки в админке (адреса, хеши, суммы).
+    _save_np_payment_details(order, data)
     if st == "finished":
         fulfill_order_after_payment(db, order, st)
     elif st == "partially_paid":

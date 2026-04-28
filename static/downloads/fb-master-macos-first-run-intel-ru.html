@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>SOCMASTER — первый запуск на Mac (Intel)</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; max-width: 38rem; margin: 2rem auto; padding: 0 1.25rem; line-height: 1.55; color: #0f172a; }
+    h1 { font-size: 1.2rem; margin-top: 0; }
+    ol { padding-left: 1.2rem; }
+    li { margin: 0.65rem 0; }
+    code { background: #f1f5f9; padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.88em; display: inline-block; margin: 0.2rem 0; }
+    .box { background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 1rem 1.1rem; margin: 1.25rem 0; }
+    .files { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem 1.1rem; margin: 1rem 0; font-size: 0.95rem; }
+    .xattr-wrap {
+      margin: 1rem 0 0;
+      padding: 1rem 1.15rem;
+      background: #fff;
+      border: 1px solid #bbf7d0;
+      border-radius: 10px;
+    }
+    .xattr-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.75rem 1rem;
+    }
+    .xattr-cmd {
+      flex: 1 1 12rem;
+      margin: 0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 1.05rem;
+      font-weight: 700;
+      line-height: 1.45;
+      word-break: break-all;
+      color: #0f172a;
+    }
+    .btn-copy {
+      flex-shrink: 0;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 600;
+      font-size: 0.95rem;
+      padding: 0.55rem 1.1rem;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+      color: #fff;
+      box-shadow: 0 1px 2px rgba(0,0,0,.12);
+    }
+    .btn-copy:hover { filter: brightness(1.05); }
+    .btn-copy:active { transform: scale(0.98); }
+    .btn-copy.copied { background: #15803d; }
+  </style>
+</head>
+<body>
+  <h1>SOCMASTER на Mac (Intel) — что сделать по шагам</h1>
+  <p>Вы открыли файл <strong>1. Инструкция.html</strong>. В той же папке после распаковки архива лежит ещё один файл с номером в начале имени:</p>
+  <div class="files">
+    <strong>1.</strong> Инструкция.html — эта страница.<br/>
+    <strong>2.</strong> SOCMASTER-…-mac-x64.dmg — установщик для Mac на процессоре Intel (полная версия указана в имени файла).
+  </div>
+
+  <p><strong>Обычный порядок:</strong> откройте <strong>2.</strong> (файл с расширением <strong>.dmg</strong>) → перетащите <strong>SOCMASTER</strong> в папку «Программы» (Applications) → запустите программу оттуда.</p>
+
+  <div class="box">
+    <p><strong>Если Mac не даёт открыть программу</strong> (неизвестный разработчик / «повреждено» / Apple не подтвердил файл):</p>
+    <ol>
+      <li>Откройте <strong>Терминал</strong> (Программы → Утилиты → Терминал).</li>
+      <li>Нажмите кнопку <strong>«Скопировать команду»</strong> ниже, затем в Терминале вставьте (<strong>⌘V</strong>) и нажмите <strong>Enter</strong>.</li>
+      <li>Снова запустите <strong>SOCMASTER</strong> из папки «Программы».</li>
+    </ol>
+    <div class="xattr-wrap">
+      <div class="xattr-row">
+        <p class="xattr-cmd" id="xattr-text">xattr -cr "/Applications/SOCMASTER.app"</p>
+        <button type="button" class="btn-copy" id="xattr-copy" aria-label="Скопировать команду в буфер обмена">Скопировать команду</button>
+      </div>
+    </div>
+  </div>
+
+  <p><strong>Без терминала (иногда помогает):</strong></p>
+  <ol>
+    <li>В Finder откройте папку «Программы», найдите <strong>SOCMASTER</strong>.</li>
+    <li><strong>Правый клик</strong> (или Control + клик) по иконке → выберите <strong>«Открыть»</strong>.</li>
+    <li>В окне нажмите <strong>«Открыть»</strong> ещё раз.</li>
+  </ol>
+  <p><strong>Ещё вариант:</strong> <strong>Системные настройки</strong> (в новых macOS — <strong>Системные параметры</strong>) → <strong>Конфиденциальность и безопасность</strong> — после попытки запуска может появиться <strong>«Всё равно открыть»</strong>.</p>
+
+  <p style="margin-top:1.5rem;color:#64748b;font-size:0.9rem">Эта сборка — для Mac с процессором <strong>Intel</strong> (MacBook 2017–2020, iMac / Mac mini до 2020). Для Mac с чипом <strong>Apple Silicon</strong> (M1–M4) скачайте отдельную сборку <em>mac-arm64</em>.</p>
+
+  <script>
+    (function () {
+      var XATTR = 'xattr -cr "/Applications/SOCMASTER.app"';
+      var btn = document.getElementById('xattr-copy');
+      if (!btn) return;
+      var label = 'Скопировать команду';
+      function flashCopied() {
+        btn.textContent = 'Скопировано!';
+        btn.classList.add('copied');
+        setTimeout(function () {
+          btn.textContent = label;
+          btn.classList.remove('copied');
+        }, 2200);
+      }
+      btn.addEventListener('click', function () {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(XATTR).then(flashCopied).catch(fallbackCopy);
+        } else {
+          fallbackCopy();
+        }
+      });
+      function fallbackCopy() {
+        try {
+          var ta = document.createElement('textarea');
+          ta.value = XATTR;
+          ta.setAttribute('readonly', '');
+          ta.style.position = 'fixed';
+          ta.style.left = '-9999px';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          flashCopied();
+        } catch (e) {
+          btn.textContent = 'Выделите команду выше и ⌘C';
+          setTimeout(function () { btn.textContent = label; }, 3000);
+        }
+      }
+    })();
+  </script>
+</body>
+</html>

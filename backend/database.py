@@ -1483,6 +1483,8 @@ def init_db() -> None:
     _migrate_twitter_accounts_credentials()
     _migrate_instagram_accounts_proxy_lease_ends_at()
     _migrate_twitter_accounts_proxy_lease_ends_at()
+    _migrate_billing_renewal_orders_np_details()
+    _migrate_access_keys_admin_note()
 
 
 def _migrate_reddit_accounts_browser_mode() -> None:
@@ -1599,4 +1601,57 @@ def _migrate_twitter_accounts_proxy_lease_ends_at() -> None:
         "twitter_accounts",
         (("proxy_lease_ends_at", "DATETIME"),),
         (("proxy_lease_ends_at", "TIMESTAMP WITH TIME ZONE"),),
+    )
+
+
+def _migrate_billing_renewal_orders_np_details() -> None:
+    """Добавить детали платежа из IPN NOWPayments в `billing_renewal_orders` (v3.0.5+).
+
+    Используется для карточки платежа в админке access-keys (как в кабинете
+    NOWPayments). Все колонки nullable — существующие старые заказы получают NULL.
+    """
+    cols_sqlite = (
+        ("np_pay_amount", "VARCHAR(64)"),
+        ("np_actually_paid", "VARCHAR(64)"),
+        ("np_outcome_amount", "VARCHAR(64)"),
+        ("np_outcome_currency", "VARCHAR(32)"),
+        ("np_pay_currency", "VARCHAR(32)"),
+        ("np_network_fee", "VARCHAR(64)"),
+        ("np_service_fee", "VARCHAR(64)"),
+        ("np_payin_address", "VARCHAR(128)"),
+        ("np_payin_hash", "VARCHAR(256)"),
+        ("np_payout_hash", "VARCHAR(256)"),
+        ("np_payout_address", "VARCHAR(128)"),
+        ("np_purchase_id", "VARCHAR(64)"),
+        ("np_ipn_payload_json", "JSON"),
+        ("np_updated_at", "DATETIME"),
+    )
+    cols_pg = (
+        ("np_pay_amount", "VARCHAR(64)"),
+        ("np_actually_paid", "VARCHAR(64)"),
+        ("np_outcome_amount", "VARCHAR(64)"),
+        ("np_outcome_currency", "VARCHAR(32)"),
+        ("np_pay_currency", "VARCHAR(32)"),
+        ("np_network_fee", "VARCHAR(64)"),
+        ("np_service_fee", "VARCHAR(64)"),
+        ("np_payin_address", "VARCHAR(128)"),
+        ("np_payin_hash", "VARCHAR(256)"),
+        ("np_payout_hash", "VARCHAR(256)"),
+        ("np_payout_address", "VARCHAR(128)"),
+        ("np_purchase_id", "VARCHAR(64)"),
+        ("np_ipn_payload_json", "JSONB"),
+        ("np_updated_at", "TIMESTAMP WITH TIME ZONE"),
+    )
+    _add_columns("billing_renewal_orders", cols_sqlite, cols_pg)
+
+
+def _migrate_access_keys_admin_note() -> None:
+    """Добавить admin_note (TEXT) к `access_keys` для пометок админа (v3.0.5+).
+
+    Свободный текст: имя клиента, контекст, заметка для возврата денег и т.п.
+    """
+    _add_columns(
+        "access_keys",
+        (("admin_note", "TEXT"),),
+        (("admin_note", "TEXT"),),
     )

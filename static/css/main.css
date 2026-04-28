@@ -1965,6 +1965,94 @@ body.fb-confirm-modal-open {
   justify-content: flex-end;
 }
 
+/* ── NOWPayments: карточка заказа в платформенной админке ── */
+.ak-np-row > td {
+  border-top: 0 !important;
+}
+
+.ak-np-card {
+  margin: 4px 8px 12px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04);
+}
+
+.ak-np-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed var(--border);
+}
+
+.ak-np-card__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.ak-np-card__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px 18px;
+}
+
+.ak-np-card__field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ak-np-card__field--wide {
+  grid-column: 1 / -1;
+}
+
+.ak-np-card__label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+
+.ak-np-card__value {
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  word-break: break-all;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+}
+
+.ak-np-card__value--copy {
+  cursor: copy;
+  display: inline-block;
+  padding: 4px 6px;
+  border-radius: 4px;
+  background: var(--bg-surface);
+  border: 1px dashed transparent;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+
+.ak-np-card__value--copy:hover {
+  border-color: var(--border);
+  background: var(--bg-surface-hover);
+}
+
+.ak-note-form .ak-note-input {
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-family: inherit;
+}
+
 /* ── Прогрев аккаунтов: карточки по аккаунту ── */
 .nw-accounts-stack {
   display: flex;

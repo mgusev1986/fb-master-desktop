@@ -338,6 +338,23 @@ async def platform_access_keys_page(request: Request, db: Session = Depends(get_
         q = q.filter(not_revoked, not_expired, AccessKey.device_fingerprint.is_(None))
 
     keys = q.limit(200).all()
+    # 3.0.5+: подгружаем последний NOWPayments-заказ для каждого ключа
+    # (если оплата шла через NP) — для карточки в админке.
+    from backend.models import BillingRenewalOrder
+    key_ids = [k.id for k in keys if k.id is not None]
+    billing_orders: dict[int, BillingRenewalOrder] = {}
+    if key_ids:
+        rows = (
+            db.query(BillingRenewalOrder)
+            .filter(BillingRenewalOrder.access_key_id.in_(key_ids))
+            .order_by(BillingRenewalOrder.id.desc())
+            .all()
+        )
+        # Для каждого access_key_id берём САМЫЙ свежий заказ.
+        for r in rows:
+            kid = int(r.access_key_id) if r.access_key_id else None
+            if kid is not None and kid not in billing_orders:
+                billing_orders[kid] = r
     flash_plain = (request.session.pop(_SESSION_NEW_ACCESS_KEY, None) or "").strip()
     templates = request.app.state.templates
     return templates.TemplateResponse(
@@ -347,10 +364,37 @@ async def platform_access_keys_page(request: Request, db: Session = Depends(get_
             "user": request.session.get("user"),
             "page_id": "platform_access_keys",
             "keys": keys,
+            "billing_orders": billing_orders,
             "new_key_plaintext": flash_plain,
             "filter_status": filt,
             "access_key_counts": _access_key_counts(db, now),
         },
+    )
+
+
+@router.post("/admin/platform/access-keys/{key_id}/note")
+async def platform_access_keys_set_note(
+    request: Request,
+    key_id: int,
+    db: Session = Depends(get_db),
+    note: str = Form(""),
+):
+    """v3.0.5+: сохранить admin_note (свободный текст-пометка) на ключе.
+
+    Используется для пометок типа «Петя из VK», «созвон 5 мая», «вернуть деньги».
+    Видна только в админке владельцу платформы. Подпись (label) при этом
+    остаётся неизменной — это отдельное поле, проставляемое при создании.
+    """
+    _require_platform_owner(request)
+    row = db.get(AccessKey, key_id)
+    if row is None:
+        raise HTTPException(status_code=404, detail="access_key_not_found")
+    text = (note or "").strip()
+    row.admin_note = text[:500] if text else None
+    db.commit()
+    return RedirectResponse(
+        request.headers.get("referer") or "/admin/platform/access-keys",
+        status_code=303,
     )
 
 
