@@ -56,6 +56,49 @@ async def accounts_import(request: Request, blob: str = Form(default="")):
     return RedirectResponse(f"/twitter/accounts{qs}", status_code=303)
 
 
+@router.post("/import-credentials")
+async def accounts_import_credentials(
+    request: Request,
+    username: str = Form(...),
+    password: str = Form(...),
+    label: str = Form(default=""),
+    totp_secret: str = Form(default=""),
+    proxy_url: str = Form(default=""),
+    proxy_username: str = Form(default=""),
+    proxy_password: str = Form(default=""),
+):
+    """Свой личный X/Twitter-аккаунт через логин + пароль (v2.93+).
+
+    Cookies появятся после первого Playwright-логина (кнопка «Войти»
+    на карточке аккаунта). Аналог IG accounts_import_credentials.
+    """
+    from urllib.parse import quote
+
+    db = SessionLocal()
+    try:
+        try:
+            acc = accounts_svc.create_from_credentials(
+                db,
+                _org_id(request),
+                username=username,
+                password=password,
+                label=label or None,
+                totp_secret=totp_secret or None,
+                proxy_url=proxy_url or None,
+                proxy_username=proxy_username or None,
+                proxy_password=proxy_password or None,
+            )
+            qs = f"?notice=credentials_imported&label={quote((acc.label or '')[:80], safe='')}"
+        except ValueError as e:
+            qs = f"?notice=credentials_error&err={quote(str(e)[:200], safe='')}"
+        except Exception as e:  # noqa: BLE001
+            db.rollback()
+            qs = f"?notice=credentials_error&err={quote(str(e)[:200], safe='')}"
+    finally:
+        db.close()
+    return RedirectResponse(f"/twitter/accounts{qs}", status_code=303)
+
+
 @router.post("/{account_id}/proxy")
 async def accounts_set_proxy(
     account_id: int,

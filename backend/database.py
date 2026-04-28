@@ -1480,6 +1480,7 @@ def init_db() -> None:
     _seed_natural_warmup_topic_stopwords()
     _migrate_reddit_accounts_browser_mode()
     _migrate_instagram_accounts_credentials()
+    _migrate_twitter_accounts_credentials()
 
 
 def _migrate_reddit_accounts_browser_mode() -> None:
@@ -1536,6 +1537,28 @@ def _migrate_instagram_accounts_credentials() -> None:
     """
     _add_columns(
         "instagram_accounts",
+        (
+            ("login_username", "VARCHAR(255)"),
+            ("enc_password", "TEXT"),
+            ("enc_totp_secret", "TEXT"),
+        ),
+        (
+            ("login_username", "VARCHAR(255)"),
+            ("enc_password", "TEXT"),
+            ("enc_totp_secret", "TEXT"),
+        ),
+    )
+
+
+def _migrate_twitter_accounts_credentials() -> None:
+    """Добавить поля login_username/enc_password/enc_totp_secret к `twitter_accounts`.
+
+    Нужно для режима «свой личный аккаунт через логин+пароль» (v2.93+).
+    Безопасно: только ADD COLUMN nullable — купленные аккаунты (cookies-only)
+    продолжают работать.
+    """
+    _add_columns(
+        "twitter_accounts",
         (
             ("login_username", "VARCHAR(255)"),
             ("enc_password", "TEXT"),

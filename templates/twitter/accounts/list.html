@@ -27,9 +27,30 @@
       <p class="x-banner__text">Добавлено: <strong>{{ imported }}</strong>. Ошибок: <strong>{{ errors_count }}</strong>.</p>
     </div>
   </div>
+  {% elif notice == 'credentials_imported' %}
+  <div class="x-banner">
+    <div class="x-banner__icon"><i class="ti ti-check"></i></div>
+    <div class="x-banner__body">
+      <h2 class="x-banner__title">Аккаунт добавлен</h2>
+      <p class="x-banner__text">Сохранили логин и пароль для <strong>{{ request.query_params.get('label') or 'X-аккаунта' }}</strong>. Осталось нажать «Войти» — система откроет Chromium, автоматически введёт учётные данные и сохранит cookies сессии.</p>
+    </div>
+  </div>
+  {% elif notice == 'credentials_error' %}
+  <div class="x-banner" style="border-color:#c33;">
+    <div class="x-banner__icon" style="color:#c33;"><i class="ti ti-alert-triangle"></i></div>
+    <div class="x-banner__body">
+      <h2 class="x-banner__title">Не удалось сохранить аккаунт</h2>
+      <p class="x-banner__text">{{ request.query_params.get('err') or 'Проверьте логин и пароль.' }}</p>
+    </div>
+  </div>
   {% endif %}
 
-  <section class="x-card x-card--accent">
+  <div class="x-tabs">
+    <button type="button" class="x-tab x-tab--active" data-tab="bought"><i class="ti ti-shopping-cart"></i> Купленный аккаунт (cookies)</button>
+    <button type="button" class="x-tab" data-tab="credentials"><i class="ti ti-key"></i> Свой личный (логин + пароль)</button>
+  </div>
+
+  <section class="x-card x-card--accent x-tab-panel x-tab-panel--active" data-panel="bought">
     <h2 class="x-card__title"><i class="ti ti-upload"></i> Импорт купленных X-аккаунтов</h2>
     <p class="x-card__desc">Поддерживаемые форматы (одна строка = один аккаунт):</p>
     <ul style="margin:0;padding-left:20px;color:var(--text-secondary,#606770);font:400 13px/1.6 Inter,sans-serif;">
@@ -44,6 +65,61 @@
       <div style="display:flex;justify-content:flex-end;"><button type="submit" class="x-btn x-btn--primary"><i class="ti ti-upload"></i> Импортировать</button></div>
     </form>
   </section>
+
+  <section class="x-card x-card--accent x-tab-panel" data-panel="credentials" style="display:none;">
+    <h2 class="x-card__title"><i class="ti ti-key"></i> Свой личный X через логин и пароль</h2>
+    <p class="x-card__desc">Для ваших <strong>собственных</strong> аккаунтов. После сохранения на карточке появится кнопка «Войти» — система откроет Chromium, автоматически введёт логин и пароль, пройдёт возможный 2FA-код (если задан секрет) и сохранит cookies сессии.</p>
+    <form method="post" action="/twitter/accounts/import-credentials" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <label style="display:flex;flex-direction:column;gap:4px;grid-column:span 2;">
+        <span style="font:500 12px/1 Inter,sans-serif;color:var(--text-secondary);">Логин / email / телефон X (Twitter) *</span>
+        <input type="text" name="username" required autocomplete="off" placeholder="my_handle или user@mail.com или +380..." style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 14px/1.2 Inter,sans-serif;"/>
+      </label>
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font:500 12px/1 Inter,sans-serif;color:var(--text-secondary);">Пароль *</span>
+        <input type="password" name="password" required autocomplete="off" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 14px/1.2 Inter,sans-serif;"/>
+      </label>
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font:500 12px/1 Inter,sans-serif;color:var(--text-secondary);">2FA-секрет (Base32, необязательно)</span>
+        <input type="text" name="totp_secret" autocomplete="off" placeholder="JBSWY3DPEHPK3PXP" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 13px/1.2 ui-monospace,monospace;"/>
+      </label>
+      <label style="display:flex;flex-direction:column;gap:4px;grid-column:span 2;">
+        <span style="font:500 12px/1 Inter,sans-serif;color:var(--text-secondary);">Название в списке (необязательно)</span>
+        <input type="text" name="label" autocomplete="off" placeholder="Мой основной X" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 14px/1.2 Inter,sans-serif;"/>
+      </label>
+      <label style="display:flex;flex-direction:column;gap:4px;grid-column:span 2;">
+        <span style="font:500 12px/1 Inter,sans-serif;color:var(--text-secondary);">Прокси URL (рекомендуется residential / mobile)</span>
+        <input type="text" name="proxy_url" autocomplete="off" placeholder="http://host:port" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 13px/1.2 ui-monospace,monospace;"/>
+      </label>
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font:500 12px/1 Inter,sans-serif;color:var(--text-secondary);">Прокси-логин</span>
+        <input type="text" name="proxy_username" autocomplete="off" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 13px/1.2 ui-monospace,monospace;"/>
+      </label>
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font:500 12px/1 Inter,sans-serif;color:var(--text-secondary);">Прокси-пароль</span>
+        <input type="password" name="proxy_password" autocomplete="off" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 13px/1.2 ui-monospace,monospace;"/>
+      </label>
+      <div style="display:flex;justify-content:flex-end;grid-column:span 2;"><button type="submit" class="x-btn x-btn--primary"><i class="ti ti-key"></i> Сохранить и войти позже</button></div>
+    </form>
+  </section>
+
+  <script>
+    (function () {
+      var tabs = document.querySelectorAll('.x-tab');
+      var panels = document.querySelectorAll('.x-tab-panel');
+      tabs.forEach(function (t) {
+        t.addEventListener('click', function () {
+          tabs.forEach(function (x) { x.classList.remove('x-tab--active'); });
+          t.classList.add('x-tab--active');
+          var key = t.getAttribute('data-tab');
+          panels.forEach(function (p) {
+            var active = p.getAttribute('data-panel') === key;
+            p.classList.toggle('x-tab-panel--active', active);
+            p.style.display = active ? '' : 'none';
+          });
+        });
+      });
+    })();
+  </script>
 
   <section>
     <h2 class="x-card__title" style="margin:8px 0 12px;">Подключённые аккаунты</h2>
@@ -63,9 +139,12 @@
               {% else %}compliance-cell__level--partial{% endif %}">{{ a.status }}</span>
           </header>
           <p class="x-card__desc" style="font-size:13px;">
-            cookies: <strong>{{ (a.cookies_json or [])|length }}</strong>
+            {% if a.login_username %}логин: <strong>{{ a.login_username }}</strong> · {% endif %}cookies: <strong>{{ (a.cookies_json or [])|length }}</strong>
             {% if a.cookies_imported_at %} · импорт: {{ a.cookies_imported_at.strftime('%d.%m.%Y %H:%M') }}{% endif %}
           </p>
+          {% if a.status == 'needs_login' %}
+          <p style="margin:0;padding:8px 10px;border-radius:8px;background:color-mix(in srgb,#b26a00 14%,transparent);color:#b26a00;font:500 12px/1.4 Inter,sans-serif;"><i class="ti ti-key"></i> Нужен первый вход: откроется Chromium, система введёт логин/пароль и сохранит cookies.</p>
+          {% endif %}
           {% if a.login_blocked_reason %}
           <p style="margin:0;padding:8px 10px;border-radius:8px;background:color-mix(in srgb,#c33 12%,transparent);color:#c33;font:400 12px/1.4 Inter,sans-serif;">
             <i class="ti ti-alert-triangle"></i> {{ a.login_blocked_reason }}
@@ -112,5 +191,9 @@
 .x-stats__pill{padding:6px 10px;border-radius:999px;background:var(--bg-surface);border:1px solid var(--border);color:var(--text-secondary);font:500 12px/1 Inter,sans-serif;}
 .x-stats__pill strong{color:var(--text-primary);margin-right:4px;}
 .x-stats__pill--ok strong{color:#1b873f;} .x-stats__pill--warn strong{color:#b26a00;}
+.x-tabs{display:flex;gap:8px;margin:16px 0 10px;flex-wrap:wrap;}
+.x-tab{appearance:none;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-secondary);padding:8px 14px;border-radius:999px;font:500 13px/1 Inter,sans-serif;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .15s;}
+.x-tab:hover{color:var(--text-primary);border-color:color-mix(in srgb,var(--ws-accent) 35%,var(--border));}
+.x-tab--active{background:color-mix(in srgb,var(--ws-accent) 16%,transparent);border-color:var(--ws-accent);color:var(--text-primary);}
 </style>
 {% endblock %}

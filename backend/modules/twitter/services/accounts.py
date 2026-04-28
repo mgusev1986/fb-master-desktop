@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from backend.config import BROWSER_PROFILES_DIR
 from backend.modules.twitter.models import TwitterAccount, TwitterComplianceEvent
 from backend.modules.twitter.services.cookie_import import ParsedTwitterAccount, parse_text
+from backend.services.fb_credentials_crypto import encrypt_secret
 
 
 _PROFILE_PREFIX = "twitter"
@@ -68,6 +69,70 @@ def create_from_parsed(db: Session, organization_id: int, parsed: ParsedTwitterA
     acc.profile_dir = _make_profile_dir(label, acc.id)
     Path(acc.profile_dir).mkdir(parents=True, exist_ok=True)
     log_event(db, organization_id, acc.id, "account_imported", "info", {"label": acc.label, "handle": handle})
+    db.commit()
+    return acc
+
+
+def create_from_credentials(
+    db: Session,
+    organization_id: int,
+    *,
+    username: str,
+    password: str,
+    label: str | None = None,
+    totp_secret: str | None = None,
+    proxy_url: str | None = None,
+    proxy_username: str | None = None,
+    proxy_password: str | None = None,
+    handle_hint: str | None = None,
+) -> TwitterAccount:
+    """Импорт «своего» X/Twitter-аккаунта через логин + пароль.
+
+    Cookies ещё нет — они появятся после первого Playwright-логина
+    (кнопка «Войти» на карточке аккаунта). Статус — `needs_login`.
+    Аналог `InstagramAccount.create_from_credentials` (v2.93+).
+    """
+    user_s = (username or "").strip()
+    pwd_s = (password or "").strip()
+    if not user_s:
+        raise ValueError("Укажите логин/email/телефон X (Twitter)")
+    if not pwd_s:
+        raise ValueError("Укажите пароль")
+
+    # handle = логин без @, если он похож на @handle (без точек/email/цифр в начале)
+    handle = (handle_hint or "").strip().lstrip("@") or None
+    if not handle and re.match(r"^[a-zA-Z0-9_]{2,15}$", user_s) and "@" not in user_s:
+        handle = user_s.lstrip("@")
+
+    final_label = (label or "").strip() or (handle or user_s)[:64]
+
+    acc = TwitterAccount(
+        organization_id=organization_id,
+        label=final_label[:255],
+        handle=handle,
+        full_name=None,
+        profile_url=f"https://x.com/{handle}" if handle else None,
+        profile_dir=_make_profile_dir(final_label),
+        cookies_json=None,
+        cookies_imported_at=None,
+        proxy_enabled=bool((proxy_url or "").strip()),
+        proxy_url=(proxy_url or "").strip() or None,
+        proxy_username=(proxy_username or "").strip() or None,
+        proxy_password=(proxy_password or "").strip() or None,
+        status="needs_login",
+        session_ok=None,
+        login_username=user_s,
+        enc_password=encrypt_secret(pwd_s),
+        enc_totp_secret=encrypt_secret(totp_secret.strip()) if (totp_secret or "").strip() else None,
+    )
+    db.add(acc)
+    db.flush()
+    acc.profile_dir = _make_profile_dir(final_label, acc.id)
+    Path(acc.profile_dir).mkdir(parents=True, exist_ok=True)
+    log_event(
+        db, organization_id, acc.id, "account_imported_credentials", "info",
+        {"label": acc.label, "handle": handle, "username": user_s},
+    )
     db.commit()
     return acc
 
