@@ -167,12 +167,16 @@ def fulfill_order_after_payment(db: Session, order: BillingRenewalOrder, np_stat
 
 def _underpayment_within_tolerance(data: dict) -> tuple[bool, float]:
     """
-    Проверяет, попадает ли недоплата в допуск NOWPAYMENTS_UNDERPAYMENT_TOLERANCE_PCT.
+    Проверяет, попадает ли недоплата в допуск.
     Возвращает (within_tolerance, ratio_paid). ratio = actually_paid / pay_amount.
 
     Применяется только для статуса partially_paid: если получатель прислал чуть меньше
     из-за проскальзывания курса USDT/USD или комиссии сети — это всё ещё считается
-    успешной оплатой. По умолчанию граница 0.5%.
+    успешной оплатой.
+
+    С 2.92 — приоритет USD-допуска (NOWPAYMENTS_UNDERPAYMENT_TOLERANCE_USD, по умолчанию $1).
+    Если получено ≥ (pay_amount − $1) → засчитываем как оплачено.
+    PCT-допуск (0.5% по умолчанию) — fallback на случай если USD-допуск выключен (=0).
     """
     try:
         pay_amount = float(data.get("pay_amount") or 0)
@@ -187,8 +191,17 @@ def _underpayment_within_tolerance(data: dict) -> tuple[bool, float]:
     if pay_amount <= 0 or actually_paid <= 0:
         return False, 0.0
     ratio = actually_paid / pay_amount
-    tolerance = float(getattr(app_config, "NOWPAYMENTS_UNDERPAYMENT_TOLERANCE_PCT", 0.5))
-    min_ratio = max(0.0, 1.0 - tolerance / 100.0)
+
+    # 2.92: USD-допуск в приоритете. Это абсолютная погрешность в долларах
+    # (или эквиваленте крипто-актива), одинаково удобная для тарифа $79 и $2000.
+    tolerance_usd = float(getattr(app_config, "NOWPAYMENTS_UNDERPAYMENT_TOLERANCE_USD", 1.0))
+    if tolerance_usd > 0:
+        diff = pay_amount - actually_paid
+        return diff <= tolerance_usd, ratio
+
+    # Fallback: процентный допуск (legacy, 0.5%).
+    tolerance_pct = float(getattr(app_config, "NOWPAYMENTS_UNDERPAYMENT_TOLERANCE_PCT", 0.5))
+    min_ratio = max(0.0, 1.0 - tolerance_pct / 100.0)
     return ratio >= min_ratio, ratio
 
 
@@ -206,19 +219,29 @@ def apply_ipn_to_order(db: Session, data: dict) -> None:
         fulfill_order_after_payment(db, order, st)
     elif st == "partially_paid":
         ok, ratio = _underpayment_within_tolerance(data)
+        try:
+            _pay_amt = float(data.get("pay_amount") or 0)
+            _act = float(data.get("actually_paid") or data.get("pay_amount_received") or data.get("outcome_amount") or 0)
+            _diff = _pay_amt - _act
+        except (TypeError, ValueError):
+            _diff = 0.0
+        _tol_usd = float(getattr(app_config, "NOWPAYMENTS_UNDERPAYMENT_TOLERANCE_USD", 1.0))
         if ok:
             logger.info(
-                "NOWPayments: partially_paid в пределах допуска (получено %.4f%% от суммы, "
-                "порог %.2f%%) — считаем как finished, order_id=%s",
+                "NOWPayments: partially_paid в пределах допуска (недоплата %.4f, порог $%.2f, "
+                "ratio %.4f%%) — считаем как finished, order_id=%s",
+                _diff,
+                _tol_usd,
                 ratio * 100.0,
-                float(getattr(app_config, "NOWPAYMENTS_UNDERPAYMENT_TOLERANCE_PCT", 0.5)),
                 order.np_order_id,
             )
             fulfill_order_after_payment(db, order, st)
         else:
             logger.warning(
-                "NOWPayments: partially_paid вне допуска (получено %.4f%% от суммы) — "
-                "ключ не выдан, order_id=%s",
+                "NOWPayments: partially_paid вне допуска (недоплата %.4f > $%.2f, "
+                "ratio %.4f%%) — ключ не выдан, order_id=%s",
+                _diff,
+                _tol_usd,
                 ratio * 100.0,
                 order.np_order_id,
             )

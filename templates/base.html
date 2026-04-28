@@ -18,10 +18,55 @@
 <aside class="sidebar">
   <div class="sidebar-header">
     <div class="sidebar-logo">
-      <span class="sidebar-logo__mark sidebar-logo__mark--facebook">SOC</span>MASTER
+      <span class="sidebar-logo__mark sidebar-logo__mark--facebook">SOC</span>MASTER{% if fbm_desktop_app_version %}<span class="sidebar-logo__version" title="Версия программы">v{{ fbm_desktop_app_version }}</span>{% endif %}
     </div>
-    {% if fbm_desktop_app_version %}
-    <div class="sidebar-version-line" title="Версия программы">v{{ fbm_desktop_app_version }}</div>
+    {# 2.92: блок с лицензией и ID перенесён из sidebar-footer наверх под логотип
+       по запросу пользователя. Footer теперь содержит только theme-toggle и logout. #}
+    {% if user and not fb_master_no_auth() %}
+    <div class="sidebar-user sidebar-user--top">
+      {% if user.picture %}
+      <img src="{{ user.picture }}" alt=""/>
+      {% else %}
+      <i class="ti ti-user-circle" style="font-size:32px;color:var(--text-sidebar)"></i>
+      {% endif %}
+      <div class="sidebar-user-info">
+        {% set ak_license = fbm_sidebar_access_key_license(request) %}
+        {% if ak_license %}
+        {% if ak_license.forever %}
+          {% set _lic_state = "ok" %}
+        {% elif ak_license.last_calendar_day or (ak_license.days_remaining is not none and ak_license.days_remaining <= 3) %}
+          {% set _lic_state = "danger" %}
+        {% elif ak_license.days_remaining is not none and ak_license.days_remaining <= 7 %}
+          {% set _lic_state = "warn" %}
+        {% else %}
+          {% set _lic_state = "ok" %}
+        {% endif %}
+        <div class="sidebar-license-lines" role="status">
+          <div class="sidebar-license-line">Оплаченный период: <span class="sidebar-license-paid">{{ ak_license.paid_period_label }}</span></div>
+          {% if ak_license.forever %}
+          <div class="sidebar-license-pill" data-license-state="{{ _lic_state }}">Срок действия ключа не ограничен.</div>
+          {% elif ak_license.last_calendar_day %}
+          <div class="sidebar-license-pill" data-license-state="{{ _lic_state }}">Последний день доступа, до {{ format_dt_madrid(ak_license.expires_at) }}</div>
+          {% else %}
+          <div class="sidebar-license-pill" id="fbm-license-countdown" data-license-state="{{ _lic_state }}" data-expires-at="{{ ak_license.expires_at_iso }}">
+            Осталось <span id="fbm-license-days">{{ ak_license.days_remaining }}</span> <span id="fbm-license-days-word">{{ ak_license.days_word }}</span>,
+            до {{ format_dt_madrid(ak_license.expires_at) }}
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+        <div class="sidebar-user-email" title="Уникальный ID этой копии программы">
+          <span class="settings-note" style="font-size:11px;opacity:.85">ID:</span>
+          <code style="font-size:11px;word-break:break-all">{{ fbm_client_installation_id() }}</code>
+        </div>
+      </div>
+      <style>
+        .sidebar-license-pill { display:inline-block; padding:4px 9px; border-radius:7px; font-size:11.5px; line-height:1.35; margin-top:3px; border:1px solid transparent; transition:background .2s,color .2s,border-color .2s; }
+        .sidebar-license-pill[data-license-state="ok"]     { background: rgba(46,160,67,0.16); color:#5cd17a; border-color: rgba(46,160,67,0.45); }
+        .sidebar-license-pill[data-license-state="warn"]   { background: rgba(255,166,0,0.16); color:#ffb547; border-color: rgba(255,166,0,0.50); }
+        .sidebar-license-pill[data-license-state="danger"] { background: rgba(220,80,80,0.18); color:#ff8a8a; border-color: rgba(220,80,80,0.55); font-weight:600; }
+      </style>
+    </div>
     {% endif %}
   </div>
 
@@ -119,56 +164,14 @@
   </nav>
 
   <div class="sidebar-footer">
-    {# В режиме локального оператора (FB_MASTER_NO_AUTH) блок с именем, лицензией и ID не показываем — десктоп всегда «локальный». #}
-    {% if user and not fb_master_no_auth() %}
-    <div class="sidebar-user">
-      {% if user.picture %}
-      <img src="{{ user.picture }}" alt=""/>
-      {% else %}
-      <i class="ti ti-user-circle" style="font-size:32px;color:var(--text-sidebar)"></i>
-      {% endif %}
-      <div class="sidebar-user-info">
-        {% set ak_license = fbm_sidebar_access_key_license(request) %}
-        {% if ak_license %}
-        {% if ak_license.forever %}
-          {% set _lic_state = "ok" %}
-        {% elif ak_license.last_calendar_day or (ak_license.days_remaining is not none and ak_license.days_remaining <= 3) %}
-          {% set _lic_state = "danger" %}
-        {% elif ak_license.days_remaining is not none and ak_license.days_remaining <= 7 %}
-          {% set _lic_state = "warn" %}
-        {% else %}
-          {% set _lic_state = "ok" %}
-        {% endif %}
-        <div class="sidebar-license-lines" role="status">
-          <div class="sidebar-license-line">Оплаченный период: <span class="sidebar-license-paid">{{ ak_license.paid_period_label }}</span></div>
-          {% if ak_license.forever %}
-          <div class="sidebar-license-pill" data-license-state="{{ _lic_state }}">Срок действия ключа не ограничен.</div>
-          {% elif ak_license.last_calendar_day %}
-          <div class="sidebar-license-pill" data-license-state="{{ _lic_state }}">Последний день доступа, до {{ format_dt_madrid(ak_license.expires_at) }}</div>
-          {% else %}
-          <div class="sidebar-license-pill" id="fbm-license-countdown" data-license-state="{{ _lic_state }}" data-expires-at="{{ ak_license.expires_at_iso }}">
-            Осталось <span id="fbm-license-days">{{ ak_license.days_remaining }}</span> <span id="fbm-license-days-word">{{ ak_license.days_word }}</span>,
-            до {{ format_dt_madrid(ak_license.expires_at) }}
-          </div>
-          {% endif %}
-        </div>
-        {% endif %}
-        <div class="sidebar-user-email" title="Уникальный ID этой копии программы">
-          <span class="settings-note" style="font-size:11px;opacity:.85">ID:</span>
-          <code style="font-size:11px;word-break:break-all">{{ fbm_client_installation_id() }}</code>
-        </div>
-      </div>
-      <style>
-        .sidebar-license-pill { display:inline-block; padding:4px 9px; border-radius:7px; font-size:11.5px; line-height:1.35; margin-top:3px; border:1px solid transparent; transition:background .2s,color .2s,border-color .2s; }
-        .sidebar-license-pill[data-license-state="ok"]     { background: rgba(46,160,67,0.16); color:#5cd17a; border-color: rgba(46,160,67,0.45); }
-        .sidebar-license-pill[data-license-state="warn"]   { background: rgba(255,166,0,0.16); color:#ffb547; border-color: rgba(255,166,0,0.50); }
-        .sidebar-license-pill[data-license-state="danger"] { background: rgba(220,80,80,0.18); color:#ff8a8a; border-color: rgba(220,80,80,0.55); font-weight:600; }
-      </style>
-    </div>
-    {% endif %}
+    {# 2.92: блок sidebar-user перенесён в sidebar-header (наверх под логотип) — см. начало файла.
+       В footer оставлены только theme-toggle и language-switcher (заглушка пока что). #}
     <div class="sidebar-actions">
       <button id="theme-toggle" class="btn-sidebar" title="Сменить тему">
         <i id="theme-icon" class="ti ti-moon"></i>
+      </button>
+      <button id="lang-toggle" class="btn-sidebar" title="Сменить язык (скоро)" onclick="alert('Скоро будет доступен выбор языка интерфейса.')">
+        <i class="ti ti-language"></i>
       </button>
       {% if sidebar_show_logout(request, user) %}
       <a href="/auth/logout" class="btn-sidebar">

@@ -260,7 +260,9 @@ body.m2-desktop-page .m2-desktop-root > .page-header .subtitle {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
 }
 
-/* Строка под логотипом (десктоп и веб-кабинет на VPS) */
+/* Строка под логотипом (десктоп и веб-кабинет на VPS).
+ * 2.92: версия теперь inline в .sidebar-logo через .sidebar-logo__version,
+ * этот класс остаётся для обратной совместимости (на случай legacy шаблонов). */
 .sidebar-version-line {
   margin-top: 6px;
   font-size: var(--font-size-xs);
@@ -269,6 +271,31 @@ body.m2-desktop-page .m2-desktop-root > .page-header .subtitle {
   color: var(--text-sidebar);
   opacity: 0.88;
   white-space: nowrap;
+}
+
+/* 2.92: версия рядом с логотипом, на одной строке. Юзер запросил перенос
+ * "v2.91" из-под "SOCMASTER" в одну строку с логотипом. */
+.sidebar-logo__version {
+  margin-left: 8px;
+  font-size: 0.62em;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--text-sidebar);
+  opacity: 0.75;
+  white-space: nowrap;
+  vertical-align: middle;
+  align-self: center;
+}
+
+/* 2.92: блок с лицензией и ID перенесён из sidebar-footer в sidebar-header
+ * (наверх под логотип) по запросу пользователя. Корректируем отступы под
+ * новое положение: меньше top-padding, отделитель снизу для визуального
+ * разделения от nav. */
+.sidebar-user--top {
+  margin-top: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 4px;
 }
 
 .sidebar-logo-version {

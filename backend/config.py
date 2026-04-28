@@ -710,6 +710,7 @@ NOWPAYMENTS_PRICE_USD_TEST: str = (os.getenv("NOWPAYMENTS_PRICE_USD_TEST") or "1
 # Допуск на недоплату (в %): если получатель прислал чуть меньше указанной суммы из-за
 # проскальзывания курса USDT/USD или комиссии сети — считаем платёж успешным. По умолчанию
 # 0.5% (0.50 USDT с $100 — типичный «хвост» NOWPayments). 0 = строгое равенство.
+# С 2.92 — fallback, если NOWPAYMENTS_UNDERPAYMENT_TOLERANCE_USD = 0.
 def _nowpayments_underpayment_tolerance_pct() -> float:
     raw = (os.getenv("NOWPAYMENTS_UNDERPAYMENT_TOLERANCE_PCT") or "0.5").strip().replace(",", ".")
     try:
@@ -720,6 +721,23 @@ def _nowpayments_underpayment_tolerance_pct() -> float:
 
 
 NOWPAYMENTS_UNDERPAYMENT_TOLERANCE_PCT: float = _nowpayments_underpayment_tolerance_pct()
+
+
+# 2.92: Допуск на недоплату (в USD, абсолютный). Если разница
+# (pay_amount − actually_paid) ≤ этого значения — считаем платёж успешным.
+# По умолчанию $1.00 (по запросу пользователя — было 0.5%).
+# Преимущество: одинакова для $79 ($78 → ОК), $139 ($138 → ОК), $2000 ($1999 → ОК).
+# 0 = выключить USD-допуск, использовать только PCT.
+def _nowpayments_underpayment_tolerance_usd() -> float:
+    raw = (os.getenv("NOWPAYMENTS_UNDERPAYMENT_TOLERANCE_USD") or "1.0").strip().replace(",", ".")
+    try:
+        v = float(raw)
+    except (TypeError, ValueError):
+        v = 1.0
+    return max(0.0, min(v, 100.0))
+
+
+NOWPAYMENTS_UNDERPAYMENT_TOLERANCE_USD: float = _nowpayments_underpayment_tolerance_usd()
 
 
 def _nowpayments_test_duration_minutes() -> int:
