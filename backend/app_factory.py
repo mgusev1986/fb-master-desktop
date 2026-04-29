@@ -496,6 +496,12 @@ def create_app() -> FastAPI:
             return await call_next(request)
         if path.startswith("/billing/nowpayments/"):
             return await call_next(request)
+
+        # LavaTop: оплата и вебхук без ключа и без входа в кабинет
+        if path == "/webhooks/lavatop" and request.method == "POST":
+            return await call_next(request)
+        if path.startswith("/billing/lavatop/"):
+            return await call_next(request)
         if request.method == "GET" and path in (
             "/",
             "/buy",
@@ -610,8 +616,10 @@ def create_app() -> FastAPI:
             if (
                 path.startswith("/auth")
                 or path.startswith("/billing/nowpayments/")
+                or path.startswith("/billing/lavatop/")
                 or path in ("/", "/buy", "/purchase", "/promo", "/promo2", "/landing", "/download/dev")
                 or (path == "/webhooks/nowpayments" and request.method == "POST")
+                or (path == "/webhooks/lavatop" and request.method == "POST")
                 or (path == "/api/public/promo-chat" and request.method == "POST")
             ):
                 return await call_next(request)
