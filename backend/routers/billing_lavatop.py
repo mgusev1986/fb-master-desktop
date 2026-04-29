@@ -52,7 +52,7 @@ async def create_lavatop_invoice(
         return JSONResponse({"ok": False, "error": "invalid_email"}, status_code=400)
 
     fp = effective_device_fingerprint(request, device_id)
-    price_amount = app_config.lavatop_price_rub(duration_days)
+    price_amount = app_config.lavatop_price_usd(duration_days)
     if not price_amount or price_amount == "0":
         logger.error("LavaTop: price not configured for duration=%s", duration_days)
         return JSONResponse({"ok": False, "error": "price_not_configured"}, status_code=500)
@@ -62,7 +62,7 @@ async def create_lavatop_invoice(
         duration_days=duration_days,
         device_fingerprint=fp,
         price_amount=price_amount,
-        price_currency="rub",
+        price_currency="usd",
         provider="lavatop",
         customer_email=customer_email.strip().lower(),
         status="pending",
