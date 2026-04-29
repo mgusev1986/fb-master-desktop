@@ -162,48 +162,8 @@
       font-size: 0.78rem;
       color: rgba(168, 162, 158, 0.85);
     }
-    /* macOS Gatekeeper хелпер */
-    .np-mac-helper {
-      margin-top: 0.85rem;
-      background: rgba(245, 208, 110, 0.08);
-      border: 1px solid rgba(245, 208, 110, 0.28);
-      border-radius: 10px;
-      padding: 0.7rem 0.95rem;
-    }
-    .np-mac-helper > summary {
-      cursor: pointer;
-      font-size: 0.88rem;
-      font-weight: 600;
-      color: #f5d06e;
-      list-style: none;
-      user-select: none;
-    }
-    .np-mac-helper > summary::-webkit-details-marker { display: none; }
-    .np-mac-helper > summary::before { content: "› "; transition: transform 0.15s; display: inline-block; }
-    .np-mac-helper[open] > summary::before { transform: rotate(90deg); }
-    .np-mac-helper__body { margin-top: 0.55rem; padding-top: 0.55rem; border-top: 1px dashed rgba(245, 208, 110, 0.18); font-size: 0.85rem; line-height: 1.5; color: rgba(229, 231, 235, 0.85); }
-    .np-mac-helper__body p { margin: 0 0 0.55rem; }
-    .np-mac-cmd-row {
-      display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;
-      background: rgba(0, 0, 0, 0.35); padding: 0.5rem 0.65rem; border-radius: 6px; margin: 0.5rem 0;
-    }
-    #np-mac-xattr-cmd {
-      flex: 1 1 14rem;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 0.88rem; color: #f5f5f4; word-break: break-all;
-      background: transparent; padding: 0; margin: 0;
-    }
-    .np-mac-copy-btn {
-      flex-shrink: 0; cursor: pointer; font: inherit; font-weight: 600;
-      font-size: 0.82rem; padding: 0.4rem 0.75rem; border: none; border-radius: 6px;
-      background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: #fff;
-    }
-    .np-mac-copy-btn:hover { filter: brightness(1.07); }
-    .np-mac-helper__note { font-size: 0.78rem; color: rgba(168, 162, 158, 0.85); margin: 0.4rem 0 0; }
-    .np-mac-step-title { margin: 0 0 0.3rem; color: #f5d06e; font-size: 0.88rem; }
-    .np-mac-steps { margin: 0 0 0.5rem; padding-left: 1.3rem; color: rgba(229, 231, 235, 0.85); font-size: 0.83rem; line-height: 1.55; }
-    .np-mac-steps li { margin: 0.2rem 0; }
-    .np-mac-tip-box { margin: 0.55rem 0 0.7rem; padding: 0.6rem 0.75rem; background: rgba(96, 165, 250, 0.1); border: 1px solid rgba(96, 165, 250, 0.28); border-radius: 7px; font-size: 0.82rem; line-height: 1.5; color: rgba(229, 231, 235, 0.92); }
+    /* macOS Gatekeeper helper-стили удалены — инструкция перенесена внутрь
+       bundle.zip (файл «1. Инструкция.html»). */
     .np-premium-outline {
       display: block;
       width: 100%;
@@ -267,38 +227,7 @@
         <div class="np-dl-captions">
           <span class="np-dl-cap-sub">Выберите версию для вашего компьютера</span>
         </div>
-        <details id="np-mac-helper" class="np-mac-helper" hidden>
-          <summary>macOS пишет «приложение повреждено»? — попробуйте 3 шага</summary>
-          <div class="np-mac-helper__body">
-            <p>На свежем macOS (Sonoma / Sequoia / Tahoe) Gatekeeper строже. Идите по шагам — обычно срабатывает <strong>Шаг 1</strong> или <strong>2</strong>.</p>
-
-            <div class="np-mac-tip-box">
-              <strong>⚠️ Если уже пытались запускать и не сработало:</strong> сначала <strong>удалите SOCMASTER из Программ</strong>, очистите <strong>Корзину</strong>, скачайте заново. Шаги ниже работают только на «свежем» .app.
-            </div>
-
-            <p class="np-mac-step-title"><strong>Шаг 1.</strong> Через Finder</p>
-            <ol class="np-mac-steps">
-              <li>Откройте <strong>Программы</strong> в Finder.</li>
-              <li>Найдите <strong>SOCMASTER</strong> — нажмите <strong>правой кнопкой</strong> (или Ctrl+клик), выберите <strong>«Открыть»</strong>.</li>
-              <li>В диалоге нажмите <strong>«Открыть»</strong>.</li>
-            </ol>
-
-            <p class="np-mac-step-title" style="margin-top:0.65rem"><strong>Шаг 2.</strong> Если не помог — через Настройки</p>
-            <ol class="np-mac-steps">
-              <li><strong>Системные настройки → Конфиденциальность и безопасность</strong>.</li>
-              <li>Прокрутить вниз — там «SOCMASTER заблокирован…».</li>
-              <li>Нажать <strong>«Открыть всё равно»</strong>, ввести пароль Mac.</li>
-            </ol>
-
-            <p class="np-mac-step-title" style="margin-top:0.65rem"><strong>Шаг 3.</strong> Через Terminal (если шаги выше не сработали)</p>
-            <p style="margin:0 0 0.35rem;font-size:0.85rem">Открыть <strong>Терминал</strong> (Spotlight → «Terminal»), вставить команду, ввести пароль Mac:</p>
-            <div class="np-mac-cmd-row">
-              <code id="np-mac-xattr-cmd">sudo xattr -cr /Applications/SOCMASTER.app && sudo codesign --force --deep --sign - /Applications/SOCMASTER.app</code>
-              <button type="button" id="np-mac-copy-btn" class="np-mac-copy-btn">Копировать</button>
-            </div>
-            <p class="np-mac-helper__note">Команда снимает карантин и ставит локальную ad-hoc подпись — Tahoe такое принимает.</p>
-          </div>
-        </details>
+        {# macOS helper удалён — инструкция живёт внутри bundle.zip («1. Инструкция.html»). #}
       </div>
       <a href="/purchase" class="np-premium-outline">Оформить ещё один доступ</a>
     </div>
@@ -374,20 +303,17 @@
   }
   function setupPlatformButtons(du) {
     let any = false;
-    let anyMac = false;
     const macArm = pickUrlByKeys(du, ['darwin_arm64_bundle', 'darwin_arm64']);
     if (macArm && dlMacArm64) {
       dlMacArm64.href = macArm;
       dlMacArm64.hidden = false;
       any = true;
-      anyMac = true;
     }
     const macX64 = pickUrlByKeys(du, ['darwin_x64']);
     if (macX64 && dlMacX64) {
       dlMacX64.href = macX64;
       dlMacX64.hidden = false;
       any = true;
-      anyMac = true;
     }
     const win = pickUrlByKeys(du, ['win32_x64']);
     if (win && dlWin) {
@@ -395,33 +321,8 @@
       dlWin.hidden = false;
       any = true;
     }
-    // macOS Gatekeeper-хелпер: показываем только если хотя бы одна mac-сборка доступна
-    const macHelper = document.getElementById('np-mac-helper');
-    if (macHelper && anyMac) macHelper.hidden = false;
     return any;
   }
-  // Copy-кнопка для xattr -cr команды (macOS Gatekeeper фикс)
-  (function setupMacCopyBtn() {
-    const btn = document.getElementById('np-mac-copy-btn');
-    const cmd = document.getElementById('np-mac-xattr-cmd');
-    if (!btn || !cmd) return;
-    btn.addEventListener('click', function () {
-      const text = (cmd.textContent || '').trim();
-      if (!text) return;
-      const orig = btn.textContent;
-      function ok() { btn.textContent = '✓ Скопировано'; setTimeout(function () { btn.textContent = orig; }, 2200); }
-      function fail() {
-        btn.textContent = '× Выделите вручную';
-        try { const r = document.createRange(); r.selectNodeContents(cmd); const s = window.getSelection(); s.removeAllRanges(); s.addRange(r); } catch (e) {}
-        setTimeout(function () { btn.textContent = orig; }, 3000);
-      }
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(ok).catch(fail);
-      } else {
-        try { const r = document.createRange(); r.selectNodeContents(cmd); const s = window.getSelection(); s.removeAllRanges(); s.addRange(r); if (document.execCommand('copy')) ok(); else fail(); s.removeAllRanges(); } catch (e) { fail(); }
-      }
-    });
-  })();
   let n = 0;
   const max = 200;
   async function poll() {
