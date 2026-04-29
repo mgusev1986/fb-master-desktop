@@ -303,10 +303,9 @@
       </a>
     </div>
 
-    {# Key-form ниже карт скачивания — показывается когда сервер сказал
-       show_unlock_key_form=True (FB_MASTER_ACCESS_KEY_REQUIRED env, либо
-       desktop UA, либо fbm_app query). Public visitor видит только карты. #}
-    {% if show_unlock_key_form %}
+    {# Key-form ВСЕГДА видна снизу под download-картами. Раньше была спрятана
+       для public visitor'а (show_unlock_key_form=False) — пользователь не мог
+       ввести ключ если уже есть. Теперь обе функции на одной странице. #}
     <hr class="fbm-premium-divider" style="margin:1.75rem 0 1.5rem"/>
     <p class="fbm-premium-section-label">Активация ключа</p>
 
@@ -342,7 +341,6 @@
       <input type="hidden" name="device_id" id="np_device_id" value=""/>
       <button type="submit" class="fbm-premium-submit fbm-premium-submit--secondary" id="unlock-np-submit" style="margin-top:0.5rem" disabled>Перейти к оплате</button>
     </form>
-    {% endif %}
     {% endif %}
 
     <a class="fbm-premium-link-muted" href="/purchase" style="margin-top:1rem">Вернуться к оплате</a>
