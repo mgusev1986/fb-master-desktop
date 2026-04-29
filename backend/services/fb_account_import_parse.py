@@ -670,3 +670,42 @@ def extract_fb_import_line_from_text(text: str) -> str:
         if hit:
             return hit
     return _try_extract_embedded_cookie_import(blob) or ""
+
+
+def extract_all_cookie_marketplace_lines(text: str) -> list[ParsedCookieMarketplaceLine]:
+    """v3.0.6+: извлечь ВСЕ cookie-format строки (для batch-импорта аккаунтов).
+
+    DarkStore и аналогичные магазины часто отдают .txt с N аккаунтами на N строк
+    (например `phone:password:UA|[{cookies}]` × 5). Раньше
+    extract_fb_import_line_from_text возвращал только первую строку → импортировался
+    1 из 5 купленных аккаунтов.
+
+    Поддерживает все 3 cookie-формата:
+      • parse_cookie_marketplace_line — phone:pass:UA|[cookies]
+      • parse_cookie_pipe_token_line — uid|pass|EAAB|[cookies]
+      • parse_cookie_semicolon_meta_pipe_line — email;pass|...|[cookies]
+
+    Дедуп по c_user (fb_user_id) — чтобы повторённый аккаунт не импортировался дважды.
+    """
+    blob = _strip_import_text_bom((text or "").strip())
+    if not blob:
+        return []
+    parsed_list: list[ParsedCookieMarketplaceLine] = []
+    seen_c_users: set[str] = set()
+    for raw in blob.splitlines():
+        s = raw.strip()
+        if not s or s.startswith("#"):
+            continue
+        cp = (
+            parse_cookie_marketplace_line(s)
+            or parse_cookie_pipe_token_line(s)
+            or parse_cookie_semicolon_meta_pipe_line(s)
+        )
+        if cp is None:
+            continue
+        if cp.fb_user_id and cp.fb_user_id in seen_c_users:
+            continue
+        if cp.fb_user_id:
+            seen_c_users.add(cp.fb_user_id)
+        parsed_list.append(cp)
+    return parsed_list

@@ -38,6 +38,7 @@ from backend.services.fb_account_profile_paths import (
 )
 from backend.services.fb_account_import_parse import (
     ParsedCookieMarketplaceLine,
+    extract_all_cookie_marketplace_lines,
     extract_fb_import_line_from_text,
     parse_account_line,
     parse_cookie_json_storage_blob,
@@ -452,6 +453,11 @@ async def fb_account_import_automation(
     org_id = require_org_id(request, db)
     raw_line = ""
     cookie_parsed = None
+    # 3.0.6+: batch-импорт. Если в файле/paste нашлось >1 cookie-строки —
+    # импортируем ВСЕ как отдельные FBAccount. Первая идёт через основной флоу
+    # (cookie_parsed), остальные — через extra_cookie_lines после первого commit.
+    extra_cookie_lines: list[ParsedCookieMarketplaceLine] = []
+    raw_blob_for_batch: str = ""
 
     def _cookie_from_text(blob: str) -> tuple[ParsedCookieMarketplaceLine | None, str]:
         """
@@ -474,10 +480,28 @@ async def fb_account_import_automation(
         body = await account_file.read()
         text = body.decode("utf-8", errors="replace")
         cookie_parsed, raw_line = _cookie_from_text(text)
+        raw_blob_for_batch = text
     if not cookie_parsed and not raw_line and (account_paste or "").strip():
         cookie_parsed, raw_line = _cookie_from_text((account_paste or "").strip())
+        raw_blob_for_batch = (account_paste or "").strip()
     if not cookie_parsed and not raw_line:
         return _redirect_flash("Загрузите .txt или вставьте строку аккаунта", "error")
+
+    # 3.0.6+: ищем дополнительные cookie-строки в том же blob (батч).
+    # Применимо только когда первый аккаунт распарсился через cookie-формат
+    # (для классики логин:пароль:TOTP — единичный импорт, как было).
+    if cookie_parsed and raw_blob_for_batch:
+        all_parsed = extract_all_cookie_marketplace_lines(raw_blob_for_batch)
+        # Первый из all_parsed — это уже cookie_parsed (или эквивалентный по c_user).
+        # Остальные — extra. Дедуп по c_user уже сделан в extract_all_cookie_marketplace_lines.
+        primary_uid = cookie_parsed.fb_user_id or ""
+        for cp in all_parsed:
+            if cp.fb_user_id and cp.fb_user_id == primary_uid:
+                continue
+            # Если у обоих нет c_user — сравниваем по login (phone/email)
+            if not primary_uid and cp.login == cookie_parsed.login:
+                continue
+            extra_cookie_lines.append(cp)
 
     parsed = None if cookie_parsed else parse_account_line(raw_line)
     if not cookie_parsed and not parsed:
@@ -587,6 +611,64 @@ async def fb_account_import_automation(
         assert pp is not None
         logger.info("FB import-automation id=%s login=%s proxy=%s:%s", acc.id, acc.fb_login_username, pp.host, pp.port)
 
+    # 3.0.6+: batch-импорт. Если в файле/paste было >1 cookie-строки — создаём
+    # дополнительные FBAccount с тем же proxy/region/lease (label берём от login
+    # каждого аккаунта, чтобы они не сливались по подписи).
+    extra_imported_count = 0
+    extra_failed_count = 0
+    for extra_cp in extra_cookie_lines:
+        try:
+            extra_acc = FBAccount(
+                organization_id=org_id,
+                label=extra_cp.login[:80],
+                profile_dir=str(_profiles_base(db) / "__new__"),
+                fb_login_username=(extra_cp.login or extra_cp.fb_user_id or "").strip(),
+                enc_password=encrypt_secret(extra_cp.password),
+                enc_totp_secret=None,
+                birth_hint=None,
+                proxy_enabled=bool(pp),
+                proxy_url=proxy_url_for_playwright(pp) if pp else None,
+                proxy_username=pp.username if pp else None,
+                proxy_password=pp.password if pp else None,
+                proxy_lease_ends_at=e_lease,
+                proxy_lease_purchased_at=None,
+                proxy_lease_days=None,
+            )
+            db.add(extra_acc)
+            db.flush()
+            extra_final = _profiles_base(db) / f"fb_account_{extra_acc.id}"
+            extra_final.mkdir(parents=True, exist_ok=True)
+            extra_acc.profile_dir = str(extra_final)
+            if reg == "custom":
+                apply_custom_stealth(extra_acc, custom_locale, custom_timezone)
+            else:
+                apply_region_preset_to_account(extra_acc, reg)
+            ua = (extra_cp.user_agent or "").strip()
+            if ua:
+                extra_acc.stealth_user_agent = ua[:512]
+            extra_acc.session_state_json = json.dumps(extra_cp.storage_state, ensure_ascii=False)
+            extra_acc.session_saved_at = datetime.now(timezone.utc)
+            db.commit()
+            on_fb_account_proxy_settings_saved(db, extra_acc.id)
+            _auto_slot_after_account_saved(db, extra_acc.id)
+            _refresh_session_flags(extra_acc.id)
+            extra_imported_count += 1
+            logger.info(
+                "FB import cookie batch id=%s login=%s c_user=%s",
+                extra_acc.id,
+                extra_cp.login,
+                extra_cp.fb_user_id,
+            )
+        except Exception as e:  # noqa: BLE001
+            db.rollback()
+            extra_failed_count += 1
+            logger.exception(
+                "FB import cookie batch FAIL login=%s c_user=%s: %s",
+                extra_cp.login,
+                extra_cp.fb_user_id,
+                e,
+            )
+
     if cookie_parsed:
         # Сразу оценим, что внутри snapshot — есть ли c_user/xs. Это даёт клиенту понимание,
         # что Facebook может встретить страницей «Продолжить как …» (Continue-gate),
@@ -597,8 +679,17 @@ async def fb_account_import_automation(
         has_c_user = "c_user" in names
         has_xs = "xs" in names
 
+        # 3.0.6+: префикс с количеством для batch-импорта (когда в файле >1 аккаунт)
+        batch_prefix = ""
+        if extra_imported_count > 0:
+            total = 1 + extra_imported_count
+            batch_prefix = f"Импортировано {total} аккаунта(ов) из файла. "
+            if extra_failed_count > 0:
+                batch_prefix += f"⚠️ {extra_failed_count} строка(и) не прошли — см. логи. "
+
         if has_c_user and has_xs:
             tip = (
+                batch_prefix +
                 "Аккаунт импортирован: cookies c_user и xs найдены, сохранены в базе. "
                 "Если при открытии Мессенджера Facebook покажет «Продолжить как …» — "
                 "это значит, что xs отозван продавцом или сменился IP. "
@@ -608,6 +699,7 @@ async def fb_account_import_automation(
             level = "ok"
         elif has_c_user and not has_xs:
             tip = (
+                batch_prefix +
                 "Аккаунт импортирован: cookie c_user найден, но xs (auth-токен) отсутствует — "
                 "это неполная сессия, Facebook потребует пароль при первом открытии Мессенджера. "
                 "Если пароль из TXT-файла верный, вход сохранится автоматически после ручного входа в Мессенджере."
@@ -615,6 +707,7 @@ async def fb_account_import_automation(
             level = "error"
         else:
             tip = (
+                batch_prefix +
                 "Аккаунт сохранён, но в импортированных cookies нет c_user — это не полноценная сессия. "
                 "Скорее всего понадобится войти по логину и паролю вручную через окно Мессенджера. "
                 "Проверьте формат TXT-файла у продавца."
