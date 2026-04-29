@@ -638,6 +638,25 @@ def _buy_page_auto_dmg_x64_url() -> str:
     return ""
 
 
+def _buy_page_auto_bundle_x64_url() -> str:
+    """v3.0.5+: Авто-ссылка на Mac Intel (x64) bundle.zip с инструкцией внутри.
+
+    Аналог _buy_page_auto_bundle_url() для arm64. Bundle содержит DMG +
+    «1. Инструкция.html» с macOS Gatekeeper helper-инструкцией (3 шага).
+    Используется на странице /auth/unlock — Intel-кнопка теперь ведёт на
+    bundle вместо raw DMG (чтобы клиент видел инструкцию про «приложение
+    повреждено» на свежих macOS Sonoma/Sequoia/Tahoe).
+    """
+    ver = FB_DESKTOP_LATEST_VERSION.strip()
+    if not ver:
+        return ""
+    for prefix in ("SOCMASTER", "FbMaster"):
+        fn = f"{prefix}-{ver}-mac-x64-bundle.zip"
+        if _static_release_file_path(fn).is_file():
+            return f"{public_app_base_url().rstrip('/')}/static/releases/{fn}"
+    return ""
+
+
 def _buy_page_auto_exe_url() -> str:
     """Авто‑ссылка на Windows‑инсталлятор SOCMASTER‑<версия>‑win‑x64.exe в static/releases/."""
     ver = FB_DESKTOP_LATEST_VERSION.strip()
@@ -677,6 +696,10 @@ def desktop_buy_page_download_urls(*, for_paid_flow: bool = False) -> dict[str, 
             full["darwin_x64"] = auto_dmg_x64
     if "darwin_x64" in full:
         out["darwin_x64"] = full["darwin_x64"]
+    # v3.0.5+: x64 bundle.zip с инструкцией (аналогично darwin_arm64_bundle).
+    bundle_x64 = _buy_page_auto_bundle_x64_url()
+    if bundle_x64:
+        out["darwin_x64_bundle"] = bundle_x64
     if "win32_x64" not in full:
         auto_exe = _buy_page_auto_exe_url()
         if auto_exe:
@@ -713,9 +736,14 @@ def unlock_page_desktop_download_hrefs() -> dict[str, str]:
             out["mac"] = v.strip()
             break
     # v3.0+: Mac Intel (x64) для MacBook на Intel CPU (2017-2020).
-    mac_x64 = du.get("darwin_x64")
-    if isinstance(mac_x64, str) and mac_x64.strip():
-        out["mac_x64"] = mac_x64.strip()
+    # 3.0.5+: предпочитаем bundle.zip (с инструкцией внутри) над raw DMG —
+    # симметрично логике mac (arm64). Без инструкции клиенты на Tahoe видят
+    # «приложение повреждено» и не знают что делать.
+    for k in ("darwin_x64_bundle", "darwin_x64"):
+        v = du.get(k)
+        if isinstance(v, str) and v.strip():
+            out["mac_x64"] = v.strip()
+            break
     win = du.get("win32_x64")
     if isinstance(win, str) and win.strip():
         out["win"] = win.strip()
