@@ -23,8 +23,23 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 45
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      # 3.0.6+: код живёт в private repo socmaster-core. Клонируем его сюда вместо
+      # actions/checkout@v4 (которая бы клонировала public socmaster-builder).
+      - name: Clone private socmaster-core repo
+        shell: bash
+        env:
+          PAT: ${{ secrets.CORE_REPO_PAT }}
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          git clone --depth 1 "https://x-access-token:${PAT}@github.com/mgusev1986/socmaster-core.git" "$RUNNER_TEMP/code"
+          cp -R "$RUNNER_TEMP/code/." ./
+          rm -rf "$RUNNER_TEMP/code"
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            TAG="${{ github.ref_name }}"
+            git fetch --tags --depth=1 origin 2>/dev/null || true
+            git checkout "$TAG" 2>/dev/null && echo "Checked out tag $TAG in private repo" || echo "Tag $TAG not in private, using main"
+          fi
+          ls -la | head -20
 
       - name: Setup Node.js 20
         uses: actions/setup-node@v4

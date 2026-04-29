@@ -38,8 +38,27 @@ jobs:
       # Минимальная версия macOS у клиента — Monterey 12.0 (MacBook Air 2017 → 12.7.6).
       MACOSX_DEPLOYMENT_TARGET: '12.0'
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      # 3.0.6+: код живёт в private repo socmaster-core. Клонируем его сюда вместо
+      # actions/checkout@v4 (которая бы клонировала public socmaster-builder).
+      # Это позволяет держать public-репо минимальным (только workflows + README),
+      # а весь код прятать в приватном repo с защитой через PAT секрет.
+      - name: Clone private socmaster-core repo
+        shell: bash
+        env:
+          PAT: ${{ secrets.CORE_REPO_PAT }}
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          git clone --depth 1 "https://x-access-token:${PAT}@github.com/mgusev1986/socmaster-core.git" "$RUNNER_TEMP/code"
+          cp -R "$RUNNER_TEMP/code/." ./
+          rm -rf "$RUNNER_TEMP/code"
+          # Если пуш был на тег — пытаемся checkout того же тега в private (если он там есть)
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            TAG="${{ github.ref_name }}"
+            git fetch --tags --depth=1 origin 2>/dev/null || true
+            git checkout "$TAG" 2>/dev/null && echo "✅ Checked out tag $TAG in private repo" || echo "⚠️ Tag $TAG not in private, using main"
+          fi
+          echo "─── Workspace contents ───"
+          ls -la | head -20
 
       - name: Show host runner architecture (для отладки)
         run: |
