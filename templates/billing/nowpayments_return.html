@@ -200,6 +200,10 @@
     }
     .np-mac-copy-btn:hover { filter: brightness(1.07); }
     .np-mac-helper__note { font-size: 0.78rem; color: rgba(168, 162, 158, 0.85); margin: 0.4rem 0 0; }
+    .np-mac-step-title { margin: 0 0 0.3rem; color: #f5d06e; font-size: 0.88rem; }
+    .np-mac-steps { margin: 0 0 0.5rem; padding-left: 1.3rem; color: rgba(229, 231, 235, 0.85); font-size: 0.83rem; line-height: 1.55; }
+    .np-mac-steps li { margin: 0.2rem 0; }
+    .np-mac-tip-box { margin: 0.55rem 0 0.7rem; padding: 0.6rem 0.75rem; background: rgba(96, 165, 250, 0.1); border: 1px solid rgba(96, 165, 250, 0.28); border-radius: 7px; font-size: 0.82rem; line-height: 1.5; color: rgba(229, 231, 235, 0.92); }
     .np-premium-outline {
       display: block;
       width: 100%;
@@ -264,14 +268,35 @@
           <span class="np-dl-cap-sub">Выберите версию для вашего компьютера</span>
         </div>
         <details id="np-mac-helper" class="np-mac-helper" hidden>
-          <summary>macOS пишет «приложение повреждено»? — есть быстрый фикс</summary>
+          <summary>macOS пишет «приложение повреждено»? — попробуйте 3 шага</summary>
           <div class="np-mac-helper__body">
-            <p>После установки откройте <strong>Terminal</strong> (Spotlight → введите «Terminal») и вставьте эту команду — она снимает с программы карантин-флаг macOS:</p>
+            <p>На свежем macOS (Sonoma / Sequoia / Tahoe) Gatekeeper строже. Идите по шагам — обычно срабатывает <strong>Шаг 1</strong> или <strong>2</strong>.</p>
+
+            <div class="np-mac-tip-box">
+              <strong>⚠️ Если уже пытались запускать и не сработало:</strong> сначала <strong>удалите SOCMASTER из Программ</strong>, очистите <strong>Корзину</strong>, скачайте заново. Шаги ниже работают только на «свежем» .app.
+            </div>
+
+            <p class="np-mac-step-title"><strong>Шаг 1.</strong> Через Finder</p>
+            <ol class="np-mac-steps">
+              <li>Откройте <strong>Программы</strong> в Finder.</li>
+              <li>Найдите <strong>SOCMASTER</strong> — нажмите <strong>правой кнопкой</strong> (или Ctrl+клик), выберите <strong>«Открыть»</strong>.</li>
+              <li>В диалоге нажмите <strong>«Открыть»</strong>.</li>
+            </ol>
+
+            <p class="np-mac-step-title" style="margin-top:0.65rem"><strong>Шаг 2.</strong> Если не помог — через Настройки</p>
+            <ol class="np-mac-steps">
+              <li><strong>Системные настройки → Конфиденциальность и безопасность</strong>.</li>
+              <li>Прокрутить вниз — там «SOCMASTER заблокирован…».</li>
+              <li>Нажать <strong>«Открыть всё равно»</strong>, ввести пароль Mac.</li>
+            </ol>
+
+            <p class="np-mac-step-title" style="margin-top:0.65rem"><strong>Шаг 3.</strong> Через Terminal (если шаги выше не сработали)</p>
+            <p style="margin:0 0 0.35rem;font-size:0.85rem">Открыть <strong>Терминал</strong> (Spotlight → «Terminal»), вставить команду, ввести пароль Mac:</p>
             <div class="np-mac-cmd-row">
-              <code id="np-mac-xattr-cmd">xattr -cr /Applications/SOCMASTER.app</code>
+              <code id="np-mac-xattr-cmd">sudo xattr -cr /Applications/SOCMASTER.app && sudo codesign --force --deep --sign - /Applications/SOCMASTER.app</code>
               <button type="button" id="np-mac-copy-btn" class="np-mac-copy-btn">Копировать</button>
             </div>
-            <p class="np-mac-helper__note">Это разовое действие — после этого macOS перестанет блокировать запуск.</p>
+            <p class="np-mac-helper__note">Команда снимает карантин и ставит локальную ad-hoc подпись — Tahoe такое принимает.</p>
           </div>
         </details>
       </div>

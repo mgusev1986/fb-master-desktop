@@ -64,33 +64,47 @@
   <p><strong>Обычный порядок:</strong> откройте <strong>2.</strong> (файл с расширением <strong>.dmg</strong>) → перетащите <strong>SOCMASTER</strong> в папку «Программы» (Applications) → запустите программу оттуда.</p>
 
   <div class="box">
-    <p><strong>Если Mac не даёт открыть программу</strong> (неизвестный разработчик / «повреждено» / Apple не подтвердил файл):</p>
+    <p><strong>Если Mac пишет «программа повреждена» или «неизвестный разработчик»</strong> — попробуйте 3 шага по порядку. Обычно срабатывает Шаг 1 или 2.</p>
+
+    <div style="margin:0.85rem 0 0.65rem;padding:0.7rem 0.85rem;background:#dbeafe;border:1px solid #93c5fd;border-radius:8px;font-size:0.92rem;line-height:1.5;color:#1e3a8a">
+      <strong>⚠️ Важно: если уже пытались запускать и не сработало:</strong> macOS «помечает» приложение после неудачного запуска, и команды ниже могут не помочь. Сначала <strong>удалите SOCMASTER из «Программ»</strong>, очистите <strong>Корзину</strong>, скачайте установщик заново с сайта — и применяйте шаги ниже к свежему .app.
+    </div>
+
+    <p style="margin:0.85rem 0 0.35rem;color:#15803d"><strong>Шаг 1.</strong> Через Finder (правый клик)</p>
+    <ol>
+      <li>В Finder откройте папку <strong>«Программы»</strong>, найдите <strong>SOCMASTER</strong>.</li>
+      <li><strong>Правый клик</strong> (или Control + клик) по иконке → выберите <strong>«Открыть»</strong>.</li>
+      <li>В диалоговом окне нажмите <strong>«Открыть»</strong> ещё раз.</li>
+    </ol>
+
+    <p style="margin:0.85rem 0 0.35rem;color:#15803d"><strong>Шаг 2.</strong> Если не помогло — через Настройки</p>
+    <ol>
+      <li>Откройте <strong>Системные настройки</strong> → <strong>Конфиденциальность и безопасность</strong>.</li>
+      <li>Прокрутите вниз — там будет надпись <em>«SOCMASTER заблокирован»</em>.</li>
+      <li>Нажмите справа <strong>«Открыть всё равно»</strong>, введите пароль Mac.</li>
+      <li>Запустите SOCMASTER из Программ.</li>
+    </ol>
+
+    <p style="margin:0.85rem 0 0.35rem;color:#15803d"><strong>Шаг 3.</strong> Если и это не помогло — через Терминал</p>
     <ol>
       <li>Откройте <strong>Терминал</strong> (Программы → Утилиты → Терминал).</li>
-      <li>Нажмите кнопку <strong>«Скопировать команду»</strong> ниже, затем в Терминале вставьте (<strong>⌘V</strong>) и нажмите <strong>Enter</strong>.</li>
-      <li>Снова запустите <strong>SOCMASTER</strong> из папки «Программы».</li>
+      <li>Нажмите <strong>«Скопировать команду»</strong> ниже, в Терминале вставьте (<strong>⌘V</strong>), нажмите <strong>Enter</strong>, введите пароль Mac.</li>
+      <li>Запустите SOCMASTER из Программ нормальным двойным кликом.</li>
     </ol>
     <div class="xattr-wrap">
       <div class="xattr-row">
-        <p class="xattr-cmd" id="xattr-text">xattr -cr "/Applications/SOCMASTER.app"</p>
+        <p class="xattr-cmd" id="xattr-text">sudo xattr -cr "/Applications/SOCMASTER.app" && sudo codesign --force --deep --sign - "/Applications/SOCMASTER.app"</p>
         <button type="button" class="btn-copy" id="xattr-copy" aria-label="Скопировать команду в буфер обмена">Скопировать команду</button>
       </div>
     </div>
+    <p style="margin:0.65rem 0 0;font-size:0.88rem;color:#475569">Команда снимает карантин <em>и</em> ставит локальную ad-hoc подпись — это нужно на свежем macOS (Sonoma / Sequoia / Tahoe), где простой <code>xattr -cr</code> уже недостаточен.</p>
   </div>
-
-  <p><strong>Без терминала (иногда помогает):</strong></p>
-  <ol>
-    <li>В Finder откройте папку «Программы», найдите <strong>SOCMASTER</strong>.</li>
-    <li><strong>Правый клик</strong> (или Control + клик) по иконке → выберите <strong>«Открыть»</strong>.</li>
-    <li>В окне нажмите <strong>«Открыть»</strong> ещё раз.</li>
-  </ol>
-  <p><strong>Ещё вариант:</strong> <strong>Системные настройки</strong> (в новых macOS — <strong>Системные параметры</strong>) → <strong>Конфиденциальность и безопасность</strong> — после попытки запуска может появиться <strong>«Всё равно открыть»</strong>.</p>
 
   <p style="margin-top:1.5rem;color:#64748b;font-size:0.9rem">Эта сборка — для Mac с процессором <strong>Intel</strong> (MacBook 2017–2020, iMac / Mac mini до 2020). Для Mac с чипом <strong>Apple Silicon</strong> (M1–M4) скачайте отдельную сборку <em>mac-arm64</em>.</p>
 
   <script>
     (function () {
-      var XATTR = 'xattr -cr "/Applications/SOCMASTER.app"';
+      var XATTR = 'sudo xattr -cr "/Applications/SOCMASTER.app" && sudo codesign --force --deep --sign - "/Applications/SOCMASTER.app"';
       var btn = document.getElementById('xattr-copy');
       if (!btn) return;
       var label = 'Скопировать команду';

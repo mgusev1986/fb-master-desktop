@@ -271,6 +271,29 @@
       color: rgba(168, 162, 158, 0.85);
       margin: 0.5rem 0 0;
     }
+    .unlock-mac-step-title {
+      margin: 0 0 0.35rem;
+      color: #f5d06e;
+      font-size: 0.92rem;
+    }
+    .unlock-mac-steps {
+      margin: 0 0 0.55rem;
+      padding-left: 1.4rem;
+      color: rgba(229, 231, 235, 0.85);
+      font-size: 0.86rem;
+      line-height: 1.55;
+    }
+    .unlock-mac-steps li { margin: 0.25rem 0; }
+    .unlock-mac-tip-box {
+      margin: 0.65rem 0 0.85rem;
+      padding: 0.7rem 0.85rem;
+      background: rgba(96, 165, 250, 0.1);
+      border: 1px solid rgba(96, 165, 250, 0.28);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      color: rgba(229, 231, 235, 0.92);
+    }
     .fbm-premium-os-btn:hover {
       transform: translateY(-1px);
       box-shadow: 0 8px 28px rgba(201, 169, 98, 0.45);
@@ -390,16 +413,38 @@
        только если хотя бы одна из mac-сборок доступна для скачивания. #}
     {% if mac_href or mac_x64_href %}
     <details class="unlock-mac-helper">
-      <summary>macOS пишет «приложение повреждено»? — есть быстрый фикс</summary>
+      <summary>macOS пишет «приложение повреждено»? — попробуйте 3 шага</summary>
       <div class="unlock-mac-helper__body">
-        <p>После установки откройте <strong>Terminal</strong> (Spotlight → введите «Terminal») и вставьте эту команду — она снимает с программы карантин-флаг macOS:</p>
+        <p>На свежем macOS (Sonoma / Sequoia / Tahoe) Gatekeeper строже. Идите по шагам — обычно срабатывает <strong>Шаг 1</strong> или <strong>2</strong>.</p>
+
+        <div class="unlock-mac-tip-box">
+          <strong>⚠️ Если уже пытались запускать и не сработало:</strong> macOS «помечает» приложение как сломанное после неудачного запуска, и команды ниже могут не помочь. Сначала <strong>удалите SOCMASTER из Программ</strong>, очистите <strong>Корзину</strong>, потом <strong>скачайте установщик заново</strong> с этой страницы — и применяйте шаги ниже к свежему .app.
+        </div>
+
+        <p class="unlock-mac-step-title"><strong>Шаг 1.</strong> Через Finder</p>
+        <ol class="unlock-mac-steps">
+          <li>Откройте <strong>Программы</strong> в Finder.</li>
+          <li>Найдите <strong>SOCMASTER</strong> — нажмите на нём <strong>правой кнопкой мыши</strong> (или Ctrl+клик), выберите <strong>«Открыть»</strong>.</li>
+          <li>В диалоге «программа от неустановленного разработчика» нажмите <strong>«Открыть»</strong>.</li>
+        </ol>
+
+        <p class="unlock-mac-step-title" style="margin-top:0.85rem"><strong>Шаг 2.</strong> Если Шаг 1 не помог — через Настройки</p>
+        <ol class="unlock-mac-steps">
+          <li>Откройте <strong>Системные настройки → Конфиденциальность и безопасность</strong>.</li>
+          <li>Прокрутите вниз — там будет надпись <em>«SOCMASTER заблокирован…»</em>.</li>
+          <li>Нажмите <strong>«Открыть всё равно»</strong>, введите пароль Mac.</li>
+          <li>Запустите SOCMASTER из Программ.</li>
+        </ol>
+
+        <p class="unlock-mac-step-title" style="margin-top:0.85rem"><strong>Шаг 3.</strong> Если и Шаг 2 не помог — через Terminal</p>
+        <p style="margin:0 0 0.4rem">Откройте <strong>Терминал</strong> (Spotlight → «Terminal»), вставьте команду и нажмите Enter (потребуется пароль Mac):</p>
         <div class="unlock-mac-cmd-row">
-          <code id="unlock-mac-xattr-cmd">xattr -cr /Applications/SOCMASTER.app</code>
+          <code id="unlock-mac-xattr-cmd">sudo xattr -cr /Applications/SOCMASTER.app && sudo codesign --force --deep --sign - /Applications/SOCMASTER.app</code>
           <button type="button" id="unlock-mac-copy-btn" class="unlock-mac-copy-btn">
             <i class="ti ti-copy"></i> Копировать
           </button>
         </div>
-        <p class="unlock-mac-helper__note">После выполнения команды откройте SOCMASTER из папки «Программы». Это разовое действие — после этого macOS перестанет блокировать запуск.</p>
+        <p class="unlock-mac-helper__note">Команда снимает карантин и ставит локальную ad-hoc подпись — Tahoe такое принимает. После — открывайте SOCMASTER нормальным двойным кликом.</p>
       </div>
     </details>
     {% endif %}
