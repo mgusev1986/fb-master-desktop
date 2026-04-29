@@ -1,0 +1,47 @@
+SOCMASTER — Proprietary License
+================================
+
+Copyright (c) 2024-2026 Maksim Gusev / SOCMASTER. All rights reserved.
+
+This repository contains build infrastructure (GitHub Actions workflows
+and supporting documentation) for the SOCMASTER project. The actual
+source code, templates, services, and assets are NOT included here —
+they live in a separate private repository.
+
+PROHIBITED WITHOUT EXPLICIT WRITTEN PERMISSION:
+
+1. Copying, redistributing, or republishing any part of the SOCMASTER
+   project (including code, templates, designs, branding, build
+   artifacts, or installers) in original or modified form.
+
+2. Using the SOCMASTER name, branding, or trademarks for any product,
+   service, or material that is not the official SOCMASTER offering.
+
+3. Reverse-engineering, decompiling, or attempting to extract source
+   code from compiled SOCMASTER binaries (DMG / EXE).
+
+4. Creating, distributing, or operating any service that competes with
+   SOCMASTER using code, designs, or business logic derived from this
+   project.
+
+5. Using any cryptographic keys, API credentials, or signing certificates
+   associated with SOCMASTER in unauthorized ways.
+
+PERMITTED:
+
+- Reading the public README and workflow files for reference / study.
+- Filing bug reports or issue suggestions via GitHub Issues (subject to
+  repository owner discretion to accept or close).
+- Forking the repository for personal study, with the understanding that
+  no commercial or distributed use is authorized.
+
+CONTACT:
+
+For licensing inquiries, partnership requests, or commercial use:
+https://socmaster.pro
+
+THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+THE AUTHORS DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING
+WITHOUT LIMITATION ANY IMPLIED WARRANTIES OF MERCHANTABILITY OR
+FITNESS FOR A PARTICULAR PURPOSE. THE AUTHORS SHALL NOT BE LIABLE
+FOR ANY DAMAGES ARISING FROM USE OR INABILITY TO USE THE SOFTWARE.
