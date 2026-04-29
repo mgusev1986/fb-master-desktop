@@ -24,21 +24,30 @@ async def promo_page(request: Request):
 @router.get("/", response_class=HTMLResponse)
 async def root_page(request: Request):
     """Главная: лендинг для гостей; вошедших пользователей — в кабинет (/home)
-    или на multi-workspace launcher, если он активен как default entry."""
-    if request.session.get("user"):
-        from backend.core.feature_flags import (
-            launcher_is_default_entry,
-            multi_workspace_enabled,
-        )
-        from backend.core.workspace.session import get_current_workspace_id
+    или на multi-workspace launcher, если он активен как default entry.
 
-        if (
-            multi_workspace_enabled()
-            and launcher_is_default_entry()
-            and not get_current_workspace_id(request)
-        ):
-            return RedirectResponse("/workspaces", status_code=303)
-        return RedirectResponse("/home", status_code=303)
+    3.0.6+: владельца платформы (admin / FB_MASTER_OWNER_EMAILS) НЕ редиректим —
+    он должен видеть публичный лендинг как любой посетитель сайта. В кабинет
+    зайдёт по прямой ссылке /home или через сайдбар на других страницах.
+    """
+    user = request.session.get("user")
+    if user:
+        from backend.services.platform_owner import is_platform_owner_user
+
+        if not is_platform_owner_user(user):
+            from backend.core.feature_flags import (
+                launcher_is_default_entry,
+                multi_workspace_enabled,
+            )
+            from backend.core.workspace.session import get_current_workspace_id
+
+            if (
+                multi_workspace_enabled()
+                and launcher_is_default_entry()
+                and not get_current_workspace_id(request)
+            ):
+                return RedirectResponse("/workspaces", status_code=303)
+            return RedirectResponse("/home", status_code=303)
     templates = request.app.state.templates
     return templates.TemplateResponse("promo2.html", _promo_ctx(request))
 
