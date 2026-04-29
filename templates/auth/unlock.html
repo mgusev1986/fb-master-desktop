@@ -188,6 +188,89 @@
       .fbm-premium-os-btn { font-size: 0.95rem; padding: 0.85rem 0.6rem; gap: 0.45rem; }
       .fbm-premium-os-btn small { font-size: 0.62rem; }
     }
+    /* macOS Gatekeeper хелпер: «приложение повреждено» → xattr -cr команда */
+    .unlock-mac-helper {
+      margin-top: 1rem;
+      background: rgba(245, 208, 110, 0.08);
+      border: 1px solid rgba(245, 208, 110, 0.28);
+      border-radius: 12px;
+      padding: 0.75rem 1rem;
+    }
+    .unlock-mac-helper > summary {
+      cursor: pointer;
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: #f5d06e;
+      list-style: none;
+      padding: 0.15rem 0;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+    .unlock-mac-helper > summary::-webkit-details-marker { display: none; }
+    .unlock-mac-helper > summary::before {
+      content: "›";
+      display: inline-block;
+      font-size: 1.1rem;
+      transition: transform 0.15s ease;
+      width: 1ch;
+    }
+    .unlock-mac-helper[open] > summary::before { transform: rotate(90deg); }
+    .unlock-mac-helper__body {
+      margin-top: 0.65rem;
+      padding-top: 0.65rem;
+      border-top: 1px dashed rgba(245, 208, 110, 0.18);
+      font-size: 0.88rem;
+      line-height: 1.5;
+      color: rgba(229, 231, 235, 0.85);
+    }
+    .unlock-mac-helper__body p { margin: 0 0 0.65rem; }
+    .unlock-mac-cmd-row {
+      display: flex;
+      gap: 0.6rem;
+      align-items: center;
+      flex-wrap: wrap;
+      background: rgba(0, 0, 0, 0.35);
+      padding: 0.6rem 0.75rem;
+      border-radius: 8px;
+      margin: 0.65rem 0;
+    }
+    #unlock-mac-xattr-cmd {
+      flex: 1 1 16rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.92rem;
+      color: #f5f5f4;
+      word-break: break-all;
+      background: transparent;
+      padding: 0;
+      margin: 0;
+    }
+    .unlock-mac-copy-btn {
+      flex-shrink: 0;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 600;
+      font-size: 0.85rem;
+      padding: 0.45rem 0.85rem;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+      color: #fff;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: filter 0.12s ease, transform 0.08s ease;
+    }
+    .unlock-mac-copy-btn:hover { filter: brightness(1.07); }
+    .unlock-mac-copy-btn:active { transform: scale(0.97); }
+    .unlock-mac-copy-btn.copied { background: #15803d; }
+    .unlock-mac-helper__note {
+      font-size: 0.82rem;
+      color: rgba(168, 162, 158, 0.85);
+      margin: 0.5rem 0 0;
+    }
     .fbm-premium-os-btn:hover {
       transform: translateY(-1px);
       box-shadow: 0 8px 28px rgba(201, 169, 98, 0.45);
@@ -300,6 +383,27 @@
         <span class="fbm-premium-os-label"><span>macOS</span><small>Intel (2017-2020) · .dmg</small></span>
       </a>
     </div>
+
+    {# macOS Gatekeeper хелпер: DMG не подписан Apple Developer ID, поэтому
+       свежий macOS (Sonoma/Tahoe) часто пишет «приложение повреждено».
+       Команда xattr -cr убирает quarantine-флаг → app запустится. Показывается
+       только если хотя бы одна из mac-сборок доступна для скачивания. #}
+    {% if mac_href or mac_x64_href %}
+    <details class="unlock-mac-helper">
+      <summary>macOS пишет «приложение повреждено»? — есть быстрый фикс</summary>
+      <div class="unlock-mac-helper__body">
+        <p>После установки откройте <strong>Terminal</strong> (Spotlight → введите «Terminal») и вставьте эту команду — она снимает с программы карантин-флаг macOS:</p>
+        <div class="unlock-mac-cmd-row">
+          <code id="unlock-mac-xattr-cmd">xattr -cr /Applications/SOCMASTER.app</code>
+          <button type="button" id="unlock-mac-copy-btn" class="unlock-mac-copy-btn">
+            <i class="ti ti-copy"></i> Копировать
+          </button>
+        </div>
+        <p class="unlock-mac-helper__note">После выполнения команды откройте SOCMASTER из папки «Программы». Это разовое действие — после этого macOS перестанет блокировать запуск.</p>
+      </div>
+    </details>
+    {% endif %}
+
     <a class="fbm-premium-link-muted" href="/purchase" style="margin-top:1rem">Вернуться к оплате</a>
     {% else %}
 
@@ -365,6 +469,39 @@ document.addEventListener("DOMContentLoaded", function () {
     enable();
   }).catch(enable);
 });
+</script>
+<script>
+// macOS Gatekeeper фикс: копирование команды xattr -cr в clipboard
+(function () {
+  var btn = document.getElementById("unlock-mac-copy-btn");
+  var cmd = document.getElementById("unlock-mac-xattr-cmd");
+  if (!btn || !cmd) return;
+  btn.addEventListener("click", function () {
+    var text = (cmd.textContent || "").trim();
+    if (!text) return;
+    var origHTML = btn.innerHTML;
+    function ok() {
+      btn.classList.add("copied");
+      btn.innerHTML = '<i class="ti ti-check"></i> Скопировано';
+      setTimeout(function () { btn.classList.remove("copied"); btn.innerHTML = origHTML; }, 2200);
+    }
+    function fail() {
+      btn.innerHTML = '<i class="ti ti-alert-circle"></i> Выделите вручную';
+      try { var r = document.createRange(); r.selectNodeContents(cmd); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); } catch (e) {}
+      setTimeout(function () { btn.innerHTML = origHTML; }, 3000);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(ok).catch(fail);
+    } else {
+      try {
+        var r = document.createRange(); r.selectNodeContents(cmd);
+        var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+        if (document.execCommand("copy")) ok(); else fail();
+        s.removeAllRanges();
+      } catch (e) { fail(); }
+    }
+  });
+})();
 </script>
 </body>
 </html>
