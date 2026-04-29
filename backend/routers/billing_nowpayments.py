@@ -66,6 +66,11 @@ async def buy_page(request: Request):
             "np_test_option_label": app_config.nowpayments_test_tariff_option_label(),
             "np_test_enabled": app_config.nowpayments_test_tariff_enabled(),
             "access_key_required": app_config.fb_master_access_key_required(),
+            "lavatop_enabled": app_config.lavatop_enabled(),
+            "lavatop_price_usd_30": app_config.lavatop_price_usd(30),
+            "lavatop_price_usd_90": app_config.lavatop_price_usd(90),
+            "lavatop_price_usd_180": app_config.lavatop_price_usd(180),
+            "lavatop_price_usd_365": app_config.lavatop_price_usd(365),
         },
     )
 
@@ -112,6 +117,11 @@ async def purchase_page(request: Request):
             "np_price_test": app_config.NOWPAYMENTS_PRICE_USD_TEST,
             "np_test_option_label": app_config.nowpayments_test_tariff_option_label(),
             "np_test_enabled": app_config.nowpayments_test_tariff_enabled(),
+            "lavatop_enabled": app_config.lavatop_enabled(),
+            "lavatop_price_usd_30": app_config.lavatop_price_usd(30),
+            "lavatop_price_usd_90": app_config.lavatop_price_usd(90),
+            "lavatop_price_usd_180": app_config.lavatop_price_usd(180),
+            "lavatop_price_usd_365": app_config.lavatop_price_usd(365),
         },
     )
 

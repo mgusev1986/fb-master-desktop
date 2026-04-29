@@ -1485,6 +1485,7 @@ def init_db() -> None:
     _migrate_twitter_accounts_proxy_lease_ends_at()
     _migrate_billing_renewal_orders_np_details()
     _migrate_access_keys_admin_note()
+    _migrate_billing_renewal_orders_lavatop_columns()
 
 
 def _migrate_reddit_accounts_browser_mode() -> None:
@@ -1654,4 +1655,38 @@ def _migrate_access_keys_admin_note() -> None:
         "access_keys",
         (("admin_note", "TEXT"),),
         (("admin_note", "TEXT"),),
+    )
+
+
+def _migrate_billing_renewal_orders_lavatop_columns() -> None:
+    """Добавить колонки LavaTop в `billing_renewal_orders` (v3.0.7+).
+
+    Все nullable — у старых заказов NOWPayments значения NULL, что эквивалентно
+    `provider="nowpayments"` (см. логику источника платежа в админке).
+    """
+    cols = (
+        ("provider", "VARCHAR(20)"),
+        ("lava_invoice_id", "VARCHAR(80)"),
+        ("lava_contract_id", "VARCHAR(80)"),
+        ("lava_subscription_id", "VARCHAR(80)"),
+        ("customer_email", "VARCHAR(255)"),
+    )
+    extra = [
+        "CREATE INDEX IF NOT EXISTS ix_billing_renewal_orders_provider "
+        "ON billing_renewal_orders (provider)",
+        "CREATE INDEX IF NOT EXISTS ix_billing_renewal_orders_lava_invoice "
+        "ON billing_renewal_orders (lava_invoice_id)",
+        "CREATE INDEX IF NOT EXISTS ix_billing_renewal_orders_lava_contract "
+        "ON billing_renewal_orders (lava_contract_id)",
+        "CREATE INDEX IF NOT EXISTS ix_billing_renewal_orders_lava_subscription "
+        "ON billing_renewal_orders (lava_subscription_id)",
+        "CREATE INDEX IF NOT EXISTS ix_billing_renewal_orders_customer_email "
+        "ON billing_renewal_orders (customer_email)",
+    ]
+    _add_columns(
+        "billing_renewal_orders",
+        cols,
+        cols,
+        extra_sql_sqlite=extra,
+        extra_sql_pg=list(extra),
     )

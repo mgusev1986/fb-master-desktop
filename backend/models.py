@@ -111,7 +111,7 @@ class ClientMachinePresence(Base):
     created_at = Column(DateTime, default=_utcnow)
 
 
-# ── Оплата продления доступа (NOWPayments) ───────────
+# ── Оплата продления доступа (NOWPayments / LavaTop) ─
 
 class BillingRenewalOrder(Base):
     __tablename__ = "billing_renewal_orders"
@@ -132,6 +132,13 @@ class BillingRenewalOrder(Base):
     access_key_id = Column(Integer, ForeignKey("access_keys.id"), nullable=True)
     # Одноразовая выдача ключа после оплаты (Fernet), очищается после первого успешного /status
     pending_plain_key_enc = Column(Text, nullable=True)
+    # LavaTop integration (3.0.7+): провайдер заказа + поля LavaTop. NULL у старых
+    # записей трактуется как "nowpayments".
+    provider = Column(String(20), nullable=True, index=True)
+    lava_invoice_id = Column(String(80), nullable=True, index=True)
+    lava_contract_id = Column(String(80), nullable=True, index=True)
+    lava_subscription_id = Column(String(80), nullable=True, index=True)
+    customer_email = Column(String(255), nullable=True, index=True)
 
     # 3.0.5+: детали платежа из последнего IPN — для карточки в админке
     # access-keys (как в кабинете NOWPayments). Все поля nullable.
@@ -761,3 +768,66 @@ class Setting(Base):
 
 
 # Подписи и порядок стадий воронки — в таблице CRMStage (сиды: crm_stages_registry.BUILTIN_CRM_STAGES).
+
+
+# ── LavaTop: подписки с автопродлением (3.0.7+) ──────
+
+class LavaSubscription(Base):
+    """Активная LavaTop-подписка с автопродлением (расчёт каждые 30/90/180/365 дней).
+
+    Создаётся при первом успешном «Результат платежа» webhook'е, обновляется
+    при каждом «Регулярный платёж». Один AccessKey может иметь не более одной
+    активной подписки (UNIQUE constraint по access_key_id среди active).
+    """
+
+    __tablename__ = "lava_subscriptions"
+
+    id = Column(Integer, primary_key=True)
+    # Идентификатор подписки в LavaTop (contract_id или subscription_id, в зависимости от их API).
+    lava_subscription_id = Column(String(80), nullable=False, unique=True, index=True)
+    lava_contract_id = Column(String(80), nullable=True, index=True)
+    customer_email = Column(String(255), nullable=False, index=True)
+    access_key_id = Column(Integer, ForeignKey("access_keys.id"), nullable=False, index=True)
+    # active | cancelled | expired | failed
+    status = Column(String(24), nullable=False, default="active", index=True)
+    period_days = Column(Integer, nullable=False, default=30)
+    price_amount = Column(String(32), nullable=True)
+    price_currency = Column(String(16), nullable=False, default="rub")
+    # Когда LavaTop планирует следующее списание (для отображения в админке).
+    next_billing_at = Column(DateTime, nullable=True)
+    last_charged_at = Column(DateTime, nullable=True)
+    cancelled_at = Column(DateTime, nullable=True)
+    charges_count = Column(Integer, nullable=False, default=0)
+    # Полный snapshot последнего webhook'а — для отладки и повторного применения.
+    last_webhook_payload_json = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=_utcnow)
+    updated_at = Column(DateTime, default=_utcnow, onupdate=_utcnow)
+
+
+# ── LavaTop: лог входящих webhook'ов (3.0.7+) ─────────
+
+class LavaWebhookLog(Base):
+    """Аудит-лог всех входящих LavaTop-webhook'ов (для дебага и compliance).
+
+    Сохраняется ДО проверки Basic Auth — нужен для расследования инцидентов и
+    для повторной обработки (replay) при сбоях.
+    """
+
+    __tablename__ = "lava_webhook_logs"
+    __table_args__ = (
+        Index("ix_lava_webhook_logs_received_at", "received_at"),
+        Index("ix_lava_webhook_logs_event_type_status", "event_type", "processing_status"),
+    )
+
+    id = Column(Integer, primary_key=True)
+    received_at = Column(DateTime, default=_utcnow)
+    event_type = Column(String(50), nullable=True)  # payment.success / subscription.charged / ...
+    basic_auth_ok = Column(Boolean, nullable=False, default=False)
+    # ok | error | invalid_auth | order_not_found | duplicate
+    processing_status = Column(String(40), nullable=True)
+    error_message = Column(Text, nullable=True)
+    # Связи (если payload разобран успешно).
+    order_id = Column(Integer, ForeignKey("billing_renewal_orders.id"), nullable=True, index=True)
+    lava_subscription_id = Column(String(80), nullable=True, index=True)
+    payload_json = Column(JSON, nullable=True)
+    raw_body_preview = Column(Text, nullable=True)  # первые ~2КБ raw body, на случай если payload не парсится

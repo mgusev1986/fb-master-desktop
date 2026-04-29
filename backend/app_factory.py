@@ -661,6 +661,7 @@ def create_app() -> FastAPI:
         account_natural_warmup,
         ai_agent,
         auth,
+        billing_lavatop,
         billing_nowpayments,
         contacted,
         crm_funnel,
@@ -698,6 +699,8 @@ def create_app() -> FastAPI:
     app.include_router(release_download.router)
     app.include_router(billing_nowpayments.router)
     app.include_router(billing_nowpayments.webhook_router)
+    app.include_router(billing_lavatop.router)
+    app.include_router(billing_lavatop.webhook_router)
     app.include_router(dashboard.router)
     app.include_router(desktop_public.router)
     app.include_router(desktop_license_public.router)

@@ -150,16 +150,30 @@
     <div class="purchase-error">{{ purchase_error }}</div>
     {% endif %}
 
+    {% if lavatop_enabled %}
+    <form method="post" action="/billing/lavatop/create" class="settings-form fbm-premium-form" style="margin:0 0 0.9rem">
+      <input type="hidden" name="billing_source" value="purchase"/>
+      <input type="hidden" name="duration_days" value="30"/>
+      <p style="margin:0 0 0.55rem;display:flex;justify-content:center"><span style="display:inline-flex;align-items:baseline;gap:0.6rem;padding:0.6rem 1.15rem;border-radius:999px;background:linear-gradient(135deg,rgba(99,132,255,0.22),rgba(99,132,255,0.08));border:1px solid rgba(99,132,255,0.55);color:#a8c0ff;font-size:1.05rem"><span style="opacity:0.85">Подписка на 30 дней —</span><strong style="font-size:1.4rem;font-weight:700;color:#c1d4ff">${{ lavatop_price_usd_30 }}</strong></span></p>
+      <input type="email" name="customer_email" id="purchase_lava_email" required maxlength="255" placeholder="ваш-email@example.com" style="display:block;width:100%;padding:0.7rem 0.95rem;margin:0 0 0.65rem;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#e6e9ef;font-size:0.95rem;box-sizing:border-box" autocomplete="email"/>
+      <p class="fbm-premium-note" style="margin:0 0 0.85rem;font-size:0.88rem;color:rgba(229,231,235,0.7);line-height:1.45">
+        Карта (RU/Visa/MC) · СБП · Apple Pay · ключ придёт на ваш email · автопродление через 30 дн.
+      </p>
+      <input type="hidden" name="device_id" id="purchase_lava_device_id" value=""/>
+      <button type="submit" class="fbm-premium-submit" id="purchase-lava-submit" style="background:linear-gradient(180deg,#6384ff,#4f6df5)" disabled>Оплатить картой</button>
+    </form>
+    {% endif %}
+
     {% if nowpayments_enabled %}
     <form method="post" action="/billing/nowpayments/create" class="settings-form fbm-premium-form" style="margin:0 0 1.1rem">
       <input type="hidden" name="billing_source" value="purchase"/>
       <input type="hidden" name="duration" value="365"/>
-      <p style="margin:0 0 0.55rem;display:flex;justify-content:center"><span style="display:inline-flex;align-items:baseline;gap:0.6rem;padding:0.6rem 1.15rem;border-radius:999px;background:linear-gradient(135deg,rgba(245,208,110,0.18),rgba(245,208,110,0.08));border:1px solid rgba(245,208,110,0.55);box-shadow:0 0 0 1px rgba(245,208,110,0.08) inset,0 10px 28px -18px rgba(245,208,110,0.65);color:#f5d06e;font-size:1.05rem;letter-spacing:0.01em"><span style="opacity:0.85">Подписка на 35 дней —</span><strong style="font-size:1.4rem;font-weight:700;color:#fbe39a;text-shadow:0 0 12px rgba(245,208,110,0.35)">{{ np_price_365 }} USD</strong></span></p>
+      <p style="margin:0 0 0.55rem;display:flex;justify-content:center"><span style="display:inline-flex;align-items:baseline;gap:0.6rem;padding:0.6rem 1.15rem;border-radius:999px;background:linear-gradient(135deg,rgba(245,208,110,0.18),rgba(245,208,110,0.08));border:1px solid rgba(245,208,110,0.55);box-shadow:0 0 0 1px rgba(245,208,110,0.08) inset,0 10px 28px -18px rgba(245,208,110,0.65);color:#f5d06e;font-size:1.05rem;letter-spacing:0.01em"><span style="opacity:0.85">{% if lavatop_enabled %}Или криптой 35 дней —{% else %}Подписка на 35 дней —{% endif %}</span><strong style="font-size:1.4rem;font-weight:700;color:#fbe39a;text-shadow:0 0 12px rgba(245,208,110,0.35)">{{ np_price_365 }} USD</strong></span></p>
       <p class="fbm-premium-note" style="margin:0 0 0.85rem;font-size:0.9rem;color:rgba(229,231,235,0.7);line-height:1.45">
         Криптовалюта · ключ выдаётся на экране сразу после оплаты · дальше продлеваете доступ по желанию.
       </p>
       <input type="hidden" name="device_id" id="purchase_device_id" value=""/>
-      <button type="submit" class="fbm-premium-submit" id="purchase-np-submit" disabled>Получить доступ</button>
+      <button type="submit" class="fbm-premium-submit" id="purchase-np-submit" disabled>{% if lavatop_enabled %}Оплатить криптой{% else %}Получить доступ{% endif %}</button>
     </form>
     {% elif remote_checkout_url %}
     <p class="fbm-premium-hint">Оплата на сайте — в отдельном окне. Затем введите ключ в программе.</p>
@@ -183,19 +197,24 @@
 <script src="{{ url_for('static', path='js/fbm-device-fingerprint.js') }}"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-  var el = document.getElementById("purchase_device_id");
-  var btn = document.getElementById("purchase-np-submit");
-  if (!btn) return;
+  var elNp = document.getElementById("purchase_device_id");
+  var btnNp = document.getElementById("purchase-np-submit");
+  var elLava = document.getElementById("purchase_lava_device_id");
+  var btnLava = document.getElementById("purchase-lava-submit");
+  function enableAll() {
+    if (btnNp) btnNp.disabled = false;
+    if (btnLava) btnLava.disabled = false;
+  }
+  if (!btnNp && !btnLava) return;
   if (typeof fbmEnsureDeviceId !== "function") {
-    btn.disabled = false;
+    enableAll();
     return;
   }
   fbmEnsureDeviceId().then(function (id) {
-    if (el) el.value = id;
-    btn.disabled = false;
-  }).catch(function () {
-    btn.disabled = false;
-  });
+    if (elNp) elNp.value = id;
+    if (elLava) elLava.value = id;
+    enableAll();
+  }).catch(enableAll);
 });
 </script>
 </body>

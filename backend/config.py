@@ -860,3 +860,95 @@ def remote_https_checkout_url_for_local_app() -> str | None:
     if not url.lower().startswith("https://"):
         return None
     return url
+
+
+# ── LavaTop (карты RU/EU + recurring подписки) ────────
+# Кабинет: https://app.lava.top/integrations/public-api — API key + два webhook'а
+# (Результат платежа + Регулярный платеж) с Basic Auth.
+LAVATOP_API_KEY: str = (os.getenv("LAVATOP_API_KEY") or "").strip()
+LAVATOP_API_BASE: str = (os.getenv("LAVATOP_API_BASE") or "https://gate.lava.top").strip().rstrip("/")
+LAVATOP_WEBHOOK_LOGIN: str = (os.getenv("LAVATOP_WEBHOOK_LOGIN") or "").strip()
+LAVATOP_WEBHOOK_PASSWORD: str = (os.getenv("LAVATOP_WEBHOOK_PASSWORD") or "").strip()
+
+# Parent product UUID (общий для всех 4 подписок-тарифов).
+LAVATOP_PRODUCT_ID: str = (os.getenv("LAVATOP_PRODUCT_ID") or "").strip()
+
+# Offer (product) IDs создаются вручную в кабинете LavaTop под каждый тариф.
+LAVATOP_OFFER_ID_30: str = (os.getenv("LAVATOP_OFFER_ID_30") or "").strip()
+LAVATOP_OFFER_ID_90: str = (os.getenv("LAVATOP_OFFER_ID_90") or "").strip()
+LAVATOP_OFFER_ID_180: str = (os.getenv("LAVATOP_OFFER_ID_180") or "").strip()
+LAVATOP_OFFER_ID_365: str = (os.getenv("LAVATOP_OFFER_ID_365") or "").strip()
+
+# Цены в USD (LavaTop сам конвертирует в RUB/EUR на checkout-странице).
+# ВАЖНО: должны совпадать с настройками в кабинете LavaTop, иначе клиент увидит расхождение.
+LAVATOP_PRICE_USD_30: str = (os.getenv("LAVATOP_PRICE_USD_30") or "100").strip()
+LAVATOP_PRICE_USD_90: str = (os.getenv("LAVATOP_PRICE_USD_90") or "270").strip()
+LAVATOP_PRICE_USD_180: str = (os.getenv("LAVATOP_PRICE_USD_180") or "499").strip()
+LAVATOP_PRICE_USD_365: str = (os.getenv("LAVATOP_PRICE_USD_365") or "865").strip()
+
+
+def lavatop_price_usd(duration_days: int) -> str:
+    """Цена в USD для тарифа из конфига LavaTop."""
+    return {
+        30: LAVATOP_PRICE_USD_30,
+        90: LAVATOP_PRICE_USD_90,
+        180: LAVATOP_PRICE_USD_180,
+        365: LAVATOP_PRICE_USD_365,
+    }.get(int(duration_days), "0")
+
+
+def lavatop_offer_id(duration_days: int) -> str:
+    return {
+        30: LAVATOP_OFFER_ID_30,
+        90: LAVATOP_OFFER_ID_90,
+        180: LAVATOP_OFFER_ID_180,
+        365: LAVATOP_OFFER_ID_365,
+    }.get(int(duration_days), "")
+
+
+def lavatop_recurring_default() -> bool:
+    """Подписка с автопродлением включена по умолчанию (решение 2026-04-29)."""
+    raw = (os.getenv("LAVATOP_RECURRING_DEFAULT") or "true").strip().lower()
+    return raw in ("1", "true", "yes", "on")
+
+
+def lavatop_enabled() -> bool:
+    """LavaTop активен, когда заданы API-ключ и креды webhook-а."""
+    return bool(LAVATOP_API_KEY and LAVATOP_WEBHOOK_LOGIN and LAVATOP_WEBHOOK_PASSWORD)
+
+
+# ── Brevo (Sendinblue) — отправка email с ключом доступа ─────────────────
+# https://app.brevo.com/settings/keys/api — 300 писем/день навсегда бесплатно.
+BREVO_API_KEY: str = (os.getenv("BREVO_API_KEY") or "").strip()
+BREVO_FROM_EMAIL: str = (os.getenv("BREVO_FROM_EMAIL") or "").strip()
+BREVO_FROM_NAME: str = (os.getenv("BREVO_FROM_NAME") or "SOCMASTER").strip()
+
+
+def brevo_api_base() -> str:
+    return "https://api.brevo.com"
+
+
+def brevo_enabled() -> bool:
+    return bool(BREVO_API_KEY and BREVO_FROM_EMAIL)
+
+
+# ── Унифицированный email helper (Brevo приоритетен, Mailgun deprecated) ──
+def email_provider_enabled() -> bool:
+    """Включён ли хотя бы один email-провайдер (Brevo или Mailgun fallback)."""
+    return brevo_enabled() or mailgun_enabled()
+
+
+# ── Mailgun (DEPRECATED — заменён Brevo, оставлен как fallback) ────────────
+MAILGUN_API_KEY: str = (os.getenv("MAILGUN_API_KEY") or "").strip()
+MAILGUN_DOMAIN: str = (os.getenv("MAILGUN_DOMAIN") or "").strip().lower()
+MAILGUN_FROM_EMAIL: str = (os.getenv("MAILGUN_FROM_EMAIL") or "").strip()
+MAILGUN_FROM_NAME: str = (os.getenv("MAILGUN_FROM_NAME") or "SOCMASTER").strip()
+MAILGUN_REGION: str = (os.getenv("MAILGUN_REGION") or "us").strip().lower()
+
+
+def mailgun_api_base() -> str:
+    return "https://api.eu.mailgun.net" if MAILGUN_REGION == "eu" else "https://api.mailgun.net"
+
+
+def mailgun_enabled() -> bool:
+    return bool(MAILGUN_API_KEY and MAILGUN_DOMAIN and MAILGUN_FROM_EMAIL)

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Спасибо за покупку — SOCMASTER</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='css/main.css') }}"/>
+  <style>
+    body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: clamp(1rem, 3vw, 2rem); background: radial-gradient(ellipse 120% 80% at 50% -20%, rgba(180, 151, 90, 0.12), transparent 50%), linear-gradient(165deg, #0c0d10 0%, #12141a 40%, #0a0b0e 100%); font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #e6e9ef; }
+    .lava-success-card { max-width: min(36rem, 94vw); background: linear-gradient(180deg, rgba(20, 22, 28, 0.92), rgba(14, 16, 21, 0.96)); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 18px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 1px 0 rgba(255, 255, 255, 0.03) inset; padding: 3rem 2.5rem; text-align: center; }
+    .lava-success-icon { width: 64px; height: 64px; margin: 0 auto 1.5rem; border-radius: 50%; background: linear-gradient(135deg, #22c55e, #16a34a); display: flex; align-items: center; justify-content: center; font-size: 32px; color: #fff; }
+    h1 { margin: 0 0 0.75rem 0; font-size: clamp(1.5rem, 3vw, 1.875rem); font-weight: 700; letter-spacing: -0.01em; }
+    .lava-success-lead { margin: 0 0 1.5rem 0; font-size: 1.0625rem; line-height: 1.55; color: #b5bbc8; }
+    .lava-success-email { display: inline-block; margin: 0 0 2rem 0; padding: 0.75rem 1.25rem; background: rgba(99, 132, 255, 0.12); border: 1px solid rgba(99, 132, 255, 0.3); border-radius: 10px; font-size: 0.9375rem; color: #c1cdf5; }
+    .lava-success-actions { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem; }
+    .lava-btn { display: block; padding: 0.875rem 1.5rem; border-radius: 10px; font-size: 0.9375rem; font-weight: 600; text-decoration: none; transition: all 0.15s; }
+    .lava-btn-primary { background: linear-gradient(180deg, #6384ff, #4f6df5); color: #fff; }
+    .lava-btn-primary:hover { background: linear-gradient(180deg, #7393ff, #6080ff); }
+    .lava-btn-secondary { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); color: #b5bbc8; }
+    .lava-btn-secondary:hover { background: rgba(255, 255, 255, 0.07); }
+    .lava-success-hint { margin: 1.5rem 0 0 0; font-size: 0.8125rem; color: #6c7691; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div class="lava-success-card">
+    <div class="lava-success-icon">✓</div>
+    <h1>Спасибо за покупку!</h1>
+    <p class="lava-success-lead">Ваш ключ доступа SOCMASTER отправлен на email,<br>который вы указали при оплате.</p>
+    <p class="lava-success-email">Проверьте папку «Входящие». Если письма нет за 5 минут — загляните в «Спам».</p>
+    <div class="lava-success-actions">
+      <a href="/auth/unlock" class="lava-btn lava-btn-primary">Перейти к активации ключа</a>
+      <a href="/" class="lava-btn lava-btn-secondary">Вернуться на главную</a>
+    </div>
+    <p class="lava-success-hint">
+      Не пришло письмо? Напишите нам в Telegram: <a href="https://t.me/socmaster_support" style="color: #6384ff;">@socmaster_support</a><br>
+      Подписка автоматически продлится через выбранный период. Отменить можно в любой момент.
+    </p>
+  </div>
+</body>
+</html>
