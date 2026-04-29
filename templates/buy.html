@@ -3,210 +3,464 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>SOCMASTER — доступ</title>
+  <title>SOCMASTER — оплата</title>
+  <meta name="theme-color" content="#0a0a0a">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', path='css/main.css') }}"/>
   <style>
-    .fbm-premium-page {
+    :root {
+      --gold: #f5d06e;
+      --gold-deep: #e8b93d;
+      --gold-soft: rgba(245, 208, 110, 0.10);
+      --gold-border: rgba(245, 208, 110, 0.35);
+      --bg-0: #050505;
+      --bg-1: #0a0a0a;
+      --bg-2: #111111;
+      --text-primary: #f5f5f4;
+      --text-secondary: rgba(229, 231, 235, 0.72);
+      --text-muted: rgba(168, 162, 158, 0.85);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg-0);
+      color: var(--text-primary);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .buy-page {
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: clamp(1rem, 3vw, 2rem);
-      background: radial-gradient(ellipse 120% 80% at 50% -20%, rgba(180, 151, 90, 0.12), transparent 50%),
-        linear-gradient(165deg, #0c0d10 0%, #12141a 40%, #0a0b0e 100%);
-      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      padding: clamp(1.25rem, 4vw, 3rem);
+      background:
+        radial-gradient(ellipse at 25% 18%, rgba(245, 208, 110, 0.08) 0%, transparent 45%),
+        radial-gradient(ellipse at 75% 85%, rgba(245, 208, 110, 0.05) 0%, transparent 55%),
+        radial-gradient(circle at 50% 100%, #111 0%, #0a0a0a 50%, #050505 100%);
     }
-    .fbm-premium-card {
-      max-width: min(44rem, 94vw);
+    .buy-card {
+      max-width: 56rem;
       width: 100%;
-      background: linear-gradient(145deg, rgba(28, 30, 38, 0.97) 0%, rgba(18, 20, 26, 0.99) 100%);
-      border-radius: 24px;
-      padding: clamp(2.25rem, 5vw, 3.25rem);
-      border: 1px solid rgba(201, 169, 98, 0.22);
-      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04) inset,
-        0 32px 64px -16px rgba(0, 0, 0, 0.55),
-        0 0 80px -30px rgba(180, 151, 90, 0.15);
+      background: linear-gradient(180deg, rgba(15, 15, 17, 0.92) 0%, rgba(8, 8, 10, 0.96) 100%);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-radius: 28px;
+      padding: clamp(2rem, 5vw, 3.5rem);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+        0 32px 64px -20px rgba(0, 0, 0, 0.65),
+        0 0 100px -40px rgba(245, 208, 110, 0.18);
     }
-    .fbm-premium-eyebrow {
-      font-size: 0.75rem;
-      letter-spacing: 0.28em;
+    .buy-eyebrow {
+      font-size: 0.7rem;
+      letter-spacing: 0.32em;
       text-transform: uppercase;
-      color: rgba(196, 165, 116, 0.85);
-      margin: 0 0 0.6rem;
+      color: var(--gold);
+      margin: 0 0 1rem;
       font-weight: 600;
     }
-    .fbm-premium-card h1 {
-      font-size: clamp(1.6rem, 4.2vw, 2.05rem);
-      font-weight: 600;
-      letter-spacing: -0.03em;
-      color: #f5f5f4;
-      margin: 0 0 1.5rem;
-      line-height: 1.2;
-    }
-    .fbm-premium-section-label {
-      font-size: 0.78rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: rgba(168, 162, 158, 0.9);
-      margin: 0 0 0.85rem;
-      font-weight: 600;
-    }
-    .fbm-premium-dl { list-style: none; padding: 0; margin: 0 0 1.75rem; }
-    .fbm-premium-dl li { margin: 0.65rem 0; }
-    .fbm-premium-dl a {
-      color: #e7d5b0;
+    .buy-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 5vw, 2.85rem);
       font-weight: 500;
-      font-size: 1.02rem;
+      letter-spacing: -0.02em;
+      line-height: 1.12;
+      margin: 0 0 0.85rem;
+      color: var(--text-primary);
+    }
+    .buy-title .gold {
+      background: linear-gradient(90deg, var(--gold) 0%, var(--gold-deep) 50%, var(--gold) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-style: italic;
+      font-weight: 600;
+    }
+    .buy-subtitle {
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin: 0 0 2.5rem;
+      max-width: 38rem;
+    }
+    .buy-error {
+      background: rgba(127, 29, 29, 0.4);
+      color: #fecaca;
+      padding: 0.85rem 1.1rem;
+      border-radius: 12px;
+      font-size: 0.88rem;
+      margin: 0 0 1.75rem;
+      border: 1px solid rgba(248, 113, 113, 0.3);
+    }
+    .buy-tariff {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.85rem;
+      padding: 1.15rem 1.5rem;
+      background: linear-gradient(135deg, rgba(245, 208, 110, 0.07), rgba(245, 208, 110, 0.02));
+      border: 1px solid var(--gold-border);
+      border-radius: 16px;
+      margin: 0 0 1.5rem;
+      box-shadow: 0 4px 24px -16px rgba(245, 208, 110, 0.4);
+    }
+    .buy-tariff-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .buy-tariff-price {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.6rem, 4vw, 2rem);
+      font-weight: 600;
+      color: var(--gold);
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    .buy-tariff-period {
+      font-size: 0.92rem;
+      color: var(--text-secondary);
+      margin-left: auto;
+    }
+    .buy-email {
+      width: 100%;
+      padding: 1rem 1.15rem;
+      margin: 0 0 1.5rem;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 1rem;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+    .buy-email::placeholder { color: rgba(168, 162, 158, 0.5); }
+    .buy-email:focus {
+      outline: none;
+      border-color: var(--gold-border);
+      background: rgba(245, 208, 110, 0.03);
+      box-shadow: 0 0 0 3px rgba(245, 208, 110, 0.1);
+    }
+    .buy-payment-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin: 0 0 2rem;
+    }
+    @media (max-width: 600px) {
+      .buy-payment-row { grid-template-columns: 1fr; }
+    }
+    .buy-payment-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      padding: 1.6rem 1.5rem 1.4rem;
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      cursor: pointer;
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                  border-color 0.25s ease,
+                  background 0.25s ease,
+                  box-shadow 0.25s ease;
+      text-align: left;
+      width: 100%;
+      font: inherit;
+      color: inherit;
+    }
+    .buy-payment-card:hover:not(:disabled) {
+      border-color: var(--gold-border);
+      background: rgba(245, 208, 110, 0.04);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 36px -16px rgba(245, 208, 110, 0.3),
+                  0 0 0 1px rgba(245, 208, 110, 0.15) inset;
+    }
+    .buy-payment-card:active:not(:disabled) {
+      transform: translateY(0);
+      transition-duration: 0.05s;
+    }
+    .buy-payment-card:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+    .buy-payment-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-deep) 100%);
+      color: #0a0a0a;
+      box-shadow: 0 6px 20px -8px rgba(245, 208, 110, 0.5),
+                  0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+      margin-bottom: 0.35rem;
+    }
+    .buy-payment-card[data-method="crypto"] .buy-payment-icon {
+      background: linear-gradient(135deg, #f7931a 0%, #d97706 100%);
+      color: #fff;
+      box-shadow: 0 6px 20px -8px rgba(247, 147, 26, 0.5),
+                  0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+    }
+    .buy-payment-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.35rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin: 0;
+      color: var(--text-primary);
+    }
+    .buy-payment-meta {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin: 0;
+    }
+    .buy-payment-arrow {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.4rem;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.25s ease, color 0.25s ease, transform 0.25s ease;
+      color: rgba(255, 255, 255, 0.5);
+    }
+    .buy-payment-card:hover:not(:disabled) .buy-payment-arrow {
+      background: var(--gold);
+      color: #0a0a0a;
+      transform: translate(2px, -2px);
+    }
+    .buy-payment-arrow svg {
+      width: 13px;
+      height: 13px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .buy-secure {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 0 0 2.25rem;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+    .buy-secure svg { width: 14px; height: 14px; opacity: 0.7; flex-shrink: 0; }
+    .buy-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(245, 208, 110, 0.25), transparent);
+      margin: 0 0 1.85rem;
+      border: none;
+    }
+    .buy-features-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin: 0 0 1.2rem;
+    }
+    .buy-features {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+    .buy-features li {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      font-size: 0.95rem;
+      line-height: 1.55;
+      color: var(--text-secondary);
+    }
+    .buy-features li strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+    .buy-features-check {
+      flex-shrink: 0;
+      color: var(--gold);
+      font-weight: 700;
+      font-size: 1rem;
+    }
+    .buy-bottom-link {
+      display: inline-block;
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
       text-decoration: none;
-      border-bottom: 1px solid rgba(231, 213, 176, 0.35);
-      padding-bottom: 2px;
+      border-bottom: 1px solid rgba(168, 162, 158, 0.3);
+      padding-bottom: 1px;
       transition: color 0.15s ease, border-color 0.15s ease;
     }
-    .fbm-premium-dl a:hover { color: #f5edd8; border-bottom-color: rgba(245, 237, 216, 0.6); }
-    .fbm-premium-note { color: rgba(168, 162, 158, 0.85); font-size: 0.92rem; margin: 0 0 1rem; line-height: 1.5; }
-    .fbm-premium-divider {
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(201, 169, 98, 0.25), transparent);
-      margin: 1.5rem 0;
-      border: none;
-    }
-    .fbm-premium-form .form-label { color: rgba(212, 212, 208, 0.9); font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; }
-    .fbm-premium-form .form-input {
-      background: rgba(0, 0, 0, 0.35);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      color: #f5f5f4;
-      border-radius: 12px;
-      font-size: 1rem;
-      padding: 0.65rem 0.85rem;
-      min-height: 3rem;
-    }
-    .fbm-premium-form .form-input:focus {
-      border-color: rgba(201, 169, 98, 0.45);
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(201, 169, 98, 0.12);
-    }
-    .fbm-premium-submit {
-      width: 100%;
-      margin-top: 0.35rem;
-      padding: 1rem 1.5rem;
-      border: none;
-      border-radius: 14px;
-      font-size: 1rem;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      color: #1a1410 !important;
-      cursor: pointer;
-      background: linear-gradient(135deg, #e8d5a8 0%, #c9a962 45%, #a67c3d 100%);
-      box-shadow: 0 4px 20px rgba(201, 169, 98, 0.35), 0 1px 2px rgba(0, 0, 0, 0.2);
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
-    }
-    .fbm-premium-submit:hover:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: 0 8px 28px rgba(201, 169, 98, 0.42);
-    }
-    .fbm-premium-submit:disabled { opacity: 0.55; cursor: not-allowed; }
-    .fbm-premium-link-muted {
-      display: inline-block;
-      margin-top: 1.25rem;
-      font-size: 0.8rem;
-      color: rgba(168, 162, 158, 0.95);
-      text-decoration: none;
-      border-bottom: 1px solid rgba(168, 162, 158, 0.35);
-    }
-    .fbm-premium-link-muted:hover { color: #d6d3d1; }
-    .buy-error {
-      background: rgba(127, 29, 29, 0.35);
-      color: #fecaca;
-      padding: 0.75rem 1rem;
-      border-radius: 10px;
-      font-size: 0.82rem;
-      margin-bottom: 1rem;
-      border: 1px solid rgba(248, 113, 113, 0.25);
+    .buy-bottom-link:hover {
+      color: var(--gold);
+      border-bottom-color: var(--gold-border);
     }
   </style>
 </head>
 <body>
-<div class="fbm-premium-page">
-  <div class="fbm-premium-card">
-    <p class="fbm-premium-eyebrow">SOCMASTER</p>
-    <h1>Лиды из Facebook — на автомате</h1>
-    <p class="fbm-premium-sub" style="margin-top:0.45rem;margin-bottom:1.05rem;font-size:1rem;line-height:1.5;color:rgba(229,231,235,0.85)">
-      Программа сама находит целевую аудиторию в Facebook, отправляет ваше сообщение в личку
-      и ведёт каждого получателя по стадиям CRM-воронки — от первого касания до сделки.
+<div class="buy-page">
+  <main class="buy-card">
+    <p class="buy-eyebrow">SOCMASTER · ОПЛАТА</p>
+    <h1 class="buy-title">Лиды из Facebook<br><span class="gold">на автомате</span></h1>
+    <p class="buy-subtitle">
+      Программа сама находит целевую аудиторию в Facebook, отправляет ваше сообщение
+      в личку и ведёт каждого получателя по стадиям CRM-воронки — от первого касания до сделки.
     </p>
 
     {% if buy_error %}
     <div class="buy-error">{{ buy_error }}</div>
     {% endif %}
 
-    {# ── Блок оплаты картой через LavaTop (главный, RU/СНГ/ЕС) ── #}
+    {% if lavatop_enabled or nowpayments_enabled %}
+
+    {# Главный тариф (LavaTop приоритет, иначе NP) #}
+    <div class="buy-tariff">
+      <span class="buy-tariff-label">Подписка</span>
+      <span class="buy-tariff-price">${{ lavatop_price_usd_30 if lavatop_enabled else np_price_365 }}</span>
+      <span class="buy-tariff-period">{% if lavatop_enabled %}за 30 дней · автопродление{% else %}за 35 дней{% endif %}</span>
+    </div>
+
     {% if lavatop_enabled %}
-    <form method="post" action="/billing/lavatop/create" class="settings-form fbm-premium-form" style="margin:0 0 0.9rem">
-      <input type="hidden" name="billing_source" value="buy"/>
-      <input type="hidden" name="duration_days" value="30"/>
-      <p style="margin:0 0 0.55rem;display:flex;justify-content:center"><span style="display:inline-flex;align-items:baseline;gap:0.6rem;padding:0.6rem 1.15rem;border-radius:999px;background:linear-gradient(135deg,rgba(99,132,255,0.22),rgba(99,132,255,0.08));border:1px solid rgba(99,132,255,0.55);color:#a8c0ff;font-size:1.05rem"><span style="opacity:0.85">Подписка на 30 дней —</span><strong style="font-size:1.4rem;font-weight:700;color:#c1d4ff">${{ lavatop_price_usd_30 }}</strong></span></p>
-      <input type="email" name="customer_email" id="lava_email" required maxlength="255" placeholder="ваш-email@example.com" style="display:block;width:100%;padding:0.7rem 0.95rem;margin:0 0 0.65rem;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#e6e9ef;font-size:0.95rem;box-sizing:border-box" autocomplete="email"/>
-      <p class="fbm-premium-note" style="margin:0 0 0.85rem;font-size:0.88rem;color:rgba(229,231,235,0.7);line-height:1.45">
-        Карта (RU/Visa/MC) · СБП · Apple Pay · ключ придёт на ваш email · автопродление через 30 дн.
-      </p>
-      <input type="hidden" name="device_id" id="buy_lava_device_id" value=""/>
-      <button type="submit" class="fbm-premium-submit" id="buy-lava-submit" style="background:linear-gradient(180deg,#6384ff,#4f6df5)" disabled>Оплатить картой</button>
-    </form>
+    <input type="email" id="buy_email" required maxlength="255" placeholder="ваш-email@example.com" class="buy-email" autocomplete="email" aria-label="Email для получения ключа"/>
     {% endif %}
 
-    {# Блок оплаты криптой через NOWPayments — fallback #}
-    {% if nowpayments_enabled %}
-    <form method="post" action="/billing/nowpayments/create" class="settings-form fbm-premium-form" style="margin:0 0 1.1rem">
-      <input type="hidden" name="billing_source" value="buy"/>
-      <input type="hidden" name="duration" value="365"/>
-      <p style="margin:0 0 0.55rem;display:flex;justify-content:center"><span style="display:inline-flex;align-items:baseline;gap:0.6rem;padding:0.6rem 1.15rem;border-radius:999px;background:linear-gradient(135deg,rgba(245,208,110,0.18),rgba(245,208,110,0.08));border:1px solid rgba(245,208,110,0.55);box-shadow:0 0 0 1px rgba(245,208,110,0.08) inset,0 10px 28px -18px rgba(245,208,110,0.65);color:#f5d06e;font-size:1.05rem;letter-spacing:0.01em"><span style="opacity:0.85">{% if lavatop_enabled %}Или криптой 35 дней —{% else %}Подписка на 35 дней —{% endif %}</span><strong style="font-size:1.4rem;font-weight:700;color:#fbe39a;text-shadow:0 0 12px rgba(245,208,110,0.35)">{{ np_price_365 }} USD</strong></span></p>
-      <p class="fbm-premium-note" style="margin:0 0 0.85rem;font-size:0.9rem;color:rgba(229,231,235,0.7);line-height:1.45">
-        Криптовалюта · ключ выдаётся на экране сразу после оплаты · дальше продлеваете доступ по желанию.
-      </p>
-      <input type="hidden" name="device_id" id="buy_device_id" value=""/>
-      <button type="submit" class="fbm-premium-submit" id="buy-np-submit" disabled>{% if lavatop_enabled %}Оплатить криптой{% else %}Получить доступ{% endif %}</button>
-    </form>
+    <div class="buy-payment-row" role="group" aria-label="Способ оплаты">
+      {% if lavatop_enabled %}
+      <form method="post" action="/billing/lavatop/create" id="form-card" style="margin:0">
+        <input type="hidden" name="billing_source" value="buy"/>
+        <input type="hidden" name="duration_days" value="30"/>
+        <input type="hidden" name="customer_email" id="form-card-email" value=""/>
+        <input type="hidden" name="device_id" id="buy_lava_device_id" value=""/>
+        <button type="submit" class="buy-payment-card" data-method="card" id="buy-lava-submit" aria-label="Оплатить картой" disabled>
+          <div class="buy-payment-arrow" aria-hidden="true">
+            <svg viewBox="0 0 12 12"><path d="M3 3h6v6M3 9l6-6"/></svg>
+          </div>
+          <div class="buy-payment-icon" aria-hidden="true">💳</div>
+          <h3 class="buy-payment-title">Картой</h3>
+          <p class="buy-payment-meta">RU · Visa · Mastercard · СБП · Apple Pay<br>Ключ придёт на email</p>
+        </button>
+      </form>
+      {% endif %}
+
+      {% if nowpayments_enabled %}
+      <form method="post" action="/billing/nowpayments/create" id="form-crypto" style="margin:0">
+        <input type="hidden" name="billing_source" value="buy"/>
+        <input type="hidden" name="duration" value="365"/>
+        <input type="hidden" name="device_id" id="buy_device_id" value=""/>
+        <button type="submit" class="buy-payment-card" data-method="crypto" id="buy-np-submit" aria-label="Оплатить криптовалютой" disabled>
+          <div class="buy-payment-arrow" aria-hidden="true">
+            <svg viewBox="0 0 12 12"><path d="M3 3h6v6M3 9l6-6"/></svg>
+          </div>
+          <div class="buy-payment-icon" aria-hidden="true">₿</div>
+          <h3 class="buy-payment-title">Криптой</h3>
+          <p class="buy-payment-meta">USDT · BTC · ETH · мгновенно<br>Ключ выдаётся сразу после оплаты</p>
+        </button>
+      </form>
+      {% endif %}
+    </div>
+
+    <div class="buy-secure">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M8 1L2 4v4c0 4 2.5 6.5 6 7 3.5-0.5 6-3 6-7V4L8 1z"/>
+        <path d="M5.5 8l2 2 3-4"/>
+      </svg>
+      <span>HTTPS · 3-D Secure · ключ привязан к вашему устройству</span>
+    </div>
+
+    {% else %}
+    <p class="buy-payment-meta" style="color:rgba(251,191,36,0.9);margin-bottom:2rem">
+      Оплата на сайте скоро будет доступна.
+    </p>
     {% endif %}
 
-    {% if not lavatop_enabled and not nowpayments_enabled %}
-    <p class="fbm-premium-note" style="margin:0 0 1.2rem;color:rgba(251,191,36,0.9)">Оплата на сайте скоро будет доступна.</p>
-    {% endif %}
+    <hr class="buy-divider"/>
 
-    <hr class="fbm-premium-divider"/>
-    <p class="fbm-premium-section-label" style="margin-bottom:0.6rem">Что внутри</p>
-    <ul class="fbm-premium-dl" style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:0.55rem">
-      <li style="display:flex;gap:0.6rem;align-items:flex-start;font-size:0.95rem;line-height:1.45"><span style="color:#f5d06e;flex-shrink:0">✓</span><span><strong>Парсер аудитории</strong> — собирает целевых людей из групп, подписок и друзей конкурентов; до 1000+ контактов в день с одного аккаунта.</span></li>
-      <li style="display:flex;gap:0.6rem;align-items:flex-start;font-size:0.95rem;line-height:1.45"><span style="color:#f5d06e;flex-shrink:0">✓</span><span><strong>Рассылка в личку</strong> — естественные паузы и темп, обход E2EE-блокировок, фильтр «уже писали» по всему пулу аккаунтов.</span></li>
-      <li style="display:flex;gap:0.6rem;align-items:flex-start;font-size:0.95rem;line-height:1.45"><span style="color:#f5d06e;flex-shrink:0">✓</span><span><strong>Прогрев аккаунтов</strong> — имитация живого пользователя (лента, профили, лайки), чтобы FB не банил рассылочные аккаунты.</span></li>
-      <li style="display:flex;gap:0.6rem;align-items:flex-start;font-size:0.95rem;line-height:1.45"><span style="color:#f5d06e;flex-shrink:0">✓</span><span><strong>CRM-система с воронкой</strong> — стадии «контактировали / заинтересован / конверсия / отказ», экспорт между устройствами, история «уже писали» переносится с компьютера на компьютер.</span></li>
+    <p class="buy-features-label">Что внутри</p>
+    <ul class="buy-features">
+      <li><span class="buy-features-check">✓</span><span><strong>Парсер аудитории</strong> — собирает целевых людей из групп, подписок и друзей конкурентов; до 1000+ контактов в день с одного аккаунта.</span></li>
+      <li><span class="buy-features-check">✓</span><span><strong>Рассылка в личку</strong> — естественные паузы и темп, обход E2EE-блокировок, фильтр «уже писали» по всему пулу аккаунтов.</span></li>
+      <li><span class="buy-features-check">✓</span><span><strong>Прогрев аккаунтов</strong> — имитация живого пользователя (лента, профили, лайки), чтобы FB не банил рассылочные аккаунты.</span></li>
+      <li><span class="buy-features-check">✓</span><span><strong>CRM-система с воронкой</strong> — стадии «контактировали / заинтересован / конверсия / отказ», экспорт между устройствами.</span></li>
     </ul>
 
     {% if access_key_required %}
-    <a class="fbm-premium-link-muted" href="/auth/unlock" style="margin-top:1rem;display:inline-block">Уже есть ключ</a>
+    <a class="buy-bottom-link" href="/auth/unlock">Уже есть ключ — активировать</a>
     {% endif %}
-  </div>
+  </main>
 </div>
 <script src="{{ url_for('static', path='js/fbm-device-fingerprint.js') }}"></script>
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-  var elNp = document.getElementById("buy_device_id");
-  var btnNp = document.getElementById("buy-np-submit");
-  var elLava = document.getElementById("buy_lava_device_id");
-  var btnLava = document.getElementById("buy-lava-submit");
-  function enableAll() {
-    if (btnNp) btnNp.disabled = false;
-    if (btnLava) btnLava.disabled = false;
-  }
-  if (typeof fbmEnsureDeviceId !== "function") {
-    enableAll();
-    return;
-  }
-  fbmEnsureDeviceId().then(function (id) {
-    if (elNp) elNp.value = id;
-    if (elLava) elLava.value = id;
-    enableAll();
-  }).catch(enableAll);
-});
+(function () {
+  document.addEventListener("DOMContentLoaded", function () {
+    var emailInput = document.getElementById("buy_email");
+    var cardEmailHidden = document.getElementById("form-card-email");
+    var formCard = document.getElementById("form-card");
+
+    if (emailInput && cardEmailHidden) {
+      emailInput.addEventListener("input", function () {
+        cardEmailHidden.value = emailInput.value.trim();
+      });
+    }
+
+    if (formCard && cardEmailHidden) {
+      formCard.addEventListener("submit", function (e) {
+        var v = (cardEmailHidden.value || "").trim();
+        if (!v || v.indexOf("@") < 1) {
+          e.preventDefault();
+          if (emailInput) {
+            emailInput.focus();
+            emailInput.style.borderColor = "rgba(248, 113, 113, 0.55)";
+            setTimeout(function () { emailInput.style.borderColor = ""; }, 2400);
+          }
+        }
+      });
+    }
+
+    var elNp = document.getElementById("buy_device_id");
+    var btnNp = document.getElementById("buy-np-submit");
+    var elLava = document.getElementById("buy_lava_device_id");
+    var btnLava = document.getElementById("buy-lava-submit");
+
+    function enableAll() {
+      if (btnNp) btnNp.disabled = false;
+      if (btnLava) btnLava.disabled = false;
+    }
+
+    if (typeof fbmEnsureDeviceId !== "function") {
+      enableAll();
+      return;
+    }
+
+    fbmEnsureDeviceId().then(function (id) {
+      if (elNp) elNp.value = id;
+      if (elLava) elLava.value = id;
+      enableAll();
+    }).catch(enableAll);
+  });
+})();
 </script>
 </body>
 </html>
