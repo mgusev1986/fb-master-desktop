@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="{% if is_en %}en{% else %}ru{% endif %}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{{ post.meta_title or post.title }}</title>
+    <meta name="description" content="{{ post.meta_description or post.excerpt }}">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta name="theme-color" content="#0a0a0a">
+    <meta name="author" content="{{ post.author or 'SOCMASTER' }}">
+    <meta property="article:published_time" content="{{ post.published_at }}">
+    {% if category_obj %}
+    <meta property="article:section" content="{{ category_obj.name }}">
+    {% endif %}
+    {% for t in tag_objs %}
+    <meta property="article:tag" content="{{ t.name }}">
+    {% endfor %}
+
+    <link rel="canonical" href="https://socmaster.pro/blog/{{ post.slug }}{% if is_en %}?lang=en{% endif %}">
+    {# i18n hreflang — for SEO #}
+    <link rel="alternate" hreflang="ru" href="https://socmaster.pro/blog/{{ post.slug }}">
+    <link rel="alternate" hreflang="en" href="https://socmaster.pro/blog/{{ post.slug }}?lang=en">
+    <link rel="alternate" hreflang="x-default" href="https://socmaster.pro/blog/{{ post.slug }}">
+
+    <meta property="og:type" content="article">
+    <meta property="og:locale" content="{% if is_en %}en_US{% else %}ru_RU{% endif %}">
+    <meta property="og:site_name" content="SOCMASTER">
+    <meta property="og:url" content="https://socmaster.pro/blog/{{ post.slug }}">
+    <meta property="og:title" content="{{ post.meta_title or post.title }}">
+    <meta property="og:description" content="{{ post.meta_description or post.excerpt }}">
+    <meta property="og:image" content="https://socmaster.pro{{ post.cover_image or '/static/images/socmaster-og.png' }}">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ post.title }}">
+    <meta name="twitter:description" content="{{ post.excerpt }}">
+    <meta name="twitter:image" content="https://socmaster.pro{{ post.cover_image or '/static/images/socmaster-og.png' }}">
+
+    <link rel="icon" href="/favicon.ico" sizes="any">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "https://socmaster.pro/blog/{{ post.slug }}"
+      },
+      "headline": {{ post.title|tojson }},
+      "description": {{ (post.meta_description or post.excerpt)|tojson }},
+      "image": "https://socmaster.pro{{ post.cover_image or '/static/images/socmaster-og.png' }}",
+      "author": {
+        "@type": "Organization",
+        "name": "{{ post.author or 'SOCMASTER' }}",
+        "url": "https://socmaster.pro"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "SOCMASTER",
+        "url": "https://socmaster.pro",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://socmaster.pro/static/images/socmaster-logo.png"
+        }
+      },
+      "datePublished": "{{ post.published_at }}",
+      "dateModified": "{{ post.published_at }}"{% if tag_objs %},
+      "keywords": {{ (tag_objs | map(attribute='name') | list)|tojson }}{% endif %}
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "{% if is_en %}Home{% else %}Главная{% endif %}", "item": "https://socmaster.pro/" },
+        { "@type": "ListItem", "position": 2, "name": "{% if is_en %}Knowledge Base{% else %}База знаний{% endif %}", "item": "https://socmaster.pro/blog" }{% if category_obj %},
+        { "@type": "ListItem", "position": 3, "name": {{ category_obj.name|tojson }}, "item": "https://socmaster.pro/blog?category={{ category_obj.slug }}" },
+        { "@type": "ListItem", "position": 4, "name": {{ post.title|tojson }}, "item": "https://socmaster.pro/blog/{{ post.slug }}" }{% else %},
+        { "@type": "ListItem", "position": 3, "name": {{ post.title|tojson }}, "item": "https://socmaster.pro/blog/{{ post.slug }}" }{% endif %}
+      ]
+    }
+    </script>
+
+    {% if post.faq %}
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {% for item in post.faq %}
+        {
+          "@type": "Question",
+          "name": {{ item.q|tojson }},
+          "acceptedAnswer": { "@type": "Answer", "text": {{ item.a|tojson }} }
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+      ]
+    }
+    </script>
+    {% endif %}
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
+        :root { --gold: #f5d06e; --gold-deep: #e8b93d; }
+        * { transition: color 200ms, background-color 200ms, border-color 200ms, box-shadow 250ms, transform 250ms; }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: #050505; color: #fff; }
+        .heading { font-family: 'Playfair Display', serif; letter-spacing: -0.025em; }
+        .gold-gradient { background: linear-gradient(90deg, #f5d06e, #e8b93d, #f5d06e); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        .navbar { backdrop-filter: blur(24px); background: rgba(5,5,5,0.7); border-bottom: 1px solid rgba(245,208,110,0.08); }
+        .hero-bg { background: radial-gradient(ellipse at 30% 20%, rgba(245,208,110,0.10) 0%, transparent 50%), #0a0a0a; }
+        .luxury-card { background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)); border: 1px solid rgba(245,208,110,0.18); border-radius: 1.25rem; }
+        .luxury-card:hover { border-color: rgba(245,208,110,0.55); transform: translateY(-4px); }
+        .cta-button { background: linear-gradient(90deg, #f5d06e, #e8b93d); color: #0a0a0a; font-weight: 600; box-shadow: 0 15px 40px -10px rgba(245,208,110,0.5); }
+        .cta-button:hover { box-shadow: 0 22px 55px -12px rgba(245,208,110,0.7); transform: translateY(-2px) scale(1.02); }
+        .cta-secondary { background: rgba(255,255,255,0.04); color: #fff; border: 1px solid rgba(245,208,110,0.35); }
+        .badge-gold { background: linear-gradient(90deg, rgba(245,208,110,0.18), rgba(245,208,110,0.08)); border: 1px solid rgba(245,208,110,0.4); color: #f5d06e; }
+        .chip { padding: 0.35rem 0.85rem; border-radius: 999px; font-size: 0.78rem; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.75); }
+        .chip:hover { border-color: rgba(245,208,110,0.5); color: #fff; }
+
+        /* ════════════════════════════════════════════════════════════════
+           КРАСИВЫЕ DYNAMIC COVER'Ы — заменяют пустышку-плейсхолдер
+           когда у статьи нет cover_image (рендерятся по slug категории)
+        ════════════════════════════════════════════════════════════════ */
+        .post-cover {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, rgba(245,208,110,0.18), rgba(245,208,110,0.04));
+        }
+        .post-cover::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                radial-gradient(circle at 20% 30%, rgba(245,208,110,0.18) 0%, transparent 35%),
+                radial-gradient(circle at 80% 70%, rgba(245,208,110,0.12) 0%, transparent 40%);
+            pointer-events: none;
+        }
+        .post-cover::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                radial-gradient(circle at 1px 1px, rgba(245,208,110,0.15) 1px, transparent 0);
+            background-size: 24px 24px;
+            opacity: 0.4;
+            pointer-events: none;
+        }
+        .cover-icon-large {
+            font-size: 5rem;
+            background: linear-gradient(135deg, #f5d06e, #e8b93d);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 8px 24px rgba(245, 208, 110, 0.4));
+            position: relative;
+            z-index: 2;
+        }
+        .cover-category-label {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            color: rgba(245, 208, 110, 0.85);
+            font-weight: 600;
+            z-index: 3;
+        }
+        .cover-decoration {
+            position: absolute;
+            opacity: 0.08;
+            z-index: 1;
+        }
+        .cover-decoration-1 { top: -30px; right: -30px; font-size: 14rem; transform: rotate(-15deg); }
+        .cover-decoration-2 { bottom: -20px; left: -20px; font-size: 8rem; transform: rotate(20deg); }
+
+        /* Категория-специфичные градиенты */
+        .cover-fb { background: linear-gradient(135deg, rgba(24,119,242,0.45) 0%, rgba(10,10,10,0.95) 60%, rgba(245,208,110,0.25) 100%); }
+        .cover-ig { background: linear-gradient(135deg, rgba(225,48,108,0.35) 0%, rgba(131,58,180,0.30) 40%, rgba(10,10,10,0.95) 75%, rgba(245,208,110,0.20) 100%); }
+        .cover-li { background: linear-gradient(135deg, rgba(10,102,194,0.45) 0%, rgba(10,10,10,0.95) 60%, rgba(245,208,110,0.25) 100%); }
+        .cover-tg { background: linear-gradient(135deg, rgba(0,136,204,0.45) 0%, rgba(10,10,10,0.95) 60%, rgba(245,208,110,0.25) 100%); }
+        .cover-reddit { background: linear-gradient(135deg, rgba(255,69,0,0.40) 0%, rgba(10,10,10,0.95) 60%, rgba(245,208,110,0.20) 100%); }
+        .cover-x { background: linear-gradient(135deg, rgba(40,40,40,0.95) 0%, rgba(10,10,10,1) 50%, rgba(245,208,110,0.20) 100%); }
+        .cover-ai { background: linear-gradient(135deg, rgba(99,102,241,0.45) 0%, rgba(168,85,247,0.30) 40%, rgba(10,10,10,0.95) 75%, rgba(245,208,110,0.20) 100%); }
+        .cover-crm { background: linear-gradient(135deg, rgba(16,185,129,0.40) 0%, rgba(10,10,10,0.95) 60%, rgba(245,208,110,0.25) 100%); }
+        .cover-lidgen { background: linear-gradient(135deg, rgba(245,158,11,0.30) 0%, rgba(10,10,10,0.95) 60%, rgba(245,208,110,0.30) 100%); }
+        .cover-traffic { background: linear-gradient(135deg, rgba(34,211,238,0.30) 0%, rgba(10,10,10,0.95) 60%, rgba(245,208,110,0.25) 100%); }
+        .cover-cases { background: linear-gradient(135deg, rgba(168,85,247,0.30) 0%, rgba(10,10,10,0.95) 60%, rgba(245,208,110,0.25) 100%); }
+        .cover-news { background: linear-gradient(135deg, rgba(245,208,110,0.30) 0%, rgba(10,10,10,0.95) 60%, rgba(245,208,110,0.40) 100%); }
+
+        .article-body { color: rgba(255,255,255,0.82); line-height: 1.75; font-size: 1.06rem; }
+        .article-body h2 { font-family: 'Playfair Display', serif; font-size: 1.95rem; font-weight: 600; letter-spacing: -0.02em; margin-top: 2.5rem; margin-bottom: 1rem; color: #fff; }
+        .article-body h3 { font-family: 'Playfair Display', serif; font-size: 1.45rem; font-weight: 600; margin-top: 2rem; margin-bottom: 0.75rem; color: #fff; }
+        .article-body p { margin: 1rem 0; }
+        .article-body ul, .article-body ol { padding-left: 1.5rem; margin: 1rem 0; }
+        .article-body li { margin: 0.5rem 0; }
+        .article-body strong { color: #fff; font-weight: 600; }
+        .article-body a { color: #f5d06e; text-decoration: underline; }
+        .article-body a:hover { color: #e8b93d; }
+        .article-body blockquote { border-left: 3px solid #f5d06e; padding: 0.5rem 1.25rem; margin: 1.5rem 0; background: rgba(245,208,110,0.04); border-radius: 0 0.75rem 0.75rem 0; color: rgba(255,255,255,0.78); font-style: italic; }
+        .article-body img { border-radius: 1rem; margin: 1.5rem 0; }
+        .article-body .callout { background: linear-gradient(135deg, rgba(245,208,110,0.10), rgba(245,208,110,0.02)); border: 1px solid rgba(245,208,110,0.35); border-radius: 1rem; padding: 1.25rem 1.5rem; margin: 1.5rem 0; }
+    </style>
+</head>
+<body class="overflow-x-hidden" data-np-price="{{ np_price_365 }}">
+
+    <nav class="navbar fixed top-0 left-0 right-0 z-50">
+        <div class="max-w-7xl mx-auto px-5 md:px-8 py-4 flex items-center justify-between">
+            <a href="/" class="flex items-center gap-2.5">
+                <span class="w-9 h-9 rounded-lg bg-gradient-to-br from-[#f5d06e] to-[#e8b93d] flex items-center justify-center text-black text-base font-bold">S</span>
+                <span class="heading text-xl md:text-2xl font-semibold gold-gradient">SOCMASTER</span>
+            </a>
+            <div class="hidden md:flex items-center gap-7 text-sm text-white/75">
+                <a href="/#ecosystem" class="hover:text-[#f5d06e]">Экосистема</a>
+                <a href="/#devices" class="hover:text-[#f5d06e]">Устройства</a>
+                <a href="/blog" class="text-[#f5d06e] font-medium">{% if is_en %}Knowledge Base{% else %}База знаний{% endif %}</a>
+                <a href="/#faq" class="hover:text-[#f5d06e]">FAQ</a>
+            </div>
+            <div class="hidden md:inline-flex items-center rounded-full border border-white/10 bg-white/[0.03] p-0.5 text-xs mr-3">
+                <a href="/blog/{{ post.slug }}" class="rounded-full px-3 py-1 font-semibold {% if not is_en %}bg-[#f5d06e]/15 text-[#f5d06e]{% else %}text-white/55{% endif %}">RU</a>
+                <a href="/blog/{{ post.slug }}?lang=en" class="rounded-full px-3 py-1 font-medium {% if is_en %}bg-[#f5d06e]/15 text-[#f5d06e]{% else %}text-white/55{% endif %}">EN</a>
+            </div>
+            <a href="https://socmaster.pro/buy" class="cta-button px-5 py-2.5 rounded-full text-sm md:text-[15px] inline-flex items-center gap-2">
+                <i class="fa-solid fa-key text-xs"></i>
+                <span>{% if is_en %}Get access{% else %}Получить доступ{% endif %}</span>
+            </a>
+        </div>
+    </nav>
+
+    <article class="pt-28 md:pt-36 pb-20">
+        <header class="max-w-3xl mx-auto px-5 md:px-8 mb-10">
+            <nav aria-label="Хлебные крошки" class="text-xs text-white/45 mb-6">
+                <a href="/" class="hover:text-[#f5d06e]">{% if is_en %}Home{% else %}Главная{% endif %}</a>
+                <span class="mx-2 text-white/25">/</span>
+                <a href="/blog" class="hover:text-[#f5d06e]">{% if is_en %}Knowledge Base{% else %}База знаний{% endif %}</a>
+                {% if category_obj %}
+                <span class="mx-2 text-white/25">/</span>
+                <a href="/blog?category={{ category_obj.slug }}{% if is_en %}&lang=en{% endif %}" class="hover:text-[#f5d06e]">{% if is_en and category_obj.name_en %}{{ category_obj.name_en }}{% else %}{{ category_obj.name }}{% endif %}</a>
+                {% endif %}
+            </nav>
+
+            {% if category_obj %}
+            <div class="mb-4">
+                <a href="/blog?category={{ category_obj.slug }}{% if is_en %}&lang=en{% endif %}" class="inline-block px-4 py-1.5 rounded-full badge-gold text-xs font-medium uppercase tracking-[0.15em]">{{ category_obj.name }}</a>
+            </div>
+            {% endif %}
+
+            <h1 class="heading text-3xl sm:text-4xl md:text-5xl font-semibold leading-[1.1] mb-5">{{ post.title }}</h1>
+            <p class="text-base md:text-xl text-white/68 leading-relaxed mb-6">{{ post.excerpt }}</p>
+
+            <div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-white/45 pb-6 border-b border-white/10">
+                <span><i class="fa-regular fa-calendar mr-1.5"></i><time datetime="{{ post.published_at }}">{{ post.published_at }}</time></span>
+                {% if post.reading_time_minutes %}
+                <span><i class="fa-regular fa-clock mr-1.5"></i>{{ post.reading_time_minutes }} {% if is_en %}min read{% else %}мин чтения{% endif %}</span>
+                {% endif %}
+                {% if post.author %}
+                <span><i class="fa-solid fa-user mr-1.5"></i>{{ post.author }}</span>
+                {% endif %}
+            </div>
+        </header>
+
+        {% if post.cover_image %}
+        <div class="max-w-3xl mx-auto px-5 md:px-8 mb-10">
+            <img src="{{ post.cover_image }}" alt="{{ post.title }}" class="w-full rounded-2xl border border-white/10 aspect-[16/9] object-cover" loading="lazy">
+        </div>
+        {% else %}
+        {# Dynamic SVG fallback cover — красивая обложка по категории #}
+        {% set cat_class_map = {
+            'facebook': ('cover-fb', 'fa-brands fa-facebook'),
+            'instagram': ('cover-ig', 'fa-brands fa-instagram'),
+            'linkedin': ('cover-li', 'fa-brands fa-linkedin'),
+            'telegram': ('cover-tg', 'fa-brands fa-telegram'),
+            'reddit': ('cover-reddit', 'fa-brands fa-reddit'),
+            'twitter-x': ('cover-x', 'fa-brands fa-x-twitter'),
+            'ai-sales': ('cover-ai', 'fa-solid fa-brain'),
+            'crm': ('cover-crm', 'fa-solid fa-list-check'),
+            'lid-generation': ('cover-lidgen', 'fa-solid fa-bullseye'),
+            'traffic-socsety': ('cover-traffic', 'fa-solid fa-chart-line'),
+            'cases': ('cover-cases', 'fa-solid fa-briefcase'),
+            'news': ('cover-news', 'fa-solid fa-newspaper')
+        } %}
+        {% set cover_data = cat_class_map.get(post.category, ('cover-lidgen', 'fa-solid fa-bullseye')) %}
+        <div class="max-w-3xl mx-auto px-5 md:px-8 mb-10">
+            <div class="post-cover {{ cover_data[0] }} w-full h-56 md:h-72 rounded-2xl border border-[#f5d06e]/25 flex items-center justify-center">
+                {% if category_obj %}
+                <span class="cover-category-label">{{ category_obj.name }}</span>
+                {% endif %}
+                <i class="{{ cover_data[1] }} cover-decoration cover-decoration-1"></i>
+                <i class="{{ cover_data[1] }} cover-decoration cover-decoration-2"></i>
+                <i class="{{ cover_data[1] }} cover-icon-large"></i>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if post.audience or post.what_youll_learn %}
+        <div class="max-w-3xl mx-auto px-5 md:px-8 mb-10">
+            <div class="grid md:grid-cols-2 gap-5">
+                {% if post.audience %}
+                <div class="luxury-card p-6">
+                    <div class="text-xs uppercase tracking-[0.2em] text-[#f5d06e] mb-2">{% if is_en %}Who this is for{% else %}Кому будет полезно{% endif %}</div>
+                    <p class="text-white/80 leading-relaxed">{{ post.audience }}</p>
+                </div>
+                {% endif %}
+                {% if post.what_youll_learn %}
+                <div class="luxury-card p-6">
+                    <div class="text-xs uppercase tracking-[0.2em] text-[#f5d06e] mb-3">{% if is_en %}What you'll learn{% else %}Что вы узнаете{% endif %}</div>
+                    <ul class="space-y-2 text-sm text-white/75">
+                        {% for item in post.what_youll_learn %}
+                        <li class="flex items-start gap-2.5"><i class="fa-solid fa-check text-[#51cf66] mt-1 text-xs"></i><span>{{ item }}</span></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="max-w-3xl mx-auto px-5 md:px-8 article-body">
+            {{ post.content|safe }}
+        </div>
+
+        <div class="max-w-3xl mx-auto px-5 md:px-8 my-12">
+            <div class="luxury-card p-8 text-center">
+                <h3 class="heading text-2xl md:text-3xl font-semibold mb-3">{% if is_en %}Want to automate customer acquisition from social media?{% else %}Хотите автоматизировать привлечение клиентов из&nbsp;соцсетей?{% endif %}</h3>
+                <p class="text-white/65 mb-6 max-w-xl mx-auto">{% if is_en %}SOCMASTER helps you find your audience, launch outreach, manage conversations, and work with leads and CRM — all in one system.{% else %}SOCMASTER помогает находить аудиторию, запускать касания, вести переписки, работать с&nbsp;лидами и&nbsp;CRM в&nbsp;одной системе.{% endif %}</p>
+                <a href="https://socmaster.pro/buy" class="cta-button px-7 py-3.5 rounded-2xl text-base inline-flex items-center justify-center gap-2.5">
+                    <i class="fa-solid fa-key"></i>
+                    {% if is_en %}Visit website{% else %}Перейти на сайт{% endif %}
+                </a>
+            </div>
+        </div>
+
+        {% if post.faq %}
+        <div class="max-w-3xl mx-auto px-5 md:px-8 mt-12">
+            <h2 class="heading text-2xl md:text-3xl font-semibold mb-6">{% if is_en %}Frequently Asked Questions{% else %}Часто задаваемые вопросы{% endif %}</h2>
+            <div class="space-y-3">
+                {% for item in post.faq %}
+                <details class="luxury-card p-5 group">
+                    <summary class="flex items-start justify-between gap-4 text-base md:text-lg font-medium cursor-pointer list-none">
+                        <span>{{ item.q }}</span>
+                        <i class="fa-solid fa-plus text-[#f5d06e] mt-1.5 shrink-0 transition-transform group-open:rotate-45"></i>
+                    </summary>
+                    <div class="mt-4 text-white/65 leading-relaxed">{{ item.a }}</div>
+                </details>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if tag_objs %}
+        <div class="max-w-3xl mx-auto px-5 md:px-8 mt-12">
+            <div class="text-xs uppercase tracking-[0.15em] text-white/40 mb-3">{% if is_en %}Tags{% else %}Теги{% endif %}</div>
+            <div class="flex flex-wrap gap-2">
+                {% for tag in tag_objs %}
+                <a href="/blog?tag={{ tag.slug }}{% if is_en %}&lang=en{% endif %}" class="chip">#{% if is_en and tag.name_en %}{{ tag.name_en }}{% else %}{{ tag.name }}{% endif %}</a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="max-w-3xl mx-auto px-5 md:px-8 mt-14">
+            <div class="luxury-card p-8 md:p-10 text-center hero-bg">
+                <h3 class="heading text-2xl md:text-4xl font-semibold mb-4">{% if is_en %}Less manual routine — more&nbsp;<span class="gold-gradient">leads</span>{% else %}Меньше ручной рутины — больше&nbsp;<span class="gold-gradient">лидов</span>{% endif %}</h3>
+                <p class="text-white/70 mb-7 max-w-2xl mx-auto leading-relaxed">{% if is_en %}SOCMASTER unites parsing, AI assistant, outreach, CRM, and social media automation in one platform.{% else %}SOCMASTER объединяет парсинг, AI-помощника, рассылки, CRM и&nbsp;автоматизацию соцсетей в&nbsp;одной платформе.{% endif %}</p>
+                <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                    <a href="https://socmaster.pro/buy" class="cta-button px-8 py-4 rounded-2xl inline-flex items-center justify-center gap-2.5">
+                        <i class="fa-solid fa-key"></i>
+                        {% if is_en %}Get access{% else %}Получить доступ{% endif %}
+                    </a>
+                    <a href="/blog" class="cta-secondary px-8 py-4 rounded-2xl inline-flex items-center justify-center gap-2.5">
+                        {% if is_en %}Read other articles{% else %}Читать другие статьи{% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    {% if related_posts %}
+    <section class="py-16 md:py-20 border-t border-white/8 bg-[#070707]">
+        <div class="max-w-7xl mx-auto px-5 md:px-8">
+            <h2 class="heading text-2xl md:text-3xl font-semibold mb-8 text-center">{% if is_en %}You may also like{% else %}Читайте также{% endif %}</h2>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                {% set cat_class_map_r = {
+                    'facebook': ('cover-fb', 'fa-brands fa-facebook'),
+                    'instagram': ('cover-ig', 'fa-brands fa-instagram'),
+                    'linkedin': ('cover-li', 'fa-brands fa-linkedin'),
+                    'telegram': ('cover-tg', 'fa-brands fa-telegram'),
+                    'reddit': ('cover-reddit', 'fa-brands fa-reddit'),
+                    'twitter-x': ('cover-x', 'fa-brands fa-x-twitter'),
+                    'ai-sales': ('cover-ai', 'fa-solid fa-brain'),
+                    'crm': ('cover-crm', 'fa-solid fa-list-check'),
+                    'lid-generation': ('cover-lidgen', 'fa-solid fa-bullseye'),
+                    'traffic-socsety': ('cover-traffic', 'fa-solid fa-chart-line'),
+                    'cases': ('cover-cases', 'fa-solid fa-briefcase'),
+                    'news': ('cover-news', 'fa-solid fa-newspaper')
+                } %}
+                {% for r in related_posts %}
+                {% set rcover = cat_class_map_r.get(r.category, ('cover-lidgen', 'fa-solid fa-bullseye')) %}
+                <article class="luxury-card overflow-hidden flex flex-col">
+                    <a href="/blog/{{ r.slug }}{% if is_en %}?lang=en{% endif %}" class="block">
+                        <div class="post-cover {{ rcover[0] }} h-36 flex items-center justify-center" style="position:relative;overflow:hidden">
+                            {% if r.cover_image %}
+                            <img src="{{ r.cover_image }}" alt="{{ r.title }}" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+                            {% else %}
+                            <i class="{{ rcover[1] }}" style="font-size:2rem;background:linear-gradient(135deg,#f5d06e,#e8b93d);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;position:relative;z-index:2"></i>
+                            {% endif %}
+                        </div>
+                    </a>
+                    <div class="p-5 flex flex-col grow">
+                        <h3 class="heading text-lg font-semibold mb-2 leading-tight">
+                            <a href="/blog/{{ r.slug }}{% if is_en %}?lang=en{% endif %}" class="hover:text-[#f5d06e]">{{ r.title }}</a>
+                        </h3>
+                        <p class="text-sm text-white/60 leading-relaxed mb-3 grow">{{ r.excerpt }}</p>
+                        <div class="text-xs text-white/40 pt-3 border-t border-white/8">
+                            <time datetime="{{ r.published_at }}">{{ r.published_at }}</time>
+                            {% if r.reading_time_minutes %}<span class="ml-3"><i class="fa-regular fa-clock mr-1"></i>{{ r.reading_time_minutes }} мин</span>{% endif %}
+                        </div>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <footer class="bg-black border-t border-white/8 py-10">
+        <div class="max-w-7xl mx-auto px-5 md:px-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-white/45">
+            <span>© SOCMASTER. <a href="/" class="hover:text-[#f5d06e]">{% if is_en %}Home{% else %}На главную{% endif %}</a></span>
+            <a href="/blog" class="hover:text-[#f5d06e]">{% if is_en %}All articles{% else %}Все статьи{% endif %}</a>
+        </div>
+    </footer>
+</body>
+</html>

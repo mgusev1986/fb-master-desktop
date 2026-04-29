@@ -21,6 +21,15 @@ async def promo_page(request: Request):
     templates = request.app.state.templates
     return templates.TemplateResponse("promo.html", _promo_ctx(request))
 
+
+@router.get("/promo3", response_class=HTMLResponse)
+async def promo3_page(request: Request):
+    """Премиум-лендинг с базой знаний (3.0.7+): экосистема SOCMASTER, AI/CRM,
+    SEO meta + Schema.org. Этот же шаблон рендерится на корне `/`."""
+    templates = request.app.state.templates
+    return templates.TemplateResponse("promo3.html", _promo_ctx(request))
+
+
 @router.get("/", response_class=HTMLResponse)
 async def root_page(request: Request):
     """Главная: лендинг для гостей; вошедших пользователей — в кабинет (/home)
@@ -49,7 +58,7 @@ async def root_page(request: Request):
                 return RedirectResponse("/workspaces", status_code=303)
             return RedirectResponse("/home", status_code=303)
     templates = request.app.state.templates
-    return templates.TemplateResponse("promo2.html", _promo_ctx(request))
+    return templates.TemplateResponse("promo3.html", _promo_ctx(request))
 
 
 @router.get("/landing")

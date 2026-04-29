@@ -508,9 +508,18 @@ def create_app() -> FastAPI:
             "/purchase",
             "/promo",
             "/promo2",
+            "/promo3",
             "/landing",
             "/download/dev",
+            "/blog",
+            "/robots.txt",
+            "/sitemap.xml",
+            "/favicon.ico",
         ):
+            return await call_next(request)
+
+        # Blog post pages (/blog/<slug>) и категории/теги (/blog/category/<slug>, /blog/tag/<slug>)
+        if request.method == "GET" and path.startswith("/blog/"):
             return await call_next(request)
 
         ak_required = fb_master_access_key_required()
@@ -527,9 +536,12 @@ def create_app() -> FastAPI:
         #   /, /buy, /promo, /promo2, /landing — публичные страницы.
         _LICENSE_WATCHER_WHITELIST_PREFIXES = (
             "/auth/", "/static/", "/api/public/", "/internal/",
-            "/webhooks/", "/billing/", "/download/",
+            "/webhooks/", "/billing/", "/download/", "/blog/",
         )
-        _LICENSE_WATCHER_WHITELIST_EXACT = ("/", "/buy", "/purchase", "/promo", "/promo2", "/landing")
+        _LICENSE_WATCHER_WHITELIST_EXACT = (
+            "/", "/buy", "/purchase", "/promo", "/promo2", "/promo3", "/landing",
+            "/blog", "/robots.txt", "/sitemap.xml", "/favicon.ico",
+        )
         if (
             not path.startswith(_LICENSE_WATCHER_WHITELIST_PREFIXES)
             and path not in _LICENSE_WATCHER_WHITELIST_EXACT
@@ -617,7 +629,12 @@ def create_app() -> FastAPI:
                 path.startswith("/auth")
                 or path.startswith("/billing/nowpayments/")
                 or path.startswith("/billing/lavatop/")
-                or path in ("/", "/buy", "/purchase", "/promo", "/promo2", "/landing", "/download/dev")
+                or path.startswith("/blog/")
+                or path in (
+                    "/", "/buy", "/purchase", "/promo", "/promo2", "/promo3",
+                    "/landing", "/download/dev",
+                    "/blog", "/robots.txt", "/sitemap.xml", "/favicon.ico",
+                )
                 or (path == "/webhooks/nowpayments" and request.method == "POST")
                 or (path == "/webhooks/lavatop" and request.method == "POST")
                 or (path == "/api/public/promo-chat" and request.method == "POST")
@@ -671,6 +688,7 @@ def create_app() -> FastAPI:
         auth,
         billing_lavatop,
         billing_nowpayments,
+        blog,
         contacted,
         crm_funnel,
         dashboard,
@@ -694,6 +712,7 @@ def create_app() -> FastAPI:
         promo,
         promo_chat,
         scenarios,
+        seo,
         system,
         warmup,
         web_cabinet_gate,
@@ -709,6 +728,8 @@ def create_app() -> FastAPI:
     app.include_router(billing_nowpayments.webhook_router)
     app.include_router(billing_lavatop.router)
     app.include_router(billing_lavatop.webhook_router)
+    app.include_router(blog.router)
+    app.include_router(seo.router)
     app.include_router(dashboard.router)
     app.include_router(desktop_public.router)
     app.include_router(desktop_license_public.router)
