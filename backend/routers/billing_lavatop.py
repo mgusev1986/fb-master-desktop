@@ -81,10 +81,18 @@ async def create_lavatop_invoice(
         logger.error(
             "LavaTop: invoice creation failed order_id=%s err=%s", order.np_order_id, err
         )
-        order.status = "failed"
-        order.last_np_status = f"invoice_error: {err[:80]}"
-        db.add(order)
-        db.commit()
+        # last_np_status — VARCHAR(32), не запихивай туда длинный error JSON.
+        # Полный текст уже в logger.error выше; здесь — только короткий маркер.
+        try:
+            order.status = "failed"
+            order.last_np_status = "invoice_error"
+            db.add(order)
+            db.commit()
+        except Exception:
+            logger.exception(
+                "LavaTop: failed to record order failure order_id=%s", order.np_order_id
+            )
+            db.rollback()
         return JSONResponse(
             {"ok": False, "error": "invoice_creation_failed", "detail": err}, status_code=502
         )
