@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Доступ — SOCMASTER{% if fbm_desktop_app_version %} · v{{ fbm_desktop_app_version }}{% endif %}</title>
   <link rel="stylesheet" href="{{ url_for('static', path='css/main.css') }}"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     .fbm-premium-topbar {
       position: fixed;
@@ -266,6 +269,107 @@
     }
     .fbm-premium-np-note { color: rgba(168, 162, 158, 0.88); font-size: 0.875rem; margin: 0 0 1rem; line-height: 1.5; }
     .fbm-premium-np-note a { color: #e7d5b0; }
+
+    /* ─── Премиум download cards (Screen 1 design) ───────────────────────
+       Большие квадратные карты: icon + Playfair-title + description +
+       full-width CTA. M1+ выделен gold-glow рамкой как primary. На мобиле
+       — стек в один столбец. */
+    .fbm-os-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin: 0 0 1.25rem;
+    }
+    @media (max-width: 760px) {
+      .fbm-os-grid { grid-template-columns: 1fr; }
+    }
+    .fbm-os-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 1.85rem 1.25rem 1.5rem;
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      text-decoration: none !important;
+      color: inherit;
+      transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+    }
+    .fbm-os-card:hover:not([aria-disabled="true"]) {
+      border-color: rgba(245, 208, 110, 0.45);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px -16px rgba(245, 208, 110, 0.3);
+    }
+    .fbm-os-card[aria-disabled="true"] { opacity: 0.5; pointer-events: none; }
+    .fbm-os-card--primary {
+      border-color: rgba(245, 208, 110, 0.55);
+      box-shadow: 0 0 32px -8px rgba(245, 208, 110, 0.4),
+                  0 0 0 1px rgba(245, 208, 110, 0.18) inset;
+    }
+    .fbm-os-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.1rem;
+      background: linear-gradient(135deg, rgba(245, 208, 110, 0.18) 0%, rgba(245, 208, 110, 0.06) 100%);
+      box-shadow: 0 0 0 1px rgba(245, 208, 110, 0.2) inset;
+    }
+    .fbm-os-icon svg {
+      width: 32px;
+      height: 32px;
+      fill: #f5d06e;
+    }
+    .fbm-os-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      line-height: 1.15;
+      margin: 0 0 0.65rem;
+      color: #f5f5f4;
+    }
+    .fbm-os-desc {
+      font-size: 0.9rem;
+      color: rgba(229, 231, 235, 0.7);
+      line-height: 1.5;
+      margin: 0 0 1.6rem;
+      flex: 1;
+    }
+    .fbm-os-cta {
+      display: block;
+      width: 100%;
+      padding: 0.85rem 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.04);
+      color: rgba(229, 231, 235, 0.95);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      text-align: center;
+      box-sizing: border-box;
+      transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+    .fbm-os-card:hover:not([aria-disabled="true"]) .fbm-os-cta {
+      background: rgba(245, 208, 110, 0.1);
+      border-color: rgba(245, 208, 110, 0.4);
+      color: #f5d06e;
+    }
+    .fbm-os-card--primary .fbm-os-cta {
+      background: linear-gradient(135deg, #f5d06e 0%, #e8b93d 100%);
+      color: #0a0a0a;
+      border-color: transparent;
+      box-shadow: 0 6px 20px -8px rgba(245, 208, 110, 0.5);
+    }
+    .fbm-os-card--primary:hover .fbm-os-cta {
+      background: linear-gradient(135deg, #f7d97a 0%, #efbf45 100%);
+      color: #0a0a0a;
+    }
   </style>
 </head>
 <body>
@@ -285,27 +389,47 @@
     <div class="unlock-banner-info">
       После установки откройте приложение SOCMASTER на компьютере — ключ доступа вставляется прямо в программе.
     </div>
-    <div class="fbm-premium-os-row">
+    <div class="fbm-os-grid">
       {% set win_href = unlock_app_download_hrefs.get('win') %}
       {% set mac_href = unlock_app_download_hrefs.get('mac') %}
       {% set mac_x64_href = unlock_app_download_hrefs.get('mac_x64') %}
-      <a class="fbm-premium-os-btn" {% if win_href %}href="{{ win_href }}" {% if win_href.startswith('http') %}target="_blank" rel="noopener noreferrer"{% endif %}{% else %}href="{{ unlock_buy_fallback }}" aria-disabled="true" title="Сборка для Windows появится после выпуска релиза"{% endif %}>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5l8-1.1v8.1H3V5.5zm0 13l8 1.1v-8H3v6.9zM12 4.3L22 3v9.5H12V4.3zm0 15.4L22 21v-9.5H12v8.2z"/></svg>
-        <span class="fbm-premium-os-label"><span>Windows</span><small>x64 · .exe</small></span>
+
+      {# Windows x64 #}
+      <a class="fbm-os-card" {% if win_href %}href="{{ win_href }}" {% if win_href.startswith('http') %}target="_blank" rel="noopener noreferrer"{% endif %}{% else %}href="{{ unlock_buy_fallback }}" aria-disabled="true" title="Сборка для Windows появится после выпуска релиза"{% endif %}>
+        <div class="fbm-os-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M3 5.5l8-1.1v8.1H3V5.5zm0 13l8 1.1v-8H3v6.9zM12 4.3L22 3v9.5H12V4.3zm0 15.4L22 21v-9.5H12v8.2z"/></svg>
+        </div>
+        <h3 class="fbm-os-title">Windows x64</h3>
+        <p class="fbm-os-desc">Для компьютеров и ноутбуков на Windows 10 / 11.</p>
+        <span class="fbm-os-cta">Скачать для Windows</span>
       </a>
-      <a class="fbm-premium-os-btn" {% if mac_x64_href %}href="{{ mac_x64_href }}" {% if mac_x64_href.startswith('http') %}target="_blank" rel="noopener noreferrer"{% endif %}{% else %}href="{{ unlock_buy_fallback }}" aria-disabled="true" title="Сборка для macOS Intel появится после выпуска релиза"{% endif %}>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
-        <span class="fbm-premium-os-label"><span>macOS</span><small>Intel (2017-2020) · .dmg</small></span>
+
+      {# macOS Intel #}
+      <a class="fbm-os-card" {% if mac_x64_href %}href="{{ mac_x64_href }}" {% if mac_x64_href.startswith('http') %}target="_blank" rel="noopener noreferrer"{% endif %}{% else %}href="{{ unlock_buy_fallback }}" aria-disabled="true" title="Сборка для macOS Intel появится после выпуска релиза"{% endif %}>
+        <div class="fbm-os-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+        </div>
+        <h3 class="fbm-os-title">macOS Intel</h3>
+        <p class="fbm-os-desc">Для более старых MacBook на Intel (2017–2020).</p>
+        <span class="fbm-os-cta">Скачать для Intel</span>
       </a>
-      <a class="fbm-premium-os-btn" {% if mac_href %}href="{{ mac_href }}" {% if mac_href.startswith('http') %}target="_blank" rel="noopener noreferrer"{% endif %}{% else %}href="{{ unlock_buy_fallback }}" aria-disabled="true" title="Сборка для macOS Apple Silicon появится после выпуска релиза"{% endif %}>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
-        <span class="fbm-premium-os-label"><span>macOS</span><small>Apple Silicon (M1+) · .dmg</small></span>
+
+      {# macOS Apple Silicon (M1+) — primary highlighted card #}
+      <a class="fbm-os-card fbm-os-card--primary" {% if mac_href %}href="{{ mac_href }}" {% if mac_href.startswith('http') %}target="_blank" rel="noopener noreferrer"{% endif %}{% else %}href="{{ unlock_buy_fallback }}" aria-disabled="true" title="Сборка для macOS Apple Silicon появится после выпуска релиза"{% endif %}>
+        <div class="fbm-os-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+        </div>
+        <h3 class="fbm-os-title">macOS Apple Silicon</h3>
+        <p class="fbm-os-desc">Для MacBook на M1 / M2 / M3 и выше.</p>
+        <span class="fbm-os-cta">Скачать для M1+</span>
       </a>
     </div>
 
-    {# Key-form ВСЕГДА видна снизу под download-картами. Раньше была спрятана
-       для public visitor'а (show_unlock_key_form=False) — пользователь не мог
-       ввести ключ если уже есть. Теперь обе функции на одной странице. #}
+    {# Key-form скрыта от public visitor'а — показывается только когда сервер
+       сказал show_unlock_key_form=True (FB_MASTER_ACCESS_KEY_REQUIRED env, либо
+       desktop UA, либо fbm_app query). Public visitor видит только download-карты
+       (Screen 1 design). #}
+    {% if show_unlock_key_form %}
     <hr class="fbm-premium-divider" style="margin:1.75rem 0 1.5rem"/>
     <p class="fbm-premium-section-label">Активация ключа</p>
 
@@ -341,6 +465,7 @@
       <input type="hidden" name="device_id" id="np_device_id" value=""/>
       <button type="submit" class="fbm-premium-submit fbm-premium-submit--secondary" id="unlock-np-submit" style="margin-top:0.5rem" disabled>Перейти к оплате</button>
     </form>
+    {% endif %}
     {% endif %}
 
     <a class="fbm-premium-link-muted" href="/purchase" style="margin-top:1rem">Вернуться к оплате</a>
