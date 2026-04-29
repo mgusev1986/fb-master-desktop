@@ -277,9 +277,8 @@
   {% endif %}
   <div class="fbm-premium-card{% if unlock_desktop_app %} fbm-premium-card--desktop{% endif %}">
     <p class="fbm-premium-eyebrow">SOCMASTER</p>
-    <h1>{% if show_unlock_key_form %}Ключ доступа{% else %}Скачать SOCMASTER{% endif %}</h1>
+    <h1>Скачать SOCMASTER</h1>
 
-    {% if not show_unlock_key_form %}
     <p class="fbm-premium-sub">
       Выберите свою операционную систему и скачайте установщик.
     </p>
@@ -304,22 +303,18 @@
       </a>
     </div>
 
-    {# macOS Gatekeeper helper — инструкция про «приложение повреждено»
-       теперь живёт ТОЛЬКО внутри bundle.zip (файл «1. Инструкция.html»).
-       Клиент скачивает bundle через mac_href / mac_x64_href (которые
-       указывают на ...mac-arm64-bundle.zip / ...mac-x64-bundle.zip),
-       раскрывает архив, видит .html инструкцию рядом с .dmg. #}
-
-    <a class="fbm-premium-link-muted" href="/purchase" style="margin-top:1rem">Вернуться к оплате</a>
-    {% else %}
+    {# Key-form ниже карт скачивания — показывается когда сервер сказал
+       show_unlock_key_form=True (FB_MASTER_ACCESS_KEY_REQUIRED env, либо
+       desktop UA, либо fbm_app query). Public visitor видит только карты. #}
+    {% if show_unlock_key_form %}
+    <hr class="fbm-premium-divider" style="margin:1.75rem 0 1.5rem"/>
+    <p class="fbm-premium-section-label">Активация ключа</p>
 
     {% if unlock_reason == 'expired' %}
     <div class="unlock-banner-expired">
       Срок действия ключа истёк. Оформите продление — новый ключ будет на странице после оплаты.
     </div>
     <a href="{{ purchase_url }}" class="fbm-premium-submit" style="margin-bottom:1.25rem" {% if purchase_url.startswith('http') %}target="_blank" rel="noopener noreferrer"{% endif %}>Оплатить продление</a>
-    {% else %}
-    <p class="fbm-premium-dl-note" style="margin-bottom:1.25rem"><a href="{{ purchase_url }}" {% if purchase_url.startswith('http') %}target="_blank" rel="noopener noreferrer"{% endif %}>Купить доступ</a></p>
     {% endif %}
 
     <p class="fbm-premium-sub" style="margin-bottom:1rem">Введите ключ. <strong>Один ключ — одно устройство</strong> (в программе привязка к железу).</p>
@@ -348,9 +343,9 @@
       <button type="submit" class="fbm-premium-submit fbm-premium-submit--secondary" id="unlock-np-submit" style="margin-top:0.5rem" disabled>Перейти к оплате</button>
     </form>
     {% endif %}
-
-    <a class="fbm-premium-link-muted" href="/purchase">Оформить доступ</a>
     {% endif %}
+
+    <a class="fbm-premium-link-muted" href="/purchase" style="margin-top:1rem">Вернуться к оплате</a>
   </div>
 </div>
 <script src="{{ url_for('static', path='js/fbm-device-fingerprint.js') }}"></script>
