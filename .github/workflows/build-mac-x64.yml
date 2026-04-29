@@ -123,13 +123,25 @@ jobs:
         run: |
           # FBM_TARGET_ARCH=x86_64 (env workflow) → ensure-macos-embedded-python.sh
           # принудительно качает x86_64 CPython, который при запуске на arm64-host
-          # пойдёт через Rosetta 2 (platform.machine()=x86_64) → playwright install
-          # тоже скачает x86_64 Chromium.
+          # пойдёт через Rosetta 2 (platform.machine()=x86_64).
+          # 3.0.7+: ensure-macos-embedded-python.sh теперь оборачивает playwright
+          # install в `arch -x86_64`, чтобы Node-driver тоже шёл через Rosetta
+          # и качал именно x86_64 Chromium (а не arm64, как было в 3.0.6).
           chmod +x scripts/prepare-desktop-backend-bundle.sh
           bash scripts/prepare-desktop-backend-bundle.sh
-          # Verify архитектура — если что-то пошло не так, билд должен упасть здесь.
+          # Verify архитектура embedded Python — если не x86_64, билд падает.
           file desktop/fb-master-desktop/resources-fb-master-backend/python/bin/python3.12 | grep -q "x86_64" || (echo "ОШИБКА: embedded Python не x86_64!" && exit 1)
           echo "✅ Embedded Python x86_64 готов"
+          # 3.0.7+ NEW: Verify архитектура bundled Chromium. В 3.0.6 этой проверки
+          # не было, и в x64-DMG ушёл arm64 Chromium → клиент на Intel Mac
+          # получил errno -86 (EBADARCH) при spawn'е Chromium.
+          CHROMIUM_BIN=$(find desktop/fb-master-desktop/resources-fb-master-backend/playwright-browsers -type f -path '*/MacOS/Chromium' | head -1)
+          if [[ -z "$CHROMIUM_BIN" ]]; then
+            echo "ОШИБКА: bundled Chromium не найден!" && exit 1
+          fi
+          file "$CHROMIUM_BIN"
+          file "$CHROMIUM_BIN" | grep -q "x86_64" || (echo "ОШИБКА: bundled Chromium не x86_64 — баг 3.0.6 повторился!" && exit 1)
+          echo "✅ Bundled Chromium x86_64 готов"
 
       - name: Install Electron dependencies (x64 npm via Rosetta)
         shell: bash
