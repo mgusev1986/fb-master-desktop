@@ -169,3 +169,48 @@ def related_posts(post: dict, *, limit: int = 3) -> list[dict]:
 def all_published_slugs() -> list[str]:
     """Slug'и всех опубликованных статей. Используется при генерации sitemap.xml."""
     return [p["slug"] for p in list_posts() if p.get("slug")]
+
+
+# ─── i18n helpers ──────────────────────────────────────────────────────────
+
+# Маппинг RU-поля → EN-поля внутри post["i18n"]["en"][...].
+# Generator (scripts/generate_daily_article.py:300-310) пишет переводы под
+# суффиксированными ключами, чтобы избежать коллизий с RU-источником.
+_LOCALIZED_FIELDS: dict[str, str] = {
+    "title": "title_en",
+    "meta_title": "meta_title_en",
+    "meta_description": "meta_description_en",
+    "excerpt": "excerpt_en",
+    "audience": "audience_en",
+    "what_youll_learn": "what_youll_learn_en",
+    "content": "content_en",
+    "faq": "faq_en",
+}
+
+
+def localize_post(post: dict, lang: str) -> dict:
+    """Возвращает «представление» post с подменёнными RU-полями на EN-версии.
+
+    Если `lang != "en"` или EN-перевод отсутствует/пуст — возвращает исходный
+    post без модификации. Не мутирует оригинал.
+
+    Используется в blog router'е перед передачей post в шаблон, чтобы
+    `{{ post.title }}` и т.п. автоматически отдавали EN-версию при
+    `?lang=en`. Жёсткий fallback на RU гарантирует, что пользователь видит
+    хоть что-то даже если конкретный пост ещё не переведён.
+    """
+    if lang != "en" or not isinstance(post, dict):
+        return post
+    en = (post.get("i18n") or {}).get("en") or {}
+    if not isinstance(en, dict) or not en:
+        return post
+    overrides = {}
+    for ru_key, en_key in _LOCALIZED_FIELDS.items():
+        val = en.get(en_key)
+        # Truthy check ловит и пустые строки, и пустые list/dict — ровно то,
+        # что мы хотим: только реальные переводы подменяют RU-источник.
+        if val:
+            overrides[ru_key] = val
+    if not overrides:
+        return post
+    return {**post, **overrides}

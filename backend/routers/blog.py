@@ -16,16 +16,20 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 
 from backend import config as app_config
 from backend.services import blog_service
+from backend.services.i18n import get_lang
 
 router = APIRouter(tags=["blog"])
 
 
 def _common_ctx(request: Request) -> dict:
+    lang = get_lang(request)
     return {
         "request": request,
         "np_price_365": app_config.NOWPAYMENTS_PRICE_USD_365,
         "all_categories": blog_service.list_categories(),
         "all_tags": blog_service.list_tags(),
+        "lang": lang,
+        "is_en": lang == "en",
     }
 
 
@@ -36,8 +40,15 @@ async def blog_list_page(
     tag: str | None = Query(None, max_length=64),
     q: str | None = Query(None, max_length=200),
 ):
-    """Список статей. Поддерживает фильтры: ?category=<slug>&tag=<slug>&q=<text>."""
+    """Список статей. Поддерживает фильтры: ?category=<slug>&tag=<slug>&q=<text>.
+
+    `?lang=en` → подменяет post.title / excerpt / content и т.д. на EN-перевод
+    из post.i18n.en (если есть; иначе fallback на RU). UI-локализация —
+    через флаг `is_en` внутри шаблона `blog/list.html`.
+    """
+    lang = get_lang(request)
     posts = blog_service.list_posts(category=category, tag=tag, query=q)
+    posts = [blog_service.localize_post(p, lang) for p in posts]
     selected_category = blog_service.get_category(category) if category else None
     selected_tag = blog_service.get_tag(tag) if tag else None
 
@@ -65,15 +76,23 @@ async def blog_tag_redirect(slug: str):
 
 @router.get("/blog/{slug}", response_class=HTMLResponse)
 async def blog_post_page(request: Request, slug: str):
-    """Отдельная статья. Если slug не найден или draft — мягкий редирект на /blog."""
+    """Отдельная статья. Если slug не найден или draft — мягкий редирект на /blog.
+
+    `?lang=en` → подменяет поля (title / excerpt / content / faq / etc.) на
+    EN-перевод из post.i18n.en если он есть.
+    """
+    lang = get_lang(request)
     post = blog_service.get_post(slug)
     if post is None:
-        return RedirectResponse("/blog", status_code=302)
+        target = "/blog?lang=en" if lang == "en" else "/blog"
+        return RedirectResponse(target, status_code=302)
+    post = blog_service.localize_post(post, lang)
 
     category_obj = blog_service.get_category(post.get("category", ""))
     tag_objs = [blog_service.get_tag(t) for t in (post.get("tags") or [])]
     tag_objs = [t for t in tag_objs if t]
     related = blog_service.related_posts(post, limit=3)
+    related = [blog_service.localize_post(p, lang) for p in related]
 
     ctx = _common_ctx(request)
     ctx.update({

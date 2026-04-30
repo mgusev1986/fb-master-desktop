@@ -55,35 +55,44 @@ async def robots_txt() -> PlainTextResponse:
 
 
 def _sitemap_xml() -> str:
-    """Генерирует sitemap.xml со списком публичных URL.
+    """Генерирует sitemap.xml со списком публичных URL — RU + EN.
 
     Включает: главную, лендинги (/promo, /promo3), /buy, /purchase, /blog
     + все опубликованные статьи блога (динамически из data/blog/posts/).
     Кабинет, админка и API не индексируются.
+
+    Двуязычность: для страниц с EN-версией (главная, /buy, /purchase, /blog,
+    статьи блога с заполненным post.i18n.en) добавляются отдельные `?lang=en`
+    URL'ы. Для статей без EN-перевода EN-версия пропускается.
     """
     from backend.services import blog_service
 
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     base = "https://socmaster.pro"
-    urls: list[tuple[str, str, str, str]] = [
-        # (loc, lastmod, changefreq, priority)
-        ("/", today, "weekly", "1.0"),
-        ("/promo3", today, "weekly", "0.9"),
-        ("/promo", today, "weekly", "0.7"),
-        ("/buy", today, "monthly", "0.9"),
-        ("/purchase", today, "monthly", "0.7"),
-        ("/blog", today, "daily", "0.9"),
+
+    # (loc, lastmod, changefreq, priority, has_en)
+    # has_en=True → дополнительно генерим ?lang=en URL.
+    urls: list[tuple[str, str, str, str, bool]] = [
+        ("/", today, "weekly", "1.0", True),
+        ("/promo3", today, "weekly", "0.9", True),
+        ("/promo", today, "weekly", "0.7", False),  # старый лендинг — RU only
+        ("/buy", today, "monthly", "0.9", True),
+        ("/purchase", today, "monthly", "0.7", True),
+        ("/blog", today, "daily", "0.9", True),
     ]
-    # Категории блога
+    # Категории блога — каждая категория двуязычна (name_en всегда есть в categories.json)
     for cat in blog_service.list_categories():
-        urls.append((f"/blog?category={cat['slug']}", today, "weekly", "0.6"))
-    # Все опубликованные статьи
+        urls.append((f"/blog?category={cat['slug']}", today, "weekly", "0.6", True))
+    # Все опубликованные статьи. EN-URL только если есть фактический перевод.
     for post in blog_service.list_posts():
         lastmod = post.get("published_at") or today
-        urls.append((f"/blog/{post['slug']}", lastmod, "monthly", "0.7"))
+        en = (post.get("i18n") or {}).get("en") or {}
+        post_has_en = bool(isinstance(en, dict) and en.get("title_en") and en.get("content_en"))
+        urls.append((f"/blog/{post['slug']}", lastmod, "monthly", "0.7", post_has_en))
 
     items = []
-    for loc, lastmod, changefreq, priority in urls:
+    for loc, lastmod, changefreq, priority, has_en in urls:
+        # RU-вариант (default)
         items.append(
             f"  <url>\n"
             f"    <loc>{base}{loc}</loc>\n"
@@ -92,6 +101,18 @@ def _sitemap_xml() -> str:
             f"    <priority>{priority}</priority>\n"
             f"  </url>"
         )
+        if has_en:
+            # EN-вариант: добавляем ?lang=en (или &lang=en если уже есть `?`)
+            sep = "&" if "?" in loc else "?"
+            en_loc = f"{loc}{sep}lang=en"
+            items.append(
+                f"  <url>\n"
+                f"    <loc>{base}{en_loc}</loc>\n"
+                f"    <lastmod>{lastmod}</lastmod>\n"
+                f"    <changefreq>{changefreq}</changefreq>\n"
+                f"    <priority>{priority}</priority>\n"
+                f"  </url>"
+            )
     return (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
