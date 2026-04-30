@@ -383,14 +383,32 @@ def create_app() -> FastAPI:
     # Язык берётся из `request` (query ?lang=en или cookie `lang`).
     # Словарь переводов: `backend/services/i18n_dict.py::TRANSLATIONS["en"]`.
     # Если перевода нет — возвращается оригинал (RU) — graceful fallback.
+    #
+    # ВАЖНО: ключи могут содержать HTML-сущности (например `&nbsp;` в premium
+    # лендинге promo3). По умолчанию Jinja2 эскейпит вывод глобала, превращая
+    # `&` в `&amp;` → пользователь видит буквальный «&nbsp;» вместо неразрывного
+    # пробела. Поэтому возвращаем `Markup`, помечая строку как уже-безопасный
+    # HTML. Ключи у нас контролируются авторами шаблонов, а пользовательские
+    # значения подставляются только через `kwargs` — их экранируем явно.
     from jinja2 import pass_context as _jinja_pass_context
+    from markupsafe import Markup, escape as _escape
     from backend.services.i18n import get_lang as _get_lang, translate as _translate
 
     @_jinja_pass_context
     def _jinja_t(ctx, key: str, **kwargs):
         request = ctx.get("request")
         lang = _get_lang(request) if request is not None else "ru"
-        return _translate(key, lang, **kwargs)
+        # Сначала получаем перевод БЕЗ format-подстановки.
+        raw = _translate(key, lang)
+        if not kwargs:
+            return Markup(raw)
+        # Экранируем kwargs (могут быть user-supplied), затем подставляем в
+        # Markup-обёртку — Markup.format() эскейпит обычные str, но не Markup.
+        safe_kwargs = {k: _escape(str(v)) for k, v in kwargs.items()}
+        try:
+            return Markup(raw).format(**safe_kwargs)
+        except (KeyError, IndexError):
+            return Markup(raw)
 
     templates.env.globals["t"] = _jinja_t
 
