@@ -534,9 +534,9 @@
           </span>
           <div class="m2-stage-crm" role="group" aria-label="{{ t("Стадия воронки CRM") }}">
             {% for st in crm_stages_messenger %}
-            <button type="button" class="m2-crm-stage-btn" data-m2-crm-slug="{{ st.slug }}" title="{{ st.label }}">
+            <button type="button" class="m2-crm-stage-btn" data-m2-crm-slug="{{ st.slug }}" title="{{ t(st.label) }}">
               <i class="ti {{ st.icon }}" aria-hidden="true"></i>
-              <span>{{ st.label }}</span>
+              <span>{{ t(st.label) }}</span>
             </button>
             {% endfor %}
           </div>
@@ -663,6 +663,7 @@ window.M2_I18N = {
   ai_replies: {{ t("Ответов AI:") | tojson }},
   no_limit: {{ t("без лимита") | tojson }},
   session_sync_ok: {{ t("Сессия и синхронизация: OK") | tojson }},
+  stage_labels: { {% for st in (crm_stages_messenger or []) %}{{ st.slug | tojson }}: {{ t(st.label) | tojson }}{% if not loop.last %}, {% endif %}{% endfor %} },
 };
 </script>
 <script>
@@ -771,7 +772,8 @@ window.M2_I18N = {
         if (statusEl) {
           statusEl.classList.remove('is-err');
           if (j.has_contact && j.crm_stage) {
-            var lab = j.stage_label || j.crm_stage;
+            var lab = (window.M2_I18N.stage_labels && window.M2_I18N.stage_labels[j.crm_stage])
+                      || j.stage_label || j.crm_stage;
             statusEl.textContent =
               window.M2_I18N.in_crm + ' «' + lab + '»' + (j.person_name ? ' · ' + j.person_name : '');
           } else if (j.has_open_thread) {
