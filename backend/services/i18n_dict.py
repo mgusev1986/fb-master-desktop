@@ -261,6 +261,78 @@ TRANSLATIONS: Final[dict[str, dict[str, str]]] = {
             "When you launch people search, warm-up, or outreach, the latest records will appear here.",
         "Запустите парсинг, прогрев или рассылку — здесь появятся последние задачи.":
             "Launch scraping, warm-up, or outreach — the latest jobs will appear here.",
+
+        # ─── FB Accounts (templates/fb_accounts/list.html) ───────────────
+        "Аккаунты — SOCMASTER": "Accounts — SOCMASTER",
+        "Facebook-аккаунты — SOCMASTER": "Facebook accounts — SOCMASTER",
+        "Facebook-аккаунты": "Facebook accounts",
+
+        # Page intro (client mode)
+        "После входа программа запоминает его — повторно вводить данные обычно не нужно. Одновременно в работе может быть до {limit} профилей; если лимит исчерпан, у одной карточки выберите «Не в работе». Для чатов нажмите «Использовать в Мессенджере» у нужного профиля. Данные из файла импорта хранятся в зашифрованном виде.":
+            "After signing in the program remembers the login — you usually don't need to re-enter credentials. Up to {limit} profiles can run simultaneously; when the limit is reached, set one card to «Not active». For chats, click «Use in Messenger» on the desired profile. Data from import files is stored encrypted.",
+
+        # Card status badges
+        "Дубликат логина": "Duplicate login",
+        "Слот": "Slot",
+        "В очереди": "In queue",
+        "Ожидание": "Pending",
+        "Вход сохранён": "Login saved",
+        "Сессия ок": "Session OK",
+        "Вход выполнен, сессия ок": "Signed in, session OK",
+        "Окно входа": "Login window",
+        "Окно входа открыто": "Login window open",
+        "Нужен пароль": "Password needed",
+        "Нужен пароль (Continue-gate)": "Password needed (Continue-gate)",
+        "Нужно войти": "Sign-in required",
+        "Нет сессии": "No session",
+        "Не проверяли": "Not checked",
+        "Текущий для Мессенджера": "Current for Messenger",
+        "Сохранено:": "Saved:",
+        "В базе:": "In database:",
+        "Этот профиль может работать одновременно с другими": "This profile can run alongside others",
+        "Участвует в параллельных задачах": "Participates in parallel tasks",
+        "Выберите слот 1–3 ниже, чтобы профиль участвовал в задачах":
+            "Choose slot 1–3 below to enable the profile in tasks",
+        "Только настройка; не в парсере/Мессенджере без слота":
+            "Setup only; not used in scraper/Messenger without a slot",
+        "Когда последний раз сохранили вход": "Last time the login was saved",
+        "Резервная копия cookies в SQLite · время Europe/Madrid":
+            "Cookies backup in SQLite · Europe/Madrid timezone",
+        "Открыть этот профиль во встроенном Мессенджере":
+            "Open this profile in the embedded Messenger",
+
+        # Buttons & form labels
+        "Войти в Facebook": "Sign in to Facebook",
+        "Использовать в Мессенджере": "Use in Messenger",
+        "Не в работе": "Not active",
+        "Активный": "Active",
+        "Поиск по названию…": "Search by name…",
+        "Развернуть или свернуть карточку аккаунта": "Expand or collapse account card",
+        "Сохранить подпись для навигации": "Save label for navigation",
+        "Подпись (для удобства)": "Label (for convenience)",
+        "Например: Elena Vasquez — Прокси Турция": "For example: Elena Vasquez — Turkey proxy",
+        "Импорт из файла": "Import from file",
+        "Сохранить подпись": "Save label",
+        "Сохранить": "Save",
+
+        # Slots / bulk info
+        "В работе сейчас:": "Active now:",
+        "Активные слоты:": "Active slots:",
+        "Чтобы освободить слот, у одной карточки выберите «Не в работе» или смените номер.":
+            "To free a slot, set «Not active» on one card or change its number.",
+        "Чтобы включить другой аккаунт, у кого-то из трёх снимите слот («Ожидание») или переназначьте слот на новую карточку.":
+            "To enable another account, remove the slot from one of the three («Pending») or reassign the slot to a new card.",
+        "{filled} из {total} занято": "{filled} of {total} in use",
+
+        # Login screen
+        "Встроенный логин: открывает Facebook внутри приложения. Messenger не попросит PIN повторно.":
+            "Embedded login: opens Facebook inside the app. Messenger won't ask for the PIN again.",
+        "Старый режим: отдельное окно Chromium через Playwright.":
+            "Legacy mode: separate Chromium window via Playwright.",
+
+        # Risk levels
+        "Оценка надёжности по сессии, прокси, суточной нагрузке (UTC) и ошибкам задач за 24 ч":
+            "Reliability score based on session, proxy, daily load (UTC), and task errors over 24h",
     }
 }
 

@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% block title %}{% if cabinet_client_mode(request) %}Аккаунты — SOCMASTER{% else %}Facebook-аккаунты — SOCMASTER{% endif %}{% endblock %}
+{% block title %}{% if cabinet_client_mode(request) %}{{ t("Аккаунты — SOCMASTER") }}{% else %}{{ t("Facebook-аккаунты — SOCMASTER") }}{% endif %}{% endblock %}
 
 {% block content %}
 <div class="page-header">
   <div class="page-header-actions">
     <div>
-      <h1>{% if cabinet_client_mode(request) %}Аккаунты{% else %}Facebook-аккаунты{% endif %}</h1>
+      <h1>{% if cabinet_client_mode(request) %}{{ t("Аккаунты") }}{% else %}{{ t("Facebook-аккаунты") }}{% endif %}</h1>
       <p class="subtitle">
         {% if cabinet_client_mode(request) %}
         После входа программа <strong>запоминает</strong> его — повторно вводить данные обычно не нужно.
