@@ -44,7 +44,7 @@
         radial-gradient(circle at 50% 100%, #111 0%, #0a0a0a 50%, #050505 100%);
     }
     .buy-card {
-      max-width: 56rem;
+      max-width: 68rem;
       width: 100%;
       background: linear-gradient(180deg, rgba(15, 15, 17, 0.92) 0%, rgba(8, 8, 10, 0.96) 100%);
       backdrop-filter: blur(24px);
@@ -113,6 +113,106 @@
       margin: 0 0 1.5rem;
       box-shadow: 0 4px 24px -16px rgba(245, 208, 110, 0.4);
     }
+    .buy-period-label {
+          font-size: 0.72rem;
+          letter-spacing: 0.24em;
+          text-transform: uppercase;
+          color: var(--text-muted);
+          font-weight: 600;
+          margin: 0 0 1rem;
+        }
+        .buy-tiers {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 0.85rem;
+          margin: 0 0 1.85rem;
+        }
+        @media (max-width: 760px) {
+          .buy-tiers { grid-template-columns: repeat(2, 1fr); gap: 0.65rem; }
+        }
+        .buy-tier {
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.45rem;
+          padding: 1.4rem 1rem 1.1rem;
+          background: rgba(255, 255, 255, 0.025);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 16px;
+          cursor: pointer;
+          transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+          text-align: center;
+          font: inherit;
+          color: inherit;
+          width: 100%;
+        }
+        .buy-tier:hover {
+          transform: translateY(-2px);
+          border-color: var(--gold-border);
+          background: rgba(245, 208, 110, 0.04);
+        }
+        .buy-tier[aria-pressed="true"] {
+          border-color: var(--gold);
+          background: rgba(245, 208, 110, 0.08);
+          box-shadow: 0 0 0 1px var(--gold) inset, 0 14px 36px -16px rgba(245, 208, 110, 0.45);
+        }
+        .buy-tier-period {
+          font-size: 0.85rem;
+          color: var(--text-muted);
+          letter-spacing: 0.04em;
+          font-weight: 500;
+        }
+        .buy-tier[aria-pressed="true"] .buy-tier-period { color: var(--text-primary); }
+        .buy-tier-price {
+          font-family: 'Playfair Display', serif;
+          font-size: 1.7rem;
+          font-weight: 600;
+          color: var(--gold);
+          letter-spacing: -0.02em;
+          line-height: 1;
+        }
+        .buy-tier-savings {
+          font-size: 0.7rem;
+          font-weight: 600;
+          color: rgba(74, 222, 128, 0.95);
+          letter-spacing: 0.02em;
+          background: rgba(34, 197, 94, 0.1);
+          padding: 0.2rem 0.55rem;
+          border-radius: 999px;
+          border: 1px solid rgba(34, 197, 94, 0.25);
+          white-space: nowrap;
+        }
+        .buy-tier-badge {
+          position: absolute;
+          top: -10px;
+          left: 50%;
+          transform: translateX(-50%);
+          font-size: 0.6rem;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: #0a0a0a;
+          background: linear-gradient(135deg, var(--gold) 0%, var(--gold-deep) 100%);
+          padding: 0.28rem 0.75rem;
+          border-radius: 999px;
+          font-weight: 700;
+          box-shadow: 0 4px 14px -4px rgba(245, 208, 110, 0.55);
+          white-space: nowrap;
+        }
+        .buy-tier.best-value .buy-tier-badge {
+          background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+          color: #fff;
+          box-shadow: 0 4px 14px -4px rgba(234, 88, 12, 0.55);
+        }
+        .buy-method-price {
+          font-family: 'Playfair Display', serif;
+          font-size: 1.45rem;
+          font-weight: 600;
+          color: var(--gold);
+          letter-spacing: -0.02em;
+          line-height: 1;
+          margin: 0.25rem 0 0.1rem;
+        }
     .buy-tariff-label {
       font-size: 0.72rem;
       letter-spacing: 0.22em;
@@ -396,11 +496,39 @@
 
     {% if lavatop_enabled or nowpayments_enabled %}
 
-    <div class="buy-tariff">
-      <span class="buy-tariff-label">{{ t("Подписка") }}</span>
-      <span class="buy-tariff-price">${{ lavatop_price_usd_30 if lavatop_enabled else np_price_365 }}</span>
-      <span class="buy-tariff-period">{% if lavatop_enabled %}{{ t("за 30 дней · автопродление") }}{% else %}{{ t("за 35 дней") }}{% endif %}</span>
-    </div>
+    {# Tier picker — 4 варианта подписки 30/90/180/365 #}
+        <p class="buy-period-label">{{ t("Выберите период подписки") }}</p>
+        <div class="buy-tiers" role="radiogroup" aria-label="{{ t("Период подписки") }}">
+          <button type="button" class="buy-tier" data-days="30" aria-pressed="false">
+            <span class="buy-tier-period">{{ t("30 дней") }}</span>
+            <span class="buy-tier-price"
+                  data-card-price="{{ lavatop_price_usd_30 }}"
+                  data-crypto-price="{{ np_price_30 }}">${{ lavatop_price_usd_30 }}</span>
+          </button>
+          <button type="button" class="buy-tier" data-days="90" aria-pressed="false">
+            <span class="buy-tier-period">{{ t("3 месяца") }}</span>
+            <span class="buy-tier-price"
+                  data-card-price="{{ lavatop_price_usd_90 }}"
+                  data-crypto-price="{{ np_price_90 }}">${{ lavatop_price_usd_90 }}</span>
+            <span class="buy-tier-savings">−10%</span>
+          </button>
+          <button type="button" class="buy-tier popular" data-days="180" aria-pressed="true">
+            <span class="buy-tier-badge">{{ t("Популярно") }}</span>
+            <span class="buy-tier-period">{{ t("6 месяцев") }}</span>
+            <span class="buy-tier-price"
+                  data-card-price="{{ lavatop_price_usd_180 }}"
+                  data-crypto-price="{{ np_price_180 }}">${{ lavatop_price_usd_180 }}</span>
+            <span class="buy-tier-savings">−17%</span>
+          </button>
+          <button type="button" class="buy-tier best-value" data-days="365" aria-pressed="false">
+            <span class="buy-tier-badge">{{ t("Лучшая цена") }}</span>
+            <span class="buy-tier-period">{{ t("1 год") }}</span>
+            <span class="buy-tier-price"
+                  data-card-price="{{ lavatop_price_usd_365 }}"
+                  data-crypto-price="{{ np_price_365 }}">${{ lavatop_price_usd_365 }}</span>
+            <span class="buy-tier-savings">−28%</span>
+          </button>
+        </div>
 
     {% if lavatop_enabled %}
     <input type="email" id="purchase_email" required maxlength="255" placeholder="{{ t("ваш-email@example.com") }}" class="buy-email" autocomplete="email" aria-label="{{ t("Email для получения ключа") }}"/>
@@ -410,7 +538,7 @@
       {% if lavatop_enabled %}
       <form method="post" action="/billing/lavatop/create" id="purchase-form-card" style="margin:0">
         <input type="hidden" name="billing_source" value="purchase"/>
-        <input type="hidden" name="duration_days" value="30"/>
+        <input type="hidden" name="duration_days" id="form-card-duration" value="180"/>
         <input type="hidden" name="customer_email" id="purchase-form-card-email" value=""/>
         <input type="hidden" name="device_id" id="purchase_lava_device_id" value=""/>
         <button type="submit" class="buy-payment-card" data-method="card" id="purchase-lava-submit" aria-label="{{ t("Оплатить картой") }}" disabled>
@@ -419,6 +547,7 @@
           </div>
           <div class="buy-payment-icon" aria-hidden="true">💳</div>
           <h3 class="buy-payment-title">{{ t("Картой") }}</h3>
+          <div class="buy-method-price">$<span class="buy-method-price-value" data-method="card">{{ lavatop_price_usd_180 }}</span></div>
           <p class="buy-payment-meta">{{ t("USD · EUR · RUB · Visa · Mastercard · СБП · PayPal") }}<br>{{ t("Ключ придёт на email") }}</p>
         </button>
       </form>
@@ -427,7 +556,7 @@
       {% if nowpayments_enabled %}
       <form method="post" action="/billing/nowpayments/create" id="purchase-form-crypto" style="margin:0">
         <input type="hidden" name="billing_source" value="purchase"/>
-        <input type="hidden" name="duration" value="365"/>
+        <input type="hidden" name="duration" id="form-crypto-duration" value="180"/>
         <input type="hidden" name="device_id" id="purchase_device_id" value=""/>
         <button type="submit" class="buy-payment-card" data-method="crypto" id="purchase-np-submit" aria-label="{{ t("Оплатить криптовалютой") }}" disabled>
           <div class="buy-payment-arrow" aria-hidden="true">
@@ -435,6 +564,7 @@
           </div>
           <div class="buy-payment-icon" aria-hidden="true">₿</div>
           <h3 class="buy-payment-title">{{ t("Криптой") }}</h3>
+          <div class="buy-method-price">$<span class="buy-method-price-value" data-method="crypto">{{ np_price_180 }}</span></div>
           <p class="buy-payment-meta">{{ t("USDT · BTC · ETH · мгновенно") }}<br>{{ t("Ключ выдаётся сразу после оплаты") }}</p>
         </button>
       </form>
@@ -500,6 +630,33 @@
         }
       });
     }
+
+    // ─── Tier picker: synchronizes period selection with both forms and method-card prices
+    function selectTier(days) {
+      var tiers = document.querySelectorAll(".buy-tier");
+      var selected = null;
+      tiers.forEach(function (t) {
+        var on = String(t.dataset.days) === String(days);
+        t.setAttribute("aria-pressed", on ? "true" : "false");
+        if (on) selected = t;
+      });
+      if (!selected) return;
+      var lavaDur = document.getElementById("form-card-duration");
+      var npDur = document.getElementById("form-crypto-duration");
+      if (lavaDur) lavaDur.value = String(days);
+      if (npDur) npDur.value = String(days);
+      var priceEl = selected.querySelector(".buy-tier-price");
+      if (!priceEl) return;
+      var cardPrice = priceEl.dataset.cardPrice || "";
+      var cryptoPrice = priceEl.dataset.cryptoPrice || "";
+      var cardOut = document.querySelector('.buy-method-price-value[data-method="card"]');
+      var cryptoOut = document.querySelector('.buy-method-price-value[data-method="crypto"]');
+      if (cardOut && cardPrice) cardOut.textContent = cardPrice;
+      if (cryptoOut && cryptoPrice) cryptoOut.textContent = cryptoPrice;
+    }
+    document.querySelectorAll(".buy-tier").forEach(function (t) {
+      t.addEventListener("click", function () { selectTier(t.dataset.days); });
+    });
 
     var elNp = document.getElementById("purchase_device_id");
     var btnNp = document.getElementById("purchase-np-submit");
