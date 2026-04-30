@@ -86,7 +86,7 @@
     {% elif not supabase_auth_configured and not oauth_configured %}
     <div class="login-error">
       {{ t("Вход не настроен. Укажите в") }} <span class="settings-mono">.env</span> {{ t("или в «Система → Настройки» параметры") }}
-      <strong>Supabase</strong> (<span class="settings-mono">SUPABASE_URL</span> и <span class="settings-mono">SUPABASE_ANON_KEY</span>{{ t(") — рекомендуется; либо") }} <span class="settings-mono">GOOGLE_CLIENT_ID</span> / <span class="settings-mono">GOOGLE_CLIENT_SECRET</span> {{ t("для прямого OAuth.") }}
+      <strong>Supabase</strong> (<span class="settings-mono">SUPABASE_URL</span> {{ t("и") }} <span class="settings-mono">SUPABASE_ANON_KEY</span>{{ t(") — рекомендуется; либо") }} <span class="settings-mono">GOOGLE_CLIENT_ID</span> / <span class="settings-mono">GOOGLE_CLIENT_SECRET</span> {{ t("для прямого OAuth.") }}
     </div>
     {% endif %}
 

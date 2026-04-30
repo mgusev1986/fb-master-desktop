@@ -52,7 +52,7 @@
   </section>
 
   <section>
-    <h2 class="x-card__title" style="margin:8px 0 12px;">Очередь · {{ summary.total }} <small style="color:var(--text-muted);font-weight:400;">pending {{ summary.pending_review }} · approved {{ summary.approved }} · sent {{ summary.sent }} · failed {{ summary.failed }} · skipped {{ summary.skipped }}</small></h2>
+    <h2 class="x-card__title" style="margin:8px 0 12px;">{{ t("Очередь ·") }} {{ summary.total }} <small style="color:var(--text-muted);font-weight:400;">pending {{ summary.pending_review }} · approved {{ summary.approved }} · sent {{ summary.sent }} · failed {{ summary.failed }} · skipped {{ summary.skipped }}</small></h2>
     {% if items %}
     <div style="overflow-x:auto;">
       <table style="width:100%;border-collapse:collapse;background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;">

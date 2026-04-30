@@ -59,7 +59,7 @@
             <strong>{{ t.name }}</strong>
             {% set nv = count_template_variants(t.body) %}
             {% if nv > 1 %}
-            <span class="badge badge-default" style="margin-left:6px;font-weight:500" title="{{ t("В шаблоне несколько текстов; при рассылке выбирается один") }}">{{ nv }} вариантов</span>
+            <span class="badge badge-default" style="margin-left:6px;font-weight:500" title="{{ t("В шаблоне несколько текстов; при рассылке выбирается один") }}">{{ nv }} {{ t("вариантов") }}</span>
             {% endif %}
           </td>
           <td>
@@ -73,7 +73,7 @@
             <div class="table-actions">
               {% if has_openai or has_gemini or is_platform_owner(user) %}
               <button type="button" class="btn btn-sm btn-secondary tpl-neuro-open"
-                      title="Сгенерировать через ИИ несколько вариантов текста: плейсхолдеры ({{ '{{full_name}}' }}, {{ '{{first_name}}' }}) сохраняются. В открывшемся окне выберите формулировки и сохраните их в этот шаблон."
+                      title="{{ t("Сгенерировать через ИИ несколько вариантов текста") }}: {{ t("плейсхолдеры") }} ({{ '{{full_name}}' }}, {{ '{{first_name}}' }}) {{ t("сохраняются. В открывшемся окне выберите формулировки и сохраните их в этот шаблон.") }}"
                       data-template-id="{{ t.id }}" data-template-name="{{ t.name|e }}">
                 <i class="ti ti-sparkles"></i>
               </button>
@@ -99,7 +99,7 @@
     <div class="empty-state">
       <div class="empty-state-icon"><i class="ti ti-template"></i></div>
       <h3>{{ t("Шаблонов пока нет") }}</h3>
-      <p>{{ t("Создайте первый текст для рассылки или комментариев:") }} <code>{{ "{{full_name}}" }}</code> и <code>{{ "{{first_name}}" }}</code>.</p>
+      <p>{{ t("Создайте первый текст для рассылки или комментариев:") }} <code>{{ "{{full_name}}" }}</code> {{ t("и") }} <code>{{ "{{first_name}}" }}</code>.</p>
       <a href="/templates/new" class="btn btn-primary"><i class="ti ti-plus"></i> {{ t("Создать шаблон") }}</a>
     </div>
   </div>

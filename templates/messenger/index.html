@@ -82,7 +82,7 @@
           </label>
           <span class="vk-ms-auto-sync-text">{{ t("Автосинхронизация с Facebook") }}</span>
         </div>
-        <button type="button" class="vk-ms-btn-primary vk-ms-pull-now-topbar-btn" id="vk-ms-pull-now-btn" {% if sync_busy %}disabled{% endif %} title="{% if thread_id %}Обновить открытый чат{% else %}Обновить список чатов со всех аккаунтов{% endif %}">
+        <button type="button" class="vk-ms-btn-primary vk-ms-pull-now-topbar-btn" id="vk-ms-pull-now-btn" {% if sync_busy %}disabled{% endif %} title="{% if thread_id %}{{ t("Обновить открытый чат") }}{% else %}{{ t("Обновить список чатов со всех аккаунтов") }}{% endif %}">
           <i class="ti ti-refresh"></i> {{ t("Ручная синхронизация") }}
         </button>
       </div>
@@ -113,7 +113,7 @@
         {% for row in chat_rows %}
         {% set c = row.c %}
         <div class="vk-ms-chat-row {% if thread_id == c.id %}is-active{% endif %}" data-conv-id="{{ c.id }}">
-          <input type="checkbox" class="vk-ms-chk vk-ms-row-chk" style="display:none" value="{{ c.id }}" aria-label="Выбрать {{ c.peer_name or 'чат' }}"/>
+          <input type="checkbox" class="vk-ms-chk vk-ms-row-chk" style="display:none" value="{{ c.id }}" aria-label="{{ t("Выбрать") }} {{ c.peer_name or t('чат') }}"/>
           <a class="vk-ms-chat-row-inner" href="{{ mb }}{{ thread_qs(c.id) }}">
             <div class="vk-ms-avatar">
               {% if c.avatar_url %}
@@ -129,7 +129,7 @@
                   {% if row.notif_muted %}<i class="ti ti-bell-off vk-ms-ico-muted" title="{{ t("Без звука") }}"></i>{% endif %}
                   <time class="vk-ms-chat-time" {% if c.last_at %}datetime="{{ c.last_at.isoformat() }}"{% endif %} title="{{ row.time_title }}">{{ row.time_s }}</time>
                   {% if row.unread_n > 0 %}
-                  <span class="vk-ms-unread-pill {% if row.unread_n > 9 %}vk-ms-unread-pill--wide{% endif %}" title="Непрочитанных: {{ row.unread_n }}">{{ row.unread_n if row.unread_n < 100 else '99+' }}</span>
+                  <span class="vk-ms-unread-pill {% if row.unread_n > 9 %}vk-ms-unread-pill--wide{% endif %}" title="{{ t("Непрочитанных:") }} {{ row.unread_n }}">{{ row.unread_n if row.unread_n < 100 else '99+' }}</span>
                   {% endif %}
                 </div>
               </div>
@@ -196,7 +196,7 @@
                   class="vk-ms-crm-stage-btn {% if active_person and active_person.crm_stage == st.slug %}is-active{% endif %}"
                   data-conversation-id="{{ active_conv.id }}"
                   data-slug="{{ st.slug }}"
-                  title="{{ st.label }} — в воронке CRM">
+                  title="{{ st.label }} — {{ t("в воронке CRM") }}">
             <i class="ti {{ st.icon }}" aria-hidden="true"></i>
             <span class="vk-ms-crm-stage-btn__text">{{ st.label }}</span>
           </button>

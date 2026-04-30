@@ -66,7 +66,7 @@
 
   {% if reports %}
   <section>
-    <h2 class="reddit-card__title" style="margin:16px 0 12px;">Результат · {{ reports|length }}</h2>
+    <h2 class="reddit-card__title" style="margin:16px 0 12px;">{{ t("Результат ·") }} {{ reports|length }}</h2>
     <div class="reddit-grid reddit-grid--wide">
       {% for r in reports %}
       <article class="reddit-card">
@@ -88,7 +88,7 @@
         {% else %}
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font:400 13px/1.4 Inter;">
           <div><span style="color:var(--text-muted)">{{ t("карма") }}</span> {{ r.karma_total if r.karma_total is not none else '—' }}</div>
-          <div><span style="color:var(--text-muted)">age</span> {{ r.account_age_days if r.account_age_days is not none else '—' }} дн</div>
+          <div><span style="color:var(--text-muted)">age</span> {{ r.account_age_days if r.account_age_days is not none else '—' }} {{ t("дн") }}</div>
           <div><span style="color:var(--text-muted)">last post</span> {{ format_dt_madrid(r.last_post_at) }}</div>
           <div><span style="color:var(--text-muted)">last comment</span> {{ format_dt_madrid(r.last_comment_at) }}</div>
           <div><span style="color:var(--text-muted)">{{ t("posts в окне") }}</span> {{ r.posts_count }}</div>
@@ -110,7 +110,7 @@
               · <span style="color:var(--text-muted)">{{ format_dt_madrid(it.at) }}</span>
               <div style="color:var(--text-secondary);margin-top:2px;">{{ it.excerpt }}</div>
               {% if it.permalink %}
-              <a href="https://www.reddit.com{{ it.permalink }}" target="_blank" rel="noreferrer noopener" style="color:var(--ws-accent);font-size:12px;">→ ссылка</a>
+              <a href="https://www.reddit.com{{ it.permalink }}" target="_blank" rel="noreferrer noopener" style="color:var(--ws-accent);font-size:12px;">{{ t("→ ссылка") }}</a>
               {% endif %}
             </li>
             {% endfor %}

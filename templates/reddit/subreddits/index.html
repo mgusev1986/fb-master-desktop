@@ -54,7 +54,7 @@
 
   {% if search_cards %}
   <section>
-    <h2 class="reddit-card__title" style="margin:8px 0 12px;">Результаты поиска · {{ search_cards|length }}</h2>
+    <h2 class="reddit-card__title" style="margin:8px 0 12px;">{{ t("Результаты поиска ·") }} {{ search_cards|length }}</h2>
     <div class="reddit-grid reddit-grid--wide">
       {% for c in search_cards %}
       <article class="reddit-card">
@@ -98,7 +98,7 @@
   {% endif %}
 
   <section>
-    <h2 class="reddit-card__title" style="margin:20px 0 12px;">Мой список · {{ saved_rows|length }}</h2>
+    <h2 class="reddit-card__title" style="margin:20px 0 12px;">{{ t("Мой список ·") }} {{ saved_rows|length }}</h2>
     {% if saved_rows %}
     <div class="reddit-grid">
       {% for r in saved_rows %}

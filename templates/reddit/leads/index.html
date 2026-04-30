@@ -135,7 +135,7 @@
     <div style="display:flex;gap:6px;padding:14px 0;align-items:center;">
       <span style="flex:1;color:var(--text-muted);font-size:13px;">Страница {{ page }} · {{ per_page }} на страницу</span>
       {% if page > 1 %}
-      <a href="?{% for k, v in request.query_params.items() if k != 'page' %}{{ k }}={{ v }}&{% endfor %}page={{ page - 1 }}" class="reddit-btn">← назад</a>
+      <a href="?{% for k, v in request.query_params.items() if k != 'page' %}{{ k }}={{ v }}&{% endfor %}page={{ page - 1 }}" class="reddit-btn">{{ t("← назад") }}</a>
       {% endif %}
       {% if rows|length == per_page and (page * per_page) < total %}
       <a href="?{% for k, v in request.query_params.items() if k != 'page' %}{{ k }}={{ v }}&{% endfor %}page={{ page + 1 }}" class="reddit-btn">{{ t("вперёд →") }}</a>

@@ -419,7 +419,7 @@
                         <p class="text-sm text-white/60 leading-relaxed mb-3 grow">{{ r.excerpt }}</p>
                         <div class="text-xs text-white/40 pt-3 border-t border-white/8">
                             <time datetime="{{ r.published_at }}">{{ r.published_at }}</time>
-                            {% if r.reading_time_minutes %}<span class="ml-3"><i class="fa-regular fa-clock mr-1"></i>{{ r.reading_time_minutes }} мин</span>{% endif %}
+                            {% if r.reading_time_minutes %}<span class="ml-3"><i class="fa-regular fa-clock mr-1"></i>{{ r.reading_time_minutes }} {{ t("мин") }}</span>{% endif %}
                         </div>
                     </div>
                 </article>

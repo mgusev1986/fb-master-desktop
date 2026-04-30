@@ -95,11 +95,11 @@
           <div style="display:flex;flex-direction:column;gap:10px">
             <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer">
               <input type="radio" name="comment_mode" value="template" {% if comment_mode == 'template' %}checked{% endif %}/>
-              <span><strong>{{ t("Шаблон комментария") }}</strong> — обычный режим без ИИ, комментарий берётся из выбранного шаблона выше.</span>
+              <span><strong>{{ t("Шаблон комментария") }}</strong> {{ t("— обычный режим без ИИ, комментарий берётся из выбранного шаблона выше.") }}</span>
             </label>
             <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer">
               <input type="radio" name="comment_mode" value="ai_comment" {% if comment_mode == 'ai_comment' %}checked{% endif %}/>
-              <span><strong>{{ t("Комментарий через нейросеть") }}</strong> — как в сценариях: модель читает выбранный пост в профиле и пишет короткий осмысленный комментарий.</span>
+              <span><strong>{{ t("Комментарий через нейросеть") }}</strong> {{ t("— как в сценариях: модель читает выбранный пост в профиле и пишет короткий осмысленный комментарий.") }}</span>
             </label>
           </div>
 
@@ -110,7 +110,7 @@
             </div>
             <div class="scenario-like-settings__fields" style="display:flex;flex-direction:column;gap:12px">
               {% if not has_openai and not has_gemini and not is_platform_owner(user) %}
-              <p class="form-hint" style="margin:0;color:var(--error)">{{ t("Нет API-ключа: задайте") }} <code>OPENAI_API_KEY</code> {{ t("или") }} <code>GOOGLE_API_KEY</code> в <code>.env</code> {{ t("или в настройках кабинета.") }}</p>
+              <p class="form-hint" style="margin:0;color:var(--error)">{{ t("Нет API-ключа: задайте") }} <code>OPENAI_API_KEY</code> {{ t("или") }} <code>GOOGLE_API_KEY</code> {{ t("в") }} <code>.env</code> {{ t("или в настройках кабинета.") }}</p>
               {% endif %}
               <p class="form-hint" style="margin:0">{{ t("Провайдер по умолчанию и названия моделей задаются в блоке") }} <strong>{{ t("«Настройки промптов и моделей»") }}</strong> {{ t("ниже на этой странице.") }}</p>
               <div class="form-group" style="margin:0">
@@ -143,11 +143,11 @@
           <div style="display:flex;flex-direction:column;gap:10px">
             <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer">
               <input type="radio" name="message_mode" value="template" {% if message_mode == 'template' %}checked{% endif %}/>
-              <span><strong>{{ t("Шаблон рассылки") }}</strong> — обычный режим без ИИ, сообщение берётся из выбранного шаблона выше.</span>
+              <span><strong>{{ t("Шаблон рассылки") }}</strong> {{ t("— обычный режим без ИИ, сообщение берётся из выбранного шаблона выше.") }}</span>
             </label>
             <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer">
               <input type="radio" name="message_mode" value="ai_dm" {% if message_mode == 'ai_dm' %}checked{% endif %}/>
-              <span><strong>{{ t("Личное сообщение через нейросеть") }}</strong> — как в режиме агента: каждый человек получает новую формулировку по примеру, шаблону и контексту профиля.</span>
+              <span><strong>{{ t("Личное сообщение через нейросеть") }}</strong> {{ t("— как в режиме агента: каждый человек получает новую формулировку по примеру, шаблону и контексту профиля.") }}</span>
             </label>
             {% if show_first_touch_ui %}
             <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer">
@@ -164,7 +164,7 @@
             </div>
             <div class="scenario-like-settings__fields" style="display:flex;flex-direction:column;gap:12px">
               {% if not has_openai and not has_gemini and not is_platform_owner(user) %}
-              <p class="form-hint" style="margin:0;color:var(--error)">{{ t("Нет API-ключа: задайте") }} <code>OPENAI_API_KEY</code> {{ t("или") }} <code>GOOGLE_API_KEY</code> в <code>.env</code> {{ t("или в настройках кабинета.") }}</p>
+              <p class="form-hint" style="margin:0;color:var(--error)">{{ t("Нет API-ключа: задайте") }} <code>OPENAI_API_KEY</code> {{ t("или") }} <code>GOOGLE_API_KEY</code> {{ t("в") }} <code>.env</code> {{ t("или в настройках кабинета.") }}</p>
               {% endif %}
               <p class="form-hint" style="margin:0">{{ t("Провайдер по умолчанию и названия моделей задаются в блоке") }} <strong>{{ t("«Настройки промптов и моделей»") }}</strong> {{ t("ниже на этой странице.") }}</p>
               <label class="form-check" style="margin:0">
@@ -175,7 +175,7 @@
               <div class="form-group" style="margin:0">
                 <label class="form-label" for="ai_dm_example">{{ t("Опорный текст / пример сообщения") }}</label>
                 <textarea id="ai_dm_example" name="ai_dm_example" class="form-textarea" rows="4"
-                          placeholder="Например: Привет, {{ '{{first_name}}' }}! Увидел твой пост про … Хотел написать и поздороваться."
+                          placeholder="{{ t("Например: Привет,") }} {{ '{{first_name}}' }}{{ t("! Увидел твой пост про … Хотел написать и поздороваться.") }}"
                           style="min-height:100px;resize:vertical">{{ cfg.get('ai_dm_example', '') }}</textarea>
                 <p class="form-hint" style="margin-top:6px">{{ t("Доступны") }} <a href="#" class="insert-marker" data-marker="{{ '{{first_name}}' }}">{{ '{{first_name}}' }}</a>, <a href="#" class="insert-marker" data-marker="{{ '{{full_name}}' }}">{{ '{{full_name}}' }}</a>{{ t(". Если поле пустое, нейросеть возьмёт за основу шаблон рассылки выше.") }}</p>
                 {{ mailing_warmup_placeholders('form-hint') }}
@@ -241,12 +241,12 @@
           <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;cursor:pointer">
             <input type="checkbox" name="account_rotation" value="1" style="margin-top:3px"
                    {% if cfg.get('account_rotation') %}checked{% endif %}/>
-            <span><strong>{{ t("Ротация аккаунтов") }}</strong> — после суточного лимита сообщений с одного аккаунта брать следующий из выбранного пула (счётчик сбрасывается в полночь UTC).</span>
+            <span><strong>{{ t("Ротация аккаунтов") }}</strong> {{ t("— после суточного лимита сообщений с одного аккаунта брать следующий из выбранного пула (счётчик сбрасывается в полночь UTC).") }}</span>
           </label>
           <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer">
             <input type="checkbox" name="auto_slot_rotation" value="1" style="margin-top:3px"
                    {% if cfg.get('auto_slot_rotation') %}checked{% endif %}/>
-            <span><strong>{{ t("Автосмена слотов 1–3") }}</strong> — если следующий аккаунт в «ожидании», забрать его слот у другого аккаунта из <em>{{ t("этого же пула") }}</em> {{ t("кампании (осторожно: меняет глобальные слоты кабинета).") }}</span>
+            <span><strong>{{ t("Автосмена слотов 1–3") }}</strong> {{ t("— если следующий аккаунт в «ожидании», забрать его слот у другого аккаунта из") }} <em>{{ t("этого же пула") }}</em> {{ t("кампании (осторожно: меняет глобальные слоты кабинета).") }}</span>
           </label>
         </div>
       </div>
@@ -260,7 +260,7 @@
           <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:12px;cursor:pointer">
             <input type="checkbox" name="send_window_24h" value="1" style="margin-top:3px"
                    {% if cfg.get('send_window_24h') %}checked{% endif %}/>
-            <span><strong>{{ t("Круглосуточно") }}</strong> — не останавливать рассылку ночью.</span>
+            <span><strong>{{ t("Круглосуточно") }}</strong> {{ t("— не останавливать рассылку ночью.") }}</span>
           </label>
           <p class="form-hint" style="margin-bottom:10px">
             {{ t("Если не отмечено: по умолчанию только дневное окно") }} <strong>{{ t("с 8:00 до 22:00") }}</strong> {{ t("(локально); можно задать свой интервал. Граница «до часа» не включается (22 — работа до 21:59). Ночью воркер ждёт, строки очереди остаются в очереди.") }}
@@ -345,7 +345,7 @@
           </label>
           <input type="hidden" name="skip_contacted_scope" value="global"/>
           <div id="outreach_skip_scope_block" style="margin:-2px 0 12px 28px;padding:10px 12px;border-left:2px solid var(--border);background:var(--bg-surface)">
-            <p class="form-hint" style="margin:0;line-height:1.45">{{ t("Учёт всегда") }} <strong>{{ t("глобальный по базе") }}</strong> — отдельные режимы «только кабинет» и «только аккаунт» отключены, чтобы клиенты и вы не получали повторы одному и тому же человеку по ошибке.</p>
+            <p class="form-hint" style="margin:0;line-height:1.45">{{ t("Учёт всегда") }} <strong>{{ t("глобальный по базе") }}</strong> {{ t("— отдельные режимы «только кабинет» и «только аккаунт» отключены, чтобы клиенты и вы не получали повторы одному и тому же человеку по ошибке.") }}</p>
           </div>
           <input type="hidden" name="skip_previously_failed" value="0"/>
           <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;cursor:pointer">

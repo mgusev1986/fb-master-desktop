@@ -115,10 +115,10 @@
 <div class="card" style="margin-bottom:20px">
   <div class="card-header">{{ t("Сводка очереди") }}</div>
   <div class="card-body" style="display:flex;flex-wrap:wrap;gap:12px;font-size:var(--font-size-sm)">
-    <span class="badge badge-default">В очереди: {{ cnt_by.get('queued', 0) }}</span>
-    <span class="badge badge-default">В работе: {{ cnt_by.get('running', 0) }}</span>
-    <span class="badge badge-success">Готово: {{ cnt_by.get('done', 0) }}</span>
-    <span class="badge badge-default">Ошибка: {{ cnt_by.get('failed', 0) }}</span>
+    <span class="badge badge-default">{{ t("В очереди:") }} {{ cnt_by.get('queued', 0) }}</span>
+    <span class="badge badge-default">{{ t("В работе:") }} {{ cnt_by.get('running', 0) }}</span>
+    <span class="badge badge-success">{{ t("Готово:") }} {{ cnt_by.get('done', 0) }}</span>
+    <span class="badge badge-default">{{ t("Ошибка:") }} {{ cnt_by.get('failed', 0) }}</span>
   </div>
   <div class="card-body" style="padding-top:0;font-size:var(--font-size-sm);color:var(--text-secondary)">
     Лайк: {{ 'да' if cfg.get('do_like', true) else 'нет' }} · Комментарий: {{ 'да' if cfg.get('do_comment') else 'нет' }}

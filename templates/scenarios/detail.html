@@ -129,12 +129,12 @@
 <div class="card" style="margin-bottom:20px">
   <div class="card-header">{{ t("Сводка режима") }}</div>
   <div class="card-body" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px">
-    <span class="badge badge-default">Источник: {{ source_total_count }}</span>
-    <span class="badge badge-default">Осталось в источнике: {{ remaining_source_count }}</span>
-    <a href="/system/logs?tab=jobs&amp;job_type=sequence&amp;status=running&amp;scenario_id={{ campaign.id }}&amp;days=30" class="badge badge-default" title="{{ t("Журнал: задачи сценария в работе") }}">Активно сейчас: {{ cnt_en.get('active', 0) }}</a>
-    <a href="/system/logs?tab=errors&amp;job_type=sequence&amp;scenario_id={{ campaign.id }}&amp;days=30" class="badge badge-error" title="{{ t("Журнал: падения и проблемные события этого режима") }}">Ошибки: {{ cnt_en.get('failed', 0) }}</a>
-    <a href="/system/logs?tab=jobs&amp;job_type=sequence&amp;status=success&amp;scenario_id={{ campaign.id }}&amp;days=30" class="badge badge-success" title="{{ t("Журнал: успешно завершённые задачи этого режима") }}">Завершено: {{ cnt_en.get('completed', 0) }}</a>
-    <span class="badge badge-default">Готово к шагу сейчас: {{ due_n }}</span>
+    <span class="badge badge-default">{{ t("Источник:") }} {{ source_total_count }}</span>
+    <span class="badge badge-default">{{ t("Осталось в источнике:") }} {{ remaining_source_count }}</span>
+    <a href="/system/logs?tab=jobs&amp;job_type=sequence&amp;status=running&amp;scenario_id={{ campaign.id }}&amp;days=30" class="badge badge-default" title="{{ t("Журнал: задачи сценария в работе") }}">{{ t("Активно сейчас:") }} {{ cnt_en.get('active', 0) }}</a>
+    <a href="/system/logs?tab=errors&amp;job_type=sequence&amp;scenario_id={{ campaign.id }}&amp;days=30" class="badge badge-error" title="{{ t("Журнал: падения и проблемные события этого режима") }}">{{ t("Ошибки:") }} {{ cnt_en.get('failed', 0) }}</a>
+    <a href="/system/logs?tab=jobs&amp;job_type=sequence&amp;status=success&amp;scenario_id={{ campaign.id }}&amp;days=30" class="badge badge-success" title="{{ t("Журнал: успешно завершённые задачи этого режима") }}">{{ t("Завершено:") }} {{ cnt_en.get('completed', 0) }}</a>
+    <span class="badge badge-default">{{ t("Готово к шагу сейчас:") }} {{ due_n }}</span>
   </div>
   <div class="card-body" style="padding-top:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;font-size:var(--font-size-sm)">
     <div>
@@ -338,7 +338,7 @@
 	              {% elif s.action_type == 'comment_post' and cfg.get('ai_comment') %}
 	              <div style="line-height:1.45">
 	                <div><strong>{{ t("Пост для комментария:") }}</strong> {{ 'первый сверху' if comment_mode == 'first' else 'случайно среди верхних ' ~ comment_pool }}</div>
-	                <div style="margin-top:6px"><strong>{{ t("Комментарий (нейросеть)") }}</strong> — текст подбирается по содержимому выбранного поста в ленте профиля.</div>
+	                <div style="margin-top:6px"><strong>{{ t("Комментарий (нейросеть)") }}</strong> {{ t("— текст подбирается по содержимому выбранного поста в ленте профиля.") }}</div>
 	                {% set _hint = (cfg.get('ai_comment_hint') or '') %}
 	                {% if _hint %}
 	                <div style="margin-top:4px">Подсказка к стилю: {{ _hint[:220] }}{% if _hint|length > 220 %}…{% endif %}</div>
@@ -545,7 +545,7 @@
               </label>
               <div class="form-group" style="margin:0">
                 <label class="form-label" for="scenario_ai_dm_example">{{ t("Опорный текст / пример сообщения") }}</label>
-                <textarea id="scenario_ai_dm_example" name="ai_dm_example" class="form-input" rows="4" placeholder="Например: Привет, {{ '{{first_name}}' }}! Увидел твой пост про … Хотел написать и поздороваться." style="min-height:100px;resize:vertical"></textarea>
+                <textarea id="scenario_ai_dm_example" name="ai_dm_example" class="form-input" rows="4" placeholder="{{ t("Например: Привет,") }} {{ '{{first_name}}' }}{{ t("! Увидел твой пост про … Хотел написать и поздороваться.") }}" style="min-height:100px;resize:vertical"></textarea>
                 <p class="form-hint" style="margin-top:6px">Нейросеть использует это как основу: новые формулировки для каждого человека, тот же смысл. Доступны {{ '{{first_name}}' }}, {{ '{{full_name}}' }}.</p>
                 {{ mailing_warmup_placeholders('form-hint') }}
               </div>
@@ -566,7 +566,7 @@
               name="step_message"
               type="text"
               class="form-input"
-              placeholder="Например, Привет, {{ '{{first_name}}' }}! Рад знакомству."
+              placeholder="{{ t("Например, Привет,") }} {{ '{{first_name}}' }}{{ t("! Рад знакомству.") }}"
               autocomplete="off"
             />
             {{ mailing_warmup_placeholders('form-hint') }}
@@ -596,7 +596,7 @@
               name="dm_message"
               type="text"
               class="form-input"
-              placeholder="Например, Привет, {{ '{{first_name}}' }}! Решил написать лично."
+              placeholder="{{ t("Например, Привет,") }} {{ '{{first_name}}' }}{{ t("! Решил написать лично.") }}"
               autocomplete="off"
             />
             {{ mailing_warmup_placeholders('form-hint') }}

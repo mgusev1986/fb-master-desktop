@@ -50,12 +50,12 @@
           <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;cursor:pointer">
             <input type="checkbox" name="account_rotation" value="1" style="margin-top:3px"
                    {% if cfg.get('account_rotation') %}checked{% endif %}/>
-            <span><strong>{{ t("Ротация аккаунтов") }}</strong> — суточный лимит действий на аккаунт, затем переключение на следующий из пула (полночь UTC).</span>
+            <span><strong>{{ t("Ротация аккаунтов") }}</strong> {{ t("— суточный лимит действий на аккаунт, затем переключение на следующий из пула (полночь UTC).") }}</span>
           </label>
           <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer">
             <input type="checkbox" name="auto_slot_rotation" value="1" style="margin-top:3px"
                    {% if cfg.get('auto_slot_rotation') %}checked{% endif %}/>
-            <span><strong>{{ t("Автосмена слотов 1–3") }}</strong> — при необходимости передать слот аккаунту из «ожидания» за счёт другого из <em>{{ t("этого же пула") }}</em> {{ t("(меняет глобальные слоты кабинета).") }}</span>
+            <span><strong>{{ t("Автосмена слотов 1–3") }}</strong> {{ t("— при необходимости передать слот аккаунту из «ожидания» за счёт другого из") }} <em>{{ t("этого же пула") }}</em> {{ t("(меняет глобальные слоты кабинета).") }}</span>
           </label>
         </div>
       </div>
@@ -63,7 +63,7 @@
       <div class="form-group">
         <label class="form-label" for="donor_id">{{ t("Контакты из донора") }}</label>
         <select id="donor_id" name="donor_id" class="form-select">
-          <option value="">— не использовать —</option>
+          <option value="">{{ t("— не использовать —") }}</option>
           {% for d in donors %}
           <option value="{{ d.id }}"
             {% if cfg.get('ui_donor_id') == d.id %}selected{% endif %}>{{ d.name or d.url[:40] }}</option>
@@ -93,7 +93,7 @@
           <div class="form-group" style="margin-bottom:0">
             <label class="form-label" for="comment_template">{{ t("Текст комментария") }}</label>
             <textarea id="comment_template" name="comment_template" class="form-textarea" rows="2"
-                      placeholder="Отличный пост, {{ "{{first_name}}" }}!">{{ cfg.get('comment_template', '') }}</textarea>
+                      placeholder="{{ t("Отличный пост,") }} {{ "{{first_name}}" }}!">{{ cfg.get('comment_template', '') }}</textarea>
             {{ mailing_warmup_placeholders('form-hint') }}
           </div>
         </div>

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     {% if selected_category %}
-    <title>{{ selected_category.name }} — База знаний SOCMASTER</title>
+    <title>{{ selected_category.name }} {{ t("— База знаний SOCMASTER") }}</title>
     <meta name="description" content="{{ selected_category.description }} Практические гайды о привлечении клиентов из соцсетей.">
     <link rel="canonical" href="https://socmaster.pro/blog?category={{ selected_category.slug }}">
     {# i18n hreflang — for SEO #}
@@ -13,7 +13,7 @@
     <link rel="alternate" hreflang="en" href="https://socmaster.pro/blog?lang=en">
     <link rel="alternate" hreflang="x-default" href="https://socmaster.pro/blog">
     {% elif selected_tag %}
-    <title>Тег: {{ selected_tag.name }} — База знаний SOCMASTER</title>
+    <title>{{ t("Тег:") }} {{ selected_tag.name }} {{ t("— База знаний SOCMASTER") }}</title>
     <meta name="description" content="Статьи по теме «{{ selected_tag.name }}»: трафик, лиды, автоматизация соцсетей и работа с клиентами.">
     <link rel="canonical" href="https://socmaster.pro/blog?tag={{ selected_tag.slug }}">
     {% elif search_query %}
@@ -187,7 +187,7 @@
 
             <form action="/blog" method="get" class="max-w-xl mx-auto mt-8">
                 <div class="relative">
-                    <input type="text" name="q" value="{{ search_query }}" placeholder="{% if is_en %}Find an article…{% else %}Найти статью по теме…{% endif %}" maxlength="200"
+                    <input type="text" name="q" value="{{ search_query }}" placeholder="{% if is_en %}Find an article…{% else %}{{ t("Найти статью по теме…") }}{% endif %}" maxlength="200"
                         class="w-full rounded-full bg-white/5 border border-white/15 px-12 py-3.5 text-white placeholder:text-white/40 focus:outline-none focus:border-[#f5d06e]/60">
                     <i class="fa-solid fa-magnifying-glass absolute left-5 top-1/2 -translate-y-1/2 text-white/40"></i>
                     {% if search_query %}

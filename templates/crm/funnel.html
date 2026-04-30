@@ -473,7 +473,7 @@
 {% else %}
 <a href="{{ messenger_url }}"
    class="btn btn-secondary btn-sm funnel-card-messenger-btn{% if not has_thread %} funnel-card-messenger-btn--search{% endif %}"
-   title="{% if has_thread %}Открыть переписку с этим контактом в Мессенджере{% else %}Открыть Мессенджер с поиском по контакту; диалог появится после синхронизации списка чатов{% endif %}"
+   title="{% if has_thread %}{{ t("Открыть переписку с этим контактом в Мессенджере") }}{% else %}{{ t("Открыть Мессенджер с поиском по контакту; диалог появится после синхронизации списка чатов") }}{% endif %}"
    onclick="event.stopPropagation()">
   <i class="ti ti-message-circle" aria-hidden="true"></i>
   {{ t("Мессенджер") }}
@@ -606,7 +606,7 @@
         <i class="ti ti-chevron-down funnel-stages-toggle__chev" aria-hidden="true"></i>
       </summary>
       <div class="funnel-stages-inner">
-        <p class="form-hint" style="margin:0 0 12px">{{ t("Меняйте порядок кнопками «Вверх/Вниз», подпись — полем и «Сохранить». Любую стадию (в том числе с меткой «встроенная») можно удалить кнопкой с корзиной: если в ней есть контакты, система автоматически перенесёт их в соседнюю стадию, а если соседней нет — очистит у них это поле. Новые шаги — блок ниже;") }} <strong>slug</strong> {{ t("необязателен — сгенерируется из латиницы в названии.") }} <strong>{{ t("Все строки этой таблицы") }}</strong> — это колонки на доске в том же порядке; доска теперь <strong>{{ t("автоматически раскладывает их по ширине страницы без горизонтального скролла") }}</strong>{{ t(". Свои стадии без метки «встроенная» там же; чтобы быстро найти колонку, нажмите её название в блоке «Стадии на доске» над доской.") }}</p>
+        <p class="form-hint" style="margin:0 0 12px">{{ t("Меняйте порядок кнопками «Вверх/Вниз», подпись — полем и «Сохранить». Любую стадию (в том числе с меткой «встроенная») можно удалить кнопкой с корзиной: если в ней есть контакты, система автоматически перенесёт их в соседнюю стадию, а если соседней нет — очистит у них это поле. Новые шаги — блок ниже;") }} <strong>slug</strong> {{ t("необязателен — сгенерируется из латиницы в названии.") }} <strong>{{ t("Все строки этой таблицы") }}</strong> {{ t("— это колонки на доске в том же порядке; доска теперь") }} <strong>{{ t("автоматически раскладывает их по ширине страницы без горизонтального скролла") }}</strong>{{ t(". Свои стадии без метки «встроенная» там же; чтобы быстро найти колонку, нажмите её название в блоке «Стадии на доске» над доской.") }}</p>
         <table class="funnel-stages-table">
           <thead>
             <tr>
@@ -744,7 +744,7 @@
       <span class="funnel-stage-rail__title">{{ t("Стадии на доске") }}</span>
       <span class="funnel-stage-rail__subtitle">{{ t("Нажмите название — колонка подсветится; если она ниже по странице, экран аккуратно прокрутится к нужному ряду.") }}</span>
       {% for s in stage_rows %}
-      <button type="button" class="funnel-stage-rail__chip{% if not s.is_builtin %} funnel-stage-rail__chip--custom{% endif %}" data-funnel-scroll-stage="{{ s.slug }}" title="Показать колонку «{{ stage_labels.get(s.slug, s.label) }}»">
+      <button type="button" class="funnel-stage-rail__chip{% if not s.is_builtin %} funnel-stage-rail__chip--custom{% endif %}" data-funnel-scroll-stage="{{ s.slug }}" title="{{ t("Показать колонку") }} «{{ stage_labels.get(s.slug, s.label) }}»">
         <span>{{ stage_labels.get(s.slug, s.label) }}</span>
         <span class="funnel-stage-rail__count">{{ counts.get(s.slug, 0) }}</span>
       </button>
@@ -857,7 +857,7 @@
           {% endfor %}
         </div>
         {% if other_overflow %}
-        <div class="funnel-overflow">Ещё {{ other_overflow }} контактов не показано — сузьте фильтр.</div>
+        <div class="funnel-overflow">{{ t("Ещё") }} {{ other_overflow }} {{ t("контактов не показано — сузьте фильтр.") }}</div>
         {% endif %}
       </div>
       {% endif %}

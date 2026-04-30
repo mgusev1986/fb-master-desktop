@@ -22,7 +22,7 @@
 
     {% if not has_openai and not has_gemini and not is_platform_owner(user) %}
     <div style="margin-bottom:12px;padding:12px;border:1px solid var(--error);border-radius:8px;font-size:var(--font-size-sm);color:var(--error)">
-      В <code>.env</code> {{ t("не заданы") }} <code>OPENAI_API_KEY</code> и <code>GOOGLE_API_KEY</code>{{ t(". Для режима «Свой шаблон + ИИ» добавьте хотя бы один ключ. Режим «Первое касание (EN)» работает без ключей.") }}
+      {{ t("В") }} <code>.env</code> {{ t("не заданы") }} <code>OPENAI_API_KEY</code> {{ t("и") }} <code>GOOGLE_API_KEY</code>{{ t(". Для режима «Свой шаблон + ИИ» добавьте хотя бы один ключ. Режим «Первое касание (EN)» работает без ключей.") }}
     </div>
     {% endif %}
 
@@ -98,7 +98,7 @@
 
     <h3 style="margin:0 0 12px;font-size:1.05rem">{{ t("Запуск агента") }}</h3>
     <p class="form-hint" style="margin-top:0">
-      {{ t("Сколько человек обработать (до 200), донор или все последние контакты в базе. В шаблоне используйте") }} <code>{{ "{{full_name}}" }}</code> и <code>{{ "{{first_name}}" }}</code>.
+      {{ t("Сколько человек обработать (до 200), донор или все последние контакты в базе. В шаблоне используйте") }} <code>{{ "{{full_name}}" }}</code> {{ t("и") }} <code>{{ "{{first_name}}" }}</code>.
     </p>
     <form method="post" action="/outreach/agent/batch-generate">
       <div class="form-group">
@@ -117,11 +117,11 @@
         <div style="display:flex;flex-direction:column;gap:8px">
           <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer">
             <input type="radio" name="dm_mode" value="custom" id="dm_mode_custom" checked/>
-            <span><strong>{{ t("Свой шаблон") }}</strong> — один текст на всех с плейсхолдерами; черновик через ИИ (нужен API-ключ).</span>
+            <span><strong>{{ t("Свой шаблон") }}</strong> {{ t("— один текст на всех с плейсхолдерами; черновик через ИИ (нужен API-ключ).") }}</span>
           </label>
           <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer">
             <input type="radio" name="dm_mode" value="first_touch" id="dm_mode_ft"/>
-            <span><strong>{{ t("Первое касание (EN)") }}</strong> — несколько готовых вариантов; подставляется <strong>{{ t("имя") }}</strong> (<code>{{ "{{first_name}}" }}</code>{{ t("). Без ИИ и без API-ключа.") }}</span>
+            <span><strong>{{ t("Первое касание (EN)") }}</strong> {{ t("— несколько готовых вариантов; подставляется") }} <strong>{{ t("имя") }}</strong> (<code>{{ "{{first_name}}" }}</code>{{ t("). Без ИИ и без API-ключа.") }}</span>
           </label>
         </div>
       </div>
@@ -154,7 +154,7 @@
       <div class="form-group" id="batch_context_block">
         <label class="form-label" for="batch_context">{{ t("Шаблон контекста (свой режим, с плейсхолдерами)") }}</label>
         <textarea id="batch_context" name="batch_context" class="form-textarea" rows="8"
-                  placeholder="Напиши короткий ответ для {{ '{{full_name}}' }}. Контекст переписки: …"></textarea>
+                  placeholder="{{ t("Напиши короткий ответ для") }} {{ '{{full_name}}' }}. {{ t("Контекст переписки: …") }}"></textarea>
       </div>
       <button type="submit" class="btn btn-primary" id="batch_submit_btn" {% if worker_busy %}disabled{% endif %}>
         <i class="ti ti-users-group"></i> {{ t("Сгенерировать черновики") }}

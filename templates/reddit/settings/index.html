@@ -41,7 +41,7 @@
       </label>
       <label style="display:flex;flex-direction:column;gap:6px;">
         <span style="font:600 13px/1 Inter;color:var(--text-primary)">client_secret</span>
-        <input type="password" name="client_secret" placeholder="{{ settings_view.client_secret_masked or 'не задан' }}" autocomplete="off"
+        <input type="password" name="client_secret" placeholder="{{ settings_view.client_secret_masked or t('не задан') }}" autocomplete="off"
                style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-family:ui-monospace,monospace;"/>
         <small style="color:var(--text-muted);font-size:12px;">{{ t("Пустое поле оставляет текущее значение.") }}</small>
       </label>

@@ -13,7 +13,7 @@
         <tr>
           <td style="padding:40px 40px 24px 40px;">
             <h1 style="margin:0 0 8px 0;font-size:24px;font-weight:700;color:#1a1d23;">{{ t("Спасибо за покупку!") }}</h1>
-            <p style="margin:0;font-size:16px;line-height:1.5;color:#4a5160;">{{ t("Ваша подписка SOCMASTER на") }} <strong>{{ duration_days }} дн.</strong> {{ t("активирована.") }}</p>
+            <p style="margin:0;font-size:16px;line-height:1.5;color:#4a5160;">{{ t("Ваша подписка SOCMASTER на") }} <strong>{{ duration_days }} {{ t("дн.") }}</strong> {{ t("активирована.") }}</p>
           </td>
         </tr>
         <tr>
@@ -36,7 +36,7 @@
         <tr>
           <td style="padding:24px 40px;background:#f9fafc;border-top:1px solid #e6e9f0;">
             <p style="margin:0 0 8px 0;font-size:14px;font-weight:600;color:#1a1d23;">{{ t("Автопродление подписки") }}</p>
-            <p style="margin:0 0 12px 0;font-size:13px;line-height:1.5;color:#6c7691;">Через {{ duration_days }} дн. подписка автоматически продлится. Деньги спишутся с той же карты.</p>
+            <p style="margin:0 0 12px 0;font-size:13px;line-height:1.5;color:#6c7691;">{{ t("Через") }} {{ duration_days }} {{ t("дн. подписка автоматически продлится. Деньги спишутся с той же карты.") }}</p>
             {% if cancel_subscription_url %}
             <p style="margin:0;font-size:13px;line-height:1.5;color:#6c7691;">{{ t("Если хотите отменить автопродление —") }} <a href="{{ cancel_subscription_url }}" style="color:#4f6df5;text-decoration:underline;">{{ t("нажмите здесь") }}</a>. Ключ продолжит работать до {{ expires_at_label }}.</p>
             {% endif %}

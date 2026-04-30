@@ -34,7 +34,7 @@
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <select name="segment_id" style="flex:1;min-width:200px;padding:8px;border-radius:8px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);font-size:12px;">
-          <option value="">— или выберите сохранённый сегмент —</option>
+          <option value="">{{ t("— или выберите сохранённый сегмент —") }}</option>
           {% for s in (segments or []) %}<option value="{{ s.id }}">{{ s.name }} ({{ s.last_run_count or 0 }} лидов · {{ s.last_run_at.strftime('%d.%m %H:%M') if s.last_run_at else 'не запускался' }})</option>{% endfor %}
         </select>
         <label style="font:400 12px/1 Inter,sans-serif;color:var(--text-secondary,#606770);display:inline-flex;align-items:center;gap:4px;">
@@ -57,7 +57,7 @@
       <div style="display:flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--border,#e4e6eb);border-radius:999px;background:color-mix(in srgb,var(--ws-accent) 4%,transparent);">
         <strong style="font:500 13px/1 Inter,sans-serif;">{{ s.name }}</strong>
         <small style="color:var(--text-muted,#888);">{{ s.keywords[:60] }}{% if s.keywords|length > 60 %}…{% endif %}</small>
-        {% if s.last_run_count %}<span style="font-size:11px;color:var(--ws-accent);">{{ s.last_run_count }} результатов</span>{% endif %}
+        {% if s.last_run_count %}<span style="font-size:11px;color:var(--ws-accent);">{{ s.last_run_count }} {{ t("результатов") }}</span>{% endif %}
         <form method="post" action="/linkedin/leads/segments/{{ s.id }}/archive" style="margin:0;"
               onsubmit="return confirm('Архивировать сегмент «{{ s.name }}»?');">
           <button class="li-btn" style="background:transparent;border:none;color:#c33;font-size:11px;padding:0 4px;" type="submit">×</button>

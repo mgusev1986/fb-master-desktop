@@ -72,12 +72,12 @@
             <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;cursor:pointer">
               <input type="checkbox" name="account_rotation" value="1" style="margin-top:3px"
                      {% if scfg.get('account_rotation') %}checked{% endif %}/>
-              <span><strong>{{ t("Ротация аккаунтов") }}</strong> — после суточного лимита шагов с одного аккаунта переключаться на следующий из пула (UTC-день).</span>
+              <span><strong>{{ t("Ротация аккаунтов") }}</strong> {{ t("— после суточного лимита шагов с одного аккаунта переключаться на следующий из пула (UTC-день).") }}</span>
             </label>
             <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:12px;cursor:pointer">
               <input type="checkbox" name="auto_slot_rotation" value="1" style="margin-top:3px"
                      {% if scfg.get('auto_slot_rotation') %}checked{% endif %}/>
-              <span><strong>{{ t("Автосмена слотов") }}</strong> — при необходимости забрать слот у другого аккаунта из <em>{{ t("этого пула") }}</em> {{ t("(меняет слоты кабинета).") }}</span>
+              <span><strong>{{ t("Автосмена слотов") }}</strong> {{ t("— при необходимости забрать слот у другого аккаунта из") }} <em>{{ t("этого пула") }}</em> {{ t("(меняет слоты кабинета).") }}</span>
             </label>
             <div class="form-group" style="margin-bottom:0">
               <label class="form-label" for="sequence_actions_per_account">{{ t("Суточный лимит шагов на один аккаунт (при ротации)") }}</label>
@@ -122,11 +122,11 @@
             <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
               <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;margin:0">
                 <input type="radio" name="person_source" value="donor" {% if not pf.get('all_people') and not pf.get('ui_import_batch_id') %}checked{% endif %}/>
-                <span><strong>{{ t("Донор") }}</strong> — только люди, привязанные к выбранному донору (как раньше).</span>
+                <span><strong>{{ t("Донор") }}</strong> {{ t("— только люди, привязанные к выбранному донору (как раньше).") }}</span>
               </label>
               <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;margin:0">
                 <input type="radio" name="person_source" value="import_batch" {% if pf.get('ui_import_batch_id') %}checked{% endif %}/>
-                <span><strong>{{ t("Партия импорта") }}</strong> — контакты, созданные при загрузке конкретного файла в разделе <a href="/import">{{ t("«Импорт базы»") }}</a> (CSV/XLSX).</span>
+                <span><strong>{{ t("Партия импорта") }}</strong> {{ t("— контакты, созданные при загрузке конкретного файла в разделе") }} <a href="/import">{{ t("«Импорт базы»") }}</a> (CSV/XLSX).</span>
               </label>
               <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;margin:0">
                 <input type="radio" name="person_source" value="all" {% if pf.get('all_people') %}checked{% endif %}/>

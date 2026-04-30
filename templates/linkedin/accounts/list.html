@@ -45,7 +45,7 @@
       <li><strong>TSV</strong>: <code>label&lt;TAB&gt;cookies_json&lt;TAB&gt;proxy_url</code></li>
     </ul>
     <p class="li-card__desc" style="margin-top:8px;color:var(--text-muted,#888);font-size:12px;">
-      {{ t("Обязательная cookie —") }} <code>li_at</code>{{ t(". Желательны также") }} <code>JSESSIONID</code> и <code>li_rm</code>.
+      {{ t("Обязательная cookie —") }} <code>li_at</code>{{ t(". Желательны также") }} <code>JSESSIONID</code> {{ t("и") }} <code>li_rm</code>.
     </p>
     <form method="post" action="/linkedin/accounts/import" style="display:flex;flex-direction:column;gap:10px;">
       <textarea name="blob" rows="8" placeholder='{"label":"my-account","cookies":[{"name":"li_at","value":"AQED..."}],"proxy_url":"http://user:pass@1.2.3.4:8080"}'

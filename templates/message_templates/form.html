@@ -98,17 +98,17 @@
         </p>
         <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:6px">
           <button type="button" class="btn btn-sm btn-secondary tpl-insert-marker" data-marker="{{ '{{first_name}}' }}"
-                  title="{{ t("Вставить в активный вариант") }}" aria-label="Вставить {{ '{{first_name}}' }}">
+                  title="{{ t("Вставить в активный вариант") }}" aria-label="{{ t("Вставить") }} {{ '{{first_name}}' }}">
             <code style="font-family:ui-monospace,monospace;font-size:12px">{{ "{{first_name}}" }}</code>
           </button>
-          <span class="form-hint" style="margin:0">— только имя</span>
+          <span class="form-hint" style="margin:0">{{ t("— только имя") }}</span>
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
           <button type="button" class="btn btn-sm btn-secondary tpl-insert-marker" data-marker="{{ '{{full_name}}' }}"
-                  title="{{ t("Вставить в активный вариант") }}" aria-label="Вставить {{ '{{full_name}}' }}">
+                  title="{{ t("Вставить в активный вариант") }}" aria-label="{{ t("Вставить") }} {{ '{{full_name}}' }}">
             <code style="font-family:ui-monospace,monospace;font-size:12px">{{ "{{full_name}}" }}</code>
           </button>
-          <span class="form-hint" style="margin:0">— имя и фамилия целиком</span>
+          <span class="form-hint" style="margin:0">{{ t("— имя и фамилия целиком") }}</span>
         </div>
       </div>
 
@@ -138,7 +138,7 @@
         <a href="/templates" class="btn btn-secondary">{{ t("К списку") }}</a>
         {% if row and (has_openai or has_gemini or is_platform_owner(user)) %}
         <button type="button" class="btn btn-secondary tpl-neuro-open" data-template-id="{{ row.id }}" data-template-name="{{ row.name|e }}"
-                title="Сгенерировать через ИИ несколько вариантов текста: плейсхолдеры ({{ '{{full_name}}' }}, {{ '{{first_name}}' }}) сохраняются. В открывшемся окне выберите формулировки и сохраните их в этот шаблон.">
+                title="{{ t("Сгенерировать через ИИ несколько вариантов текста") }}: {{ t("плейсхолдеры") }} ({{ '{{full_name}}' }}, {{ '{{first_name}}' }}) {{ t("сохраняются. В открывшемся окне выберите формулировки и сохраните их в этот шаблон.") }}">
           <i class="ti ti-sparkles"></i> {{ t("Нейро-варианты") }}
         </button>
         {% endif %}

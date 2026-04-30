@@ -147,7 +147,7 @@
     <form id="outreach-bulk-forget-form" method="post" action="/outreach/{{ campaign.id }}/forget-campaign-done-bulk" style="display:none" aria-hidden="true"></form>
     <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px">
       <button type="button" class="btn btn-sm btn-primary" id="outreach-bulk-forget-open" disabled
-              {% if campaign.status == 'running' %}disabled data-locked="1" title="Сначала остановите {{ 'комментинг' if is_comment_campaign else 'рассылку' }}"{% endif %}>
+              {% if campaign.status == 'running' %}disabled data-locked="1" title="{{ t("Сначала остановите") }} {{ t('комментинг') if is_comment_campaign else t('рассылку') }}"{% endif %}>
         <i class="ti ti-repeat"></i> {{ t("Вернуть в очередь выбранных (") }}<span id="outreach-bulk-cnt">0</span>)
       </button>
     </div>
@@ -156,7 +156,7 @@
         <thead>
           <tr>
             <th class="outreach-done-col-chk" style="width:42px;text-align:center" title="{{ t("Выбрать всех") }}">
-              <input type="checkbox" class="outreach-done-select-all outreach-done-checkbox" aria-label="Выбрать всех в списке {{ 'обработанных' if is_comment_campaign else 'отправленных' }}"
+              <input type="checkbox" class="outreach-done-select-all outreach-done-checkbox" aria-label="{{ t("Выбрать всех в списке") }} {{ t('обработанных') if is_comment_campaign else t('отправленных') }}"
                      {% if campaign.status == 'running' %}disabled{% endif %}/>
             </th>
             <th>{{ t("Имя") }}</th>
@@ -169,7 +169,7 @@
           <tr>
             <td style="text-align:center;vertical-align:middle">
               <input type="checkbox" form="outreach-bulk-forget-form" name="person_id" value="{{ p.id }}"
-                     class="outreach-done-row-chk outreach-done-checkbox" aria-label="Выбрать: {{ (p.display_name or p.first_name or ('#' ~ p.id))|e }}"
+                     class="outreach-done-row-chk outreach-done-checkbox" aria-label="{{ t("Выбрать:") }} {{ (p.display_name or p.first_name or ('#' ~ p.id))|e }}"
                      {% if campaign.status == 'running' %}disabled{% endif %}/>
             </td>
             <td><strong>{{ p.display_name or p.first_name or ('#' ~ p.id) }}</strong> <span style="color:var(--text-secondary);font-size:var(--font-size-xs)">id {{ p.id }}</span></td>
@@ -177,7 +177,7 @@
               <a href="{{ p.canonical_url }}" target="_blank" class="table-link">{{ p.canonical_url.replace('https://www.facebook.com/', '') }}</a>
             </td>
             <td>
-              <button type="button" class="btn btn-sm btn-secondary outreach-forget-open" {% if campaign.status == 'running' %}disabled title="Сначала остановите {{ 'комментинг' if is_comment_campaign else 'рассылку' }}"{% endif %}
+              <button type="button" class="btn btn-sm btn-secondary outreach-forget-open" {% if campaign.status == 'running' %}disabled title="{{ t("Сначала остановите") }} {{ t('комментинг') if is_comment_campaign else t('рассылку') }}"{% endif %}
                       data-person-id="{{ p.id }}"
                       data-name="{{ (p.display_name or p.first_name or ('#' ~ p.id))|e }}">
                 <i class="ti ti-repeat"></i> {{ t("Вернуть в очередь") }}
@@ -204,10 +204,10 @@
       <div style="font-weight:600;margin-bottom:4px">{{ t("Рассылка на паузе: нужно ваше действие") }}</div>
       <div style="font-size:var(--font-size-sm);color:var(--text-secondary);line-height:1.5">{{ _wait_ru }}</div>
       {% if _wait_details %}
-      <div style="font-size:var(--font-size-xs, 12px);color:var(--text-muted, #888);margin-top:4px">Детали: {{ _wait_details }}</div>
+      <div style="font-size:var(--font-size-xs, 12px);color:var(--text-muted, #888);margin-top:4px">{{ t("Детали:") }} {{ _wait_details }}</div>
       {% endif %}
       {% if _job_prog and _job_prog.wait_reason_count %}
-      <div style="font-size:var(--font-size-xs, 12px);color:var(--text-muted, #888);margin-top:4px">Повторов подряд: {{ _job_prog.wait_reason_count }}</div>
+      <div style="font-size:var(--font-size-xs, 12px);color:var(--text-muted, #888);margin-top:4px">{{ t("Повторов подряд:") }} {{ _job_prog.wait_reason_count }}</div>
       {% endif %}
     </div>
   </div>
@@ -314,10 +314,10 @@
   <div class="card-header">{{ t("Очередь") }}</div>
   <div class="card-body">
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;font-size:var(--font-size-sm)">
-      <span class="badge badge-default">В очереди: {{ cnt_by.get('queued', 0) }}</span>
-      <span class="badge badge-default">В работе: {{ cnt_by.get('running', 0) }}</span>
+      <span class="badge badge-default">{{ t("В очереди:") }} {{ cnt_by.get('queued', 0) }}</span>
+      <span class="badge badge-default">{{ t("В работе:") }} {{ cnt_by.get('running', 0) }}</span>
       <span class="badge badge-success">{{ 'Готово' if is_comment_campaign else 'Отправлено' }}: {{ cnt_by.get('done', 0) }}</span>
-      <span class="badge badge-default">Ошибка: {{ cnt_by.get('failed', 0) }}</span>
+      <span class="badge badge-default">{{ t("Ошибка:") }} {{ cnt_by.get('failed', 0) }}</span>
     </div>
     {% if not is_comment_campaign %}
     <p class="form-hint" style="margin:0 0 14px;line-height:1.55;color:var(--text-secondary);max-width:920px">

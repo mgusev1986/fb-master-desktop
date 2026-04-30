@@ -275,7 +275,7 @@
 
         <div class="reddit-card__desc" style="display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;">
           <div><span style="color:var(--text-muted, var(--text-secondary))">{{ t("карма") }}</span> {{ acc.karma_total }} <small style="color:var(--text-muted, var(--text-secondary))">({{ acc.karma_link or 0 }} / {{ acc.karma_comment or 0 }})</small></div>
-          <div><span style="color:var(--text-muted, var(--text-secondary))">{{ t("возраст") }}</span> {{ acc.account_age_days if acc.account_age_days is not none else '—' }} дн</div>
+          <div><span style="color:var(--text-muted, var(--text-secondary))">{{ t("возраст") }}</span> {{ acc.account_age_days if acc.account_age_days is not none else '—' }} {{ t("дн") }}</div>
           <div><span style="color:var(--text-muted, var(--text-secondary))">email</span> {{ 'да' if acc.email_verified else '—' }}</div>
           <div><span style="color:var(--text-muted, var(--text-secondary))">{{ t("чат") }}</span> {{ 'да' if acc.can_chat else '—' }}</div>
           <div><span style="color:var(--text-muted, var(--text-secondary))">{{ t("ЛС") }}</span> {{ 'да' if acc.can_dm else '—' }}</div>

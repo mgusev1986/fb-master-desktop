@@ -25,10 +25,10 @@
           <option value="">{{ t("— аккаунт —") }}</option>{% for a in accounts %}<option value="{{ a.id }}">{{ a.label }} [{{ a.status }}]</option>{% endfor %}
         </select>
         <select name="template_id" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
-          <option value="">— шаблон (для comment) —</option>{% for t in templates %}<option value="{{ t.id }}">{{ t.name }} · {{ t.kind }}</option>{% endfor %}
+          <option value="">{{ t("— шаблон (для comment) —") }}</option>{% for t in templates %}<option value="{{ t.id }}">{{ t.name }} · {{ t.kind }}</option>{% endfor %}
         </select>
         <select name="segment_id" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
-          <option value="">— или сегмент —</option>{% for s in segments %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}
+          <option value="">{{ t("— или сегмент —") }}</option>{% for s in segments %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}
         </select>
         <input type="number" name="daily_cap" min="1" max="200" placeholder="cap/day" style="width:120px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
       </div>

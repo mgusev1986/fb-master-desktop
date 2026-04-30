@@ -41,13 +41,13 @@
         <div class="preset-card {{ 'selected' if current_preset == 'fast' }}" data-preset="fast" role="button" tabindex="0" aria-pressed="{{ 'true' if current_preset == 'fast' else 'false' }}">
           <div class="preset-icon">🚀</div>
           <h3>{{ t("Быстро") }}</h3>
-          <p style="color:var(--warning)">⚠ До <strong>{{ t("~60 сообщений в час") }}</strong>{{ t(". Повышенный риск блокировки.") }}</p>
+          <p style="color:var(--warning)">{{ t("⚠ До") }} <strong>{{ t("~60 сообщений в час") }}</strong>{{ t(". Повышенный риск блокировки.") }}</p>
         </div>
 
         <div class="preset-card {{ 'selected' if current_preset == 'very_fast' }}" data-preset="very_fast" role="button" tabindex="0" aria-pressed="{{ 'true' if current_preset == 'very_fast' else 'false' }}">
           <div class="preset-icon">⚡️</div>
           <h3>{{ t("Очень быстро") }}</h3>
-          <p style="color:var(--error)">⚠ Ориентир <strong>{{ t("~100 сообщений в час") }}</strong>{{ t(". Очень высокий риск ограничений и блокировки.") }}</p>
+          <p style="color:var(--error)">{{ t("⚠ Ориентир") }} <strong>{{ t("~100 сообщений в час") }}</strong>{{ t(". Очень высокий риск ограничений и блокировки.") }}</p>
         </div>
 
       </div>
@@ -77,16 +77,16 @@
             <th>{{ t("Действие") }}</th>
             <th>{{ t("Мин. пауза") }}</th>
             <th>{{ t("Макс. пауза") }}</th>
-            <th title="{% if cabinet_client_mode(request) %}Минимальная пауза даже на быстром режиме{% else %}Одинаково для всех режимов: пауза никогда не короче этого значения (в т.ч. на «Быстро» и «Очень быстро»).{% endif %}">{% if cabinet_client_mode(request) %}Минимум{% else %}Нижний пол{% endif %}</th>
+            <th title="{% if cabinet_client_mode(request) %}{{ t("Минимальная пауза даже на быстром режиме") }}{% else %}{{ t("Одинаково для всех режимов: пауза никогда не короче этого значения (в т.ч. на «Быстро» и «Очень быстро»).") }}{% endif %}">{% if cabinet_client_mode(request) %}Минимум{% else %}Нижний пол{% endif %}</th>
           </tr>
         </thead>
         <tbody id="speed-delays-tbody" aria-live="polite" aria-atomic="true">
           {% for action, (lo, hi) in delays.items() %}
           <tr data-action="{{ action }}">
             <td>{{ action_type_labels.get(action, action) }}</td>
-            <td class="delay-range delay-lo">{{ lo }} сек</td>
-            <td class="delay-range delay-hi">{{ hi }} сек</td>
-            <td style="color:var(--text-secondary)">{{ min_floors.get(action, '—') }} сек</td>
+            <td class="delay-range delay-lo">{{ lo }} {{ t("сек") }}</td>
+            <td class="delay-range delay-hi">{{ hi }} {{ t("сек") }}</td>
+            <td style="color:var(--text-secondary)">{{ min_floors.get(action, '—') }} {{ t("сек") }}</td>
           </tr>
           {% endfor %}
         </tbody>

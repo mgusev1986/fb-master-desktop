@@ -167,9 +167,9 @@
     <div class="settings-status-row">
       {% if has_google_llm_effective %}
         {% if google_llm_health_known %}
-        <span class="badge badge-success" title="{{ t("Результат последней проверки при сохранении ключей (listModels)") }}">рабочих: {{ google_llm_keys_ok }}</span>
+        <span class="badge badge-success" title="{{ t("Результат последней проверки при сохранении ключей (listModels)") }}">{{ t("рабочих:") }} {{ google_llm_keys_ok }}</span>
         {% if google_llm_keys_bad > 0 %}
-        <span class="badge badge-error" title="{{ t("Ключ отклонён (403/401), неверный формат или нет сети") }}">битых: {{ google_llm_keys_bad }}</span>
+        <span class="badge badge-error" title="{{ t("Ключ отклонён (403/401), неверный формат или нет сети") }}">{{ t("битых:") }} {{ google_llm_keys_bad }}</span>
         {% endif %}
         {% if google_llm_keys_ok > 0 %}<span class="badge badge-success">{{ t("готово") }}</span>
         {% else %}<span class="badge badge-error">{{ t("нет рабочих ключей") }}</span>{% endif %}
@@ -214,7 +214,7 @@
         <section class="settings-field">
           <h3>OpenAI</h3>
           <p class="settings-note" style="margin-bottom:10px">{% if settings_hide_infra %}Нужен для возможностей на базе ChatGPT.{% else %}Для функций на базе ChatGPT.{% endif %}</p>
-          <input type="password" name="openai_api_key" class="form-input js-settings-masked-secret" autocomplete="new-password" placeholder="{% if has_openai_effective %}Кликните и введите новый ключ{% else %}Вставьте ключ сюда{% endif %}"{% if has_openai_effective %} data-key-mask-present="1"{% endif %}/>
+          <input type="password" name="openai_api_key" class="form-input js-settings-masked-secret" autocomplete="new-password" placeholder="{% if has_openai_effective %}{{ t("Кликните и введите новый ключ") }}{% else %}{{ t("Вставьте ключ сюда") }}{% endif %}"{% if has_openai_effective %} data-key-mask-present="1"{% endif %}/>
           <div class="settings-field-save">
             <button type="submit" name="save_partial" value="openai" class="btn btn-primary"><i class="ti ti-device-floppy"></i> {{ t("Сохранить") }}</button>
             {% if openai_cabinet %}
@@ -229,8 +229,8 @@
 
         <section class="settings-field">
           <h3>Google AI (Gemini)</h3>
-          <p class="settings-note" style="margin-bottom:10px">{% if settings_hide_infra %}Нужен для возможностей на базе Gemini.{% else %}Для функций на базе Gemini.{% endif %} Можно ввести <strong>{{ t("несколько ключей") }}</strong> — по одному на строку; при ошибке квоты или лимита используется следующий.</p>
-          <textarea name="google_llm_api_key" class="form-textarea js-settings-masked-secret" rows="{% if has_google_llm_effective %}{{ [google_llm_key_count, 4]|max }}{% else %}4{% endif %}" autocomplete="off" spellcheck="false" placeholder="{% if has_google_llm_effective %}Кликните и вставьте ключи (каждый с новой строки){% else %}Первый ключ&#10;Второй ключ (необязательно){% endif %}"{% if has_google_llm_effective %} data-key-mask-present="1" data-mask-line-count="{{ google_llm_key_count }}"{% endif %} style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px"></textarea>
+          <p class="settings-note" style="margin-bottom:10px">{% if settings_hide_infra %}Нужен для возможностей на базе Gemini.{% else %}Для функций на базе Gemini.{% endif %} Можно ввести <strong>{{ t("несколько ключей") }}</strong> {{ t("— по одному на строку; при ошибке квоты или лимита используется следующий.") }}</p>
+          <textarea name="google_llm_api_key" class="form-textarea js-settings-masked-secret" rows="{% if has_google_llm_effective %}{{ [google_llm_key_count, 4]|max }}{% else %}4{% endif %}" autocomplete="off" spellcheck="false" placeholder="{% if has_google_llm_effective %}{{ t("Кликните и вставьте ключи (каждый с новой строки)") }}{% else %}{{ t("Первый ключ") }}&#10;{{ t("Второй ключ (необязательно)") }}{% endif %}"{% if has_google_llm_effective %} data-key-mask-present="1" data-mask-line-count="{{ google_llm_key_count }}"{% endif %} style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px"></textarea>
           <div class="settings-field-save">
             <button type="submit" name="save_partial" value="google_llm" class="btn btn-primary"><i class="ti ti-device-floppy"></i> {{ t("Сохранить") }}</button>
             {% if google_llm_cabinet %}
@@ -279,7 +279,7 @@
         <section class="settings-field">
           <h3>Supabase anon key</h3>
           <p>{{ t("Публичный ключ (часто") }} <span class="settings-mono">eyJ...</span>).</p>
-          <input type="password" name="supabase_anon_key" class="form-input js-settings-masked-secret" autocomplete="new-password" placeholder="{% if supabase_auth_ready %}Кликните и введите новый ключ{% else %}Новый anon key, если меняете{% endif %}"{% if supabase_auth_ready %} data-key-mask-present="1"{% endif %}/>
+          <input type="password" name="supabase_anon_key" class="form-input js-settings-masked-secret" autocomplete="new-password" placeholder="{% if supabase_auth_ready %}{{ t("Кликните и введите новый ключ") }}{% else %}{{ t("Новый anon key, если меняете") }}{% endif %}"{% if supabase_auth_ready %} data-key-mask-present="1"{% endif %}/>
           <label class="settings-inline-check"><input type="checkbox" name="clear_supabase_anon_key" value="1"/> {{ t("Очистить override anon key") }}</label>
           <div class="settings-status-row">
             {% if supabase_anon_cabinet %}<span class="badge badge-default">{{ t("ключ из кабинета") }}</span>
@@ -305,7 +305,7 @@
           <input type="text" name="google_oauth_client_id" value="{{ google_oauth_client_id_input }}" class="form-input" placeholder="{{ t("Оставьте пустым, если текущий источник менять не нужно") }}"/>
           <label class="settings-inline-check"><input type="checkbox" name="clear_google_oauth_id" value="1"/> {{ t("Очистить override Client ID") }}</label>
           <label class="form-label" style="margin-top:14px">Google Client Secret</label>
-          <input type="password" name="google_oauth_client_secret" class="form-input js-settings-masked-secret" autocomplete="new-password" placeholder="{% if google_oauth_ready_effective %}Кликните и введите новый secret{% else %}Новый client secret{% endif %}"{% if google_oauth_ready_effective %} data-key-mask-present="1"{% endif %}/>
+          <input type="password" name="google_oauth_client_secret" class="form-input js-settings-masked-secret" autocomplete="new-password" placeholder="{% if google_oauth_ready_effective %}{{ t("Кликните и введите новый secret") }}{% else %}{{ t("Новый client secret") }}{% endif %}"{% if google_oauth_ready_effective %} data-key-mask-present="1"{% endif %}/>
           <label class="settings-inline-check"><input type="checkbox" name="clear_google_oauth_secret" value="1"/> {{ t("Очистить override Client Secret") }}</label>
           <div class="settings-status-row">
             {% if google_oauth_ready_effective %}<span class="badge badge-success">{{ t("Google login готов") }}</span>{% else %}<span class="badge badge-error">{{ t("Нужны и ID, и Secret") }}</span>{% endif %}
@@ -325,13 +325,13 @@
           <input type="text" name="oauth_redirect_base" value="{{ oauth_redirect_input }}" class="form-input" placeholder="{{ t("Например: https://your-domain.com") }}"/>
           <label class="settings-inline-check"><input type="checkbox" name="clear_oauth_redirect_base" value="1"/> {{ t("Очистить override redirect base") }}</label>
           <div class="settings-status-row">
-            {% if effective_allowlist_count %}<span class="badge badge-success">в allowlist: {{ effective_allowlist_count }}</span>{% else %}<span class="badge badge-warning">{{ t("allowlist пустой") }}</span>{% endif %}
+            {% if effective_allowlist_count %}<span class="badge badge-success">{{ t("в allowlist:") }} {{ effective_allowlist_count }}</span>{% else %}<span class="badge badge-warning">{{ t("allowlist пустой") }}</span>{% endif %}
             {% if oauth_redirect_cabinet %}<span class="badge badge-default">{{ t("redirect из кабинета") }}</span>
             {% elif env_oauth_redirect %}<span class="badge badge-success">{{ t("redirect из .env") }}</span>
             {% else %}<span class="badge badge-warning">{{ t("redirect берётся из Host запроса") }}</span>{% endif %}
           </div>
           <p class="form-hint" style="margin-top:12px">{{ t("Эффективный callback:") }} <span class="settings-mono">{{ oauth_callback_preview }}</span></p>
-          <p class="form-hint">Эффективный allowlist: {{ effective_allowlist_preview or 'не задан, вход разрешён любой почте Google' }}</p>
+          <p class="form-hint">{{ t("Эффективный allowlist:") }} {{ effective_allowlist_preview or 'не задан, вход разрешён любой почте Google' }}</p>
         </section>
       </div>
     </div>
@@ -396,7 +396,7 @@
           {% else %}
           <p>
             {{ t("По умолчанию парсер, прогрев, цепочки, рассылка и отправка в мессенджере запускают Chromium") }}
-            <strong>{{ t("в фоне") }}</strong> {{ t("(без окна), как задано в") }} <span class="settings-mono">WARMUP_HEADLESS</span> в <span class="settings-mono">.env</span>{{ t(". Включите переключатель ниже, чтобы") }} <strong>{{ t("всегда видеть") }}</strong> {{ t("окно браузера при этих задачах (удобно для отладки). Фоновый авто-синк списка чатов мессенджера по-прежнему остаётся без окна.") }}
+            <strong>{{ t("в фоне") }}</strong> {{ t("(без окна), как задано в") }} <span class="settings-mono">WARMUP_HEADLESS</span> {{ t("в") }} <span class="settings-mono">.env</span>{{ t(". Включите переключатель ниже, чтобы") }} <strong>{{ t("всегда видеть") }}</strong> {{ t("окно браузера при этих задачах (удобно для отладки). Фоновый авто-синк списка чатов мессенджера по-прежнему остаётся без окна.") }}
           </p>
           <label class="settings-inline-check" style="font-size:var(--font-size-sm);cursor:pointer">
             <input type="checkbox" name="playwright_show_browser" value="1" {% if cabinet_playwright_show_browser %}checked{% endif %}/>

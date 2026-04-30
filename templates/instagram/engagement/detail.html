@@ -20,7 +20,7 @@
   </section>
 
   <section>
-    <h2 class="ig-card__title" style="margin:8px 0 12px;">Очередь · {{ summary.total }} <small style="color:var(--text-muted);font-weight:400;">pending {{ summary.pending }} · done {{ summary.done }} · failed {{ summary.failed }} · skipped {{ summary.skipped }}</small></h2>
+    <h2 class="ig-card__title" style="margin:8px 0 12px;">{{ t("Очередь ·") }} {{ summary.total }} <small style="color:var(--text-muted);font-weight:400;">pending {{ summary.pending }} · done {{ summary.done }} · failed {{ summary.failed }} · skipped {{ summary.skipped }}</small></h2>
     {% if items %}
     <table style="width:100%;border-collapse:collapse;background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;">
       <thead><tr style="border-bottom:1px solid var(--border);font:600 12px/1 Inter;color:var(--text-muted);text-transform:uppercase;"><th style="text-align:left;padding:10px;">Target</th><th style="text-align:left;padding:10px;">{{ t("Тип") }}</th><th style="text-align:left;padding:10px;">{{ t("Статус") }}</th><th style="text-align:left;padding:10px;">{{ t("Попыток") }}</th></tr></thead>

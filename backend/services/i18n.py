@@ -33,19 +33,28 @@ DEFAULT_LANG: Final[str] = "ru"
 
 
 def get_lang(request: Request) -> str:
-    """Прочитать язык **только** из `?lang=` query-параметра.
+    """Прочитать язык: query-параметр `?lang=` имеет приоритет, иначе cookie.
 
-    Cookie persistence отключён сознательно: иначе пользователь, кликнувший
-    EN однажды, навсегда «застревает» на английском (cookie 1 год) и не
-    видит RU даже на `/` без query. По умолчанию (без query) — всегда RU.
+    Logic:
+    1. Если `?lang=ru|en` в URL — используем его (middleware параллельно
+       перезапишет cookie на это же значение, см. app_factory.py).
+    2. Иначе — читаем cookie `lang` (если был установлен предыдущим визитом).
+    3. Иначе — `DEFAULT_LANG` (ru).
 
-    Чтобы зафиксировать EN — пользователь должен явно использовать
-    `?lang=en` в URL (или клик на кнопку EN, которая ведёт на `?lang=en`).
-    Возвращает только язык из `SUPPORTED_LANGS`; всё остальное → `DEFAULT_LANG`.
+    Это даёт persistence между переходами по сайдбару (пользователь нажал EN
+    один раз → cookie сохранил → все следующие страницы остаются на EN, даже
+    без `?lang=` в URL). При этом пользователь в любой момент может явно
+    переключиться обратно через `?lang=ru` — middleware перезапишет cookie.
     """
-    raw = request.query_params.get("lang", "").strip().lower()
-    if raw in SUPPORTED_LANGS:
-        return raw
+    # 1. Query-параметр имеет наивысший приоритет
+    raw_q = request.query_params.get("lang", "").strip().lower()
+    if raw_q in SUPPORTED_LANGS:
+        return raw_q
+    # 2. Cookie от предыдущего визита (если был ?lang=)
+    raw_c = request.cookies.get("lang", "").strip().lower()
+    if raw_c in SUPPORTED_LANGS:
+        return raw_c
+    # 3. Default
     return DEFAULT_LANG
 
 
