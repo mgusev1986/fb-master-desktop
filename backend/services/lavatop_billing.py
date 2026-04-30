@@ -152,7 +152,11 @@ async def create_invoice(
     payload: dict[str, Any] = {
         "email": customer_email,
         "offerId": offer_id,
-        "currency": "RUB",
+        # 3.0.8: переход с RUB на USD — наши внутренние цены LAVATOP_PRICE_USD_*
+        # уже в USD, поэтому отдаём ту же валюту в LavaTop. Это также подсказывает
+        # LavaTop checkout-странице ставить USD как валюту по умолчанию (вместо
+        # автоматического EUR по гео).
+        "currency": "USD",
         "periodicity": _periodicity_for_days(duration_days),
         "buyerLanguage": "RU",
         "clientUtm": {
