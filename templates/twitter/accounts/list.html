@@ -109,7 +109,7 @@
           {% for key, label in stealth_region_choices() %}
             {% if key != 'custom' %}
               {# 2.99+: default = Россия (ru-RU). Хотите страну по прокси — нажмите кнопку «Страна по прокси» выше. #}
-              <option value="{{ key }}" {% if key == 'ru' %}selected{% endif %}>{{ label }}</option>
+              <option value="{{ key }}" {% if key == 'ru' %}selected{% endif %}>{{ t(label) }}</option>
             {% endif %}
           {% endfor %}
         </select>

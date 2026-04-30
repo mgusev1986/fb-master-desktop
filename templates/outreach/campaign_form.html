@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "macros/hints.html" import mailing_warmup_placeholders %}
+{% from "macros/hints.html" import mailing_warmup_placeholders with context %}
 {% block title %}{% if campaign_kind == 'comment' %}{{ 'Редактировать комментинг' if campaign else 'Новая кампания комментинг' }}{% else %}{{ 'Редактировать рассылку' if campaign else 'Новая кампания рассылка в ЛС' }}{% endif %} — SOCMASTER{% endblock %}
 
 {% block content %}

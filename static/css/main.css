@@ -964,6 +964,80 @@ a.btn {
     0 1px 0 rgba(255, 255, 255, 0.2) inset;
 }
 
+/* Кастомный file picker — переводимый текст кнопки и состояния «no file chosen»
+   (нативный <input type=file> рендерит эти строки на языке браузера). */
+.custom-file-input {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px 10px;
+  min-height: 60px;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border));
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--accent-light) 18%, var(--bg-surface)) 0%, var(--bg-surface) 100%);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--accent) 12%, transparent) inset;
+}
+
+.custom-file-input:hover {
+  border-color: color-mix(in srgb, var(--accent) 44%, var(--border));
+}
+
+.custom-file-input__native {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.custom-file-input__btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 11px 18px;
+  min-height: 42px;
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+  color: #fff;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  font-family: var(--font-sans);
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow:
+    0 10px 22px color-mix(in srgb, var(--accent) 24%, transparent),
+    0 1px 0 rgba(255, 255, 255, 0.2) inset;
+  transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+  user-select: none;
+}
+
+.custom-file-input__btn:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 12px 26px color-mix(in srgb, var(--accent) 30%, transparent),
+    0 1px 0 rgba(255, 255, 255, 0.24) inset;
+  filter: saturate(1.05);
+}
+
+.custom-file-input__native:focus + .custom-file-input__btn {
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent),
+    0 10px 22px color-mix(in srgb, var(--accent) 24%, transparent),
+    0 1px 0 rgba(255, 255, 255, 0.2) inset;
+}
+
+.custom-file-input__name {
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  word-break: break-all;
+}
+
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;

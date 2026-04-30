@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "macros/hints.html" import mailing_warmup_placeholders %}
+{% from "macros/hints.html" import mailing_warmup_placeholders with context %}
 {% block title %}{% if cabinet_client_mode(request) %}{{ t("Тексты сообщений — SOCMASTER") }}{% else %}{{ t("Шаблоны — SOCMASTER") }}{% endif %}{% endblock %}
 
 {% block content %}

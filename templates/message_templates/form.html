@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "macros/hints.html" import mailing_warmup_placeholders %}
+{% from "macros/hints.html" import mailing_warmup_placeholders with context %}
 {% block title %}{{ 'Редактировать шаблон' if row else 'Новый шаблон' }} — SOCMASTER{% endblock %}
 
 {% block content %}

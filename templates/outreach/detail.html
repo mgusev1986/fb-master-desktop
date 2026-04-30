@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "macros/hints.html" import mailing_warmup_placeholders %}
+{% from "macros/hints.html" import mailing_warmup_placeholders with context %}
 {% block title %}{{ campaign.name }} — {{ 'Комментинг' if campaign_kind == 'comment' else 'Рассылка' }} — SOCMASTER{% endblock %}
 
 {% block content %}

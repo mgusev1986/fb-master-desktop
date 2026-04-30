@@ -107,7 +107,11 @@
     <form method="post" action="/fb-accounts/import-automation" enctype="multipart/form-data" class="form-row" style="display:flex;flex-direction:column;gap:14px;max-width:52rem">
       <div class="form-group" style="margin:0">
         <label class="form-label" for="imp-file">{% if cabinet_client_mode(request) %}{{ t("Файл с данными аккаунта") }}{% else %}{{ t("Файл аккаунта (.txt)") }}{% endif %}</label>
-        <input id="imp-file" name="account_file" type="file" accept=".txt,text/plain" class="form-input form-input-file"/>
+        <div class="custom-file-input">
+          <input id="imp-file" name="account_file" type="file" accept=".txt,text/plain" class="custom-file-input__native"/>
+          <label for="imp-file" class="custom-file-input__btn">{{ t("Выберите файл") }}</label>
+          <span class="custom-file-input__name" data-empty-text="{{ t("Файл не выбран") }}">{{ t("Файл не выбран") }}</span>
+        </div>
       </div>
       <div class="form-group" style="margin:0">
         <label class="form-label" for="imp-paste">{{ t("Или вставьте строку аккаунта") }}</label>
@@ -142,7 +146,7 @@
           <select id="imp-region" name="stealth_region" class="form-input" style="max-width:100%">
             {% for key, label in stealth_region_choices %}
             {% if not cabinet_client_mode(request) or key != 'custom' %}
-            <option value="{{ key }}" {% if key == 'turkey' %}selected{% endif %}>{{ label }}</option>
+            <option value="{{ key }}" {% if key == 'turkey' %}selected{% endif %}>{{ t(label) }}</option>
             {% endif %}
             {% endfor %}
           </select>
@@ -1186,5 +1190,19 @@
     });
   });
 })();
+</script>
+<script>
+  (function () {
+    var input = document.getElementById('imp-file');
+    if (!input) return;
+    input.addEventListener('change', function (e) {
+      var wrap = e.target.closest('.custom-file-input');
+      if (!wrap) return;
+      var span = wrap.querySelector('.custom-file-input__name');
+      if (!span) return;
+      var f = e.target.files && e.target.files[0];
+      span.textContent = f ? f.name : (span.dataset.emptyText || '');
+    });
+  })();
 </script>
 {% endblock %}

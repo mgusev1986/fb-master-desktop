@@ -129,7 +129,7 @@
                 onchange="document.getElementById('sequence_timezone').value = this.value">
           <option value="">{{ t("— выберите или введите ниже —") }}</option>
           {% for zone, label in common_timezones %}
-          <option value="{{ zone }}" {% if zone == sequence_timezone_effective %}selected{% endif %}>{{ zone }} — {{ label }}</option>
+          <option value="{{ zone }}" {% if zone == sequence_timezone_effective %}selected{% endif %}>{{ zone }} — {{ t(label) }}</option>
           {% endfor %}
         </select>
       </div>
