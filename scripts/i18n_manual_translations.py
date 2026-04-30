@@ -1881,6 +1881,33 @@ TRANSLATIONS: dict[str, str] = {
 
     # Parser JS hints (rendered into JS via | tojson)
     "В режиме «Без языка» фильтр по языку отключён: в контакты попадают все найденные в списке.": "In “No Language” mode the language filter is disabled: all people found in the list go into contacts.",
+
+    # ─── Wave 13: /system/logs dropdowns (LOG_DAYS, STATUS, SEVERITY) ─
+    "24 часа": "24 hours",
+    "3 дня": "3 days",
+    "7 дней": "7 days",
+    "30 дней": "30 days",
+    "90 дней": "90 days",
+    "За всё время": "All time",
+    "Все статусы": "All statuses",
+    "В очереди": "Queued",
+    "В работе": "Running",
+    "Успешно": "Success",
+    "Ошибка": "Failed",
+    "Отменено": "Cancelled",
+    "Только проблемы": "Problems only",
+    "Только error": "Errors only",
+    "Только warning": "Warnings only",
+    "Только info": "Info only",
+    "Все события": "All events",
+    "Все типы": "All types",
+    # JOB_TYPE_LABELS (system.py:212)
+    "Парсер доноров": "Donor parser",
+    "Автопоиск аудитории": "Audience auto-search",
+    "Мессенджер": "Messenger",
+    "Рассылка": "Outreach",
+    "Сценарий": "Scenario",
+    "Прогрев": "Warmup",
 }
 # fmt: on
 
