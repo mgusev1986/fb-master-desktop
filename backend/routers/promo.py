@@ -37,6 +37,21 @@ async def promo3_page(request: Request):
     )
 
 
+@router.get("/promo4", response_class=HTMLResponse)
+async def promo4_page(request: Request):
+    """Preview-вариант лендинга с улучшенной анимацией (3.0.8+): blob-фоны,
+    sparkles, scroll-reveal, 3D-tilt карточек, mockup desktop+AI, counters,
+    sticky CTA. На основе promo3.html, текст и контент идентичны. Не индексируется
+    (noindex). Если устроит — переносим на корень `/`.
+
+    `?lang=en` → отдаёт `promo4_en.html` (если файл существует), иначе RU."""
+    templates = request.app.state.templates
+    return templates.TemplateResponse(
+        select_template(request, "promo4.html"),
+        _promo_ctx(request),
+    )
+
+
 @router.get("/", response_class=HTMLResponse)
 async def root_page(request: Request):
     """Главная: лендинг для гостей; вошедших пользователей — в кабинет (/home)

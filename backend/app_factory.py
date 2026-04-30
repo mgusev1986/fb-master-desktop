@@ -568,6 +568,7 @@ def create_app() -> FastAPI:
             "/promo",
             "/promo2",
             "/promo3",
+            "/promo4",
             "/landing",
             "/download/dev",
             "/blog",
@@ -598,7 +599,7 @@ def create_app() -> FastAPI:
             "/webhooks/", "/billing/", "/download/", "/blog/",
         )
         _LICENSE_WATCHER_WHITELIST_EXACT = (
-            "/", "/buy", "/purchase", "/promo", "/promo2", "/promo3", "/landing",
+            "/", "/buy", "/purchase", "/promo", "/promo2", "/promo3", "/promo4", "/landing",
             "/blog", "/robots.txt", "/sitemap.xml", "/favicon.ico",
         )
         if (
@@ -690,7 +691,7 @@ def create_app() -> FastAPI:
                 or path.startswith("/billing/lavatop/")
                 or path.startswith("/blog/")
                 or path in (
-                    "/", "/buy", "/purchase", "/promo", "/promo2", "/promo3",
+                    "/", "/buy", "/purchase", "/promo", "/promo2", "/promo3", "/promo4",
                     "/landing", "/download/dev",
                     "/blog", "/robots.txt", "/sitemap.xml", "/favicon.ico",
                 )
