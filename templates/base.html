@@ -167,7 +167,9 @@
       {# Language switcher: рабочий pill RU/EN. Cookie middleware (app_factory.py)
          запоминает выбор на 1 год при клике с ?lang=ru/en. #}
       <div class="sidebar-lang-pill" role="group" aria-label="{{ t('Сменить язык') }}" style="display:inline-flex;gap:2px;padding:2px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:999px">
-        {% set _cur_lang = request.cookies.get('lang') or request.query_params.get('lang') or 'ru' %}
+        {# Приоритет тот же что в backend/services/i18n.py:get_lang() — query→cookie→default,
+           иначе подсветка отстаёт от текста на 1 запрос (cookie ещё старый при клике ?lang=). #}
+        {% set _cur_lang = request.query_params.get('lang') or request.cookies.get('lang') or 'ru' %}
         <a href="?lang=ru" class="btn-sidebar" style="padding:4px 9px;font-size:11px;border-radius:999px;text-decoration:none;{% if _cur_lang != 'en' %}background:rgba(245,208,110,0.12);color:#f5d06e;font-weight:600;{% else %}color:rgba(255,255,255,0.55);{% endif %}">RU</a>
         <a href="?lang=en" class="btn-sidebar" style="padding:4px 9px;font-size:11px;border-radius:999px;text-decoration:none;{% if _cur_lang == 'en' %}background:rgba(245,208,110,0.12);color:#f5d06e;font-weight:600;{% else %}color:rgba(255,255,255,0.55);{% endif %}">EN</a>
       </div>
