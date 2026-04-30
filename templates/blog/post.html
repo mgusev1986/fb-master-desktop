@@ -217,8 +217,8 @@
                 <span class="heading text-xl md:text-2xl font-semibold gold-gradient">SOCMASTER</span>
             </a>
             <div class="hidden md:flex items-center gap-7 text-sm text-white/75">
-                <a href="/#ecosystem" class="hover:text-[#f5d06e]">Экосистема</a>
-                <a href="/#devices" class="hover:text-[#f5d06e]">Устройства</a>
+                <a href="/{% if is_en %}?lang=en{% endif %}#ecosystem" class="hover:text-[#f5d06e]">{% if is_en %}Ecosystem{% else %}Экосистема{% endif %}</a>
+                <a href="/{% if is_en %}?lang=en{% endif %}#devices" class="hover:text-[#f5d06e]">{% if is_en %}Devices{% else %}Устройства{% endif %}</a>
                 <a href="/blog" class="text-[#f5d06e] font-medium">{% if is_en %}Knowledge Base{% else %}База знаний{% endif %}</a>
                 <a href="/#faq" class="hover:text-[#f5d06e]">FAQ</a>
             </div>
