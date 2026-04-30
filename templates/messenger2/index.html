@@ -2305,7 +2305,7 @@
 <div class="card">
   <div class="card-body" style="padding:20px">
     <p style="margin:0 0 12px">{% if cabinet_client_mode(request) %}Нет подключённых профилей Facebook. Сначала добавьте их в разделе «Аккаунты».{% else %}Нет Facebook-аккаунтов. Сначала добавьте аккаунт в разделе «Аккаунты».{% endif %}</p>
-    <a href="/fb-accounts" class="btn btn-primary"><i class="ti ti-brand-facebook"></i> {% if cabinet_client_mode(request) %}К аккаунтам{% else %}Перейти к аккаунтам{% endif %}</a>
+    <a href="/fb-accounts" class="btn btn-primary"><i class="ti ti-brand-facebook"></i> {% if cabinet_client_mode(request) %}{{ t("К аккаунтам") }}{% else %}{{ t("Перейти к аккаунтам") }}{% endif %}</a>
   </div>
 </div>
 {% else %}

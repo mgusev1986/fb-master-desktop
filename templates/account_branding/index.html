@@ -73,7 +73,7 @@
             {% if a.active_slot %}
             <span class="badge badge-default">Слот {{ a.active_slot }}</span>
             {% else %}
-            <span class="badge badge-warning">{% if cabinet_client_mode(request) %}В очереди{% else %}Ожидание{% endif %}</span>
+            <span class="badge badge-warning">{% if cabinet_client_mode(request) %}{{ t("В очереди") }}{% else %}{{ t("Ожидание") }}{% endif %}</span>
             {% endif %}
             {% if a.session_ok is sameas true %}
             <span class="badge badge-success">{% if cabinet_client_mode(request) %}Вход: ок{% else %}Сессия: ок{% endif %}</span>

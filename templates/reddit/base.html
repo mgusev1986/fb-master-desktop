@@ -21,9 +21,9 @@
       <span class="sidebar-logo__mark sidebar-logo__mark--reddit">SOC</span>MASTER
     </div>
     {% if fbm_desktop_app_version %}
-    <div class="sidebar-version-line" title="Версия программы">v{{ fbm_desktop_app_version }}</div>
+    <div class="sidebar-version-line" title="{{ t("Версия программы") }}">v{{ fbm_desktop_app_version }}</div>
     {% endif %}
-    <div class="sidebar-beta-line" title="Reddit Master в режиме Beta">
+    <div class="sidebar-beta-line" title="{{ t("Reddit Master в режиме Beta") }}">
       <i class="ti ti-flask-2"></i> Reddit Master · Beta
     </div>
   </div>
@@ -49,12 +49,12 @@
 
   <div class="sidebar-footer">
     <div class="sidebar-actions">
-      <button id="theme-toggle" class="btn-sidebar" title="Сменить тему">
+      <button id="theme-toggle" class="btn-sidebar" title="{{ t("Сменить тему") }}">
         <i id="theme-icon" class="ti ti-moon"></i>
       </button>
       {% if sidebar_show_logout(request, user) %}
       <a href="/auth/logout" class="btn-sidebar">
-        <i class="ti ti-logout"></i> Выйти
+        <i class="ti ti-logout"></i> {{ t("Выйти") }}
       </a>
       {% endif %}
     </div>

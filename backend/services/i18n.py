@@ -33,16 +33,19 @@ DEFAULT_LANG: Final[str] = "ru"
 
 
 def get_lang(request: Request) -> str:
-    """Прочитать язык из `?lang=` (приоритет 1) или cookie `lang` (приоритет 2).
+    """Прочитать язык **только** из `?lang=` query-параметра.
 
+    Cookie persistence отключён сознательно: иначе пользователь, кликнувший
+    EN однажды, навсегда «застревает» на английском (cookie 1 год) и не
+    видит RU даже на `/` без query. По умолчанию (без query) — всегда RU.
+
+    Чтобы зафиксировать EN — пользователь должен явно использовать
+    `?lang=en` в URL (или клик на кнопку EN, которая ведёт на `?lang=en`).
     Возвращает только язык из `SUPPORTED_LANGS`; всё остальное → `DEFAULT_LANG`.
     """
     raw = request.query_params.get("lang", "").strip().lower()
     if raw in SUPPORTED_LANGS:
         return raw
-    cookie = (request.cookies.get("lang") or "").strip().lower()
-    if cookie in SUPPORTED_LANGS:
-        return cookie
     return DEFAULT_LANG
 
 

@@ -152,6 +152,63 @@ def wrap_in_html(html: str) -> tuple[str, int]:
     masked = _TEXT_BETWEEN_TAGS.sub(_wrap_text, masked)
     masked = _ATTR_TEXT.sub(_wrap_attr, masked)
     result = protector.unmask(masked)
+
+    # ─── Pass 2: handle {% if cond %}RU1{% else %}RU2{% endif %} patterns ─
+    # На этом проходе уже маска снята, regex работает на полном HTML.
+    # Только если ОБЕ ветки полностью совпадают с ключами dict — оборачиваем
+    # каждую отдельно. Иначе — пропускаем (safety).
+    def _wrap_ifelse(match: re.Match) -> str:
+        nonlocal count
+        if_tag = match.group("if_tag")
+        text1 = match.group("text1")
+        text2 = match.group("text2")
+        endif = match.group("endif")
+        n1 = _normalize_text(text1)
+        n2 = _normalize_text(text2)
+        if not (_has_cyrillic(n1) and _has_cyrillic(n2)):
+            return match.group(0)
+        if n1 not in _KNOWN_KEYS or n2 not in _KNOWN_KEYS:
+            return match.group(0)
+        if "{{ t(" in text1 or "{{ t(" in text2:
+            return match.group(0)
+        wrapped1 = f"{{{{ t({_escape_for_jinja_string(n1)}) }}}}"
+        wrapped2 = f"{{{{ t({_escape_for_jinja_string(n2)}) }}}}"
+        count += 2
+        return f"{if_tag}{wrapped1}{{% else %}}{wrapped2}{endif}"
+
+    if_else_re = re.compile(
+        r"(?P<if_tag>\{%\s*if\s+[^%}]+%\})"
+        r"(?P<text1>[^{}<>\n]*?[А-Яа-яЁё][^{}<>\n]*?)"
+        r"\{%\s*else\s*%\}"
+        r"(?P<text2>[^{}<>\n]*?[А-Яа-яЁё][^{}<>\n]*?)"
+        r"(?P<endif>\{%\s*endif\s*%\})"
+    )
+    result = if_else_re.sub(_wrap_ifelse, result)
+
+    # ─── Pass 3: simple {% if cond %}RU{% endif %} ────────────────────────
+    def _wrap_if_only(match: re.Match) -> str:
+        nonlocal count
+        if_tag = match.group("if_tag")
+        text = match.group("text")
+        endif = match.group("endif")
+        n = _normalize_text(text)
+        if not _has_cyrillic(n):
+            return match.group(0)
+        if n not in _KNOWN_KEYS:
+            return match.group(0)
+        if "{{ t(" in text:
+            return match.group(0)
+        wrapped = f"{{{{ t({_escape_for_jinja_string(n)}) }}}}"
+        count += 1
+        return f"{if_tag}{wrapped}{endif}"
+
+    if_only_re = re.compile(
+        r"(?P<if_tag>\{%\s*if\s+[^%}]+%\})"
+        r"(?P<text>[^{}<>\n]*?[А-Яа-яЁё][^{}<>\n]*?)"
+        r"(?P<endif>\{%\s*endif\s*%\})"
+    )
+    result = if_only_re.sub(_wrap_if_only, result)
+
     return result, count
 
 

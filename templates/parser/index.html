@@ -217,7 +217,7 @@
     <a href="/donors" class="btn btn-primary">{% if cabinet_client_mode(request) %}К источникам{% else %}Добавить донора{% endif %}</a>
     {% elif not accounts %}
     <p style="color:var(--text-secondary)">{% if cabinet_client_mode(request) %}Нужен хотя бы один профиль Facebook с выполненным входом.{% else %}Нужен хотя бы один аккаунт Facebook с рабочей сессией.{% endif %}</p>
-    <a href="/fb-accounts" class="btn btn-primary">{% if cabinet_client_mode(request) %}К аккаунтам{% else %}Аккаунты{% endif %}</a>
+    <a href="/fb-accounts" class="btn btn-primary">{% if cabinet_client_mode(request) %}{{ t("К аккаунтам") }}{% else %}{{ t("Аккаунты") }}{% endif %}</a>
     {% else %}
     <form method="post" action="/parser/run" class="stack" style="gap:24px">
       <div class="form-group" style="margin-bottom:0">

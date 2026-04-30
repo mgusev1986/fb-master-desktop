@@ -8,9 +8,7 @@
     <div class="ig-page__title-wrap">
       <h1 class="ig-page__title">Instagram Master <span class="ig-page__beta-pill">Beta</span></h1>
       <p class="ig-page__subtitle">
-        Browser-mode (Chromium + cookies <code>sessionid</code>, <code>csrftoken</code>, <code>ds_user_id</code>).
-        Поиск по hashtag, парсер аудитории конкурентов, рассылка Direct, лайки/комменты/follow по целевой,
-        лайки сторисов и <strong>AI-автоответчик</strong>.
+        Browser-mode (Chromium + cookies <code>sessionid</code>, <code>csrftoken</code>, <code>ds_user_id</code>{{ t("). Поиск по hashtag, парсер аудитории конкурентов, рассылка Direct, лайки/комменты/follow по целевой, лайки сторисов и") }} <strong>{{ t("AI-автоответчик") }}</strong>.
       </p>
     </div>
     <span class="ig-page__status"><span class="ig-page__status-dot"></span>Beta</span>
@@ -19,73 +17,71 @@
   <section class="ig-banner">
     <div class="ig-banner__icon"><i class="ti ti-bolt"></i></div>
     <div class="ig-banner__body">
-      <h2 class="ig-banner__title">Все Instagram-функции под капотом</h2>
+      <h2 class="ig-banner__title">{{ t("Все Instagram-функции под капотом") }}</h2>
       <p class="ig-banner__text">
-        Поиск аудитории по keyword/hashtag, парсер likers/commenters/followers конкурентов, Direct-рассылка
-        с AI-шаблонами, движок engagement (лайки постов, лайки сторисов, follow по целевой), AI-autoresponder
-        с persona+goal (book_call/share_info/qualify_lead). Default approval = manual.
+        {{ t("Поиск аудитории по keyword/hashtag, парсер likers/commenters/followers конкурентов, Direct-рассылка с AI-шаблонами, движок engagement (лайки постов, лайки сторисов, follow по целевой), AI-autoresponder с persona+goal (book_call/share_info/qualify_lead). Default approval = manual.") }}
       </p>
     </div>
   </section>
 
   <section class="ig-grid ig-grid--wide">
     <article class="ig-card ig-card--accent">
-      <h2 class="ig-card__title"><i class="ti ti-brand-instagram"></i> Шаг 1 — подключить аккаунт</h2>
-      <p class="ig-card__desc">Импорт купленных IG-аккаунтов с cookies. Каждому — свой profile_dir + mobile/residential proxy.</p>
-      <div><a href="/instagram/accounts" class="ig-btn ig-btn--primary"><i class="ti ti-plug"></i> К аккаунтам</a></div>
+      <h2 class="ig-card__title"><i class="ti ti-brand-instagram"></i> {{ t("Шаг 1 — подключить аккаунт") }}</h2>
+      <p class="ig-card__desc">{{ t("Импорт купленных IG-аккаунтов с cookies. Каждому — свой profile_dir + mobile/residential proxy.") }}</p>
+      <div><a href="/instagram/accounts" class="ig-btn ig-btn--primary"><i class="ti ti-plug"></i> {{ t("К аккаунтам") }}</a></div>
     </article>
 
     <article class="ig-card">
-      <h2 class="ig-card__title"><i class="ti ti-users-group"></i> Шаг 2 — Поиск аудитории</h2>
-      <p class="ig-card__desc">По hashtag (популярные/топ), keyword или users.</p>
+      <h2 class="ig-card__title"><i class="ti ti-users-group"></i> {{ t("Шаг 2 — Поиск аудитории") }}</h2>
+      <p class="ig-card__desc">{{ t("По hashtag (популярные/топ), keyword или users.") }}</p>
       <div><a href="/instagram/audience" class="ig-btn">Audience search</a></div>
     </article>
 
     <article class="ig-card">
-      <h2 class="ig-card__title"><i class="ti ti-target"></i> Парсер конкурентов</h2>
-      <p class="ig-card__desc">Likers / commenters / followers конкурентов → leads с тегом источника.</p>
+      <h2 class="ig-card__title"><i class="ti ti-target"></i> {{ t("Парсер конкурентов") }}</h2>
+      <p class="ig-card__desc">{{ t("Likers / commenters / followers конкурентов → leads с тегом источника.") }}</p>
       <div><a href="/instagram/competitor-audience" class="ig-btn">Competitor parser</a></div>
     </article>
 
     <article class="ig-card">
-      <h2 class="ig-card__title"><i class="ti ti-template"></i> Шаблоны и AI</h2>
-      <p class="ig-card__desc">DM / comment / story-reply шаблоны + AI-вариации.</p>
-      <div><a href="/instagram/templates" class="ig-btn">Шаблоны</a></div>
+      <h2 class="ig-card__title"><i class="ti ti-template"></i> {{ t("Шаблоны и AI") }}</h2>
+      <p class="ig-card__desc">{{ t("DM / comment / story-reply шаблоны + AI-вариации.") }}</p>
+      <div><a href="/instagram/templates" class="ig-btn">{{ t("Шаблоны") }}</a></div>
     </article>
 
     <article class="ig-card">
-      <h2 class="ig-card__title"><i class="ti ti-send"></i> Direct рассылка</h2>
-      <p class="ig-card__desc">DM-кампании по leads, daily caps, review queue.</p>
+      <h2 class="ig-card__title"><i class="ti ti-send"></i> {{ t("Direct рассылка") }}</h2>
+      <p class="ig-card__desc">{{ t("DM-кампании по leads, daily caps, review queue.") }}</p>
       <div><a href="/instagram/outreach" class="ig-btn">Outreach Builder</a></div>
     </article>
 
     <article class="ig-card">
       <h2 class="ig-card__title"><i class="ti ti-message-circle"></i> Direct / Inbox</h2>
-      <p class="ig-card__desc">Conversation workspace с compose + AI-помощником.</p>
+      <p class="ig-card__desc">{{ t("Conversation workspace с compose + AI-помощником.") }}</p>
       <div><a href="/instagram/conversations" class="ig-btn">Inbox</a></div>
     </article>
 
     <article class="ig-card">
-      <h2 class="ig-card__title"><i class="ti ti-robot"></i> AI-автоответчик</h2>
-      <p class="ig-card__desc">Нейросеть ведёт DM-переписку до цели (созвон / инфо / квалификация).</p>
-      <div><a href="/instagram/autoresponder" class="ig-btn">AI-автоответчик</a></div>
+      <h2 class="ig-card__title"><i class="ti ti-robot"></i> {{ t("AI-автоответчик") }}</h2>
+      <p class="ig-card__desc">{{ t("Нейросеть ведёт DM-переписку до цели (созвон / инфо / квалификация).") }}</p>
+      <div><a href="/instagram/autoresponder" class="ig-btn">{{ t("AI-автоответчик") }}</a></div>
     </article>
 
     <article class="ig-card">
-      <h2 class="ig-card__title"><i class="ti ti-heart"></i> Engagement (лайки/комменты/follow)</h2>
-      <p class="ig-card__desc">Массовый engagement по target audience с safety-капами.</p>
+      <h2 class="ig-card__title"><i class="ti ti-heart"></i> {{ t("Engagement (лайки/комменты/follow)") }}</h2>
+      <p class="ig-card__desc">{{ t("Массовый engagement по target audience с safety-капами.") }}</p>
       <div><a href="/instagram/engagement" class="ig-btn">Engagement Tasks</a></div>
     </article>
 
     <article class="ig-card">
-      <h2 class="ig-card__title"><i class="ti ti-circle-dot"></i> Лайки сторисов</h2>
-      <p class="ig-card__desc">Прогрев целевой аудитории через лайки сторисов — мощный engagement signal.</p>
+      <h2 class="ig-card__title"><i class="ti ti-circle-dot"></i> {{ t("Лайки сторисов") }}</h2>
+      <p class="ig-card__desc">{{ t("Прогрев целевой аудитории через лайки сторисов — мощный engagement signal.") }}</p>
       <div><a href="/instagram/story-likes" class="ig-btn">Story likes</a></div>
     </article>
 
     <article class="ig-card">
-      <h2 class="ig-card__title"><i class="ti ti-shield-check"></i> Правила и лимиты</h2>
-      <p class="ig-card__desc">Capability matrix + safety caps + известные ограничения.</p>
+      <h2 class="ig-card__title"><i class="ti ti-shield-check"></i> {{ t("Правила и лимиты") }}</h2>
+      <p class="ig-card__desc">{{ t("Capability matrix + safety caps + известные ограничения.") }}</p>
       <div><a href="/instagram/compliance" class="ig-btn">Compliance</a></div>
     </article>
   </section>
