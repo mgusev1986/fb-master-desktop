@@ -179,6 +179,29 @@ TRANSLATIONS: Final[dict[str, dict[str, str]]] = {
         "Выбор языка": "Language",
         "Русский": "Russian",
         "English": "English",
+        "Сменить язык": "Switch language",
+        "Сменить язык (скоро)": "Switch language (coming soon)",
+        "Скоро будет доступен выбор языка интерфейса.": "UI language switcher is coming soon.",
+        "Сменить тему": "Toggle theme",
+
+        # ─── Sidebar header / license / ID ───────────────────────────────
+        "Версия программы": "Application version",
+        "Уникальный ID этой копии программы": "Unique ID of this app installation",
+        "ID:": "ID:",
+
+        # ─── Sidebar nav extras ──────────────────────────────────────────
+        "Доноры": "Donors",
+        "Messenger Old": "Messenger Old",
+        "Админ-панель": "Admin panel",
+
+        # ─── Modals / common dialogs ─────────────────────────────────────
+        "Подтвердить действие": "Confirm action",
+
+        # ─── Preview as user banner ──────────────────────────────────────
+        "Предпросмотр клиента:": "Client preview:",
+        "как у десктопа — без «Админ-панели», «Выйти» и служебных блоков в «Настройках».":
+            "matches desktop view — without 'Admin panel', 'Sign out' and service blocks in 'Settings'.",
+        "Выйти из предпросмотра": "Exit preview",
     }
 }
 

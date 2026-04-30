@@ -18,7 +18,7 @@
 <aside class="sidebar">
   <div class="sidebar-header">
     <div class="sidebar-logo">
-      <span class="sidebar-logo__mark sidebar-logo__mark--facebook">SOC</span>MASTER{% if fbm_desktop_app_version %}<span class="sidebar-logo__version" title="Версия программы">v{{ fbm_desktop_app_version }}</span>{% endif %}
+      <span class="sidebar-logo__mark sidebar-logo__mark--facebook">SOC</span>MASTER{% if fbm_desktop_app_version %}<span class="sidebar-logo__version" title="{{ t('Версия программы') }}">v{{ fbm_desktop_app_version }}</span>{% endif %}
     </div>
     {# 2.92: блок с лицензией и ID перенесён из sidebar-footer наверх под логотип.
        2.93: убраны значок аватара и строка "Оплаченный период: ..." — оставлены
@@ -39,19 +39,18 @@
         {% endif %}
         <div class="sidebar-license-lines" role="status">
           {% if ak_license.forever %}
-          <div class="sidebar-license-pill" data-license-state="{{ _lic_state }}">Срок действия ключа не ограничен.</div>
+          <div class="sidebar-license-pill" data-license-state="{{ _lic_state }}">{{ t("Срок действия ключа не ограничен.") }}</div>
           {% elif ak_license.last_calendar_day %}
-          <div class="sidebar-license-pill" data-license-state="{{ _lic_state }}">Последний день доступа, до {{ format_dt_madrid(ak_license.expires_at) }}</div>
+          <div class="sidebar-license-pill" data-license-state="{{ _lic_state }}">{{ t("Последний день доступа, до {until}", until=format_dt_madrid(ak_license.expires_at)) }}</div>
           {% else %}
           <div class="sidebar-license-pill" id="fbm-license-countdown" data-license-state="{{ _lic_state }}" data-expires-at="{{ ak_license.expires_at_iso }}">
-            Осталось <span id="fbm-license-days">{{ ak_license.days_remaining }}</span> <span id="fbm-license-days-word">{{ ak_license.days_word }}</span>,
-            до {{ format_dt_madrid(ak_license.expires_at) }}
+            {{ t("Осталось {days} {days_word}, до {until}", days=ak_license.days_remaining, days_word=t(ak_license.days_word), until=format_dt_madrid(ak_license.expires_at)) }}
           </div>
           {% endif %}
         </div>
         {% endif %}
-        <div class="sidebar-user-email" title="Уникальный ID этой копии программы">
-          <span class="settings-note" style="font-size:11px;opacity:.85">ID:</span>
+        <div class="sidebar-user-email" title="{{ t('Уникальный ID этой копии программы') }}">
+          <span class="settings-note" style="font-size:11px;opacity:.85">{{ t("ID:") }}</span>
           <code style="font-size:11px;word-break:break-all">{{ fbm_client_installation_id() }}</code>
         </div>
       </div>
@@ -68,90 +67,90 @@
   <nav class="sidebar-nav">
 
     <div class="nav-group">
-      <div class="nav-group-label">Обзор</div>
+      <div class="nav-group-label">{{ t("Обзор") }}</div>
       <a href="/home" class="nav-item {{ 'active' if page_id == 'dashboard' }}">
-        <i class="ti ti-layout-dashboard"></i> Главная
+        <i class="ti ti-layout-dashboard"></i> {{ t("Главная") }}
       </a>
     </div>
 
     <div class="nav-group">
-      <div class="nav-group-label">Рабочие аккаунты</div>
+      <div class="nav-group-label">{{ t("Рабочие аккаунты") }}</div>
       <a href="/fb-accounts" class="nav-item {{ 'active' if page_id == 'fb_accounts' }}">
-        <i class="ti ti-brand-facebook"></i> Аккаунты
+        <i class="ti ti-brand-facebook"></i> {{ t("Аккаунты") }}
       </a>
       <a href="/account-branding" class="nav-item {{ 'active' if page_id == 'account_branding' }}">
-        <i class="ti ti-palette"></i> Оформление аккаунтов
+        <i class="ti ti-palette"></i> {{ t("Оформление аккаунтов") }}
       </a>
       <a href="/account-warming" class="nav-item {{ 'active' if page_id == 'account_natural_warmup' }}">
-        <i class="ti ti-flame"></i> Прогрев аккаунтов
+        <i class="ti ti-flame"></i> {{ t("Прогрев аккаунтов") }}
       </a>
     </div>
 
     <div class="nav-group">
-      <div class="nav-group-label">Данные</div>
+      <div class="nav-group-label">{{ t("Данные") }}</div>
       <a href="/donors" class="nav-item nav-item--sidebar-hidden {{ 'active' if page_id == 'donors' }}">
-        <i class="ti ti-users-group"></i> Доноры
+        <i class="ti ti-users-group"></i> {{ t("Доноры") }}
       </a>
       <a href="/discovery" class="nav-item {{ 'active' if page_id == 'discovery' }}">
-        <i class="ti ti-radar-2"></i> Автопоиск
+        <i class="ti ti-radar-2"></i> {{ t("Автопоиск") }}
       </a>
       <a href="/parser" class="nav-item {{ 'active' if page_id == 'parser' }}">
-        <i class="ti ti-radar"></i> Парсер
+        <i class="ti ti-radar"></i> {{ t("Парсер") }}
       </a>
       <a href="/import" class="nav-item {{ 'active' if page_id == 'import' }}">
-        <i class="ti ti-file-import"></i> Импорт базы
+        <i class="ti ti-file-import"></i> {{ t("Импорт базы") }}
       </a>
       <a href="/people" class="nav-item {{ 'active' if page_id == 'people' }}">
-        <i class="ti ti-address-book"></i> База контактов
+        <i class="ti ti-address-book"></i> {{ t("База контактов") }}
       </a>
     </div>
 
     <div class="nav-group">
-      <div class="nav-group-label">Коммуникации</div>
+      <div class="nav-group-label">{{ t("Коммуникации") }}</div>
       <a href="/templates" class="nav-item {{ 'active' if page_id == 'templates' }}">
-        <i class="ti ti-template"></i> Шаблоны
+        <i class="ti ti-template"></i> {{ t("Шаблоны") }}
       </a>
       <a href="/outreach" class="nav-item {{ 'active' if page_id in ('outreach', 'outreach_magic') }}">
-        <i class="ti ti-send"></i> Рассылка
+        <i class="ti ti-send"></i> {{ t("Рассылка") }}
       </a>
       <a href="/outreach?focus=agent" class="nav-item nav-item--sidebar-hidden {{ 'active' if page_id == 'outreach_magic' }}">
-        <i class="ti ti-sparkles"></i> Magic-агент
+        <i class="ti ti-sparkles"></i> {{ t("Magic-агент") }}
       </a>
       <a href="/scenarios" class="nav-item {{ 'active' if page_id in ('warmup', 'scenarios') }}">
-        <i class="ti ti-brain"></i> Режим агента
+        <i class="ti ti-brain"></i> {{ t("Режим агента") }}
       </a>
       <a href="/messenger" class="nav-item nav-item--sidebar-hidden {{ 'active' if page_id == 'messenger' }}">
-        <i class="ti ti-message-circle"></i> Messenger Old
+        <i class="ti ti-message-circle"></i> {{ t("Messenger Old") }}
       </a>
       <a href="/messenger2" class="nav-item {{ 'active' if page_id == 'messenger2' }}">
-        <i class="ti ti-message-circle"></i> Мессенджер
+        <i class="ti ti-message-circle"></i> {{ t("Мессенджер") }}
       </a>
     </div>
 
     <div class="nav-group">
-      <div class="nav-group-label">CRM</div>
+      <div class="nav-group-label">{{ t("CRM") }}</div>
       <a href="/crm/funnel" class="nav-item {{ 'active' if page_id == 'crm_funnel' }}">
-        <i class="ti ti-chart-funnel"></i> Воронка
+        <i class="ti ti-chart-funnel"></i> {{ t("Воронка") }}
       </a>
     </div>
 
     <div class="nav-group">
-      <div class="nav-group-label">Система</div>
+      <div class="nav-group-label">{{ t("Система") }}</div>
       <a href="/system/speed" class="nav-item {{ 'active' if page_id == 'system_speed' }}">
-        <i class="ti ti-gauge"></i> Скорость и паузы
+        <i class="ti ti-gauge"></i> {{ t("Скорость и паузы") }}
       </a>
       <a href="/system/logs" class="nav-item {{ 'active' if page_id == 'system_logs' }}">
-        <i class="ti ti-report-analytics"></i> Журнал и отчёты
+        <i class="ti ti-report-analytics"></i> {{ t("Журнал и отчёты") }}
       </a>
       <a href="/system/settings" class="nav-item {{ 'active' if page_id == 'system_settings' }}">
-        <i class="ti ti-settings"></i> Настройки
+        <i class="ti ti-settings"></i> {{ t("Настройки") }}
       </a>
       <a href="/faq" class="nav-item {{ 'active' if page_id == 'faq' }}">
-        <i class="ti ti-help-circle"></i> FAQ
+        <i class="ti ti-help-circle"></i> {{ t("FAQ") }}
       </a>
       {% if is_platform_owner(user) and not preview_as_user_active(request) %}
       <a href="/admin/platform" class="nav-item {{ 'active' if page_id == 'platform_admin' }}">
-        <i class="ti ti-layout-dashboard"></i> Админ-панель
+        <i class="ti ti-layout-dashboard"></i> {{ t("Админ-панель") }}
       </a>
       {% endif %}
     </div>
@@ -162,15 +161,19 @@
     {# 2.92: блок sidebar-user перенесён в sidebar-header (наверх под логотип) — см. начало файла.
        В footer оставлены только theme-toggle и language-switcher (заглушка пока что). #}
     <div class="sidebar-actions">
-      <button id="theme-toggle" class="btn-sidebar" title="Сменить тему">
+      <button id="theme-toggle" class="btn-sidebar" title="{{ t('Сменить тему') }}">
         <i id="theme-icon" class="ti ti-moon"></i>
       </button>
-      <button id="lang-toggle" class="btn-sidebar" title="Сменить язык (скоро)" onclick="alert('Скоро будет доступен выбор языка интерфейса.')">
-        <i class="ti ti-language"></i>
-      </button>
+      {# Language switcher: рабочий pill RU/EN. Cookie middleware (app_factory.py)
+         запоминает выбор на 1 год при клике с ?lang=ru/en. #}
+      <div class="sidebar-lang-pill" role="group" aria-label="{{ t('Сменить язык') }}" style="display:inline-flex;gap:2px;padding:2px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:999px">
+        {% set _cur_lang = request.cookies.get('lang') or request.query_params.get('lang') or 'ru' %}
+        <a href="?lang=ru" class="btn-sidebar" style="padding:4px 9px;font-size:11px;border-radius:999px;text-decoration:none;{% if _cur_lang != 'en' %}background:rgba(245,208,110,0.12);color:#f5d06e;font-weight:600;{% else %}color:rgba(255,255,255,0.55);{% endif %}">RU</a>
+        <a href="?lang=en" class="btn-sidebar" style="padding:4px 9px;font-size:11px;border-radius:999px;text-decoration:none;{% if _cur_lang == 'en' %}background:rgba(245,208,110,0.12);color:#f5d06e;font-weight:600;{% else %}color:rgba(255,255,255,0.55);{% endif %}">EN</a>
+      </div>
       {% if sidebar_show_logout(request, user) %}
       <a href="/auth/logout" class="btn-sidebar">
-        <i class="ti ti-logout"></i> Выйти
+        <i class="ti ti-logout"></i> {{ t("Выйти") }}
       </a>
       {% endif %}
     </div>
@@ -181,11 +184,11 @@
 {% block shell_banners %}
   {% if user and is_platform_owner(user) and preview_as_user_active(request) %}
   <div class="fb-preview-as-user-banner" role="status">
-    <span><strong>Предпросмотр клиента:</strong> как у десктопа — без «Админ-панели», «Выйти» и служебных блоков в «Настройках».</span>
+    <span><strong>{{ t("Предпросмотр клиента:") }}</strong> {{ t("как у десктопа — без «Админ-панели», «Выйти» и служебных блоков в «Настройках».") }}</span>
     <form method="post" action="/admin/platform/preview-as-user">
       <input type="hidden" name="enable" value="0"/>
       <input type="hidden" name="next" value="{{ request.url.path }}"/>
-      <button type="submit" class="btn btn-secondary btn-sm">Выйти из предпросмотра</button>
+      <button type="submit" class="btn btn-secondary btn-sm">{{ t("Выйти из предпросмотра") }}</button>
     </form>
   </div>
   {% endif %}
@@ -195,11 +198,11 @@
 <div id="fb-confirm-modal" class="fb-confirm-modal" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="fb-confirm-modal-title">
   <div class="fb-confirm-modal__backdrop" tabindex="-1" data-fb-confirm-dismiss></div>
   <div class="fb-confirm-modal__panel">
-    <h2 id="fb-confirm-modal-title" class="fb-confirm-modal__title">Подтвердить действие</h2>
+    <h2 id="fb-confirm-modal-title" class="fb-confirm-modal__title">{{ t("Подтвердить действие") }}</h2>
     <p class="fb-confirm-modal__message" id="fb-confirm-modal-message"></p>
     <div class="fb-confirm-modal__actions">
-      <button type="button" class="btn btn-secondary" data-fb-confirm-dismiss>Отмена</button>
-      <button type="button" class="btn btn-primary" id="fb-confirm-modal-ok">Подтвердить</button>
+      <button type="button" class="btn btn-secondary" data-fb-confirm-dismiss>{{ t("Отмена") }}</button>
+      <button type="button" class="btn btn-primary" id="fb-confirm-modal-ok">{{ t("Подтвердить") }}</button>
     </div>
   </div>
 </div>

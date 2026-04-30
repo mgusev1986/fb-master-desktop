@@ -394,6 +394,29 @@ def create_app() -> FastAPI:
 
     templates.env.globals["t"] = _jinja_t
 
+    # Cookie persistence для языка: при ?lang=en/ru сохраняем выбор на 1 год,
+    # чтобы пользователю не приходилось каждый раз кликать переключатель.
+    # Cookie читается helper'ом get_lang() (services/i18n.py).
+    @app.middleware("http")
+    async def _i18n_cookie_middleware(request, call_next):
+        response = await call_next(request)
+        try:
+            qlang = (request.query_params.get("lang") or "").strip().lower()
+            if qlang in ("ru", "en"):
+                # Перезаписываем только если query param действительно был
+                response.set_cookie(
+                    key="lang",
+                    value=qlang,
+                    max_age=60 * 60 * 24 * 365,  # 1 год
+                    httponly=False,  # JS может читать (на будущее для UI)
+                    samesite="lax",
+                    path="/",
+                )
+        except Exception:  # noqa: BLE001
+            # Безопасный fallback — не ломаем response
+            pass
+        return response
+
     # Reddit Master — локализация технических статусов/enum'ов для Jinja.
     _REDDIT_RU_LABELS = {
         "connected": "Подключён", "disconnected": "Отключён",
