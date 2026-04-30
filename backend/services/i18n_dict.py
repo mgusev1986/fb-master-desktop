@@ -4477,6 +4477,8 @@ TRANSLATIONS: Final[dict[str, dict[str, str]]] = {
         # ─── Manual (post-auto): file picker labels (fb_accounts/list.html) ──
         "Выберите файл": "Choose file",
         "Файл не выбран": "No file chosen",
+        # ─── Manual (post-auto): payment card meta (buy.html, billing/purchase.html) ──
+        "USD · EUR · RUB · Visa · Mastercard · СБП · PayPal": "USD · EUR · RUB · Visa · Mastercard · SBP · PayPal",
         # ─── Manual (post-auto): throttle PRESET_LABELS (system/speed.html) ──
         "Улитка (~20 сообщ./час)": "Snail (~20 msg/hour)",
         "Медленно (~30 сообщ./час)": "Slowly (~30 msg/hour)",
