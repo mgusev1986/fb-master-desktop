@@ -81,6 +81,9 @@
       -webkit-text-fill-color: transparent;
       font-style: italic;
       font-weight: 600;
+      /* italic glyph extends past its bbox; background-clip: text strict-clips
+         the right edge → last letter (е / t) was being cut. */
+      padding-right: 0.12em;
     }
     .buy-subtitle {
       font-size: 1.05rem;
