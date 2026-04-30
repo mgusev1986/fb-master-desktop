@@ -202,6 +202,65 @@ TRANSLATIONS: Final[dict[str, dict[str, str]]] = {
         "как у десктопа — без «Админ-панели», «Выйти» и служебных блоков в «Настройках».":
             "matches desktop view — without 'Admin panel', 'Sign out' and service blocks in 'Settings'.",
         "Выйти из предпросмотра": "Exit preview",
+
+        # ─── Dashboard (templates/dashboard.html) ────────────────────────
+        "Главная — Facebook Master": "Home — Facebook Master",
+        "Аккаунты, парсер, оформление и прогрев, шаблоны, рассылка в Messenger, сценарии и CRM-воронка. Browser-profile режим на Chromium + cookies + свой прокси на каждый аккаунт.":
+            "Accounts, scraper, profile setup and warm-up, templates, Messenger outreach, scenarios, and a CRM funnel. Browser-profile mode on Chromium + cookies + a dedicated proxy for each account.",
+        "Подключение аккаунтов = импорт купленных FB-аккаунтов с cookies + персональный Chrome-профиль + свой прокси на каждый аккаунт. Facebook видит сессию как обычный браузерный логин. Рассылка в Messenger, прогрев и сценарии — с ручным подтверждением опасных действий по умолчанию.":
+            "Connecting accounts = importing purchased FB accounts with cookies + a personal Chrome profile + a dedicated proxy for each account. Facebook sees the session as a regular browser login. Messenger outreach, warm-up, and scenarios use manual confirmation for risky actions by default.",
+
+        "Контактов в базе": "Contacts in database",
+        "FB-аккаунты": "FB accounts",
+
+        # Step 1 — Аккаунты
+        "Подключение FB-аккаунтов через browser-профиль (Chromium + cookies) и персональный прокси. Без подключённого аккаунта парсинг, прогрев и рассылка недоступны.":
+            "Connecting FB accounts via browser-profile (Chromium + cookies) and a personal proxy. Without a connected account, scraping, warm-up, and outreach are unavailable.",
+        # Step 2 — Оформление
+        "Заполнение профилей: аватар, обложка, bio, работа, интересы. Шаблоны оформления и автозагрузка фото для «человеческого» вида аккаунта.":
+            "Filling out profiles: avatar, cover, bio, work, interests. Profile templates and photo auto-upload for a 'human-looking' account.",
+        # Step 3 — Прогрев
+        "Natural warmup: лайки, скролл ленты, реакции, дружеские запросы по реалистичным паттернам. Снижает риск блокировки и повышает headroom по активности.":
+            "Natural warm-up: likes, feed scrolling, reactions, and friend requests using realistic patterns. Reduces ban risk and increases activity headroom.",
+        # Step 4 — Поиск аудитории
+        "Автопоиск по ключевикам, парсинг друзей доноров, групп и комментариев. Импорт базы из CSV. Дедуп и сегментация по источнику.":
+            "Keyword auto-search, scraping donor friends, groups, and comments. CSV database import. Deduplication and segmentation by source.",
+        # Step 5 — База контактов
+        "Единая база людей: фильтры по тегам, источникам, статусам CRM, превью профилей. Основа для рассылок и сценариев.":
+            "A unified people database: filters by tags, sources, CRM stages, and profile previews. The foundation for outreach and scenarios.",
+        # Step 6 — Шаблоны и AI
+        "Шаблоны первого касания, follow-up, повторные касания. AI-вариации, антиспам-фильтр запрещённых фраз, превью перед отправкой.":
+            "First-touch templates, follow-ups, repeat touches. AI variations, an anti-spam filter for forbidden phrases, and a preview before sending.",
+        # Step 7 — Рассылка
+        "Кампании outreach в Messenger с дневными/недельными капами, окнами отправки и review-queue. Magic-агент для semi-auto режима.":
+            "Outreach campaigns in Messenger with daily/weekly caps, sending windows, and a review queue. Magic-agent for semi-auto mode.",
+        # Сценарии
+        "Сценарии": "Scenarios",
+        "Конструктор цепочек: собрать → обогатить → оценить → написать → подождать → follow-up → ветка на ответ. Ручная проверка на всех send-шагах по умолчанию.":
+            "Sequence builder: collect → enrich → score → write → wait → follow-up → reply branch. Manual review at every send-step by default.",
+        # Мессенджер
+        "Conversation workspace: список тредов, детальный вид, AI-помощник для ответов, ручная обработка сложных переписок.":
+            "Conversation workspace: thread list, detailed view, an AI assistant for replies, and manual handling of complex chats.",
+        # CRM — Воронка
+        "CRM — Воронка": "CRM — Funnel",
+        "Воронка лидов: стадии, фильтры по источнику, контактам и ответам. Быстрый переход к диалогам и карточкам людей.":
+            "Lead funnel: stages, filters by source, contact, and reply. Quick navigation to chats and people cards.",
+
+        # Recent jobs section
+        "Недавние действия": "Recent activity",
+        "Последние задачи": "Recent jobs",
+        "Вид": "Kind",
+        "Тип": "Type",
+        "Статус": "Status",
+        "Создано": "Created",
+        "Успешно": "Success",
+        "Выполняется": "Running",
+        "Пока ничего не запускали": "Nothing has been launched yet",
+        "Задач пока нет": "No jobs yet",
+        "Когда запустите поиск людей, прогрев или рассылку, здесь появятся последние записи.":
+            "When you launch people search, warm-up, or outreach, the latest records will appear here.",
+        "Запустите парсинг, прогрев или рассылку — здесь появятся последние задачи.":
+            "Launch scraping, warm-up, or outreach — the latest jobs will appear here.",
     }
 }
 
