@@ -4,6 +4,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from backend import config as app_config
+from backend.services.i18n import get_lang, select_template
 
 router = APIRouter(tags=["promo"])
 
@@ -12,6 +13,7 @@ def _promo_ctx(request: Request) -> dict:
     return {
         "request": request,
         "np_price_365": app_config.NOWPAYMENTS_PRICE_USD_365,
+        "lang": get_lang(request),
     }
 
 
@@ -25,9 +27,14 @@ async def promo_page(request: Request):
 @router.get("/promo3", response_class=HTMLResponse)
 async def promo3_page(request: Request):
     """Премиум-лендинг с базой знаний (3.0.7+): экосистема SOCMASTER, AI/CRM,
-    SEO meta + Schema.org. Этот же шаблон рендерится на корне `/`."""
+    SEO meta + Schema.org. Этот же шаблон рендерится на корне `/`.
+
+    `?lang=en` → отдаёт `promo3_en.html` (если файл существует), иначе RU."""
     templates = request.app.state.templates
-    return templates.TemplateResponse("promo3.html", _promo_ctx(request))
+    return templates.TemplateResponse(
+        select_template(request, "promo3.html"),
+        _promo_ctx(request),
+    )
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -38,6 +45,8 @@ async def root_page(request: Request):
     3.0.6+: владельца платформы (admin / FB_MASTER_OWNER_EMAILS) НЕ редиректим —
     он должен видеть публичный лендинг как любой посетитель сайта. В кабинет
     зайдёт по прямой ссылке /home или через сайдбар на других страницах.
+
+    `?lang=en` → отдаёт `promo3_en.html` (если файл существует), иначе RU.
     """
     user = request.session.get("user")
     if user:
@@ -58,7 +67,10 @@ async def root_page(request: Request):
                 return RedirectResponse("/workspaces", status_code=303)
             return RedirectResponse("/home", status_code=303)
     templates = request.app.state.templates
-    return templates.TemplateResponse("promo3.html", _promo_ctx(request))
+    return templates.TemplateResponse(
+        select_template(request, "promo3.html"),
+        _promo_ctx(request),
+    )
 
 
 @router.get("/landing")
