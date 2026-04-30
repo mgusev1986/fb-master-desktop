@@ -16,13 +16,26 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 
 from backend import config as app_config
 from backend.services import blog_service
-from backend.services.i18n import get_lang
 
 router = APIRouter(tags=["blog"])
 
 
+def _blog_lang(request: Request) -> str:
+    """Blog-специфичная детекция языка: ТОЛЬКО `?lang=` query, без cookie.
+
+    Почему отдельная функция: блог — публичная SEO-зона, URL'ы должны быть
+    canonical и предсказуемыми. `/blog/<slug>` всегда RU, `/blog/<slug>?lang=en`
+    всегда EN — независимо от cookie прошлых визитов. Иначе Google индексирует
+    RU-URL с EN-контентом (или наоборот) если у краулера случайно cookie от
+    прошлой сессии. Кабинет продолжает использовать общий `get_lang()` с
+    cookie persistence — для рабочего UX он удобнее.
+    """
+    raw = request.query_params.get("lang", "").strip().lower()
+    return raw if raw in ("ru", "en") else "ru"
+
+
 def _common_ctx(request: Request) -> dict:
-    lang = get_lang(request)
+    lang = _blog_lang(request)
     return {
         "request": request,
         "np_price_365": app_config.NOWPAYMENTS_PRICE_USD_365,
@@ -46,7 +59,7 @@ async def blog_list_page(
     из post.i18n.en (если есть; иначе fallback на RU). UI-локализация —
     через флаг `is_en` внутри шаблона `blog/list.html`.
     """
-    lang = get_lang(request)
+    lang = _blog_lang(request)
     posts = blog_service.list_posts(category=category, tag=tag, query=q)
     posts = [blog_service.localize_post(p, lang) for p in posts]
     selected_category = blog_service.get_category(category) if category else None
@@ -81,7 +94,7 @@ async def blog_post_page(request: Request, slug: str):
     `?lang=en` → подменяет поля (title / excerpt / content / faq / etc.) на
     EN-перевод из post.i18n.en если он есть.
     """
-    lang = get_lang(request)
+    lang = _blog_lang(request)
     post = blog_service.get_post(slug)
     if post is None:
         target = "/blog?lang=en" if lang == "en" else "/blog"
