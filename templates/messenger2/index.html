@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Мессенджер — SOCMASTER{% endblock %}
+{% block title %}{{ t("Мессенджер — SOCMASTER") }}{% endblock %}
 {% block body_class %}{% if is_fb_master_desktop %}m2-desktop-page{% endif %}{% endblock %}
 
 {% block head %}
@@ -423,19 +423,19 @@
     <h1>{{ t("Мессенджер") }}</h1>
     <p class="subtitle" style="margin:0">
       {% if cabinet_client_mode(request) %}
-      Чаты Facebook открываются ниже под <strong>{{ t("текущим профилем") }}</strong> {{ t("(сейчас:") }} <strong>{{ active_fb_account_label or '—' }}</strong>{{ t("). Сменить профиль: в") }} <a href="/fb-accounts">{{ t("«Аккаунтах»") }}</a>{% if accounts|length > 1 %} или списком <strong>{{ t("«Аккаунт»") }}</strong> в панели над чатом — только аккаунты в слотах 1–3{% endif %}; одновременно активен один.
+      {{ t("Чаты Facebook открываются ниже под") }} <strong>{{ t("текущим профилем") }}</strong> {{ t("(сейчас:") }} <strong>{{ active_fb_account_label or '—' }}</strong>{{ t("). Сменить профиль: в") }} <a href="/fb-accounts">{{ t("«Аккаунтах»") }}</a>{% if accounts|length > 1 %} {{ t("или списком") }} <strong>{{ t("«Аккаунт»") }}</strong> {{ t("в панели над чатом — только аккаунты в слотах 1–3") }}{% endif %}{{ t("; одновременно активен один.") }}
       {% if m2_messenger_use_disk_profile %}
-      Если открыто отдельное окно входа в Facebook для этого же профиля, сначала закройте его, чтобы не было конфликта.
+      {{ t("Если открыто отдельное окно входа в Facebook для этого же профиля, сначала закройте его, чтобы не было конфликта.") }}
       {% else %}
-      Если чат не подхватил вход, нажмите «Обновить» на странице мессенджера или снова выполните вход в разделе аккаунтов.
-      Для ручного ввода логина включите <strong>{{ t("«Пауза автообновления»") }}</strong> рядом с «Обновить», иначе окно Facebook может само обновляться.
+      {{ t("Если чат не подхватил вход, нажмите «Обновить» на странице мессенджера или снова выполните вход в разделе аккаунтов.") }}
+      {{ t("Для ручного ввода логина включите") }} <strong>{{ t("«Пауза автообновления»") }}</strong> {{ t("рядом с «Обновить», иначе окно Facebook может само обновляться.") }}
       {% endif %}
       {% else %}
-      Режим <strong>SOCMASTER Desktop</strong>{{ t(": Messenger ниже для аккаунта") }} <strong>{{ active_fb_account_label or '—' }}</strong>{{ t(". Переключить:") }} <a href="/fb-accounts">{{ t("«Аккаунты»") }}</a>{% if accounts|length > 1 %} или выпадающий список <strong>{{ t("«Аккаунт»") }}</strong> в панели над чатом (только профили в слотах 1–3){% endif %}; одновременно активен один.
+      {{ t("Режим") }} <strong>SOCMASTER Desktop</strong>{{ t(": Messenger ниже для аккаунта") }} <strong>{{ active_fb_account_label or '—' }}</strong>{{ t(". Переключить:") }} <a href="/fb-accounts">{{ t("«Аккаунты»") }}</a>{% if accounts|length > 1 %} {{ t("или выпадающий список") }} <strong>{{ t("«Аккаунт»") }}</strong> {{ t("в панели над чатом (только профили в слотах 1–3)") }}{% endif %}{{ t("; одновременно активен один.") }}
       {% if m2_messenger_use_disk_profile %}
-      Встроенный Messenger использует <strong>{{ t("тот же каталог профиля Chromium на диске") }}</strong>{{ t(", что и кнопка «Войти в Facebook», и") }} <strong>{{ t("подмешивает cookies из базы") }}</strong> (Electron и Playwright по-разному читают один файл — без копии из БД вход мог не подтягиваться). Закройте окно Chromium перед открытием Messenger, если профиль занят (файл блокировки).
+      {{ t("Встроенный Messenger использует") }} <strong>{{ t("тот же каталог профиля Chromium на диске") }}</strong>{{ t(", что и кнопка «Войти в Facebook», и") }} <strong>{{ t("подмешивает cookies из базы") }}</strong> {{ t("(Electron и Playwright по-разному читают один файл — без копии из БД вход мог не подтягиваться). Закройте окно Chromium перед открытием Messenger, если профиль занят (файл блокировки).") }}
       {% else %}
-      После входа в Chromium подтяните сессию кнопкой <strong>{{ t("«Обновить»") }}</strong> {{ t("— из базы подставятся cookies. Задайте") }} <strong>{{ t("UA в карточке") }}</strong> {{ t("или выполните первый вход, чтобы появилась папка профиля — тогда включится режим общего диска с Chromium. Для ручного ввода логина включите") }} <strong>{{ t("«Пауза автообновления»") }}</strong> рядом с «Обновить», иначе окно Facebook может само обновляться.
+      {{ t("После входа в Chromium подтяните сессию кнопкой") }} <strong>{{ t("«Обновить»") }}</strong> {{ t("— из базы подставятся cookies. Задайте") }} <strong>{{ t("UA в карточке") }}</strong> {{ t("или выполните первый вход, чтобы появилась папка профиля — тогда включится режим общего диска с Chromium. Для ручного ввода логина включите") }} <strong>{{ t("«Пауза автообновления»") }}</strong> {{ t("рядом с «Обновить», иначе окно Facebook может само обновляться.") }}
       {% endif %}
       {% endif %}
     </p>
@@ -463,9 +463,9 @@
     <div class="card-body" style="padding:14px 18px;font-size:var(--font-size-sm);line-height:1.55;color:var(--text-primary)">
       {% if cabinet_client_mode(request) %}
       <strong>{{ t("Такой прокси") }}</strong> {{ t("(с логином в специальном формате) во встроенном окне чата") }} <strong>{{ t("может не работать") }}</strong>.
-      Попросите администратора переключить прокси на обычный HTTP-вариант, войти через кнопку «Войти в Facebook» в отдельном окне или временно отключить прокси для проверки.
+      {{ t("Попросите администратора переключить прокси на обычный HTTP-вариант, войти через кнопку «Войти в Facebook» в отдельном окне или временно отключить прокси для проверки.") }}
       {% else %}
-      <strong>{{ t("SOCKS5 с логином и паролем") }}</strong> {{ t("во встроенном окне Electron/Chromium") }} <strong>{{ t("не поддерживается") }}</strong> {{ t("(ошибка") }} <code>ERR_NO_SUPPORTED_PROXIES</code>{{ t("). Варианты: задайте") }} <strong>HTTP(S)</strong>{{ t("-прокси в карточке аккаунта, откройте Messenger через") }} <strong>{{ t("«Войти в Facebook»") }}</strong> / внешний Chromium с тем же прокси или временно отключите прокси только для проверки встроенного Messenger.
+      <strong>{{ t("SOCKS5 с логином и паролем") }}</strong> {{ t("во встроенном окне Electron/Chromium") }} <strong>{{ t("не поддерживается") }}</strong> {{ t("(ошибка") }} <code>ERR_NO_SUPPORTED_PROXIES</code>{{ t("). Варианты: задайте") }} <strong>HTTP(S)</strong>{{ t("-прокси в карточке аккаунта, откройте Messenger через") }} <strong>{{ t("«Войти в Facebook»") }}</strong> {{ t("/ внешний Chromium с тем же прокси или временно отключите прокси только для проверки встроенного Messenger.") }}
       {% endif %}
     </div>
   </div>
@@ -482,7 +482,7 @@
         <select name="account_id" id="m2-outreach-block-account-switch" class="form-select" aria-label="{{ t("Переключить аккаунт Messenger") }}" onchange="if (this.value) this.form.submit();">
           {% for a in accounts %}
           <option value="{{ a.id }}" {% if selected_account_id == a.id %}selected{% endif %}>
-            Слот {{ a.active_slot }} — {{ a.label or a.fb_login_username or ('#' ~ a.id) }}
+            {{ t("Слот") }} {{ a.active_slot }} — {{ a.label or a.fb_login_username or ('#' ~ a.id) }}
           </option>
           {% endfor %}
         </select>
@@ -515,7 +515,7 @@
                     onchange="if (this.value) this.form.submit();">
               {% for a in accounts %}
               <option value="{{ a.id }}" {% if selected_account_id == a.id %}selected{% endif %}>
-                Слот {{ a.active_slot }} — {{ a.label or a.fb_login_username or ('#' ~ a.id) }}
+                {{ t("Слот") }} {{ a.active_slot }} — {{ a.label or a.fb_login_username or ('#' ~ a.id) }}
               </option>
               {% endfor %}
             </select>
@@ -2237,16 +2237,16 @@
       <h1>{{ t("Мессенджер") }}</h1>
       <p class="subtitle">
         {% if cabinet_client_mode(request) %}
-        В обычном браузере чат Facebook <strong>{{ t("сюда встроить нельзя") }}</strong> {{ t("— такие правила у самой сети. Установите") }} <strong>{{ t("программу SOCMASTER на компьютер") }}</strong>: там будет то же меню слева и переписка на этой странице.
+        {{ t("В обычном браузере чат Facebook") }} <strong>{{ t("сюда встроить нельзя") }}</strong> {{ t("— такие правила у самой сети. Установите") }} <strong>{{ t("программу SOCMASTER на компьютер") }}</strong>{{ t(": там будет то же меню слева и переписка на этой странице.") }}
         {% else %}
-        Внутри обычного браузера на <code>127.0.0.1</code> {{ t("нельзя встроить страницу Facebook во фрейме (ограничения Meta). Установите") }} <strong>{{ t("настольное приложение") }}</strong> <code>desktop/fb-master-desktop</code> — в нём тот же back-office (боковая панель) и встроенный Messenger на этой странице.
+        {{ t("Внутри обычного браузера на") }} <code>127.0.0.1</code> {{ t("нельзя встроить страницу Facebook во фрейме (ограничения Meta). Установите") }} <strong>{{ t("настольное приложение") }}</strong> <code>desktop/fb-master-desktop</code> {{ t("— в нём тот же back-office (боковая панель) и встроенный Messenger на этой странице.") }}
         {% endif %}
       </p>
       <p class="subtitle" style="margin-top:10px">
         {% if cabinet_client_mode(request) %}
-        Если вы на Mac и программа ставилась с сервером, она может открываться автоматически. Ваш вход в Facebook хранится только на вашем компьютере.
+        {{ t("Если вы на Mac и программа ставилась с сервером, она может открываться автоматически. Ваш вход в Facebook хранится только на вашем компьютере.") }}
         {% else %}
-        На macOS при старте сервера по умолчанию поднимается это приложение (если выполнен <code>npm install</code> {{ t("в папке). Сессия Facebook в webview хранится в") }} <code>desktop/fb-master-desktop/.electron-app-data</code>.
+        {{ t("На macOS при старте сервера по умолчанию поднимается это приложение (если выполнен") }} <code>npm install</code> {{ t("в папке). Сессия Facebook в webview хранится в") }} <code>desktop/fb-master-desktop/.electron-app-data</code>.
         {% endif %}
       </p>
     </div>
@@ -2263,11 +2263,11 @@
     <p id="m2-sidecar-status" style="margin:0 0 8px">{{ t("Проверка…") }}</p>
     <p class="form-hint" style="margin:0">
       {% if messenger2_autostart %}
-      Автозапуск при старте сервера: <strong>{{ t("включён") }}</strong> {{ t("(macOS или") }} <code>FB_MASTER_AUTOSTART_DESKTOP=1</code> / <code>FB_MASTER_AUTOSTART_MESSENGER2_FRAME=1</code>).
+      {{ t("Автозапуск при старте сервера:") }} <strong>{{ t("включён") }}</strong> {{ t("(macOS или") }} <code>FB_MASTER_AUTOSTART_DESKTOP=1</code> / <code>FB_MASTER_AUTOSTART_MESSENGER2_FRAME=1</code>).
       {% else %}
-      Автозапуск: <strong>{{ t("выключен") }}</strong>{{ t(". Включите переменную окружения или запустите") }} <code>{{ t("desktop/fb-master-desktop/Запуск.command") }}</code>.
+      {{ t("Автозапуск:") }} <strong>{{ t("выключен") }}</strong>{{ t(". Включите переменную окружения или запустите") }} <code>{{ t("desktop/fb-master-desktop/Запуск.command") }}</code>.
       {% endif %}
-      Порт health: <code>{{ messenger2_frame_health_port }}</code> (<code>MESSENGER2_FRAME_HEALTH_PORT</code>).
+      {{ t("Порт health:") }} <code>{{ messenger2_frame_health_port }}</code> (<code>MESSENGER2_FRAME_HEALTH_PORT</code>).
     </p>
   </div>
 </div>
@@ -2347,10 +2347,10 @@
   <div class="card-body" style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">
     <p class="form-hint" style="margin:0;max-width:520px">
       {% if cabinet_client_mode(request) %}
-      Сейчас для чата используется профиль: <strong>{{ active_fb_account_label or '—' }}</strong>{{ t(". Сменить можно в разделе") }} <a href="/fb-accounts">{{ t("«Аккаунты»") }}</a> — кнопка «Использовать в Мессенджере».
+      {{ t("Сейчас для чата используется профиль:") }} <strong>{{ active_fb_account_label or '—' }}</strong>{{ t(". Сменить можно в разделе") }} <a href="/fb-accounts">{{ t("«Аккаунты»") }}</a> {{ t("— кнопка «Использовать в Мессенджере».") }}
       {% else %}
-      Используется <strong>{{ t("текущий аккаунт") }}</strong> {{ t("из") }} <a href="/fb-accounts">{{ t("«Аккаунты»") }}</a>:
-      <strong>{{ active_fb_account_label or '—' }}</strong>. Сменить — только там («Использовать в Мессенджере»).
+      {{ t("Используется") }} <strong>{{ t("текущий аккаунт") }}</strong> {{ t("из") }} <a href="/fb-accounts">{{ t("«Аккаунты»") }}</a>:
+      <strong>{{ active_fb_account_label or '—' }}</strong>{{ t(". Сменить — только там («Использовать в Мессенджере»).") }}
       {% endif %}
     </p>
     <form id="m2-open-form" method="post" action="/messenger2/open-chromium" style="display:flex;flex-direction:column;gap:10px;align-items:flex-start">

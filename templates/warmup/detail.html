@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "macros/hints.html" import mailing_warmup_placeholders %}
-{% block title %}{{ campaign.name }} — Прогрев — SOCMASTER{% endblock %}
+{% block title %}{{ campaign.name }} {{ t("— Прогрев — SOCMASTER") }}{% endblock %}
 
 {% block content %}
 {% set cfg = campaign.config if campaign.config is mapping else {} %}
@@ -9,13 +9,13 @@
     <div>
       <h1>{{ campaign.name }}</h1>
       <p class="subtitle">
-        Статус:
+        {{ t("Статус:") }}
         {% if campaign.status == 'running' %}<strong>{{ t("выполняется") }}</strong>
-        {% elif campaign.status == 'paused' %}пауза
-        {% elif campaign.status == 'completed' %}завершена
-        {% elif campaign.status == 'ready' %}очередь собрана, можно стартовать
-        {% else %}черновик{% endif %}
-        {% if job %}· Задача #{{ job.id }} ({{ job.status }}){% endif %}
+        {% elif campaign.status == 'paused' %}{{ t("пауза") }}
+        {% elif campaign.status == 'completed' %}{{ t("завершена") }}
+        {% elif campaign.status == 'ready' %}{{ t("очередь собрана, можно стартовать") }}
+        {% else %}{{ t("черновик") }}{% endif %}
+        {% if job %}{{ t("· Задача #") }}{{ job.id }} ({{ job.status }}){% endif %}
       </p>
       {{ mailing_warmup_placeholders('subtitle') }}
     </div>
@@ -99,7 +99,7 @@
     {% if cnt_by.get('failed') %}
     <form method="post" action="/warmup/{{ campaign.id }}/retry-failed" data-confirm="Повторить только неудачные строки?">
       <button type="submit" class="btn btn-secondary" {% if campaign.status == 'running' %}disabled{% endif %}>
-        <i class="ti ti-repeat"></i> Повторить неудачные ({{ cnt_by.get('failed', 0) }})
+        <i class="ti ti-repeat"></i> {{ t("Повторить неудачные (") }}{{ cnt_by.get('failed', 0) }})
       </button>
     </form>
     {% endif %}
@@ -121,9 +121,9 @@
     <span class="badge badge-default">{{ t("Ошибка:") }} {{ cnt_by.get('failed', 0) }}</span>
   </div>
   <div class="card-body" style="padding-top:0;font-size:var(--font-size-sm);color:var(--text-secondary)">
-    Лайк: {{ 'да' if cfg.get('do_like', true) else 'нет' }} · Комментарий: {{ 'да' if cfg.get('do_comment') else 'нет' }}
-    {% if cfg.get('preset') %}· Пресет: {{ preset_labels.get(cfg.get('preset'), cfg.get('preset')) }}{% endif %}
-    {% if cfg.get('time_budget_seconds') %}· Бюджет: {{ cfg.get('time_budget_seconds') }} с{% endif %}
+    {{ t("Лайк:") }} {{ 'да' if cfg.get('do_like', true) else 'нет' }} {{ t("· Комментарий:") }} {{ 'да' if cfg.get('do_comment') else 'нет' }}
+    {% if cfg.get('preset') %}{{ t("· Пресет:") }} {{ preset_labels.get(cfg.get('preset'), cfg.get('preset')) }}{% endif %}
+    {% if cfg.get('time_budget_seconds') %}{{ t("· Бюджет:") }} {{ cfg.get('time_budget_seconds') }} с{% endif %}
   </div>
 </div>
 

@@ -1,6 +1,6 @@
 {% extends "reddit/base.html" %}
 
-{% block title %}Правила и лимиты · Reddit Master{% endblock %}
+{% block title %}{{ t("Правила и лимиты · Reddit Master") }}{% endblock %}
 
 {% block content %}
 <div class="reddit-page">
@@ -8,7 +8,7 @@
     <div class="reddit-page__title-wrap">
       <h1 class="reddit-page__title">{{ t("Правила и лимиты") }}</h1>
       <p class="reddit-page__subtitle">
-        {{ t("Честный список поддерживаемых действий Reddit API, текущие ограничения по аккаунтам и недавние события безопасности. Параметры безопасности по умолчанию: режим подтверждения —") }} <strong>{{ approval_mode }}</strong>{{ t(", лимиты —") }} <strong>{{ per_day_cap }}/сутки</strong>, <strong>{{ per_hour_cap }}/час</strong>.
+        {{ t("Честный список поддерживаемых действий Reddit API, текущие ограничения по аккаунтам и недавние события безопасности. Параметры безопасности по умолчанию: режим подтверждения —") }} <strong>{{ approval_mode }}</strong>{{ t(", лимиты —") }} <strong>{{ per_day_cap }}{{ t("/сутки") }}</strong>, <strong>{{ per_hour_cap }}{{ t("/час") }}</strong>.
       </p>
     </div>
     <a href="/reddit/settings" class="reddit-btn"><i class="ti ti-settings"></i> {{ t("Настройки") }}</a>

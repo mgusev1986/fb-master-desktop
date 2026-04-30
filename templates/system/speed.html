@@ -5,9 +5,9 @@
 <div class="page-header">
   <h1>{% if cabinet_client_mode(request) %}{{ t("Темп работы") }}{% else %}{{ t("Скорость и паузы") }}{% endif %}</h1>
   <p class="subtitle">{% if cabinet_client_mode(request) %}
-  Насколько быстро программа делает паузы между действиями в Facebook. Для стабильности удобнее <strong>{{ t("«Медленно»") }}</strong> {{ t("или") }} <strong>{{ t("«Средне»") }}</strong>; «Быстро» и «Очень быстро» — заметно выше риск ограничений.
+  {{ t("Насколько быстро программа делает паузы между действиями в Facebook. Для стабильности удобнее") }} <strong>{{ t("«Медленно»") }}</strong> {{ t("или") }} <strong>{{ t("«Средне»") }}</strong>{{ t("; «Быстро» и «Очень быстро» — заметно выше риск ограничений.") }}
   {% else %}
-  Глобальный темп работы по умолчанию. Для устойчивости и поведения «как человек» чаще выбирайте <strong>{{ t("«Медленно»") }}</strong> {{ t("или") }} <strong>{{ t("«Средне»") }}</strong>{{ t("; «Быстро» и особенно") }} <strong>{{ t("«Очень быстро»") }}</strong> — только если осознанно принимаете больший риск ограничений со стороны сети.
+  {{ t("Глобальный темп работы по умолчанию. Для устойчивости и поведения «как человек» чаще выбирайте") }} <strong>{{ t("«Медленно»") }}</strong> {{ t("или") }} <strong>{{ t("«Средне»") }}</strong>{{ t("; «Быстро» и особенно") }} <strong>{{ t("«Очень быстро»") }}</strong> {{ t("— только если осознанно принимаете больший риск ограничений со стороны сети.") }}
   {% endif %}</p>
 </div>
 
@@ -110,15 +110,15 @@
     {% if request.query_params.get('tz') == 'saved' %}
     <p style="color:var(--success);font-size:var(--font-size-sm);margin-bottom:12px">{{ t("Часовой пояс сохранён.") }}</p>
     {% elif request.query_params.get('tz') == 'bad' %}
-    <p style="color:var(--error);font-size:var(--font-size-sm);margin-bottom:12px">{% if cabinet_client_mode(request) %}Не удалось распознать пояс. Пример: Europe/Moscow{% else %}Некорректное имя пояса. Пример: <code>Europe/Moscow</code>{% endif %}</p>
+    <p style="color:var(--error);font-size:var(--font-size-sm);margin-bottom:12px">{% if cabinet_client_mode(request) %}{{ t("Не удалось распознать пояс. Пример: Europe/Moscow") }}{% else %}{{ t("Некорректное имя пояса. Пример:") }} <code>Europe/Moscow</code>{% endif %}</p>
     {% elif request.query_params.get('tz') == 'reset' %}
-    <p style="color:var(--text-secondary);font-size:var(--font-size-sm);margin-bottom:12px">{% if cabinet_client_mode(request) %}Сброшено к настройке по умолчанию.{% else %}Сброшено к значению из .env (<code>SEQUENCE_TIMEZONE</code>).{% endif %}</p>
+    <p style="color:var(--text-secondary);font-size:var(--font-size-sm);margin-bottom:12px">{% if cabinet_client_mode(request) %}{{ t("Сброшено к настройке по умолчанию.") }}{% else %}{{ t("Сброшено к значению из .env (") }}<code>SEQUENCE_TIMEZONE</code>).{% endif %}</p>
     {% endif %}
     <p style="font-size:var(--font-size-xs);color:var(--text-secondary);margin-bottom:12px">
       {% if cabinet_client_mode(request) %}
-      Сейчас: <strong>{{ sequence_timezone_effective }}</strong>
+      {{ t("Сейчас:") }} <strong>{{ sequence_timezone_effective }}</strong>
       {% else %}
-      Сейчас используется: <strong>{{ sequence_timezone_effective }}</strong>
+      {{ t("Сейчас используется:") }} <strong>{{ sequence_timezone_effective }}</strong>
       {% if not sequence_timezone_saved %}<span> {{ t("(из .env, т.к. в БД не задано)") }}</span>{% endif %}
       {% endif %}
     </p>
@@ -160,9 +160,9 @@
   <div class="card-body">
     <p style="color:var(--text-secondary);margin-bottom:16px;font-size:var(--font-size-sm)">
       {% if cabinet_client_mode(request) %}
-      В настройках отдельных задач (поиск людей, прогрев, рассылка, сценарий) можно включить режим, при котором программа <strong>{{ t("сама подбирает паузы") }}</strong>, чтобы уложиться в выбранный срок. В рассылке лимит задаётся в минутах.
+      {{ t("В настройках отдельных задач (поиск людей, прогрев, рассылка, сценарий) можно включить режим, при котором программа") }} <strong>{{ t("сама подбирает паузы") }}</strong>{{ t(", чтобы уложиться в выбранный срок. В рассылке лимит задаётся в минутах.") }}
       {% else %}
-      Этот режим доступен <strong>{{ t("в настройках каждой задачи") }}</strong> {{ t("(парсинг, прогрев, рассылка, сценарий). Система сама распределит задержки с джиттером, чтобы уложиться в указанное время. В") }} <strong>{{ t("рассылке") }}</strong> {{ t("бюджет задаётся в") }} <strong>{{ t("минутах") }}</strong> (с теми же пресетами, что ниже).
+      {{ t("Этот режим доступен") }} <strong>{{ t("в настройках каждой задачи") }}</strong> {{ t("(парсинг, прогрев, рассылка, сценарий). Система сама распределит задержки с джиттером, чтобы уложиться в указанное время. В") }} <strong>{{ t("рассылке") }}</strong> {{ t("бюджет задаётся в") }} <strong>{{ t("минутах") }}</strong> {{ t("(с теми же пресетами, что ниже).") }}
       {% endif %}
     </p>
     <p style="color:var(--text-secondary);margin-bottom:12px;font-size:var(--font-size-sm)">

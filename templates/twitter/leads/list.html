@@ -16,7 +16,7 @@
     <h2 class="x-card__title"><i class="ti ti-search"></i> {{ t("Поиск через X Search (Playwright)") }}</h2>
     <p class="x-card__desc" style="font-size:13px;">{{ t("Открывает") }} <code>/search?q=&f=user</code> {{ t("или") }} <code>&f=live</code> {{ t("под выбранным аккаунтом и сохраняет handles как leads.") }}</p>
     <form method="post" action="/twitter/leads/audience-search" style="display:flex;flex-direction:column;gap:8px;"
-          onsubmit="this.querySelector('button.search-go').disabled=true; this.querySelector('button.search-go').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Ищу…';">
+          onsubmit="this.querySelector('button.search-go').disabled=true; this.querySelector('button.search-go').innerHTML='<i class=&quot;ti ti-loader&quot;></i> {{ t("Ищу…';\">") }}
       <input type="hidden" name="return_to" value="{{ '/twitter/audience' if is_audience_page else '/twitter/leads' }}"/>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <select name="account_id" required style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
@@ -33,7 +33,7 @@
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <select name="segment_id" style="flex:1;min-width:200px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font-size:12px;">
           <option value="">{{ t("— или сохранённый сегмент —") }}</option>
-          {% for s in (segments or []) %}<option value="{{ s.id }}">{{ s.name }} ({{ s.last_run_count or 0 }} рез.)</option>{% endfor %}
+          {% for s in (segments or []) %}<option value="{{ s.id }}">{{ s.name }} ({{ s.last_run_count or 0 }} {{ t("рез.)") }}</option>{% endfor %}
         </select>
         <label style="font:400 12px/1 Inter;color:var(--text-secondary);display:inline-flex;align-items:center;gap:4px;">
           <input type="checkbox" name="save_as_segment" value="on"/> {{ t("сохранить как сегмент:") }}
@@ -67,7 +67,7 @@
 
   {% if segments %}
   <section class="x-card">
-    <h2 class="x-card__title"><i class="ti ti-bookmark"></i> Сохранённые сегменты ({{ segments|length }})</h2>
+    <h2 class="x-card__title"><i class="ti ti-bookmark"></i> {{ t("Сохранённые сегменты (") }}{{ segments|length }})</h2>
     <div style="display:flex;flex-wrap:wrap;gap:8px;">
       {% for s in segments %}
       <div style="display:flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--border);border-radius:999px;background:color-mix(in srgb,var(--ws-accent) 4%,transparent);">
@@ -84,7 +84,7 @@
   {% endif %}
 
   <section>
-    <h2 class="x-card__title" style="margin:8px 0 12px;">Лиды ({{ leads|length }})</h2>
+    <h2 class="x-card__title" style="margin:8px 0 12px;">{{ t("Лиды (") }}{{ leads|length }})</h2>
     {% if leads %}
     <div style="overflow-x:auto;">
       <table style="width:100%;border-collapse:collapse;background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;">

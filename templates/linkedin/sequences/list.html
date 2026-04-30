@@ -1,6 +1,6 @@
 {% extends "linkedin/base.html" %}
 
-{% block title %}Сценарии · LinkedIn Master{% endblock %}
+{% block title %}{{ t("Сценарии · LinkedIn Master") }}{% endblock %}
 
 {% block content %}
 <div class="li-page">
@@ -44,7 +44,7 @@
   </section>
 
   <section>
-    <h2 class="li-card__title" style="margin:8px 0 12px;">Сценарии ({{ sequences|length }})</h2>
+    <h2 class="li-card__title" style="margin:8px 0 12px;">{{ t("Сценарии (") }}{{ sequences|length }})</h2>
     {% if sequences %}
       <div class="li-grid li-grid--wide">
         {% for s in sequences %}
@@ -52,7 +52,7 @@
           <header style="display:flex;justify-content:space-between;align-items:center;">
             <h3 class="li-card__title" style="font-size:15px;"><i class="ti ti-brain"></i> {{ s.name }}</h3>
             <span class="compliance-cell__level compliance-cell__level--supported" style="font-size:10px;">
-              {{ (s.nodes_json or [])|length }} узлов
+              {{ (s.nodes_json or [])|length }} {{ t("узлов") }}
             </span>
           </header>
           <p class="li-card__desc" style="font-size:12px;color:var(--text-muted,#888);">

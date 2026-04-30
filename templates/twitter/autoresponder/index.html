@@ -1,6 +1,6 @@
 {% extends "twitter/base.html" %}
 
-{% block title %}AI-автоответчик · Twitter Master{% endblock %}
+{% block title %}{{ t("AI-автоответчик · Twitter Master") }}{% endblock %}
 
 {% block content %}
 <div class="x-page">
@@ -92,7 +92,7 @@
 
   {# ── SESSIONS LIST ── #}
   <section>
-    <h2 class="x-card__title" style="margin:8px 0 12px;">AI-сессии ({{ sessions|length }})</h2>
+    <h2 class="x-card__title" style="margin:8px 0 12px;">{{ t("AI-сессии (") }}{{ sessions|length }})</h2>
     {% if sessions %}
       <div class="x-grid x-grid--wide">
         {% for s in sessions %}

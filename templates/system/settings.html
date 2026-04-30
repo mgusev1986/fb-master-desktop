@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Настройки — SOCMASTER{% endblock %}
+{% block title %}{{ t("Настройки — SOCMASTER") }}{% endblock %}
 
 {% block head %}
 <style>
@@ -205,9 +205,9 @@
     <div class="card-body">
       <p class="settings-note" style="margin-bottom:16px">
         {% if settings_hide_infra %}
-        Вставьте ключ от сервиса и нажмите <strong>{{ t("Сохранить") }}</strong>{{ t(". Ключ хранится только на вашем компьютере. Если ключ уже введён, в поле видны точки вместо букв — это нормально. Чтобы заменить ключ, нажмите в поле, вставьте новый и снова") }} <strong>{{ t("Сохранить") }}</strong>{{ t(". Для") }} <strong>Gemini</strong> {{ t("можно указать") }} <strong>{{ t("несколько ключей") }}</strong> (по одному на строку): при лимите квоты одного ключа запросы автоматически перейдут на следующий.
+        {{ t("Вставьте ключ от сервиса и нажмите") }} <strong>{{ t("Сохранить") }}</strong>{{ t(". Ключ хранится только на вашем компьютере. Если ключ уже введён, в поле видны точки вместо букв — это нормально. Чтобы заменить ключ, нажмите в поле, вставьте новый и снова") }} <strong>{{ t("Сохранить") }}</strong>{{ t(". Для") }} <strong>Gemini</strong> {{ t("можно указать") }} <strong>{{ t("несколько ключей") }}</strong> {{ t("(по одному на строку): при лимите квоты одного ключа запросы автоматически перейдут на следующий.") }}
         {% else %}
-        Вставьте ключ и нажмите <strong>{{ t("Сохранить") }}</strong>{{ t(". Если ключ уже сохранён, в поле отображаются точки — сам секрет не передаётся в браузер. Чтобы сменить ключ, кликните в поле (оно очистится), вставьте новый и снова нажмите") }} <strong>{{ t("Сохранить") }}</strong>{{ t(". Для") }} <strong>Gemini</strong> {{ t("допускается") }} <strong>{{ t("несколько API-ключей") }}</strong> — каждый с новой строки; при исчерпании квоты одного ключа система переключится на следующий.
+        {{ t("Вставьте ключ и нажмите") }} <strong>{{ t("Сохранить") }}</strong>{{ t(". Если ключ уже сохранён, в поле отображаются точки — сам секрет не передаётся в браузер. Чтобы сменить ключ, кликните в поле (оно очистится), вставьте новый и снова нажмите") }} <strong>{{ t("Сохранить") }}</strong>{{ t(". Для") }} <strong>Gemini</strong> {{ t("допускается") }} <strong>{{ t("несколько API-ключей") }}</strong> {{ t("— каждый с новой строки; при исчерпании квоты одного ключа система переключится на следующий.") }}
         {% endif %}
       </p>
       <div class="settings-subgrid">
@@ -229,7 +229,7 @@
 
         <section class="settings-field">
           <h3>Google AI (Gemini)</h3>
-          <p class="settings-note" style="margin-bottom:10px">{% if settings_hide_infra %}{{ t("Нужен для возможностей на базе Gemini.") }}{% else %}{{ t("Для функций на базе Gemini.") }}{% endif %} Можно ввести <strong>{{ t("несколько ключей") }}</strong> {{ t("— по одному на строку; при ошибке квоты или лимита используется следующий.") }}</p>
+          <p class="settings-note" style="margin-bottom:10px">{% if settings_hide_infra %}{{ t("Нужен для возможностей на базе Gemini.") }}{% else %}{{ t("Для функций на базе Gemini.") }}{% endif %} {{ t("Можно ввести") }} <strong>{{ t("несколько ключей") }}</strong> {{ t("— по одному на строку; при ошибке квоты или лимита используется следующий.") }}</p>
           <textarea name="google_llm_api_key" class="form-textarea js-settings-masked-secret" rows="{% if has_google_llm_effective %}{{ [google_llm_key_count, 4]|max }}{% else %}4{% endif %}" autocomplete="off" spellcheck="false" placeholder="{% if has_google_llm_effective %}{{ t("Кликните и вставьте ключи (каждый с новой строки)") }}{% else %}{{ t("Первый ключ") }}&#10;{{ t("Второй ключ (необязательно)") }}{% endif %}"{% if has_google_llm_effective %} data-key-mask-present="1" data-mask-line-count="{{ google_llm_key_count }}"{% endif %} style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px"></textarea>
           <div class="settings-field-save">
             <button type="submit" name="save_partial" value="google_llm" class="btn btn-primary"><i class="ti ti-device-floppy"></i> {{ t("Сохранить") }}</button>
@@ -239,7 +239,7 @@
           </div>
           <div class="settings-status-row">
             {% if has_google_llm_effective %}
-              {% if google_llm_key_count > 1 %}<span class="badge badge-success">сохранено ключей: {{ google_llm_key_count }}, ротация при квоте</span>
+              {% if google_llm_key_count > 1 %}<span class="badge badge-success">{{ t("сохранено ключей:") }} {{ google_llm_key_count }}{{ t(", ротация при квоте") }}</span>
               {% else %}<span class="badge badge-success">{{ t("ключ сохранён, можно пользоваться") }}</span>{% endif %}
             {% else %}<span class="badge badge-default">{{ t("ключ ещё не введён") }}</span>{% endif %}
           </div>
@@ -379,8 +379,8 @@
           <h3>{% if settings_hide_infra %}{{ t("Показывать окно или нет") }}{% else %}{{ t("Видимое окно") }}{% endif %}</h3>
           {% if settings_hide_infra %}
           <p>
-            {{ t("Обычно парсер, прогрев, рассылка и похожие действия выполняются") }} <strong>{{ t("в фоне") }}</strong> — отдельное окно браузера не открывается. Так удобнее и меньше отвлекает.
-            Включите галочку ниже, если хотите <strong>{{ t("видеть") }}</strong> {{ t("браузер во время этих задач — например, чтобы понять, что именно делает программа. Обновление списка чатов в мессенджере по-прежнему идёт без показа окна.") }}
+            {{ t("Обычно парсер, прогрев, рассылка и похожие действия выполняются") }} <strong>{{ t("в фоне") }}</strong> {{ t("— отдельное окно браузера не открывается. Так удобнее и меньше отвлекает.") }}
+            {{ t("Включите галочку ниже, если хотите") }} <strong>{{ t("видеть") }}</strong> {{ t("браузер во время этих задач — например, чтобы понять, что именно делает программа. Обновление списка чатов в мессенджере по-прежнему идёт без показа окна.") }}
           </p>
           <label class="settings-inline-check" style="font-size:var(--font-size-sm);cursor:pointer">
             <input type="checkbox" name="playwright_show_browser" value="1" {% if cabinet_playwright_show_browser %}checked{% endif %}/>
@@ -415,8 +415,8 @@
 
           <h3 style="margin:0 0 6px;font-size:var(--font-size-md)">{{ t("Встроенный логин в Facebook") }} <span class="badge badge-warning" style="font-size:10px;padding:1px 5px">beta</span></h3>
           <p style="font-size:var(--font-size-sm);color:var(--text-secondary);margin:0 0 8px">
-            {{ t("Когда включено — кнопка «Войти в Facebook» открывает логин в webview внутри SOCMASTER (а не в отдельном окне Chromium). После такого логина встроенный Messenger") }} <strong>{{ t("не спрашивает PIN сквозного шифрования второй раз") }}</strong> — ключи E2EE живут в том же Chromium-контексте.
-            Старый режим (отдельное окно через Playwright) остаётся доступен рядом кнопкой «В отдельном окне».
+            {{ t("Когда включено — кнопка «Войти в Facebook» открывает логин в webview внутри SOCMASTER (а не в отдельном окне Chromium). После такого логина встроенный Messenger") }} <strong>{{ t("не спрашивает PIN сквозного шифрования второй раз") }}</strong> {{ t("— ключи E2EE живут в том же Chromium-контексте.") }}
+            {{ t("Старый режим (отдельное окно через Playwright) остаётся доступен рядом кнопкой «В отдельном окне».") }}
           </p>
           <label class="settings-inline-check" style="font-size:var(--font-size-sm);cursor:pointer">
             <input type="checkbox" name="embedded_login_enabled" value="1" {% if cabinet_embedded_login_enabled %}checked{% endif %}/>
@@ -534,7 +534,7 @@
         </div>
         <div class="settings-kv">
           <p class="settings-kv-label">LOG_LEVEL / retention</p>
-          <p class="settings-kv-value">{{ runtime_log_level }} · {{ runtime_log_retention_days }} дн.</p>
+          <p class="settings-kv-value">{{ runtime_log_level }} · {{ runtime_log_retention_days }} {{ t("дн.") }}</p>
         </div>
         <div class="settings-kv">
           <p class="settings-kv-label">LOCAL_SIMULATE_PRODUCTION</p>
@@ -552,12 +552,12 @@
         <div class="settings-kv">
           <p class="settings-kv-label">{{ t("Headless (эффективно)") }}</p>
           <p class="settings-kv-value">{% if runtime_warmup_headless %}<span class="badge badge-default">headless</span>{% else %}<span class="badge badge-success">{{ t("окно") }}</span>{% endif %}
-            <span style="opacity:.75">(.env: {% if runtime_warmup_headless_env %}on{% else %}off{% endif %}{% if cabinet_playwright_show_browser %}; кабинет: окно{% endif %})</span></p>
+            <span style="opacity:.75">(.env: {% if runtime_warmup_headless_env %}on{% else %}off{% endif %}{% if cabinet_playwright_show_browser %}{{ t("; кабинет: окно") }}{% endif %})</span></p>
         </div>
         <div class="settings-kv">
           <p class="settings-kv-label">Messenger E2EE</p>
           <p class="settings-kv-value">
-            ждать {{ runtime_messenger_e2ee_wait_seconds }} сек ·
+            {{ t("ждать") }} {{ runtime_messenger_e2ee_wait_seconds }} {{ t("сек ·") }}
             {% if runtime_messenger_e2ee_pin_configured %}<span class="badge badge-success">{{ t("PIN задан") }}</span>{% else %}<span class="badge badge-default">{{ t("PIN не задан") }}</span>{% endif %}
           </p>
         </div>

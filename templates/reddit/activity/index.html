@@ -1,6 +1,6 @@
 {% extends "reddit/base.html" %}
 
-{% block title %}Недавняя активность · Reddit Master{% endblock %}
+{% block title %}{{ t("Недавняя активность · Reddit Master") }}{% endblock %}
 
 {% block content %}
 <div class="reddit-page">
@@ -78,7 +78,7 @@
           <span style="font-size:11px;padding:2px 6px;border-radius:999px;background:color-mix(in srgb,#c33 14%,transparent);color:#c33;">{{ t("ошибка") }}</span>
           {% else %}
           <span style="font-size:11px;padding:2px 6px;border-radius:999px;background:var(--ws-accent-soft);color:var(--ws-accent);">
-            {{ r.posts_count + r.comments_count }} действий
+            {{ r.posts_count + r.comments_count }} {{ t("действий") }}
           </span>
           {% endif %}
         </header>
@@ -96,7 +96,7 @@
         </div>
         {% if r.subreddits_seen %}
         <div class="reddit-card__desc" style="font-size:12px;">
-          Активен в: {% for s in r.subreddits_seen %}{{ s }}{% if not loop.last %}, {% endif %}{% endfor %}
+          {{ t("Активен в:") }} {% for s in r.subreddits_seen %}{{ s }}{% if not loop.last %}, {% endif %}{% endfor %}
         </div>
         {% endif %}
         {% if r.latest_items %}

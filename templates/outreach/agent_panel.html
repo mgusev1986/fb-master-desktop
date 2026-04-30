@@ -14,8 +14,8 @@
       <span>{{ t("Magic mode · нейросеть") }}</span>
     </p>
     <p class="subtitle" style="margin:0 0 12px;font-size:var(--font-size-sm);color:var(--text-secondary)">
-      {{ t("Генерация черновиков для контактов из «Базы контактов» (OpenAI или Gemini API, либо готовые тексты «первое касание»). Запуск") }} <strong>{{ t("в этом же окне") }}</strong> — дождитесь окончания, затем смотрите журнал ниже.
-      Паузы между запросами к ИИ — как «следующий контакт» в
+      {{ t("Генерация черновиков для контактов из «Базы контактов» (OpenAI или Gemini API, либо готовые тексты «первое касание»). Запуск") }} <strong>{{ t("в этом же окне") }}</strong> {{ t("— дождитесь окончания, затем смотрите журнал ниже.") }}
+      {{ t("Паузы между запросами к ИИ — как «следующий контакт» в") }}
       <a href="/system/speed">{{ t("Система → Скорость и паузы") }}</a>
       (<strong>{{ throttle_preset_label }}</strong>).
     </p>
@@ -29,8 +29,8 @@
     {% if err %}
     <div style="margin-bottom:12px;padding:12px;border:1px solid var(--error);border-radius:8px;font-size:var(--font-size-sm);color:var(--error)">
       {% if err == 'bad_context' %}{{ t("Некорректный тип задачи.") }}{% endif %}
-      {% if err == 'no_openai' %}Для OpenAI нужен <code>OPENAI_API_KEY</code> в .env{% endif %}
-      {% if err == 'no_gemini' %}Для Gemini нужен <code>GOOGLE_API_KEY</code> в .env{% endif %}
+      {% if err == 'no_openai' %}{{ t("Для OpenAI нужен") }} <code>OPENAI_API_KEY</code> {{ t("в .env") }}{% endif %}
+      {% if err == 'no_gemini' %}{{ t("Для Gemini нужен") }} <code>GOOGLE_API_KEY</code> {{ t("в .env") }}{% endif %}
       {% if err == 'batch_empty' %}{{ t("Заполните шаблон контекста.") }}{% endif %}
       {% if err == 'first_touch_dm_only' %}{{ t("Первое касание доступно только в режиме «Переписка».") }}{% endif %}
       {% if err == 'no_people_batch' %}{{ t("Нет контактов по выбранным условиям (донор или последние в базе).") }}{% endif %}
@@ -41,11 +41,11 @@
 
     {% if agent_done and batch_contacts %}
     <div style="margin-bottom:12px;padding:12px;border:1px solid var(--success);border-radius:8px;font-size:var(--font-size-sm)">
-      {{ t("Готово: обработано") }} <strong>{{ batch_contacts }}</strong> контактов
+      {{ t("Готово: обработано") }} <strong>{{ batch_contacts }}</strong> {{ t("контактов") }}
       {% if batch_rows and batch_contacts and batch_rows|int > batch_contacts|int %}
-      → <strong>{{ batch_rows }}</strong> записей в журнале (несколько вариантов на человека)
+      → <strong>{{ batch_rows }}</strong> {{ t("записей в журнале (несколько вариантов на человека)") }}
       {% elif batch_rows %}
-      → <strong>{{ batch_rows }}</strong> записей в журнале
+      → <strong>{{ batch_rows }}</strong> {{ t("записей в журнале") }}
       {% endif %}.
     </div>
     {% endif %}
@@ -63,7 +63,7 @@
           <div>
             <strong>{{ t("Запуск из журнала") }}</strong>
             · {{ ai_provider_label(highlight_run.provider) }} / <code>{{ highlight_run.model }}</code>
-            · {% if highlight_run.context_type == 'first_touch' %}первое касание (EN){% elif highlight_run.context_type == 'dm' %}переписка{% else %}комментарий{% endif %}
+            · {% if highlight_run.context_type == 'first_touch' %}{{ t("первое касание (EN)") }}{% elif highlight_run.context_type == 'dm' %}{{ t("переписка") }}{% else %}{{ t("комментарий") }}{% endif %}
             · {{ format_dt_madrid(highlight_run.created_at) }}
             {% if highlight_run.person_id and person_labels.get(highlight_run.person_id) %}
             · {{ person_labels.get(highlight_run.person_id) }}
@@ -73,7 +73,7 @@
             {% else %}
             <span style="color:var(--error)">{{ t("ошибка") }}</span>
             {% endif %}
-            {% if highlight_run.duration_ms %}· {{ highlight_run.duration_ms }} мс{% endif %}
+            {% if highlight_run.duration_ms %}· {{ highlight_run.duration_ms }} {{ t("мс") }}{% endif %}
           </div>
           {% if highlight_run.outcome == 'success' and highlight_run.output_preview %}
           <button type="button" class="btn btn-sm btn-secondary" id="outreach-ai-copy-draft">{{ t("Копировать черновик") }}</button>
@@ -133,7 +133,7 @@
       <div class="form-group" id="provider_block">
         <label class="form-label" for="batch_provider">{{ t("Провайдер (только для своего шаблона + ИИ)") }}</label>
         <select id="batch_provider" name="provider" class="form-input" style="max-width:280px">
-          <option value="">По умолчанию ({% if settings.default_provider == 'gemini' %}Gemini{% elif settings.default_provider == 'ollama' %}Gemini{% else %}OpenAI{% endif %})</option>
+          <option value="">{{ t("По умолчанию (") }}{% if settings.default_provider == 'gemini' %}Gemini{% elif settings.default_provider == 'ollama' %}Gemini{% else %}OpenAI{% endif %})</option>
           <option value="openai" {% if not has_openai %}disabled{% endif %}>OpenAI</option>
           <option value="gemini" {% if not has_gemini %}disabled{% endif %}>Gemini</option>
         </select>
@@ -196,7 +196,7 @@
           {% for r in runs %}
           <tr {% if highlight_run and r.id == highlight_run.id %}style="background:var(--bg-surface-hover)"{% endif %}>
             <td><a href="/outreach?focus=agent&highlight={{ r.id }}" class="table-link">{{ format_dt_madrid(r.created_at) }}</a></td>
-            <td>{% if r.context_type == 'first_touch' %}1-й контакт{% elif r.context_type == 'dm' %}ЛС{% else %}Комм.{% endif %}</td>
+            <td>{% if r.context_type == 'first_touch' %}{{ t("1-й контакт") }}{% elif r.context_type == 'dm' %}{{ t("ЛС") }}{% else %}{{ t("Комм.") }}{% endif %}</td>
             <td style="font-size:var(--font-size-sm);max-width:140px;overflow:hidden;text-overflow:ellipsis" {% if r.person_id %}title="{{ person_labels.get(r.person_id, '') }}"{% endif %}>
               {% if r.person_id %}{{ person_labels.get(r.person_id, '—') }}{% else %}—{% endif %}
             </td>

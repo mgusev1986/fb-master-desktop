@@ -7,7 +7,7 @@
   <header class="reddit-page__header">
     <div class="reddit-page__title-wrap">
       <h1 class="reddit-page__title">{{ sequence.name }}</h1>
-      <p class="reddit-page__subtitle">status: {{ sequence.status }} · шагов: {{ (sequence.nodes_json or []) | length }} · TZ: {{ sequence.timezone }}</p>
+      <p class="reddit-page__subtitle">status: {{ sequence.status }} {{ t("· шагов:") }} {{ (sequence.nodes_json or []) | length }} · TZ: {{ sequence.timezone }}</p>
     </div>
     <div style="display:flex;gap:8px;">
       <a href="/reddit/sequences/{{ sequence.id }}/edit" class="reddit-btn">{{ t("Редактировать") }}</a>

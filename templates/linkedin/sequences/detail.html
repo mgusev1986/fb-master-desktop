@@ -1,13 +1,13 @@
 {% extends "linkedin/base.html" %}
 
-{% block title %}{{ sequence.name }} · Сценарий · LinkedIn Master{% endblock %}
+{% block title %}{{ sequence.name }} {{ t("· Сценарий · LinkedIn Master") }}{% endblock %}
 
 {% block content %}
 <div class="li-page">
   <header class="li-page__header">
     <div class="li-page__title-wrap">
       <h1 class="li-page__title">{{ sequence.name }} <span class="li-page__beta-pill">Beta</span></h1>
-      <p class="li-page__subtitle">{{ (sequence.nodes_json or [])|length }} узлов · {{ runs|length }} runs</p>
+      <p class="li-page__subtitle">{{ (sequence.nodes_json or [])|length }} {{ t("узлов ·") }} {{ runs|length }} runs</p>
     </div>
     <a href="/linkedin/sequences" class="li-btn"><i class="ti ti-arrow-left"></i> {{ t("К списку") }}</a>
   </header>
@@ -44,7 +44,7 @@
   </section>
 
   <section>
-    <h2 class="li-card__title" style="margin:8px 0 12px;">Активные runs ({{ runs|length }})</h2>
+    <h2 class="li-card__title" style="margin:8px 0 12px;">{{ t("Активные runs (") }}{{ runs|length }})</h2>
     {% if runs %}
     <div style="overflow-x:auto;">
       <table style="width:100%;border-collapse:collapse;background:var(--bg-surface,#fff);border:1px solid var(--border,#e4e6eb);border-radius:12px;">

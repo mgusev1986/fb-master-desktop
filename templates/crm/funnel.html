@@ -787,7 +787,7 @@
           {% endfor %}
         </div>
         {% if overflow.get(primary_stage_key) %}
-        <div class="funnel-overflow">Ещё {{ overflow[primary_stage_key] }} — <a href="/people?stage={{ primary_stage_key }}&amp;q={{ search_q|urlencode }}">{{ t("открыть в «Базе контактов»") }}</a></div>
+        <div class="funnel-overflow">{{ t("Ещё") }} {{ overflow[primary_stage_key] }} — <a href="/people?stage={{ primary_stage_key }}&amp;q={{ search_q|urlencode }}">{{ t("открыть в «Базе контактов»") }}</a></div>
         {% endif %}
       </div>
       {% endif %}
@@ -823,7 +823,7 @@
           {% endfor %}
         </div>
         {% if overflow.get(key) %}
-        <div class="funnel-overflow">Ещё {{ overflow[key] }} — <a href="/people?stage={{ key }}&amp;q={{ search_q|urlencode }}">{{ t("открыть в «Базе контактов»") }}</a></div>
+        <div class="funnel-overflow">{{ t("Ещё") }} {{ overflow[key] }} — <a href="/people?stage={{ key }}&amp;q={{ search_q|urlencode }}">{{ t("открыть в «Базе контактов»") }}</a></div>
         {% endif %}
       </div>
       {% endif %}
@@ -902,11 +902,11 @@
         {% endfor %}
       </div>
       {% if overflow.get(active_tab) %}
-      <div class="funnel-overflow">Ещё {{ overflow[active_tab] }} — <a href="/people?stage={{ active_tab }}&amp;q={{ search_q|urlencode }}">{{ t("в «Базе контактов»") }}</a></div>
+      <div class="funnel-overflow">{{ t("Ещё") }} {{ overflow[active_tab] }} — <a href="/people?stage={{ active_tab }}&amp;q={{ search_q|urlencode }}">{{ t("в «Базе контактов»") }}</a></div>
       {% endif %}
     </div>
     {% if other_total %}
-    <p class="form-hint" style="margin-top:14px">Вне стандартных стадий: {{ other_total }} контакт(ов). Переключитесь на доску, чтобы видеть колонку «Другое».</p>
+    <p class="form-hint" style="margin-top:14px">{{ t("Вне стандартных стадий:") }} {{ other_total }} {{ t("контакт(ов). Переключитесь на доску, чтобы видеть колонку «Другое».") }}</p>
     {% endif %}
     {% endif %}
   </div>

@@ -1,6 +1,6 @@
 {% extends "linkedin/base.html" %}
 
-{% block title %}Лиды · LinkedIn Master{% endblock %}
+{% block title %}{{ t("Лиды · LinkedIn Master") }}{% endblock %}
 
 {% block content %}
 <div class="li-page">
@@ -22,7 +22,7 @@
       {{ t("Открывает") }} <code>/search/results/people/</code> {{ t("под выбранным аккаунтом, парсит первые N результатов и сохраняет их как лидов с дедупликацией по URL. Можно сохранить параметры как сегмент для повторного запуска.") }}
     </p>
     <form method="post" action="/linkedin/leads/audience-search" style="display:flex;flex-direction:column;gap:8px;"
-          onsubmit="this.querySelector('button[type=submit].search-go').disabled=true; this.querySelector('button[type=submit].search-go').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Ищу…';">
+          onsubmit="this.querySelector('button[type=submit].search-go').disabled=true; this.querySelector('button[type=submit].search-go').innerHTML='<i class=&quot;ti ti-loader&quot;></i> {{ t("Ищу…';\">") }}
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
         <select name="account_id" required style="flex:1;min-width:200px;padding:8px;border-radius:8px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);">
           <option value="">{{ t("— аккаунт для поиска —") }}</option>
@@ -35,7 +35,7 @@
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <select name="segment_id" style="flex:1;min-width:200px;padding:8px;border-radius:8px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);font-size:12px;">
           <option value="">{{ t("— или выберите сохранённый сегмент —") }}</option>
-          {% for s in (segments or []) %}<option value="{{ s.id }}">{{ s.name }} ({{ s.last_run_count or 0 }} лидов · {{ s.last_run_at.strftime('%d.%m %H:%M') if s.last_run_at else 'не запускался' }})</option>{% endfor %}
+          {% for s in (segments or []) %}<option value="{{ s.id }}">{{ s.name }} ({{ s.last_run_count or 0 }} {{ t("лидов ·") }} {{ s.last_run_at.strftime('%d.%m %H:%M') if s.last_run_at else 'не запускался' }})</option>{% endfor %}
         </select>
         <label style="font:400 12px/1 Inter,sans-serif;color:var(--text-secondary,#606770);display:inline-flex;align-items:center;gap:4px;">
           <input type="checkbox" name="save_as_segment" value="on"/>
@@ -51,7 +51,7 @@
 
   {% if segments %}
   <section class="li-card">
-    <h2 class="li-card__title"><i class="ti ti-bookmark"></i> Сохранённые сегменты ({{ segments|length }})</h2>
+    <h2 class="li-card__title"><i class="ti ti-bookmark"></i> {{ t("Сохранённые сегменты (") }}{{ segments|length }})</h2>
     <div style="display:flex;flex-wrap:wrap;gap:8px;">
       {% for s in segments %}
       <div style="display:flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--border,#e4e6eb);border-radius:999px;background:color-mix(in srgb,var(--ws-accent) 4%,transparent);">
@@ -104,7 +104,7 @@
   </div>
 
   <section>
-    <h2 class="li-card__title" style="margin:8px 0 12px;">Лиды ({{ leads|length }})</h2>
+    <h2 class="li-card__title" style="margin:8px 0 12px;">{{ t("Лиды (") }}{{ leads|length }})</h2>
     {% if leads %}
       <div style="overflow-x:auto;">
         <table style="width:100%;border-collapse:collapse;background:var(--bg-surface,#fff);border:1px solid var(--border,#e4e6eb);border-radius:12px;">

@@ -1,6 +1,6 @@
 {% extends "reddit/base.html" %}
 
-{% block title %}Поиск аудитории · Reddit Master{% endblock %}
+{% block title %}{{ t("Поиск аудитории · Reddit Master") }}{% endblock %}
 
 {% block content %}
 <div class="reddit-page">
@@ -26,7 +26,7 @@
     <p class="reddit-card__desc">{{ t("Открывает Reddit под выбранным аккаунтом и парсит первые N результатов в leads с дедупликацией по username.") }}</p>
 
     <form method="post" action="/reddit/audience/scan-subreddit-browser" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px;"
-          onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Сканирую…';">
+          onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> {{ t("Сканирую…';\">") }}
       <select name="account_id" required style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);">
         <option value="">{{ t("— browser-mode аккаунт —") }}</option>
         {% for a in browser_accounts %}<option value="{{ a.id }}">{{ a.label }} [{{ a.status }}]</option>{% endfor %}
@@ -40,7 +40,7 @@
     </form>
 
     <form method="post" action="/reddit/audience/search-users-browser" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"
-          onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Ищу…';">
+          onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> {{ t("Ищу…';\">") }}
       <select name="account_id" required style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);">
         <option value="">{{ t("— browser-mode аккаунт —") }}</option>
         {% for a in browser_accounts %}<option value="{{ a.id }}">{{ a.label }} [{{ a.status }}]</option>{% endfor %}
@@ -110,7 +110,7 @@
 
     <div class="reddit-card" style="padding:14px 18px;flex-direction:row;align-items:center;gap:12px;justify-content:space-between;">
       <div style="font:500 14px/1.2 Inter;color:var(--text-primary);">
-        Найдено: {{ cards|length }}
+        {{ t("Найдено:") }} {{ cards|length }}
       </div>
       <div style="display:flex;gap:8px;">
         <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-muted);">

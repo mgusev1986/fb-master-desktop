@@ -7,7 +7,7 @@
   <header class="x-page__header">
     <div class="x-page__title-wrap">
       <h1 class="x-page__title">@{{ conversation.counterpart_handle or '?' }} <span class="x-page__beta-pill">Beta</span></h1>
-      <p class="x-page__subtitle">acc#{{ conversation.account_id }}{% if marked_read %} · помечено прочитанными: {{ marked_read }}{% endif %}</p>
+      <p class="x-page__subtitle">acc#{{ conversation.account_id }}{% if marked_read %} {{ t("· помечено прочитанными:") }} {{ marked_read }}{% endif %}</p>
     </div>
     <a href="/twitter/conversations" class="x-btn"><i class="ti ti-arrow-left"></i> Inbox</a>
   </header>
@@ -24,7 +24,7 @@
   </section>
 
   <section>
-    <h2 class="x-card__title" style="margin:8px 0 12px;">История ({{ messages|length }})</h2>
+    <h2 class="x-card__title" style="margin:8px 0 12px;">{{ t("История (") }}{{ messages|length }})</h2>
     {% if messages %}
     <div style="display:flex;flex-direction:column;gap:8px;max-height:520px;overflow:auto;padding:8px;background:color-mix(in srgb,#000 3%,transparent);border-radius:12px;">
       {% for m in messages %}
@@ -43,7 +43,7 @@
 
   <section class="x-card x-card--accent">
     <h2 class="x-card__title"><i class="ti ti-send"></i> {{ t("Ответить") }}</h2>
-    <form method="post" action="/twitter/conversations/{{ conversation.id }}/send" style="display:flex;flex-direction:column;gap:8px;" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Отправляю…';">
+    <form method="post" action="/twitter/conversations/{{ conversation.id }}/send" style="display:flex;flex-direction:column;gap:8px;" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> {{ t("Отправляю…';\">") }}
       <textarea name="body" rows="4" required placeholder="{{ t("Ваш ответ…") }}" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 14px/1.5 Inter;"></textarea>
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <label style="font:400 12px/1 Inter;color:var(--text-secondary);"><input type="checkbox" name="headless" value="on" checked/> headless</label>

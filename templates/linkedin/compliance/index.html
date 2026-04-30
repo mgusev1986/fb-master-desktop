@@ -1,6 +1,6 @@
 {% extends "linkedin/base.html" %}
 
-{% block title %}Правила и лимиты · LinkedIn Master{% endblock %}
+{% block title %}{{ t("Правила и лимиты · LinkedIn Master") }}{% endblock %}
 
 {% block content %}
 <div class="li-page">
@@ -12,9 +12,9 @@
       </h1>
       <p class="li-page__subtitle">
         {{ t("Честный список того, что LinkedIn API реально позволяет, что доступно частично, что только в режиме manual review и что запрещено платформой. Параметры безопасности по умолчанию: режим подтверждения —") }} <strong>{{ approval_mode }}</strong>,
-        invitations — <strong>{{ daily_invites_cap }}/сутки</strong> {{ t("и") }}
-        <strong>{{ weekly_invites_cap }}/неделя</strong>,
-        messages — <strong>{{ daily_messages_cap }}/сутки</strong>.
+        invitations — <strong>{{ daily_invites_cap }}{{ t("/сутки") }}</strong> {{ t("и") }}
+        <strong>{{ weekly_invites_cap }}{{ t("/неделя") }}</strong>,
+        messages — <strong>{{ daily_messages_cap }}{{ t("/сутки") }}</strong>.
       </p>
     </div>
     <a href="/linkedin/settings" class="li-btn"><i class="ti ti-settings"></i> {{ t("Настройки") }}</a>

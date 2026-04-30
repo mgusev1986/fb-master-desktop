@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "macros/hints.html" import mailing_warmup_placeholders %}
-{% block title %}{{ campaign.name }} — Режим агента — SOCMASTER{% endblock %}
+{% block title %}{{ campaign.name }} {{ t("— Режим агента — SOCMASTER") }}{% endblock %}
 
 {% block content %}
 {% set donor_ns = namespace(label='Не выбран') %}
@@ -16,7 +16,7 @@
       <h1>{{ campaign.name }}</h1>
       <p class="subtitle">
         {% if campaign.status == 'active' %}<span class="badge badge-success">{{ t("Активен") }}</span>{% elif campaign.status == 'paused' %}<span class="badge badge-warning">{{ t("Пауза") }}</span>{% else %}<span class="badge badge-default">{{ t("Черновик") }}</span>{% endif %}
-        · готово к шагу сейчас: <strong>{{ due_n }}</strong> <span style="font-weight:400;opacity:0.85">{{ t("(в очереди и подошло время)") }}</span>
+        {{ t("· готово к шагу сейчас:") }} <strong>{{ due_n }}</strong> <span style="font-weight:400;opacity:0.85">{{ t("(в очереди и подошло время)") }}</span>
         {{ t("· незавершённых контактов в текущей партии:") }} <strong>{{ unfinished_enrollment_count }}</strong>
       </p>
     </div>
@@ -32,9 +32,9 @@
   <div class="card-body" style="font-size:var(--font-size-sm)">
     {% set seeded = request.query_params.get('seeded')|int %}
     {% if seeded > 0 %}
-    В очередь режима добавлена новая партия: <strong>{{ seeded }}</strong> человек.
+    {{ t("В очередь режима добавлена новая партия:") }} <strong>{{ seeded }}</strong> {{ t("человек.") }}
     {% else %}
-    Новая партия не была добавлена. Скорее всего, источник уже исчерпан или текущая партия ещё не завершена.
+    {{ t("Новая партия не была добавлена. Скорее всего, источник уже исчерпан или текущая партия ещё не завершена.") }}
     {% endif %}
   </div>
 </div>
@@ -59,13 +59,13 @@
 {% if request.query_params.get('full_autopilot') %}
 <div class="card" style="margin-bottom:16px;border-color:var(--success)">
   <div class="card-body" style="font-size:var(--font-size-sm)">
-    <strong>{{ t("Полный автопилот включён:") }}</strong> в настройках режима включены автоматические партии, глобально включён автозапуск проверки (~15&nbsp;мин), статус режима — «Активен».
+    <strong>{{ t("Полный автопилот включён:") }}</strong> {{ t("в настройках режима включены автоматические партии, глобально включён автозапуск проверки (~15&nbsp;мин), статус режима — «Активен».") }}
     {% if request.query_params.get('seeded') is not none and (request.query_params.get('seeded')|int) > 0 %}
-    Добавлена первая партия: <strong>{{ request.query_params.get('seeded') }}</strong> чел.; при свободном воркере сразу начнутся шаги цепочки.
+    {{ t("Добавлена первая партия:") }} <strong>{{ request.query_params.get('seeded') }}</strong> {{ t("чел.; при свободном воркере сразу начнутся шаги цепочки.") }}
     {% elif request.query_params.get('seeded') is not none %}
-    Первая партия не добавлена (источник пуст или партия ещё не завершена) — проверьте источник и очередь.
+    {{ t("Первая партия не добавлена (источник пуст или партия ещё не завершена) — проверьте источник и очередь.") }}
     {% endif %}
-    После того как текущая партия полностью отработает по цепочке, следующая подтянется автоматически (с учётом интервала между партиями в настройках), без ожидания только таймера 15&nbsp;мин.
+    {{ t("После того как текущая партия полностью отработает по цепочке, следующая подтянется автоматически (с учётом интервала между партиями в настройках), без ожидания только таймера 15&nbsp;мин.") }}
   </div>
 </div>
 {% endif %}
@@ -140,32 +140,32 @@
     <div>
       <strong>{{ t("Источник контактов") }}</strong>
       <p style="margin:8px 0 0;color:var(--text-secondary)">
-        Источник:
+        {{ t("Источник:") }}
         {% if pf.get('ui_import_batch_id') %}
-        партия импорта{% if import_batch_filename %} «{{ import_batch_filename }}»{% else %} #{{ pf.get('ui_import_batch_id') }}{% endif %}
+        {{ t("партия импорта") }}{% if import_batch_filename %} «{{ import_batch_filename }}»{% else %} #{{ pf.get('ui_import_batch_id') }}{% endif %}
         {% elif pf.get('all_people') %}
-        вся «База контактов»
+        {{ t("вся «База контактов»") }}
         {% else %}
-        донор: {{ donor_ns.label }}
+        {{ t("донор:") }} {{ donor_ns.label }}
         {% endif %}<br/>
-        Стадия CRM: {{ pf.get('crm_stage') or 'Все стадии' }}<br/>
-        Язык: {{ language_filter_label(pf.get('language_filter', 'all')) }}
+        {{ t("Стадия CRM:") }} {{ pf.get('crm_stage') or 'Все стадии' }}<br/>
+        {{ t("Язык:") }} {{ language_filter_label(pf.get('language_filter', 'all')) }}
       </p>
     </div>
     <div>
       <strong>{{ t("Аккаунты и темп") }}</strong>
       <p style="margin:8px 0 0;color:var(--text-secondary)">
-        Аккаунтов: {{ (campaign.fb_account_ids or [])|length }}<br/>
-        Пресет: {{ preset_labels.get(pf.get('preset', 'slow'), pf.get('preset', 'slow')) }}<br/>
-        Бюджет времени: {{ pf.get('time_budget_seconds') or 'не задан' }}
+        {{ t("Аккаунтов:") }} {{ (campaign.fb_account_ids or [])|length }}<br/>
+        {{ t("Пресет:") }} {{ preset_labels.get(pf.get('preset', 'slow'), pf.get('preset', 'slow')) }}<br/>
+        {{ t("Бюджет времени:") }} {{ pf.get('time_budget_seconds') or 'не задан' }}
       </p>
     </div>
     <div>
       <strong>{{ t("Автоматизация") }}</strong>
       <p style="margin:8px 0 0;color:var(--text-secondary)">
         {% if automation.enabled %}{{ t("Включена") }}{% else %}{{ t("Выключена") }}{% endif %}<br/>
-        Размер партии: {{ automation.batch_size }}<br/>
-        Интервал между партиями: {{ automation.batch_wait_value }} {% if automation.batch_wait_unit == 'minutes' %}мин.{% elif automation.batch_wait_unit == 'hours' %}час.{% else %}дн.{% endif %}
+        {{ t("Размер партии:") }} {{ automation.batch_size }}<br/>
+        {{ t("Интервал между партиями:") }} {{ automation.batch_wait_value }} {% if automation.batch_wait_unit == 'minutes' %}{{ t("мин.") }}{% elif automation.batch_wait_unit == 'hours' %}{{ t("час.") }}{% else %}{{ t("дн.") }}{% endif %}
       </p>
     </div>
     <div>
@@ -174,7 +174,7 @@
         {% if automation.last_batch_at %}
         {{ automation.last_batch_at.strftime('%d.%m.%Y %H:%M UTC') }}
         {% else %}
-        Ещё не запускалась
+        {{ t("Ещё не запускалась") }}
         {% endif %}
       </p>
     </div>
@@ -285,24 +285,24 @@
 	          {% set comment_pool = cfg.get('comment_pool_size', 5) %}
 	          <tr>
             <td>{{ s.step_index + 1 }}</td>
-            <td>{{ wait_value }} {% if wait_unit == 'hours' %}час.{% elif wait_unit == 'minutes' %}мин.{% else %}дн.{% endif %}</td>
+            <td>{{ wait_value }} {% if wait_unit == 'hours' %}{{ t("час.") }}{% elif wait_unit == 'minutes' %}{{ t("мин.") }}{% else %}{{ t("дн.") }}{% endif %}</td>
             <td>{{ step_labels.get(s.action_type, s.action_type) }}</td>
             <td style="color:var(--text-secondary);font-size:var(--font-size-xs);max-width:340px">
               {% if s.action_type == 'like_post' %}
               <div style="line-height:1.45">
-                <strong>{{ t("Лайк:") }}</strong> только посты · {{ 'сверху по порядку' if cfg.get('post_like_mode', 'first') == 'first' else 'случайно в пуле' }} · верхних в пуле {{ cfg.get('post_pool_size', 5) }} · {{ cfg.get('like_count', 1) }} лайк(ов)
-                {% if cfg.get('post_skip_likes') %} · пропуск {{ cfg.get('post_skip_likes') }}{% endif %}
+                <strong>{{ t("Лайк:") }}</strong> {{ t("только посты ·") }} {{ 'сверху по порядку' if cfg.get('post_like_mode', 'first') == 'first' else 'случайно в пуле' }} {{ t("· верхних в пуле") }} {{ cfg.get('post_pool_size', 5) }} · {{ cfg.get('like_count', 1) }} {{ t("лайк(ов)") }}
+                {% if cfg.get('post_skip_likes') %} {{ t("· пропуск") }} {{ cfg.get('post_skip_likes') }}{% endif %}
               </div>
 	              {% elif s.action_type in ('like_and_comment', 'like_comment_friend_request', 'like_comment_friend_request_send_dm') %}
 	              <div style="line-height:1.45">
-	                <strong>{{ t("Лайк:") }}</strong> только посты · {{ 'сверху по порядку' if cfg.get('post_like_mode', 'first') == 'first' else 'случайно в пуле' }} · верхних в пуле {{ cfg.get('post_pool_size', 5) }} · {{ cfg.get('like_count', 1) }} лайк(ов)
-	                {% if cfg.get('post_skip_likes') %} · пропуск {{ cfg.get('post_skip_likes') }}{% endif %}
+	                <strong>{{ t("Лайк:") }}</strong> {{ t("только посты ·") }} {{ 'сверху по порядку' if cfg.get('post_like_mode', 'first') == 'first' else 'случайно в пуле' }} {{ t("· верхних в пуле") }} {{ cfg.get('post_pool_size', 5) }} · {{ cfg.get('like_count', 1) }} {{ t("лайк(ов)") }}
+	                {% if cfg.get('post_skip_likes') %} {{ t("· пропуск") }} {{ cfg.get('post_skip_likes') }}{% endif %}
 	                <div style="margin-top:6px"><strong>{{ t("Пост для комментария:") }}</strong> {{ 'первый сверху' if comment_mode == 'first' else 'случайно среди верхних ' ~ comment_pool }}</div>
 	                {% if cfg.get('ai_comment') %}
-	                <div style="margin-top:6px"><strong>{{ t("Комментарий (нейросеть)") }}</strong> — по тексту выбранного поста в ленте.
+	                <div style="margin-top:6px"><strong>{{ t("Комментарий (нейросеть)") }}</strong> {{ t("— по тексту выбранного поста в ленте.") }}
 	                  {% set _hint = (cfg.get('ai_comment_hint') or '') %}
 	                  {% if _hint %}
-	                  <div style="margin-top:4px">Подсказка к стилю: {{ _hint[:180] }}{% if _hint|length > 180 %}…{% endif %}</div>
+	                  <div style="margin-top:4px">{{ t("Подсказка к стилю:") }} {{ _hint[:180] }}{% if _hint|length > 180 %}…{% endif %}</div>
                   {% endif %}
                 </div>
                 {% elif template_row %}
@@ -315,17 +315,17 @@
                 {% endif %}
                 {% if s.action_type == 'like_comment_friend_request_send_dm' %}
                   {% if cfg.get('ai_dm') %}
-                  <div style="margin-top:6px"><strong>{{ t("ЛС (нейросеть)") }}</strong> — отдельный текст для личного сообщения.
+                  <div style="margin-top:6px"><strong>{{ t("ЛС (нейросеть)") }}</strong> {{ t("— отдельный текст для личного сообщения.") }}
                     {% if cfg.get('ai_dm_example') %}
-                    <div style="margin-top:4px">Опора: поле «Опорный текст»{% set _dm_ex = (cfg.get('ai_dm_example') or '') %} — «{{ _dm_ex[:72] }}{% if _dm_ex|length > 72 %}…{% endif %}»</div>
+                    <div style="margin-top:4px">{{ t("Опора: поле «Опорный текст»") }}{% set _dm_ex = (cfg.get('ai_dm_example') or '') %} — «{{ _dm_ex[:72] }}{% if _dm_ex|length > 72 %}…{% endif %}»</div>
                     {% elif dm_template_row %}
-                    <div style="margin-top:4px">Опора: шаблон «{{ dm_template_row.name }}»</div>
+                    <div style="margin-top:4px">{{ t("Опора: шаблон «") }}{{ dm_template_row.name }}»</div>
                     {% elif cfg.get('dm_message') %}
                     <div style="margin-top:4px">{{ t("Опора: отдельный текст ЛС в форме шага") }}</div>
                     {% endif %}
                     {% set _dmh = (cfg.get('ai_dm_hint') or '') %}
                     {% if _dmh %}
-                    <div style="margin-top:4px">Подсказка: {{ _dmh[:200] }}{% if _dmh|length > 200 %}…{% endif %}</div>
+                    <div style="margin-top:4px">{{ t("Подсказка:") }} {{ _dmh[:200] }}{% if _dmh|length > 200 %}…{% endif %}</div>
                     {% endif %}
                   </div>
                   {% elif dm_template_row %}
@@ -341,7 +341,7 @@
 	                <div style="margin-top:6px"><strong>{{ t("Комментарий (нейросеть)") }}</strong> {{ t("— текст подбирается по содержимому выбранного поста в ленте профиля.") }}</div>
 	                {% set _hint = (cfg.get('ai_comment_hint') or '') %}
 	                {% if _hint %}
-	                <div style="margin-top:4px">Подсказка к стилю: {{ _hint[:220] }}{% if _hint|length > 220 %}…{% endif %}</div>
+	                <div style="margin-top:4px">{{ t("Подсказка к стилю:") }} {{ _hint[:220] }}{% if _hint|length > 220 %}…{% endif %}</div>
 	                {% endif %}
 	              </div>
 	              {% elif s.action_type == 'comment_post' %}
@@ -355,17 +355,17 @@
 	              </div>
 	              {% elif s.action_type == 'send_dm' and cfg.get('ai_dm') %}
 	              <div style="line-height:1.45">
-	                <strong>{{ t("Личное сообщение (нейросеть)") }}</strong> — каждый раз новый текст в заданном контексте.
+	                <strong>{{ t("Личное сообщение (нейросеть)") }}</strong> {{ t("— каждый раз новый текст в заданном контексте.") }}
                 {% if cfg.get('ai_dm_example') %}
-                <div style="margin-top:4px">Опора: пример в поле «Опорный текст»{% set _ex = (cfg.get('ai_dm_example') or '') %} — «{{ _ex[:72] }}{% if _ex|length > 72 %}…{% endif %}»</div>
+                <div style="margin-top:4px">{{ t("Опора: пример в поле «Опорный текст»") }}{% set _ex = (cfg.get('ai_dm_example') or '') %} — «{{ _ex[:72] }}{% if _ex|length > 72 %}…{% endif %}»</div>
                 {% elif template_row %}
-                <div style="margin-top:4px">Опора: шаблон «{{ template_row.name }}»</div>
+                <div style="margin-top:4px">{{ t("Опора: шаблон «") }}{{ template_row.name }}»</div>
                 {% elif cfg.get('message') %}
                 <div style="margin-top:4px">{{ t("Опора: текст шага внизу формы") }}</div>
                 {% endif %}
                 {% set _dh = (cfg.get('ai_dm_hint') or '') %}
                 {% if _dh %}
-                <div style="margin-top:4px">Подсказка: {{ _dh[:200] }}{% if _dh|length > 200 %}…{% endif %}</div>
+                <div style="margin-top:4px">{{ t("Подсказка:") }} {{ _dh[:200] }}{% if _dh|length > 200 %}…{% endif %}</div>
                 {% endif %}
                 {% if cfg.get('ai_dm_use_profile_post', True) %}
                 <div style="margin-top:4px;opacity:0.9">{{ t("+ контекст верхнего поста в ленте") }}</div>
@@ -546,7 +546,7 @@
               <div class="form-group" style="margin:0">
                 <label class="form-label" for="scenario_ai_dm_example">{{ t("Опорный текст / пример сообщения") }}</label>
                 <textarea id="scenario_ai_dm_example" name="ai_dm_example" class="form-input" rows="4" placeholder="{{ t("Например: Привет,") }} {{ '{{first_name}}' }}{{ t("! Увидел твой пост про … Хотел написать и поздороваться.") }}" style="min-height:100px;resize:vertical"></textarea>
-                <p class="form-hint" style="margin-top:6px">Нейросеть использует это как основу: новые формулировки для каждого человека, тот же смысл. Доступны {{ '{{first_name}}' }}, {{ '{{full_name}}' }}.</p>
+                <p class="form-hint" style="margin-top:6px">{{ t("Нейросеть использует это как основу: новые формулировки для каждого человека, тот же смысл. Доступны {{ '") }}{{first_name}}' }}, {{ '{{full_name}}' }}.</p>
                 {{ mailing_warmup_placeholders('form-hint') }}
               </div>
               <div class="form-group" style="margin:0">
@@ -647,7 +647,7 @@
             </td>
             <td style="font-size:var(--font-size-xs)">
               {% if e.status == 'completed' %}
-              Завершено
+              {{ t("Завершено") }}
               {% elif steps and e.current_step_index < steps|length %}
               {{ e.current_step_index + 1 }} · {{ step_labels.get(steps[e.current_step_index].action_type, steps[e.current_step_index].action_type) }}
               {% else %}

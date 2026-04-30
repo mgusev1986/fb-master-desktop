@@ -1,6 +1,6 @@
 {% extends "reddit/base.html" %}
 
-{% block title %}Reddit-аккаунты · Reddit Master{% endblock %}
+{% block title %}{{ t("Reddit-аккаунты · Reddit Master") }}{% endblock %}
 
 {% block head %}
 {{ super() }}
@@ -193,7 +193,7 @@
         </header>
         <p class="reddit-card__desc" style="font-size:13px;">
           cookies: <strong>{{ (a.cookies_json or [])|length }}</strong>
-          {% if a.cookies_imported_at %} · импорт: {{ a.cookies_imported_at.strftime('%d.%m.%Y %H:%M') }}{% endif %}
+          {% if a.cookies_imported_at %} {{ t("· импорт:") }} {{ a.cookies_imported_at.strftime('%d.%m.%Y %H:%M') }}{% endif %}
         </p>
         {% if a.login_blocked_reason %}
         <p style="margin:0;padding:8px 10px;border-radius:8px;background:color-mix(in srgb,#c33 12%,transparent);color:#c33;font:400 12px/1.4 Inter,sans-serif;">
@@ -219,7 +219,7 @@
         </details>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <form method="post" action="/reddit/accounts/{{ a.id }}/probe-browser" style="margin:0;"
-                onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Проверяю…';">
+                onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> {{ t("Проверяю…';\">") }}
             <button class="reddit-btn" type="submit" style="font-size:12px;padding:6px 10px;" title="{{ t("Открыть Reddit и проверить, что cookies живые") }}">
               <i class="ti ti-refresh"></i> {{ t("Проверить (browser)") }}
             </button>
@@ -265,10 +265,10 @@
                           {% elif acc.status == 'needs_reauth' %}color-mix(in srgb, #c33 14%, transparent);color:#c33
                           {% elif acc.status == 'cooldown' %}color-mix(in srgb, #b26a00 14%, transparent);color:#b26a00
                           {% else %}color-mix(in srgb, var(--text-secondary) 14%, transparent);color:var(--text-secondary){% endif %};">
-            {% if acc.status == 'connected' %}подключён
-            {% elif acc.status == 'needs_reauth' %}нужен повторный вход
-            {% elif acc.status == 'cooldown' %}временная пауза
-            {% elif acc.status == 'disconnected' %}отключён
+            {% if acc.status == 'connected' %}{{ t("подключён") }}
+            {% elif acc.status == 'needs_reauth' %}{{ t("нужен повторный вход") }}
+            {% elif acc.status == 'cooldown' %}{{ t("временная пауза") }}
+            {% elif acc.status == 'disconnected' %}{{ t("отключён") }}
             {% else %}{{ acc.status|ru_status }}{% endif %}
           </span>
         </header>

@@ -15,7 +15,7 @@
         <label style="font:400 12px/1 Inter;color:var(--text-secondary);"><input type="checkbox" name="headless" value="on" checked/> headless</label>
         <button type="submit" class="ig-btn ig-btn--primary"><i class="ti ti-bolt"></i> {{ t("Запустить N items") }}</button>
       </form>
-      <form method="post" action="/instagram/engagement/{{ task.id }}/status" style="display:inline;"><input type="hidden" name="status" value="{% if task.status == 'active' %}paused{% else %}active{% endif %}"/><button class="ig-btn" type="submit">{% if task.status == 'active' %}<i class="ti ti-player-pause"></i> Пауза{% else %}<i class="ti ti-player-play"></i> Активировать{% endif %}</button></form>
+      <form method="post" action="/instagram/engagement/{{ task.id }}/status" style="display:inline;"><input type="hidden" name="status" value="{% if task.status == 'active' %}paused{% else %}active{% endif %}"/><button class="ig-btn" type="submit">{% if task.status == 'active' %}<i class="ti ti-player-pause"></i> {{ t("Пауза") }}{% else %}<i class="ti ti-player-play"></i> {{ t("Активировать") }}{% endif %}</button></form>
     </div>
   </section>
 

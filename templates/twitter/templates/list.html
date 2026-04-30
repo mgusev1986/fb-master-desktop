@@ -1,6 +1,6 @@
 {% extends "twitter/base.html" %}
 
-{% block title %}Шаблоны · Twitter Master{% endblock %}
+{% block title %}{{ t("Шаблоны · Twitter Master") }}{% endblock %}
 
 {% block content %}
 <div class="x-page">
@@ -27,7 +27,7 @@
   </section>
 
   <section>
-    <h2 class="x-card__title" style="margin:8px 0 12px;">Шаблоны ({{ templates|length }})</h2>
+    <h2 class="x-card__title" style="margin:8px 0 12px;">{{ t("Шаблоны (") }}{{ templates|length }})</h2>
     {% if templates %}
       <div class="x-grid x-grid--wide">
         {% for t in templates %}

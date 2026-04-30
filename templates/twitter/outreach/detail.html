@@ -46,7 +46,7 @@
       </form>
       <form method="post" action="/twitter/outreach/{{ campaign.id }}/status" style="display:inline;">
         <input type="hidden" name="status" value="{% if campaign.status == 'active' %}paused{% else %}active{% endif %}"/>
-        <button class="x-btn" type="submit">{% if campaign.status == 'active' %}<i class="ti ti-player-pause"></i> Пауза{% else %}<i class="ti ti-player-play"></i> Активировать{% endif %}</button>
+        <button class="x-btn" type="submit">{% if campaign.status == 'active' %}<i class="ti ti-player-pause"></i> {{ t("Пауза") }}{% else %}<i class="ti ti-player-play"></i> {{ t("Активировать") }}{% endif %}</button>
       </form>
     </div>
   </section>

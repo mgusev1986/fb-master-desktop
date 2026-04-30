@@ -45,15 +45,15 @@
         <div class="card" style="border-color:var(--error);margin:0">
           <div class="card-body" style="font-size:var(--font-size-sm);color:var(--error)">
             {% if form_err == 'no_senders' %}
-            <strong>{{ t("Не выбран аккаунт-отправитель.") }}</strong> Отметьте хотя бы один Facebook-аккаунт ниже — без него очередь рассылки не соберётся.
+            <strong>{{ t("Не выбран аккаунт-отправитель.") }}</strong> {{ t("Отметьте хотя бы один Facebook-аккаунт ниже — без него очередь рассылки не соберётся.") }}
             {% elif form_err == 'batch_scope' %}
-            <strong>{{ t("Источник не подходит для очереди.") }}</strong> Выберите «Вся база контактов» или партию из «Импорт базы».
+            <strong>{{ t("Источник не подходит для очереди.") }}</strong> {{ t("Выберите «Вся база контактов» или партию из «Импорт базы».") }}
             {% elif form_err == 'no_source' %}
             <strong>{{ t("Не выбран источник контактов.") }}</strong> {{ t("Укажите «Вся база контактов» или партию из истории") }} <a href="/import">{{ t("импорта") }}</a> / <a href="/parser">{{ t("парсера") }}</a>.
             {% elif form_err == 'accounts' %}
-            Выбраны недопустимые аккаунты. Обновите страницу и выберите аккаунты из списка.
+            {{ t("Выбраны недопустимые аккаунты. Обновите страницу и выберите аккаунты из списка.") }}
             {% else %}
-            Ошибка сохранения (код: {{ form_err|e }}). Проверьте поля формы.
+            {{ t("Ошибка сохранения (код:") }} {{ form_err|e }}{{ t("). Проверьте поля формы.") }}
             {% endif %}
           </div>
         </div>
@@ -221,7 +221,7 @@
           <label class="form-check" style="display:flex;align-items:center;gap:8px;cursor:pointer">
             <input type="checkbox" name="fb_account_id" value="{{ a.id }}"
                    {% if campaign and a.id in (campaign.fb_account_ids or []) %}checked{% elif not campaign and accounts|length == 1 %}checked{% elif campaign and not (campaign.fb_account_ids or []) and accounts|length == 1 %}checked{% endif %}/>
-            <span>{{ a.label }}{% if a.active_slot %} — слот {{ a.active_slot }}{% else %} — ожидание{% endif %}</span>
+            <span>{{ a.label }}{% if a.active_slot %} {{ t("— слот") }} {{ a.active_slot }}{% else %} {{ t("— ожидание") }}{% endif %}</span>
           </label>
           {% else %}
           <p style="color:var(--warning)">{{ t("Нет аккаунтов.") }} <a href="/fb-accounts">{{ t("Добавьте") }}</a>.</p>
@@ -314,7 +314,7 @@
             {% for b in parser_import_batches %}
             <option value="batch:{{ b.id }}" {% if not cfg.get('batch_all_donors') and cfg.get('ui_import_batch_id') == b.id %}selected{% endif %}>
               {%- if b.filename.startswith('parser::') -%}{{ b.filename[8:] }}{%- elif b.filename.startswith('parser:') -%}{{ b.filename[7:] }}{%- else -%}{{ b.filename }}{%- endif -%}
-              (партия №{{ b.id }})
+              {{ t("(партия №") }}{{ b.id }})
             </option>
             {% endfor %}
           </optgroup>

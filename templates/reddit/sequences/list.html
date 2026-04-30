@@ -1,6 +1,6 @@
 {% extends "reddit/base.html" %}
 
-{% block title %}Сценарии · Reddit Master{% endblock %}
+{% block title %}{{ t("Сценарии · Reddit Master") }}{% endblock %}
 
 {% block content %}
 <div class="reddit-page">
@@ -22,7 +22,7 @@
         <h3 class="reddit-card__title" style="margin:0;flex:1;">{{ s.name }}</h3>
         <span style="font:500 11px/1 Inter;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,#777 14%,transparent);color:#555;">{{ s.status|ru_status }}</span>
       </header>
-      <div class="reddit-card__desc">шагов: {{ (s.nodes_json or []) | length }} · TZ: {{ s.timezone }}</div>
+      <div class="reddit-card__desc">{{ t("шагов:") }} {{ (s.nodes_json or []) | length }} · TZ: {{ s.timezone }}</div>
       <footer style="display:flex;gap:6px;">
         <a href="/reddit/sequences/{{ s.id }}" class="reddit-btn reddit-btn--primary"><i class="ti ti-arrow-right"></i> {{ t("Открыть") }}</a>
         <a href="/reddit/sequences/{{ s.id }}/edit" class="reddit-btn">{{ t("Редактировать") }}</a>

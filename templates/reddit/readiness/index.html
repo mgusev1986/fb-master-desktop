@@ -1,6 +1,6 @@
 {% extends "reddit/base.html" %}
 
-{% block title %}Готовность · Reddit Master{% endblock %}
+{% block title %}{{ t("Готовность · Reddit Master") }}{% endblock %}
 
 {% block content %}
 <div class="reddit-page">
@@ -53,7 +53,7 @@
       {% endif %}
 
       <div style="font:400 12px/1.4 Inter;color:var(--text-muted);">
-        последняя проверка: {{ format_dt_madrid(r.performed_at) }}
+        {{ t("последняя проверка:") }} {{ format_dt_madrid(r.performed_at) }}
       </div>
 
       <footer style="display:flex;gap:6px;">

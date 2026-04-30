@@ -1,6 +1,6 @@
 {% extends "reddit/base.html" %}
 
-{% block title %}Кампании · Reddit Master{% endblock %}
+{% block title %}{{ t("Кампании · Reddit Master") }}{% endblock %}
 
 {% block content %}
 <div class="reddit-page">
@@ -31,7 +31,7 @@
         <div><span style="color:var(--text-muted)">{{ t("Ошибка") }}</span> {{ it.counts.failed }}</div>
         <div><span style="color:var(--text-muted)">{{ t("Пропущено") }}</span> {{ it.counts.skipped }}</div>
       </div>
-      <div class="reddit-card__desc">approval: <strong>{{ it.row.approval_mode }}</strong> · всего в очереди: {{ it.total }}</div>
+      <div class="reddit-card__desc">approval: <strong>{{ it.row.approval_mode }}</strong> {{ t("· всего в очереди:") }} {{ it.total }}</div>
       <footer style="display:flex;gap:6px;">
         <a href="/reddit/campaigns/{{ it.row.id }}" class="reddit-btn reddit-btn--primary"><i class="ti ti-arrow-right"></i> {{ t("Открыть") }}</a>
         <form method="post" action="/reddit/campaigns/{{ it.row.id }}/delete" style="display:inline"

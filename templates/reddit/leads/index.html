@@ -1,6 +1,6 @@
 {% extends "reddit/base.html" %}
 
-{% block title %}Лиды · Reddit Master{% endblock %}
+{% block title %}{{ t("Лиды · Reddit Master") }}{% endblock %}
 
 {% block content %}
 <div class="reddit-page">
@@ -8,8 +8,8 @@
     <div class="reddit-page__title-wrap">
       <h1 class="reddit-page__title">{{ t("Лиды") }}</h1>
       <p class="reddit-page__subtitle">
-        Единое хранилище собранных пользователей. Источник, теги, CRM-стадия,
-        статус и связь с кампаниями. Всего: {{ total }}.
+        {{ t("Единое хранилище собранных пользователей. Источник, теги, CRM-стадия,") }}
+        {{ t("статус и связь с кампаниями. Всего:") }} {{ total }}.
       </p>
     </div>
   </header>
@@ -104,7 +104,7 @@
           <td style="padding:10px;white-space:nowrap;">{{ format_dt_madrid(r.activity_timestamp) }}</td>
           <td style="padding:10px;font-size:13px;">
             {% if r.user_profile %}
-            К:{{ (r.user_profile.karma_link or 0) + (r.user_profile.karma_comment or 0) }} / В:{{ r.user_profile.account_age_days or '—' }}
+            {{ t("К:") }}{{ (r.user_profile.karma_link or 0) + (r.user_profile.karma_comment or 0) }} {{ t("/ В:") }}{{ r.user_profile.account_age_days or '—' }}
             {% else %}—{% endif %}
           </td>
           <td style="padding:10px;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
@@ -133,7 +133,7 @@
     </table>
 
     <div style="display:flex;gap:6px;padding:14px 0;align-items:center;">
-      <span style="flex:1;color:var(--text-muted);font-size:13px;">Страница {{ page }} · {{ per_page }} на страницу</span>
+      <span style="flex:1;color:var(--text-muted);font-size:13px;">{{ t("Страница") }} {{ page }} · {{ per_page }} {{ t("на страницу") }}</span>
       {% if page > 1 %}
       <a href="?{% for k, v in request.query_params.items() if k != 'page' %}{{ k }}={{ v }}&{% endfor %}page={{ page - 1 }}" class="reddit-btn">{{ t("← назад") }}</a>
       {% endif %}

@@ -27,7 +27,7 @@
           <label class="form-check" style="display:flex;align-items:center;gap:8px;cursor:pointer">
             <input type="checkbox" name="fb_account_id" value="{{ a.id }}"
                    {% if campaign and a.id in (campaign.fb_account_ids or []) %}checked{% endif %}/>
-            <span>{{ a.label }}{% if a.active_slot %} — слот {{ a.active_slot }}{% else %} — ожидание{% endif %}</span>
+            <span>{{ a.label }}{% if a.active_slot %} {{ t("— слот") }} {{ a.active_slot }}{% else %} {{ t("— ожидание") }}{% endif %}</span>
             {% if a.session_ok == false %}
             <span class="badge badge-default" style="font-size:10px">{{ t("сессия?") }}</span>
             {% endif %}

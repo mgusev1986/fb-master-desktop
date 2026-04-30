@@ -1,5 +1,5 @@
 {% extends "instagram/base.html" %}
-{% block title %}Лиды · Instagram Master{% endblock %}
+{% block title %}{{ t("Лиды · Instagram Master") }}{% endblock %}
 {% block content %}
 <div class="ig-page">
   <header class="ig-page__header">
@@ -29,7 +29,7 @@
   </div>
 
   <section>
-    <h2 class="ig-card__title" style="margin:8px 0 12px;">Лиды ({{ leads|length }})</h2>
+    <h2 class="ig-card__title" style="margin:8px 0 12px;">{{ t("Лиды (") }}{{ leads|length }})</h2>
     {% if leads %}
     <div style="overflow-x:auto;">
       <table style="width:100%;border-collapse:collapse;background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;">

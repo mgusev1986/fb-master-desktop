@@ -25,7 +25,7 @@
 {% if err %}
 <div class="card" style="margin-bottom:16px;border-color:var(--danger)">
   <div class="card-body" style="font-size:var(--font-size-sm)">
-    {% if err == 'bad_account' %}Некорректный аккаунт.{% elif err == 'no_slot' %}{% if cabinet_client_mode(request) %}В «Аккаунтах» выберите для профиля <strong>{{ t("место 1, 2 или 3") }}</strong>.{% else %}Назначьте аккаунту слот 1–3 в «Аккаунтах».{% endif %}{% elif err == 'account_busy' %}{{ request.query_params.get('why') or 'Аккаунт занят другой автоматизацией.' }}{% elif err == 'already' %}По этому аккаунту уже есть активная задача оформления.{% elif err == 'pipeline_active' %}По этому аккаунту уже идёт или запланировано оформление. Дождитесь публикаций, нажмите «Пауза» или «Сбросить очередь», затем запустите снова.{% elif err == 'worker_busy' %}Сейчас заняты все параллельные слоты воркера — повторите позже.{% elif err == 'proxy_tunnel' %}{{ request.query_params.get('why') or 'Прокси недоступен — автоматизация заблокирована.' }}{% elif err == 'no_queued_job' %}Нет задачи в очереди для отмены (возможно, она уже выполняется или завершена).{% else %}{{ err }}{% endif %}
+    {% if err == 'bad_account' %}{{ t("Некорректный аккаунт.") }}{% elif err == 'no_slot' %}{% if cabinet_client_mode(request) %}{{ t("В «Аккаунтах» выберите для профиля") }} <strong>{{ t("место 1, 2 или 3") }}</strong>.{% else %}{{ t("Назначьте аккаунту слот 1–3 в «Аккаунтах».") }}{% endif %}{% elif err == 'account_busy' %}{{ request.query_params.get('why') or 'Аккаунт занят другой автоматизацией.' }}{% elif err == 'already' %}{{ t("По этому аккаунту уже есть активная задача оформления.") }}{% elif err == 'pipeline_active' %}{{ t("По этому аккаунту уже идёт или запланировано оформление. Дождитесь публикаций, нажмите «Пауза» или «Сбросить очередь», затем запустите снова.") }}{% elif err == 'worker_busy' %}{{ t("Сейчас заняты все параллельные слоты воркера — повторите позже.") }}{% elif err == 'proxy_tunnel' %}{{ request.query_params.get('why') or 'Прокси недоступен — автоматизация заблокирована.' }}{% elif err == 'no_queued_job' %}{{ t("Нет задачи в очереди для отмены (возможно, она уже выполняется или завершена).") }}{% else %}{{ err }}{% endif %}
   </div>
 </div>
 {% endif %}
@@ -85,7 +85,7 @@
             <span class="badge badge-default">{{ t("Задача:") }} {{ job.status }}</span>
             {% endif %}
             {% if pl_status %}
-            <span class="badge badge-default">Очередь: {{ pl_status }}{% if pl.get('paused') %} · пауза{% endif %}</span>
+            <span class="badge badge-default">{{ t("Очередь:") }} {{ pl_status }}{% if pl.get('paused') %} {{ t("· пауза") }}{% endif %}</span>
             {% endif %}
           </div>
         </div>
@@ -106,7 +106,7 @@
           <p style="margin:4px 0">{{ t("Постов в очереди:") }} <strong>{{ items|length }}</strong> {{ t("(статус «готово» — в списке ниже)") }}</p>
           <ul style="margin:6px 0;padding-left:1.1rem;max-height:140px;overflow:auto">
             {% for it in items[:12] %}
-            <li>#{{ it.get('id') }} — {% if it.get('published_at') %}готово{% elif it.get('scheduled_at') %}план: {{ (it.get('scheduled_at') or '')[:16] }}{% else %}—{% endif %}</li>
+            <li>#{{ it.get('id') }} — {% if it.get('published_at') %}{{ t("готово") }}{% elif it.get('scheduled_at') %}{{ t("план:") }} {{ (it.get('scheduled_at') or '')[:16] }}{% else %}—{% endif %}</li>
             {% endfor %}
           </ul>
           {% endif %}

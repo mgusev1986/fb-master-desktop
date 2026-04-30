@@ -1,5 +1,5 @@
 {% extends "instagram/base.html" %}
-{% block title %}AI-автоответчик · Instagram Master{% endblock %}
+{% block title %}{{ t("AI-автоответчик · Instagram Master") }}{% endblock %}
 {% block content %}
 <div class="ig-page">
   <header class="ig-page__header">
@@ -68,7 +68,7 @@
   {% endif %}
 
   <section>
-    <h2 class="ig-card__title" style="margin:8px 0 12px;">AI-сессии ({{ sessions|length }})</h2>
+    <h2 class="ig-card__title" style="margin:8px 0 12px;">{{ t("AI-сессии (") }}{{ sessions|length }})</h2>
     {% if sessions %}
       <div class="ig-grid ig-grid--wide">{% for s in sessions %}
         <article class="ig-card">

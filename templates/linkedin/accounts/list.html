@@ -1,6 +1,6 @@
 {% extends "linkedin/base.html" %}
 
-{% block title %}LinkedIn-аккаунты · LinkedIn Master{% endblock %}
+{% block title %}{{ t("LinkedIn-аккаунты · LinkedIn Master") }}{% endblock %}
 
 {% block content %}
 <div class="li-page">
@@ -28,7 +28,7 @@
       <h2 class="li-banner__title">{{ t("Импорт завершён") }}</h2>
       <p class="li-banner__text">
         {{ t("Добавлено:") }} <strong>{{ imported }}</strong>{{ t(". Ошибок:") }} <strong>{{ errors_count }}</strong>.
-        {% if (errors_count|int) > 0 %}Часть строк не распарсилась — проверьте формат или наличие <code>li_at</code> в cookies.{% endif %}
+        {% if (errors_count|int) > 0 %}{{ t("Часть строк не распарсилась — проверьте формат или наличие") }} <code>li_at</code> {{ t("в cookies.") }}{% endif %}
       </p>
     </div>
   </div>
@@ -85,7 +85,7 @@
           </header>
           <p class="li-card__desc" style="font-size:13px;">
             cookies: <strong>{{ (a.cookies_json or [])|length }}</strong>
-            {% if a.cookies_imported_at %} · импорт: {{ a.cookies_imported_at.strftime('%d.%m.%Y %H:%M') }}{% endif %}
+            {% if a.cookies_imported_at %} {{ t("· импорт:") }} {{ a.cookies_imported_at.strftime('%d.%m.%Y %H:%M') }}{% endif %}
           </p>
           {% if a.login_blocked_reason %}
           <p style="margin:0;padding:8px 10px;border-radius:8px;background:color-mix(in srgb,#c33 12%,transparent);color:#c33;font:400 12px/1.4 Inter,sans-serif;">
@@ -111,7 +111,7 @@
           </details>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <form method="post" action="/linkedin/accounts/{{ a.id }}/probe" style="margin:0;"
-                  onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Проверяю…';">
+                  onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> {{ t("Проверяю…';\">") }}
               <button type="submit" class="li-btn" style="font-size:12px;padding:6px 10px;" title="{{ t("Открыть LinkedIn /feed/ через Playwright и проверить, что cookies живые") }}">
                 <i class="ti ti-refresh"></i> {{ t("Проверить") }}
               </button>

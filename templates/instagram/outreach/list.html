@@ -1,5 +1,5 @@
 {% extends "instagram/base.html" %}
-{% block title %}Direct рассылка · Instagram Master{% endblock %}
+{% block title %}{{ t("Direct рассылка · Instagram Master") }}{% endblock %}
 {% block content %}
 <div class="ig-page">
   <header class="ig-page__header">
@@ -53,7 +53,7 @@
   {% endif %}
 
   <section>
-    <h2 class="ig-card__title" style="margin:8px 0 12px;">Кампании ({{ campaigns|length }})</h2>
+    <h2 class="ig-card__title" style="margin:8px 0 12px;">{{ t("Кампании (") }}{{ campaigns|length }})</h2>
     {% if campaigns %}
       <div class="ig-grid ig-grid--wide">
         {% for c in campaigns %}

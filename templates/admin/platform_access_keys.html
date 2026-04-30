@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Ключи доступа — SOCMASTER{% endblock %}
+{% block title %}{{ t("Ключи доступа — SOCMASTER") }}{% endblock %}
 
 {% block content %}
 <style>
@@ -537,7 +537,7 @@
             <td colspan="10" style="padding:0;background:var(--bg-surface)">
               <div class="ak-np-card">
                 <div class="ak-np-card__header">
-                  <span class="ak-np-card__title"><i class="ti ti-receipt"></i> NOWPayments — заказ #{{ bo.id }}</span>
+                  <span class="ak-np-card__title"><i class="ti ti-receipt"></i> {{ t("NOWPayments — заказ #") }}{{ bo.id }}</span>
                   <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
                     <span class="badge {% if bo.status == 'fulfilled' %}badge-success{% elif bo.status == 'paid_ready' %}badge-success{% elif bo.status == 'failed' %}badge-error{% else %}badge-default{% endif %}">{{ bo.status or '—' }}</span>
                     {% if bo.np_payment_id %}
@@ -568,7 +568,7 @@
                   </div>
                   <div class="ak-np-card__field">
                     <span class="ak-np-card__label">{{ t("Тариф") }}</span>
-                    <span class="ak-np-card__value">{{ bo.price_amount or '—' }} {{ (bo.price_currency or '') | upper }} · {{ bo.duration_days or '—' }} дн.</span>
+                    <span class="ak-np-card__value">{{ bo.price_amount or '—' }} {{ (bo.price_currency or '') | upper }} · {{ bo.duration_days or '—' }} {{ t("дн.") }}</span>
                   </div>
                   <div class="ak-np-card__field">
                     <span class="ak-np-card__label">{{ t("Статус NP (последний)") }}</span>

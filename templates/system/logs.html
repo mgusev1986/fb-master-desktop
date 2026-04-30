@@ -270,10 +270,10 @@
 <div class="card" style="margin-bottom:20px;border-color:var(--accent)">
   <div class="card-body" style="font-size:var(--font-size-sm);line-height:1.55">
     {% if cabinet_client_mode(request) %}
-    Показаны записи только для сценария <strong>«{{ scenario_filter_name }}»</strong>.
+    {{ t("Показаны записи только для сценария") }} <strong>«{{ scenario_filter_name }}»</strong>.
     {% else %}
-    Показаны записи только для <strong>{{ t("режима агента") }}</strong> «{{ scenario_filter_name }}»
-    (задачи с <code>campaign_id</code> в конфиге).
+    {{ t("Показаны записи только для") }} <strong>{{ t("режима агента") }}</strong> «{{ scenario_filter_name }}»
+    {{ t("(задачи с") }} <code>campaign_id</code> {{ t("в конфиге).") }}
     {% endif %}
     <span style="white-space:nowrap">· <a href="/scenarios/{{ scenario_id }}">{% if cabinet_client_mode(request) %}{{ t("Открыть сценарий") }}{% else %}{{ t("Открыть режим") }}{% endif %}</a>
     · <a href="/system/logs?tab={{ active_tab }}">{{ t("Снять фильтр") }}</a></span>
@@ -303,8 +303,8 @@
 <div class="card" style="margin-bottom:24px">
   <div class="card-body">
     <div class="logs-tabs">
-      <a href="{{ tab_urls.jobs }}" class="btn btn-sm {{ 'btn-primary' if active_tab == 'jobs' else 'btn-secondary' }}">Задачи ({{ jobs_total }})</a>
-      <a href="{{ tab_urls.errors }}" class="btn btn-sm {{ 'btn-primary' if active_tab == 'errors' else 'btn-secondary' }}">Ошибки ({{ failed_jobs_total + problem_events_total }})</a>
+      <a href="{{ tab_urls.jobs }}" class="btn btn-sm {{ 'btn-primary' if active_tab == 'jobs' else 'btn-secondary' }}">{{ t("Задачи (") }}{{ jobs_total }})</a>
+      <a href="{{ tab_urls.errors }}" class="btn btn-sm {{ 'btn-primary' if active_tab == 'errors' else 'btn-secondary' }}">{{ t("Ошибки (") }}{{ failed_jobs_total + problem_events_total }})</a>
       <a href="{{ tab_urls.reports }}" class="btn btn-sm {{ 'btn-primary' if active_tab == 'reports' else 'btn-secondary' }}">{{ t("Отчёты и выгрузки") }}</a>
     </div>
 
@@ -362,7 +362,7 @@
 
 {% if active_tab == 'jobs' %}
 <div class="card">
-  <div class="card-header">Последние задачи{% if jobs_total > jobs|length %} — показаны первые {{ jobs|length }} из {{ jobs_total }}{% endif %}</div>
+  <div class="card-header">{{ t("Последние задачи") }}{% if jobs_total > jobs|length %} {{ t("— показаны первые") }} {{ jobs|length }} {{ t("из") }} {{ jobs_total }}{% endif %}</div>
   <div class="card-body">
     {% if jobs %}
     <div class="table-wrap">
@@ -475,7 +475,7 @@
 {% elif active_tab == 'errors' %}
 <div class="logs-split">
   <div class="card">
-    <div class="card-header">Упавшие задачи{% if failed_jobs_total > failed_jobs|length %} — показаны первые {{ failed_jobs|length }} из {{ failed_jobs_total }}{% endif %}</div>
+    <div class="card-header">{{ t("Упавшие задачи") }}{% if failed_jobs_total > failed_jobs|length %} {{ t("— показаны первые") }} {{ failed_jobs|length }} {{ t("из") }} {{ failed_jobs_total }}{% endif %}</div>
     <div class="card-body">
       {% if failed_jobs %}
       <div class="table-wrap">
@@ -554,7 +554,7 @@
   </div>
 
   <div class="card">
-    <div class="card-header">Проблемные события job_events{% if problem_events_total > problem_events|length %} — показаны первые {{ problem_events|length }} из {{ problem_events_total }}{% endif %}</div>
+    <div class="card-header">{{ t("Проблемные события job_events") }}{% if problem_events_total > problem_events|length %} {{ t("— показаны первые") }} {{ problem_events|length }} {{ t("из") }} {{ problem_events_total }}{% endif %}</div>
     <div class="card-body">
       {% if problem_events %}
       <div class="table-wrap">
@@ -605,7 +605,7 @@
                 {% endif %}
                 {% if event.person_id %}
                 <div class="logs-muted">
-                  Контакт:
+                  {{ t("Контакт:") }}
                   {% if person_map.get(event.person_id) and person_map[event.person_id].url %}
                   <a class="table-link" href="{{ person_map[event.person_id].url }}" target="_blank" rel="noopener">{{ person_map[event.person_id].name }}</a>
                   {% else %}
@@ -680,7 +680,7 @@
   </div>
   <div class="logs-report-card">
     <h3>{{ t("Что уже видно") }}</h3>
-    <p>В базе сейчас {{ summary.total_jobs }} задач, {{ summary.problem_events }} проблемных событий и {{ recent_batches|length }} недавних импортов для быстрых выгрузок отсюда.</p>
+    <p>{{ t("В базе сейчас") }} {{ summary.total_jobs }} {{ t("задач,") }} {{ summary.problem_events }} {{ t("проблемных событий и") }} {{ recent_batches|length }} {{ t("недавних импортов для быстрых выгрузок отсюда.") }}</p>
     <div class="logs-actions-row">
       <a href="{{ tab_urls.jobs }}" class="btn btn-secondary btn-sm">{{ t("Открыть задачи") }}</a>
       <a href="{{ tab_urls.errors }}" class="btn btn-secondary btn-sm">{{ t("Открыть ошибки") }}</a>
@@ -710,16 +710,16 @@
               <div>{{ batch.filename }}</div>
               <div class="logs-muted">
                 {% if batch.donor_id %}
-                Донор: {{ donor_name_map.get(batch.donor_id, 'ID ' ~ batch.donor_id) }}
+                {{ t("Донор:") }} {{ donor_name_map.get(batch.donor_id, 'ID ' ~ batch.donor_id) }}
                 {% else %}
-                Ручной импорт
+                {{ t("Ручной импорт") }}
                 {% endif %}
               </div>
               <div class="logs-muted">{{ format_dt_madrid(batch.created_at) }}</div>
             </td>
             <td>
               <div>{{ t("Всего:") }} {{ batch.rows_total or 0 }}</div>
-              <div class="logs-muted">Новых: {{ batch.rows_new or 0 }} · Обновлено: {{ batch.rows_updated or 0 }}</div>
+              <div class="logs-muted">{{ t("Новых:") }} {{ batch.rows_new or 0 }} {{ t("· Обновлено:") }} {{ batch.rows_updated or 0 }}</div>
               <div class="logs-muted">{{ t("Пропущено:") }} {{ batch.rows_skipped or 0 }}</div>
             </td>
             <td>

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{% if cabinet_client_mode(request) %}Помощь — SOCMASTER{% else %}FAQ — SOCMASTER{% endif %}{% endblock %}
+{% block title %}{% if cabinet_client_mode(request) %}{{ t("Помощь — SOCMASTER") }}{% else %}FAQ — SOCMASTER{% endif %}{% endblock %}
 
 {% block content %}
 {% if cabinet_client_mode(request) %}

@@ -38,7 +38,7 @@
             <p style="margin:0 0 8px 0;font-size:14px;font-weight:600;color:#1a1d23;">{{ t("Автопродление подписки") }}</p>
             <p style="margin:0 0 12px 0;font-size:13px;line-height:1.5;color:#6c7691;">{{ t("Через") }} {{ duration_days }} {{ t("дн. подписка автоматически продлится. Деньги спишутся с той же карты.") }}</p>
             {% if cancel_subscription_url %}
-            <p style="margin:0;font-size:13px;line-height:1.5;color:#6c7691;">{{ t("Если хотите отменить автопродление —") }} <a href="{{ cancel_subscription_url }}" style="color:#4f6df5;text-decoration:underline;">{{ t("нажмите здесь") }}</a>. Ключ продолжит работать до {{ expires_at_label }}.</p>
+            <p style="margin:0;font-size:13px;line-height:1.5;color:#6c7691;">{{ t("Если хотите отменить автопродление —") }} <a href="{{ cancel_subscription_url }}" style="color:#4f6df5;text-decoration:underline;">{{ t("нажмите здесь") }}</a>{{ t(". Ключ продолжит работать до") }} {{ expires_at_label }}.</p>
             {% endif %}
           </td>
         </tr>

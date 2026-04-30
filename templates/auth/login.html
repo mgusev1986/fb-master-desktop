@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Вход — SOCMASTER{% if fbm_client_version or fbm_desktop_app_version %} · v{{ fbm_client_version or fbm_desktop_app_version }}{% endif %}</title>
+  <title>{{ t("Вход — SOCMASTER") }}{% if fbm_client_version or fbm_desktop_app_version %} · v{{ fbm_client_version or fbm_desktop_app_version }}{% endif %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
@@ -29,24 +29,24 @@
     <div class="login-error">
       {% set err = request.query_params.get('error') %}
       {% if err == 'access_denied' %}
-        Доступ запрещён. Ваш email не в списке допущенных (тот же allowlist, что и для Google).
+        {{ t("Доступ запрещён. Ваш email не в списке допущенных (тот же allowlist, что и для Google).") }}
       {% elif err == 'oauth_not_configured' %}
-        Google OAuth не настроен. Заполните GOOGLE_CLIENT_ID и GOOGLE_CLIENT_SECRET в .env или в «Настройках».
+        {{ t("Google OAuth не настроен. Заполните GOOGLE_CLIENT_ID и GOOGLE_CLIENT_SECRET в .env или в «Настройках».") }}
       {% elif err == 'oauth_failed' %}
-        Ошибка обмена кода на токен (часто неверный Client Secret или сессия устарела).
-        Закройте вкладку, откройте вход снова или попробуйте другой способ входа.
+        {{ t("Ошибка обмена кода на токен (часто неверный Client Secret или сессия устарела).") }}
+        {{ t("Закройте вкладку, откройте вход снова или попробуйте другой способ входа.") }}
       {% elif err == 'supabase_not_configured' %}
-        Supabase Auth не настроен: задайте SUPABASE_URL и SUPABASE_ANON_KEY в .env или в «Настройках».
+        {{ t("Supabase Auth не настроен: задайте SUPABASE_URL и SUPABASE_ANON_KEY в .env или в «Настройках».") }}
       {% elif err == 'supabase_password_failed' %}
-        Неверный email или пароль Supabase (или вход по паролю отключён в проекте Supabase).
+        {{ t("Неверный email или пароль Supabase (или вход по паролю отключён в проекте Supabase).") }}
       {% elif err == 'supabase_token_invalid' %}
-        Токен Supabase отклонён. Войдите снова.
+        {{ t("Токен Supabase отклонён. Войдите снова.") }}
       {% elif err == 'supabase_no_email' %}
-        У аккаунта Supabase нет email — добавьте email в Supabase Auth.
+        {{ t("У аккаунта Supabase нет email — добавьте email в Supabase Auth.") }}
       {% elif err == 'dev_login_disabled' %}
-        Режим «Developer» отключён (как на сервере). Используйте Google или Supabase Auth.
+        {{ t("Режим «Developer» отключён (как на сервере). Используйте Google или Supabase Auth.") }}
       {% else %}
-        Произошла ошибка. Попробуйте ещё раз.
+        {{ t("Произошла ошибка. Попробуйте ещё раз.") }}
       {% endif %}
     </div>
     {% endif %}

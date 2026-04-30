@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Автопоиск аудитории — SOCMASTER{% endblock %}
+{% block title %}{{ t("Автопоиск аудитории — SOCMASTER") }}{% endblock %}
 
 {% block content %}
 <div class="page-header">
@@ -51,7 +51,7 @@
 {% if qp.get('approved') %}
 <div class="card" style="margin-bottom:16px;border-color:var(--success)">
   <div class="card-body" style="font-size:var(--font-size-sm)">
-    <i class="ti ti-check"></i> Добавлено доноров: {{ qp.get('approved') }}.
+    <i class="ti ti-check"></i> {{ t("Добавлено доноров:") }} {{ qp.get('approved') }}.
   </div>
 </div>
 {% endif %}
@@ -88,7 +88,7 @@
 {% if last_job and not _disc_poll %}
 <div class="card" style="margin-bottom:16px">
   <div class="card-body" style="font-size:var(--font-size-sm);color:var(--text-secondary)">
-    Последний автопоиск: #{{ last_job.id }} —
+    {{ t("Последний автопоиск: #") }}{{ last_job.id }} —
     {% if last_job.status == 'success' %}
     <span class="badge badge-success">{{ t("успех") }}</span>
     {% elif last_job.status == 'failed' %}
@@ -173,8 +173,8 @@
   <div class="card-body">
     <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px">
       <h3 style="margin:0;font-size:var(--font-size-md)">
-        Найденные источники
-        {% if latest_task %}<span style="color:var(--text-secondary);font-weight:normal;font-size:var(--font-size-sm)">({{ results|length }} шт.{% if latest_task.keywords %}, запрос: «{{ latest_task.keywords[:80] }}»{% endif %})</span>{% endif %}
+        {{ t("Найденные источники") }}
+        {% if latest_task %}<span style="color:var(--text-secondary);font-weight:normal;font-size:var(--font-size-sm)">({{ results|length }} {{ t("шт.") }}{% if latest_task.keywords %}{{ t(", запрос: «") }}{{ latest_task.keywords[:80] }}»{% endif %})</span>{% endif %}
       </h3>
       {% if latest_task %}
       <form method="post" action="/discovery/{{ latest_task.id }}/delete" onsubmit="return confirm('Удалить задачу и все её результаты?')">

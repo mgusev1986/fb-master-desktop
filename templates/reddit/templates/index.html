@@ -1,6 +1,6 @@
 {% extends "reddit/base.html" %}
 
-{% block title %}Шаблоны · Reddit Master{% endblock %}
+{% block title %}{{ t("Шаблоны · Reddit Master") }}{% endblock %}
 
 {% block content %}
 <div class="reddit-page">
@@ -8,8 +8,8 @@
     <div class="reddit-page__title-wrap">
       <h1 class="reddit-page__title">{{ t("Шаблоны и AI-варианты") }}</h1>
       <p class="reddit-page__subtitle">
-        DM, chat-opener, комментарии, follow-up. Плейсхолдеры: {{ '{username}' }}, {{ '{subreddit}' }},
-        {{ '{last_post_title}' }}. AI-варианты генерируются через общий сервис SOCMASTER (если ключи настроены).
+        {{ t("DM, chat-opener, комментарии, follow-up. Плейсхолдеры:") }} {{ '{username}' }}, {{ '{subreddit}' }},
+        {{ '{last_post_title}' }}{{ t(". AI-варианты генерируются через общий сервис SOCMASTER (если ключи настроены).") }}
       </p>
     </div>
     <a href="/reddit/templates/new" class="reddit-btn reddit-btn--primary"><i class="ti ti-plus"></i> {{ t("Новый шаблон") }}</a>
@@ -35,11 +35,11 @@
       <pre class="reddit-card__desc" style="white-space:pre-wrap;font:400 13px/1.5 ui-monospace,monospace;background:color-mix(in srgb,#000 4%,transparent);padding:10px;border-radius:8px;margin:0;">{{ t.body[:400] }}{% if t.body|length > 400 %}…{% endif %}</pre>
       {% if t.placeholders %}
       <div style="font-size:12px;color:var(--text-muted);">
-        Плейсхолдеры: {% for p in t.placeholders %}<code>{{ '{' + p + '}' }}</code>{% if not loop.last %}, {% endif %}{% endfor %}
+        {{ t("Плейсхолдеры:") }} {% for p in t.placeholders %}<code>{{ '{' + p + '}' }}</code>{% if not loop.last %}, {% endif %}{% endfor %}
       </div>
       {% endif %}
       {% if t.variants %}
-      <div style="font-size:12px;color:var(--text-muted);">Вариантов: {{ t.variants|length }} ({{ t.variant_mode }})</div>
+      <div style="font-size:12px;color:var(--text-muted);">{{ t("Вариантов:") }} {{ t.variants|length }} ({{ t.variant_mode }})</div>
       {% endif %}
       <footer style="display:flex;gap:6px;flex-wrap:wrap;">
         <a href="/reddit/templates/{{ t.id }}/edit" class="reddit-btn"><i class="ti ti-edit"></i> {{ t("Редактировать") }}</a>

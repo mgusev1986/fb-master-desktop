@@ -1,6 +1,6 @@
 {% extends "twitter/base.html" %}
 
-{% block title %}X-аккаунты · Twitter Master{% endblock %}
+{% block title %}{{ t("X-аккаунты · Twitter Master") }}{% endblock %}
 
 {% block content %}
 <div class="x-page">
@@ -255,8 +255,8 @@
               {% else %}compliance-cell__level--partial{% endif %}">{{ a.status }}</span>
           </header>
           <p class="x-card__desc" style="font-size:13px;">
-            {% if a.login_username %}логин: <strong>{{ a.login_username }}</strong> · {% endif %}cookies: <strong>{{ (a.cookies_json or [])|length }}</strong>
-            {% if a.cookies_imported_at %} · импорт: {{ a.cookies_imported_at.strftime('%d.%m.%Y %H:%M') }}{% endif %}
+            {% if a.login_username %}{{ t("логин:") }} <strong>{{ a.login_username }}</strong> · {% endif %}cookies: <strong>{{ (a.cookies_json or [])|length }}</strong>
+            {% if a.cookies_imported_at %} {{ t("· импорт:") }} {{ a.cookies_imported_at.strftime('%d.%m.%Y %H:%M') }}{% endif %}
           </p>
           {% if a.status == 'needs_login' %}
           <p style="margin:0;padding:8px 10px;border-radius:8px;background:color-mix(in srgb,#b26a00 14%,transparent);color:#b26a00;font:500 12px/1.4 Inter,sans-serif;"><i class="ti ti-key"></i> {{ t("Нужен первый вход: откроется Chromium, система введёт логин/пароль и сохранит cookies.") }}</p>
@@ -280,11 +280,11 @@
           </details>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
             {% if a.status == 'needs_login' and a.login_username %}
-            <form method="post" action="/twitter/accounts/{{ a.id }}/login" style="margin:0;" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Войти…';">
+            <form method="post" action="/twitter/accounts/{{ a.id }}/login" style="margin:0;" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> {{ t("Войти…';\">") }}
               <button class="x-btn x-btn--primary" type="submit" style="font-size:12px;padding:6px 10px;"><i class="ti ti-login"></i> {{ t("Войти") }}</button>
             </form>
             {% endif %}
-            <form method="post" action="/twitter/accounts/{{ a.id }}/probe" style="margin:0;" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Проверяю…';">
+            <form method="post" action="/twitter/accounts/{{ a.id }}/probe" style="margin:0;" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> {{ t("Проверяю…';\">") }}
               <button class="x-btn" type="submit" style="font-size:12px;padding:6px 10px;"><i class="ti ti-refresh"></i> {{ t("Проверить") }}</button>
             </form>
             <form method="post" action="/twitter/accounts/{{ a.id }}/inbox-sync" style="margin:0;" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Sync…';">

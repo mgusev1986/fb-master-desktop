@@ -58,7 +58,7 @@
   {% endif %}
 
   <section>
-    <h2 class="li-card__title" style="margin:8px 0 12px;">Кампании ({{ campaigns|length }})</h2>
+    <h2 class="li-card__title" style="margin:8px 0 12px;">{{ t("Кампании (") }}{{ campaigns|length }})</h2>
     {% if campaigns %}
       <div class="li-grid li-grid--wide">
         {% for c in campaigns %}

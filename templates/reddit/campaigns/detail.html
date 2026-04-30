@@ -9,7 +9,7 @@
       <h1 class="reddit-page__title">{{ campaign.name }}</h1>
       <p class="reddit-page__subtitle">
         {{ t("Режим") }} <strong>{{ campaign.mode|ru_status }}</strong> {{ t("· подтверждение:") }} <strong>{{ campaign.approval_mode|ru_status }}</strong> {{ t("· статус") }} <strong>{{ campaign.status|ru_status }}</strong>
-        {% if template %} · шаблон <code>{{ template.name }}</code>{% endif %}
+        {% if template %} {{ t("· шаблон") }} <code>{{ template.name }}</code>{% endif %}
       </p>
     </div>
     <a href="/reddit/campaigns" class="reddit-btn"><i class="ti ti-arrow-left"></i> {{ t("К кампаниям") }}</a>

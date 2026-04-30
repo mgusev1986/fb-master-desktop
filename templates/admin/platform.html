@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Админ-панель — SOCMASTER{% endblock %}
+{% block title %}{{ t("Админ-панель — SOCMASTER") }}{% endblock %}
 
 {% block content %}
 <style>
@@ -209,14 +209,14 @@
   <div class="card-header">{{ t("Клиентские машины: ID установки и онлайн") }}</div>
   <div class="card-body">
     <p class="subtitle" style="margin:0 0 14px">
-      {{ t("В сайдбаре у каждой копии программы —") }} <strong>{{ t("ID установки") }}</strong> {{ t("(файл") }} <code>client_installation_id</code> в каталоге данных).
-      Пульс в эту таблицу: не чаще раз в {{ presence_interval_sec|int }} с (<code>FBM_CLIENT_PRESENCE_INTERVAL_SEC</code>); «онлайн» — активность за {{ online_threshold_sec }} с (<code>FBM_CLIENT_ONLINE_THRESHOLD_SEC</code>).
+      {{ t("В сайдбаре у каждой копии программы —") }} <strong>{{ t("ID установки") }}</strong> {{ t("(файл") }} <code>client_installation_id</code> {{ t("в каталоге данных).") }}
+      {{ t("Пульс в эту таблицу: не чаще раз в") }} {{ presence_interval_sec|int }} {{ t("с (") }}<code>FBM_CLIENT_PRESENCE_INTERVAL_SEC</code>{{ t("); «онлайн» — активность за") }} {{ online_threshold_sec }} {{ t("с (") }}<code>FBM_CLIENT_ONLINE_THRESHOLD_SEC</code>).
       {% if presence_db_is_postgresql %}
-      Кабинет на этом сервере (PostgreSQL) пишет строки напрямую. Копии <strong>{{ t("десктопа") }}</strong> {{ t("с локальной SQLite отправляют пульс на тот же хост через") }}
-      <code>POST …/api/public/client-presence</code> {{ t("(см.") }} <code>FB_MASTER_LICENSE_API_BASE</code> / <code>FB_MASTER_PRESENCE_REPORT_URL</code>){% if presence_endpoint_hint %}: например <code>{{ presence_endpoint_hint }}</code>{% endif %}.
-      Привязка к клиенту — по <strong>{{ t("ключу доступа") }}</strong> {{ t("(тот же") }} <code>device_fingerprint</code>, что при активации).
+      {{ t("Кабинет на этом сервере (PostgreSQL) пишет строки напрямую. Копии") }} <strong>{{ t("десктопа") }}</strong> {{ t("с локальной SQLite отправляют пульс на тот же хост через") }}
+      <code>POST …/api/public/client-presence</code> {{ t("(см.") }} <code>FB_MASTER_LICENSE_API_BASE</code> / <code>FB_MASTER_PRESENCE_REPORT_URL</code>){% if presence_endpoint_hint %}{{ t(": например") }} <code>{{ presence_endpoint_hint }}</code>{% endif %}.
+      {{ t("Привязка к клиенту — по") }} <strong>{{ t("ключу доступа") }}</strong> {{ t("(тот же") }} <code>device_fingerprint</code>{{ t(", что при активации).") }}
       {% else %}
-      На этой инсталляции база SQLite: в таблице будут только машины, которые ходят в <em>{{ t("этот") }}</em> локальный процесс. Для сводки по всем клиентам откройте админку на VPS с PostgreSQL.
+      {{ t("На этой инсталляции база SQLite: в таблице будут только машины, которые ходят в") }} <em>{{ t("этот") }}</em> {{ t("локальный процесс. Для сводки по всем клиентам откройте админку на VPS с PostgreSQL.") }}
       {% endif %}
     </p>
     {% if machine_presences %}
@@ -248,7 +248,7 @@
             <td>
               {% if row.access_key_id %}
               <div>{% if row.access_key_label %}{{ row.access_key_label }}{% else %}<span class="settings-note">{{ t("без подписи") }}</span>{% endif %}</div>
-              <div class="settings-note">ключ #{{ row.access_key_id }}</div>
+              <div class="settings-note">{{ t("ключ #") }}{{ row.access_key_id }}</div>
               {% else %}—{% endif %}
             </td>
             <td>
@@ -376,7 +376,7 @@
         <dt>Cookie Secure</dt>
         <dd>{% if tech.session_cookie_secure %}{{ t("да") }}{% else %}{{ t("нет") }}{% endif %}</dd>
         <dt>{{ t("Имитация прода") }}</dt>
-        <dd>{% if tech.local_simulate_production %}<span class="badge badge-warning">{{ t("да") }}</span>{% else %}нет{% endif %}</dd>
+        <dd>{% if tech.local_simulate_production %}<span class="badge badge-warning">{{ t("да") }}</span>{% else %}{{ t("нет") }}{% endif %}</dd>
         <dt>{{ t("Playwright, параллельно") }}</dt>
         <dd>{{ tech.playwright_max_concurrent }}</dd>
         <dt>{{ t("Прогрев: headless") }}</dt>

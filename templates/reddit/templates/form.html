@@ -8,7 +8,7 @@
     <div class="reddit-page__title-wrap">
       <h1 class="reddit-page__title">{% if row %}{{ t("Редактирование шаблона") }}{% else %}{{ t("Новый шаблон") }}{% endif %}</h1>
       <p class="reddit-page__subtitle">
-        Плейсхолдеры рендерятся при отправке: {% for p in known_placeholders %}<code>{{ '{' + p + '}' }}</code>{% if not loop.last %}, {% endif %}{% endfor %}.
+        {{ t("Плейсхолдеры рендерятся при отправке:") }} {% for p in known_placeholders %}<code>{{ '{' + p + '}' }}</code>{% if not loop.last %}, {% endif %}{% endfor %}.
       </p>
     </div>
     <a href="/reddit/templates" class="reddit-btn"><i class="ti ti-arrow-left"></i> {{ t("К списку") }}</a>

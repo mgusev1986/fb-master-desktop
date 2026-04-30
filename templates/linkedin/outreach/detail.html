@@ -9,7 +9,7 @@
       <h1 class="li-page__title">{{ campaign.name }} <span class="li-page__beta-pill">Beta</span></h1>
       <p class="li-page__subtitle">
         {{ t("Режим") }} <strong>{{ campaign.mode }}</strong>, approval <strong>{{ campaign.approval_mode }}</strong>{{ t(", статус") }} <strong>{{ campaign.status }}</strong>.
-        {% if campaign.daily_cap %}Дневной кап: <strong>{{ campaign.daily_cap }}</strong>.{% endif %}
+        {% if campaign.daily_cap %}{{ t("Дневной кап:") }} <strong>{{ campaign.daily_cap }}</strong>.{% endif %}
       </p>
     </div>
     <a href="/linkedin/outreach" class="li-btn"><i class="ti ti-arrow-left"></i> {{ t("К списку") }}</a>
@@ -29,7 +29,7 @@
     <h2 class="li-card__title"><i class="ti ti-bolt"></i> {{ t("Управление рассылкой") }}</h2>
     <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
       <form method="post" action="/linkedin/outreach/{{ campaign.id }}/run-once" style="display:flex;gap:6px;align-items:center;"
-            onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Отправляю…';">
+            onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> {{ t("Отправляю…';\">") }}
         <input type="number" name="max_items" min="1" max="20" value="3"
                style="width:70px;padding:6px;border-radius:6px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);"/>
         <label style="font:400 12px/1 Inter,sans-serif;color:var(--text-secondary,#606770);">
@@ -43,9 +43,9 @@
         <input type="hidden" name="status" value="{% if campaign.status == 'active' %}paused{% else %}active{% endif %}"/>
         <button type="submit" class="li-btn">
           {% if campaign.status == 'active' %}
-            <i class="ti ti-player-pause"></i> Пауза (выкл фонового воркера)
+            <i class="ti ti-player-pause"></i> {{ t("Пауза (выкл фонового воркера)") }}
           {% else %}
-            <i class="ti ti-player-play"></i> Активировать (фоновой воркер)
+            <i class="ti ti-player-play"></i> {{ t("Активировать (фоновой воркер)") }}
           {% endif %}
         </button>
       </form>
@@ -80,7 +80,7 @@
 
   <section>
     <h2 class="li-card__title" style="margin:8px 0 12px;">
-      Очередь · {{ summary.total }} элементов
+      {{ t("Очередь ·") }} {{ summary.total }} {{ t("элементов") }}
       <small style="color:var(--text-muted,#888);font-weight:400;font-size:12px;">
         pending {{ summary.pending_review }} · approved {{ summary.approved }} · sent {{ summary.sent }} · failed {{ summary.failed }} · skipped {{ summary.skipped }}
       </small>

@@ -8,11 +8,11 @@
       <h1>{% if cabinet_client_mode(request) %}{{ t("Сценарии по дням") }}{% else %}{{ t("Режим агента") }}{% endif %}</h1>
       <p class="subtitle">
         {% if cabinet_client_mode(request) %}
-        Здесь настраиваются <strong>{{ t("цепочки действий") }}</strong> {{ t("с людьми из вашего списка: например, лайк, комментарий, заявка в друзья, сообщение. Программа берёт людей") }} <strong>{{ t("небольшими группами") }}</strong> и выполняет шаги по очереди — следующая группа начнётся, когда текущая дойдёт до конца.
+        {{ t("Здесь настраиваются") }} <strong>{{ t("цепочки действий") }}</strong> {{ t("с людьми из вашего списка: например, лайк, комментарий, заявка в друзья, сообщение. Программа берёт людей") }} <strong>{{ t("небольшими группами") }}</strong> {{ t("и выполняет шаги по очереди — следующая группа начнётся, когда текущая дойдёт до конца.") }}
         {% else %}
-        Единый раздел для цепочек касаний: лайки, комментарии, добавление в друзья и сообщения в личку.
-        Система берёт контакты из выбранной базы партиями, ведёт их по шагам последовательно и не запускает
-        следующую партию, пока текущая не завершена.
+        {{ t("Единый раздел для цепочек касаний: лайки, комментарии, добавление в друзья и сообщения в личку.") }}
+        {{ t("Система берёт контакты из выбранной базы партиями, ведёт их по шагам последовательно и не запускает") }}
+        {{ t("следующую партию, пока текущая не завершена.") }}
         {% endif %}
       </p>
     </div>
@@ -32,9 +32,9 @@
 <div class="card" style="margin-bottom:16px">
   <div class="card-body" style="font-size:var(--font-size-sm);color:var(--text-secondary)">
     {% if cabinet_client_mode(request) %}
-    У вас есть <strong>{{ legacy_warmups_count }}</strong> старых кампаний прогрева по контактам — они по-прежнему открываются из меню (раздел «Прогрев по контактам»), а новые цепочки удобнее вести здесь.
+    {{ t("У вас есть") }} <strong>{{ legacy_warmups_count }}</strong> {{ t("старых кампаний прогрева по контактам — они по-прежнему открываются из меню (раздел «Прогрев по контактам»), а новые цепочки удобнее вести здесь.") }}
     {% else %}
-    Найдено старых кампаний из раздела прогрева: <strong>{{ legacy_warmups_count }}</strong>{{ t(". Они не потеряны и пока доступны по прямой ссылке") }} <a href="/warmup">/warmup</a>{{ t(", но новый рабочий раздел теперь один:") }} <strong>{{ t("Режим агента") }}</strong>.
+    {{ t("Найдено старых кампаний из раздела прогрева:") }} <strong>{{ legacy_warmups_count }}</strong>{{ t(". Они не потеряны и пока доступны по прямой ссылке") }} <a href="/warmup">/warmup</a>{{ t(", но новый рабочий раздел теперь один:") }} <strong>{{ t("Режим агента") }}</strong>.
     {% endif %}
   </div>
 </div>
@@ -60,9 +60,9 @@
         <strong>{{ t("Шаблоны сообщений") }}</strong>
         <p style="margin:8px 0 0;color:var(--text-secondary);font-size:var(--font-size-sm)">
           {% if cabinet_client_mode(request) %}
-          Тексты для комментариев и сообщений берите из раздела <a href="/templates">{{ t("«Тексты сообщений»") }}</a>.
+          {{ t("Тексты для комментариев и сообщений берите из раздела") }} <a href="/templates">{{ t("«Тексты сообщений»") }}</a>.
           {% else %}
-          Для комментариев и личных сообщений можно использовать шаблоны из раздела <a href="/templates">{{ t("Шаблоны") }}</a>.
+          {{ t("Для комментариев и личных сообщений можно использовать шаблоны из раздела") }} <a href="/templates">{{ t("Шаблоны") }}</a>.
           {% endif %}
         </p>
       </div>
@@ -117,15 +117,15 @@
               <strong>{{ c.name }}</strong>
               <div style="font-size:var(--font-size-xs);color:var(--text-secondary);margin-top:4px">
                 {% if pf.get('ui_import_batch_id') %}
-                Импорт #{{ pf.get('ui_import_batch_id') }}
+                {{ t("Импорт #") }}{{ pf.get('ui_import_batch_id') }}
                 {% elif pf.get('all_people') %}
-                Вся база
+                {{ t("Вся база") }}
                 {% else %}
-                Донор: {% if pf.get('ui_donor_id') %}#{{ pf.get('ui_donor_id') }}{% else %}не выбран{% endif %}
+                {{ t("Донор:") }} {% if pf.get('ui_donor_id') %}#{{ pf.get('ui_donor_id') }}{% else %}{{ t("не выбран") }}{% endif %}
                 {% endif %}
                 {% if pf.get('crm_stage') %}· CRM: {{ pf.get('crm_stage') }}{% endif %}
                 {% if pf.get('language_filter') and pf.get('language_filter') != 'all' %}
-                · Язык: {{ language_filter_label(pf.get('language_filter')) }}
+                {{ t("· Язык:") }} {{ language_filter_label(pf.get('language_filter')) }}
                 {% endif %}
               </div>
             </td>
@@ -139,13 +139,13 @@
               {% endif %}
             </td>
             <td style="color:var(--text-secondary);font-size:var(--font-size-sm)">
-              {{ (c.fb_account_ids or [])|length }} акк.
+              {{ (c.fb_account_ids or [])|length }} {{ t("акк.") }}
             </td>
             <td style="color:var(--text-secondary);font-size:var(--font-size-sm)">
               {% if pf.get('auto_batch_enabled') %}
-              Партиями по {{ pf.get('batch_size', 20) }} · ожидание {{ pf.get('batch_wait_value', 1) }} {% set _u = pf.get('batch_wait_unit', 'days') %}{% if _u == 'minutes' %}мин.{% elif _u == 'hours' %}час.{% else %}дн.{% endif %}
+              {{ t("Партиями по") }} {{ pf.get('batch_size', 20) }} {{ t("· ожидание") }} {{ pf.get('batch_wait_value', 1) }} {% set _u = pf.get('batch_wait_unit', 'days') %}{% if _u == 'minutes' %}{{ t("мин.") }}{% elif _u == 'hours' %}{{ t("час.") }}{% else %}{{ t("дн.") }}{% endif %}
               {% else %}
-              Выключена
+              {{ t("Выключена") }}
               {% endif %}
             </td>
             <td style="color:var(--text-secondary);font-size:var(--font-size-sm)">

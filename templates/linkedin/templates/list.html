@@ -1,6 +1,6 @@
 {% extends "linkedin/base.html" %}
 
-{% block title %}Шаблоны · LinkedIn Master{% endblock %}
+{% block title %}{{ t("Шаблоны · LinkedIn Master") }}{% endblock %}
 
 {% block content %}
 <div class="li-page">
@@ -36,7 +36,7 @@
   </section>
 
   <section>
-    <h2 class="li-card__title" style="margin:8px 0 12px;">Шаблоны ({{ templates|length }})</h2>
+    <h2 class="li-card__title" style="margin:8px 0 12px;">{{ t("Шаблоны (") }}{{ templates|length }})</h2>
     {% if templates %}
       <div class="li-grid li-grid--wide">
         {% for t in templates %}
@@ -75,7 +75,7 @@
               </div>
               {% if t.body_variants %}
               <div style="margin-top:6px;display:flex;flex-direction:column;gap:6px;">
-                <small style="color:var(--text-muted,#888);">Сохранённые варианты ({{ t.body_variants|length }}) — клик «применить» делает variant новым body, текущий уходит в backup:</small>
+                <small style="color:var(--text-muted,#888);">{{ t("Сохранённые варианты (") }}{{ t.body_variants|length }}{{ t(") — клик «применить» делает variant новым body, текущий уходит в backup:") }}</small>
                 {% for v in t.body_variants %}
                 <div style="display:flex;gap:6px;align-items:flex-start;padding:6px;border:1px dashed var(--border,#e4e6eb);border-radius:6px;">
                   <pre style="margin:0;font:400 12px/1.4 Inter,sans-serif;color:var(--text-secondary,#606770);flex:1;white-space:pre-wrap;">{{ v }}</pre>

@@ -1,5 +1,5 @@
 {% extends "instagram/base.html" %}
-{% block title %}Шаблоны · Instagram Master{% endblock %}
+{% block title %}{{ t("Шаблоны · Instagram Master") }}{% endblock %}
 {% block content %}
 <div class="ig-page">
   <header class="ig-page__header">
@@ -25,7 +25,7 @@
   </section>
 
   <section>
-    <h2 class="ig-card__title" style="margin:8px 0 12px;">Шаблоны ({{ templates|length }})</h2>
+    <h2 class="ig-card__title" style="margin:8px 0 12px;">{{ t("Шаблоны (") }}{{ templates|length }})</h2>
     {% if templates %}
       <div class="ig-grid ig-grid--wide">
         {% for t in templates %}

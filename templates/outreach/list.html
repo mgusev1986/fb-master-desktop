@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "macros/hints.html" import mailing_warmup_placeholders %}
-{% block title %}Рассылка — SOCMASTER{% endblock %}
+{% block title %}{{ t("Рассылка — SOCMASTER") }}{% endblock %}
 
 {% block content %}
 {% set show_agent_toggle = false %}
@@ -9,9 +9,9 @@
     <div>
       <h1>{{ t("Рассылка") }}</h1>
       <p class="subtitle">{% if cabinet_client_mode(request) %}
-      Отправка <strong>{{ t("личных сообщений") }}</strong> {{ t("и") }} <strong>{{ t("комментариев") }}</strong> под постами — по очереди, с ваших профилей Facebook и с разумными лимитами. Можно не писать тем, кому уже писали. Не запускайте одновременно с прогревом или сценариями по дням — дождитесь их окончания.
+      {{ t("Отправка") }} <strong>{{ t("личных сообщений") }}</strong> {{ t("и") }} <strong>{{ t("комментариев") }}</strong> {{ t("под постами — по очереди, с ваших профилей Facebook и с разумными лимитами. Можно не писать тем, кому уже писали. Не запускайте одновременно с прогревом или сценариями по дням — дождитесь их окончания.") }}
       {% else %}
-      Кампании из аккаунтов Facebook: личные сообщения и комментинг по очереди, с лимитом на аккаунт. ЛС по-прежнему можно вести с опциональным пропуском «уже писали» (таблица «Уже контактировали»). Не параллелить с прогревом и сценариями.
+      {{ t("Кампании из аккаунтов Facebook: личные сообщения и комментинг по очереди, с лимитом на аккаунт. ЛС по-прежнему можно вести с опциональным пропуском «уже писали» (таблица «Уже контактировали»). Не параллелить с прогревом и сценариями.") }}
       {% endif %}</p>
       {{ mailing_warmup_placeholders('subtitle') }}
     </div>
@@ -77,11 +77,11 @@
             </td>
             <td style="font-size:var(--font-size-sm);color:var(--text-secondary)">#{{ c.template_id or '—' }}</td>
             <td style="font-size:var(--font-size-sm);color:var(--text-secondary)">
-              {{ (c.fb_account_ids or [])|length }} акк. · {{ (c.person_ids or [])|length }} чел. · до {{ c.messages_per_account or 20 }}/акк.
+              {{ (c.fb_account_ids or [])|length }} {{ t("акк. ·") }} {{ (c.person_ids or [])|length }} {{ t("чел. · до") }} {{ c.messages_per_account or 20 }}{{ t("/акк.") }}
               {% if campaign_kind == 'comment' %}
-              · комментарии
+              {{ t("· комментарии") }}
               {% elif cfg.get('skip_contacted', true) %}
-              · пропуск «писали»
+              {{ t("· пропуск «писали»") }}
               {% endif %}
             </td>
             <td style="color:var(--text-secondary);font-size:var(--font-size-sm)">{{ c.updated_at.strftime('%d.%m.%Y %H:%M') if c.updated_at else '—' }}</td>

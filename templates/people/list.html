@@ -15,7 +15,7 @@
   <div class="page-header-actions">
     <div>
       <h1>{% if cabinet_client_mode(request) %}{{ t("Мои контакты") }}{% else %}{{ t("База контактов") }}{% endif %}</h1>
-      <p class="subtitle" id="people-subtitle">{% if cabinet_client_mode(request) %}Люди из загрузок и поиска — <span id="people-total-count">{{ total }}</span> записей{% else %}Все контакты из импорта и парсинга — <span id="people-total-count">{{ total }}</span> записей{% endif %}</p>
+      <p class="subtitle" id="people-subtitle">{% if cabinet_client_mode(request) %}{{ t("Люди из загрузок и поиска —") }} <span id="people-total-count">{{ total }}</span> {{ t("записей") }}{% else %}{{ t("Все контакты из импорта и парсинга —") }} <span id="people-total-count">{{ total }}</span> {{ t("записей") }}{% endif %}</p>
     </div>
   </div>
 </div>
@@ -55,7 +55,7 @@
       <div style="min-width:0">
         <div id="people-language-live-title" style="font-weight:600">{{ t("Идёт сегментация языка…") }}</div>
         <div id="people-language-live-detail" style="color:var(--text-secondary);margin-top:4px">
-          {% if segment_running_fb_account_label %}Аккаунт Facebook: <strong>{{ segment_running_fb_account_label }}</strong>{% endif %}
+          {% if segment_running_fb_account_label %}{{ t("Аккаунт Facebook:") }} <strong>{{ segment_running_fb_account_label }}</strong>{% endif %}
         </div>
       </div>
     </div>
@@ -176,7 +176,7 @@
             <td>
               <span class="badge {{ language_segment_badge(p.language_segment) }}">{{ language_segment_label(p.language_segment) }}</span>
               {% if p.language_confidence %}
-              <div class="form-hint" style="margin-top:6px">точность ~{{ p.language_confidence }}%</div>
+              <div class="form-hint" style="margin-top:6px">{{ t("точность ~") }}{{ p.language_confidence }}%</div>
               {% endif %}
             </td>
             <td>

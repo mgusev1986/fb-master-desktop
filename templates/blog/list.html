@@ -17,7 +17,7 @@
     <meta name="description" content="Статьи по теме «{{ selected_tag.name }}»: трафик, лиды, автоматизация соцсетей и работа с клиентами.">
     <link rel="canonical" href="https://socmaster.pro/blog?tag={{ selected_tag.slug }}">
     {% elif search_query %}
-    <title>Поиск: «{{ search_query }}» — База знаний SOCMASTER</title>
+    <title>{{ t("Поиск: «") }}{{ search_query }}{{ t("» — База знаний SOCMASTER") }}</title>
     <meta name="description" content="Результаты поиска по статьям SOCMASTER.">
     <link rel="canonical" href="https://socmaster.pro/blog">
     <meta name="robots" content="noindex, follow">
@@ -144,9 +144,9 @@
                 <span class="heading text-xl md:text-2xl font-semibold gold-gradient">SOCMASTER</span>
             </a>
             <div class="hidden md:flex items-center gap-7 text-sm text-white/75">
-                <a href="/{% if is_en %}?lang=en{% endif %}#ecosystem" class="hover:text-[#f5d06e]">{% if is_en %}Ecosystem{% else %}Экосистема{% endif %}</a>
-                <a href="/{% if is_en %}?lang=en{% endif %}#devices" class="hover:text-[#f5d06e]">{% if is_en %}Devices{% else %}Устройства{% endif %}</a>
-                <a href="/blog{% if is_en %}?lang=en{% endif %}" class="text-[#f5d06e] font-medium">{% if is_en %}Knowledge Base{% else %}База знаний{% endif %}</a>
+                <a href="/{% if is_en %}?lang=en{% endif %}#ecosystem" class="hover:text-[#f5d06e]">{% if is_en %}Ecosystem{% else %}{{ t("Экосистема") }}{% endif %}</a>
+                <a href="/{% if is_en %}?lang=en{% endif %}#devices" class="hover:text-[#f5d06e]">{% if is_en %}Devices{% else %}{{ t("Устройства") }}{% endif %}</a>
+                <a href="/blog{% if is_en %}?lang=en{% endif %}" class="text-[#f5d06e] font-medium">{% if is_en %}Knowledge Base{% else %}{{ t("База знаний") }}{% endif %}</a>
                 <a href="/#faq" class="hover:text-[#f5d06e]">FAQ</a>
             </div>
             <div class="hidden md:inline-flex items-center rounded-full border border-white/10 bg-white/[0.03] p-0.5 text-xs mr-3">
@@ -155,7 +155,7 @@
             </div>
             <a href="https://socmaster.pro/buy" class="cta-button px-5 py-2.5 rounded-full text-sm md:text-[15px] inline-flex items-center gap-2">
                 <i class="fa-solid fa-key text-xs"></i>
-                <span>{% if is_en %}Get access{% else %}Получить доступ{% endif %}</span>
+                <span>{% if is_en %}Get access{% else %}{{ t("Получить доступ") }}{% endif %}</span>
             </a>
         </div>
     </nav>
@@ -164,24 +164,24 @@
         <div class="max-w-5xl mx-auto px-5 md:px-8 text-center">
             <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full badge-gold text-xs md:text-sm font-medium mb-6">
                 <i class="fa-solid fa-book-open"></i>
-                {% if is_en %}SOCMASTER Knowledge Base{% else %}База знаний SOCMASTER{% endif %}
+                {% if is_en %}SOCMASTER Knowledge Base{% else %}{{ t("База знаний SOCMASTER") }}{% endif %}
             </div>
             <h1 class="heading text-3xl sm:text-5xl md:text-6xl font-semibold leading-[1.05] mb-5">
                 {% if selected_category -%}
                 {% if is_en and selected_category.name_en %}{{ selected_category.name_en }}{% else %}{{ selected_category.name }}{% endif %}
                 {%- elif selected_tag -%}
-                {% if is_en %}Tag{% else %}Тег{% endif %}: <span class="gold-gradient">{% if is_en and selected_tag.name_en %}{{ selected_tag.name_en }}{% else %}{{ selected_tag.name }}{% endif %}</span>
+                {% if is_en %}Tag{% else %}{{ t("Тег") }}{% endif %}: <span class="gold-gradient">{% if is_en and selected_tag.name_en %}{{ selected_tag.name_en }}{% else %}{{ selected_tag.name }}{% endif %}</span>
                 {%- elif search_query -%}
-                {% if is_en %}Search{% else %}Поиск{% endif %}: «<span class="gold-gradient">{{ search_query }}</span>»
+                {% if is_en %}Search{% else %}{{ t("Поиск") }}{% endif %}: «<span class="gold-gradient">{{ search_query }}</span>»
                 {%- else -%}
-                {% if is_en %}SOCMASTER&nbsp;<span class="gold-gradient">Knowledge Base</span>{% else %}База знаний&nbsp;<span class="gold-gradient">SOCMASTER</span>{% endif %}
+                {% if is_en %}SOCMASTER&nbsp;<span class="gold-gradient">Knowledge Base</span>{% else %}{{ t("База знаний&nbsp;") }}<span class="gold-gradient">SOCMASTER</span>{% endif %}
                 {%- endif %}
             </h1>
             <p class="text-base md:text-xl text-white/72 max-w-3xl mx-auto leading-relaxed">
                 {% if selected_category and selected_category.description %}
                 {% if is_en and selected_category.description_en %}{{ selected_category.description_en }}{% else %}{{ selected_category.description }}{% endif %}
                 {% else %}
-                {% if is_en %}Practical articles on traffic, leads, social media automation, and business growth.{% else %}Практические статьи о трафике, лидах, автоматизации соцсетей и&nbsp;росте бизнеса.{% endif %}
+                {% if is_en %}Practical articles on traffic, leads, social media automation, and business growth.{% else %}{{ t("Практические статьи о трафике, лидах, автоматизации соцсетей и&nbsp;росте бизнеса.") }}{% endif %}
                 {% endif %}
             </p>
 
@@ -191,7 +191,7 @@
                         class="w-full rounded-full bg-white/5 border border-white/15 px-12 py-3.5 text-white placeholder:text-white/40 focus:outline-none focus:border-[#f5d06e]/60">
                     <i class="fa-solid fa-magnifying-glass absolute left-5 top-1/2 -translate-y-1/2 text-white/40"></i>
                     {% if search_query %}
-                    <a href="/blog{% if is_en %}?lang=en{% endif %}" class="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white text-sm">{% if is_en %}Clear{% else %}Сбросить{% endif %} ✕</a>
+                    <a href="/blog{% if is_en %}?lang=en{% endif %}" class="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white text-sm">{% if is_en %}Clear{% else %}{{ t("Сбросить") }}{% endif %} ✕</a>
                     {% endif %}
                 </div>
             </form>
@@ -201,7 +201,7 @@
     <section class="bg-[#050505] py-6 border-y border-white/5">
         <div class="max-w-7xl mx-auto px-5 md:px-8">
             <div class="flex flex-wrap gap-2.5 justify-center">
-                <a href="/blog{% if is_en %}?lang=en{% endif %}" class="chip {% if not selected_category and not selected_tag and not search_query %}active{% endif %}">{% if is_en %}All{% else %}Все{% endif %}</a>
+                <a href="/blog{% if is_en %}?lang=en{% endif %}" class="chip {% if not selected_category and not selected_tag and not search_query %}active{% endif %}">{% if is_en %}All{% else %}{{ t("Все") }}{% endif %}</a>
                 {% for cat in all_categories %}
                 <a href="/blog?category={{ cat.slug }}{% if is_en %}&lang=en{% endif %}" class="chip {% if selected_category and selected_category.slug == cat.slug %}active{% endif %}">
                     {% if is_en and cat.name_en %}{{ cat.name_en }}{% else %}{{ cat.name }}{% endif %}
@@ -215,10 +215,10 @@
         <div class="max-w-7xl mx-auto px-5 md:px-8">
             {% if posts %}
             <div class="text-sm text-white/45 mb-6">
-                {% if is_en %}Found{% else %}Найдено{% endif %}: <strong class="text-white/80">{{ total_count }}</strong>
-                {% if selected_category %}— {% if is_en %}category «{% if selected_category.name_en %}{{ selected_category.name_en }}{% else %}{{ selected_category.name }}{% endif %}»{% else %}категория «{{ selected_category.name }}»{% endif %}{% endif %}
-                {% if selected_tag %}— {% if is_en %}tag «{% if selected_tag.name_en %}{{ selected_tag.name_en }}{% else %}{{ selected_tag.name }}{% endif %}»{% else %}тег «{{ selected_tag.name }}»{% endif %}{% endif %}
-                {% if search_query %}— по запросу «{{ search_query }}»{% endif %}
+                {% if is_en %}Found{% else %}{{ t("Найдено") }}{% endif %}: <strong class="text-white/80">{{ total_count }}</strong>
+                {% if selected_category %}— {% if is_en %}category «{% if selected_category.name_en %}{{ selected_category.name_en }}{% else %}{{ selected_category.name }}{% endif %}»{% else %}{{ t("категория «") }}{{ selected_category.name }}»{% endif %}{% endif %}
+                {% if selected_tag %}— {% if is_en %}tag «{% if selected_tag.name_en %}{{ selected_tag.name_en }}{% else %}{{ selected_tag.name }}{% endif %}»{% else %}{{ t("тег «") }}{{ selected_tag.name }}»{% endif %}{% endif %}
+                {% if search_query %}{{ t("— по запросу «") }}{{ search_query }}»{% endif %}
             </div>
             <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-7">
                 {% set cat_class_map = {
@@ -261,7 +261,7 @@
                         <div class="flex items-center justify-between text-xs text-white/40 pt-4 border-t border-white/8">
                             <time datetime="{{ post.published_at }}">{{ post.published_at }}</time>
                             {% if post.reading_time_minutes %}
-                            <span><i class="fa-regular fa-clock mr-1"></i>{{ post.reading_time_minutes }} {% if is_en %}min{% else %}мин{% endif %}</span>
+                            <span><i class="fa-regular fa-clock mr-1"></i>{{ post.reading_time_minutes }} {% if is_en %}min{% else %}{{ t("мин") }}{% endif %}</span>
                             {% endif %}
                         </div>
                     </div>
@@ -271,8 +271,8 @@
             {% else %}
             <div class="text-center py-16">
                 <i class="fa-regular fa-folder-open text-5xl text-white/20 mb-5"></i>
-                <h2 class="heading text-2xl mb-2">{% if is_en %}Nothing found{% else %}Ничего не нашлось{% endif %}</h2>
-                <p class="text-white/55">{% if is_en %}Try changing filters or return to the <a href="/blog?lang=en" class="text-[#f5d06e] underline">full list of articles</a>.{% else %}Попробуйте изменить фильтры или вернитесь к&nbsp;<a href="/blog" class="text-[#f5d06e] underline">{{ t("полному списку статей") }}</a>.{% endif %}</p>
+                <h2 class="heading text-2xl mb-2">{% if is_en %}Nothing found{% else %}{{ t("Ничего не нашлось") }}{% endif %}</h2>
+                <p class="text-white/55">{% if is_en %}Try changing filters or return to the <a href="/blog?lang=en" class="text-[#f5d06e] underline">full list of articles</a>.{% else %}{{ t("Попробуйте изменить фильтры или вернитесь к&nbsp;") }}<a href="/blog" class="text-[#f5d06e] underline">{{ t("полному списку статей") }}</a>.{% endif %}</p>
             </div>
             {% endif %}
         </div>
@@ -281,7 +281,7 @@
     {% if all_tags and not selected_tag %}
     <section class="py-12 md:py-16 border-t border-white/5">
         <div class="max-w-5xl mx-auto px-5 md:px-8 text-center">
-            <h2 class="heading text-2xl md:text-3xl font-semibold mb-6">{% if is_en %}Topics{% else %}Темы{% endif %}</h2>
+            <h2 class="heading text-2xl md:text-3xl font-semibold mb-6">{% if is_en %}Topics{% else %}{{ t("Темы") }}{% endif %}</h2>
             <div class="flex flex-wrap gap-2.5 justify-center">
                 {% for tag in all_tags %}
                 <a href="/blog?tag={{ tag.slug }}{% if is_en %}&lang=en{% endif %}" class="chip text-xs">#{% if is_en and tag.name_en %}{{ tag.name_en }}{% else %}{{ tag.name }}{% endif %}</a>
@@ -293,13 +293,13 @@
 
     <section class="py-20 md:py-28 hero-bg">
         <div class="max-w-4xl mx-auto px-5 md:px-8 text-center">
-            <h2 class="heading text-3xl md:text-5xl font-semibold mb-5 leading-[1.1]">{% if is_en %}Turn social media into a&nbsp;<span class="gold-gradient">lead source</span>{% else %}Превратите соцсети в&nbsp;<span class="gold-gradient">{{ t("источник заявок") }}</span>{% endif %}</h2>
+            <h2 class="heading text-3xl md:text-5xl font-semibold mb-5 leading-[1.1]">{% if is_en %}Turn social media into a&nbsp;<span class="gold-gradient">lead source</span>{% else %}{{ t("Превратите соцсети в&nbsp;") }}<span class="gold-gradient">{{ t("источник заявок") }}</span>{% endif %}</h2>
             <p class="text-base md:text-lg text-white/70 max-w-2xl mx-auto mb-8 leading-relaxed">
-                {% if is_en %}SOCMASTER helps you find audiences, launch outreach, work with leads in CRM, and automate routine actions.{% else %}SOCMASTER помогает находить аудиторию, запускать касания, работать с&nbsp;лидами в&nbsp;CRM и&nbsp;автоматизировать рутинные действия.{% endif %}
+                {% if is_en %}SOCMASTER helps you find audiences, launch outreach, work with leads in CRM, and automate routine actions.{% else %}{{ t("SOCMASTER помогает находить аудиторию, запускать касания, работать с&nbsp;лидами в&nbsp;CRM и&nbsp;автоматизировать рутинные действия.") }}{% endif %}
             </p>
             <a href="https://socmaster.pro/buy" class="cta-button px-9 py-4 rounded-2xl text-base md:text-lg inline-flex items-center gap-3">
                 <i class="fa-solid fa-key"></i>
-                {% if is_en %}Get access{% else %}Получить доступ{% endif %}
+                {% if is_en %}Get access{% else %}{{ t("Получить доступ") }}{% endif %}
             </a>
         </div>
     </section>

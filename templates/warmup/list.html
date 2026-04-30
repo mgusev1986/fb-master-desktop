@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "macros/hints.html" import mailing_warmup_placeholders %}
-{% block title %}Прогрев — SOCMASTER{% endblock %}
+{% block title %}{{ t("Прогрев — SOCMASTER") }}{% endblock %}
 
 {% block content %}
 <div class="page-header">
@@ -8,9 +8,9 @@
     <div>
       <h1>{% if cabinet_client_mode(request) %}{{ t("Лайки по списку людей") }}{% else %}{{ t("Прогрев по контактам") }}{% endif %}</h1>
       <p class="subtitle">{% if cabinet_client_mode(request) %}
-      Лайки (и при желании короткие комментарии) к постам на страницах людей из <strong>{{ t("«Мои контакты»") }}</strong> {{ t("— без личных сообщений. Скорость задаётся в") }} <a href="/system/speed">{{ t("«Темп работы»") }}</a> {{ t("и в самой кампании. Мягкий многодневный прогрев самого аккаунта Facebook — в разделе") }} <a href="/account-warming">{{ t("«Прогрев профиля»") }}</a>.
+      {{ t("Лайки (и при желании короткие комментарии) к постам на страницах людей из") }} <strong>{{ t("«Мои контакты»") }}</strong> {{ t("— без личных сообщений. Скорость задаётся в") }} <a href="/system/speed">{{ t("«Темп работы»") }}</a> {{ t("и в самой кампании. Мягкий многодневный прогрев самого аккаунта Facebook — в разделе") }} <a href="/account-warming">{{ t("«Прогрев профиля»") }}</a>.
       {% else %}
-      Лайки и опционально комментарии к постам на профилях из базы — без личных сообщений. Темп как в «Скорость и паузы» и в настройках кампании. Для многодневного «естественного» прогрева купленных аккаунтов см. раздел <a href="/account-warming">{{ t("Прогрев аккаунтов") }}</a> в меню Facebook.
+      {{ t("Лайки и опционально комментарии к постам на профилях из базы — без личных сообщений. Темп как в «Скорость и паузы» и в настройках кампании. Для многодневного «естественного» прогрева купленных аккаунтов см. раздел") }} <a href="/account-warming">{{ t("Прогрев аккаунтов") }}</a> {{ t("в меню Facebook.") }}
       {% endif %}</p>
       {{ mailing_warmup_placeholders('subtitle') }}
     </div>
@@ -59,7 +59,7 @@
               {% endif %}
             </td>
             <td style="color:var(--text-secondary);font-size:var(--font-size-sm)">
-              {{ (c.fb_account_ids or [])|length }} акк. · {{ (c.person_ids or [])|length }} чел. · до {{ c.actions_per_account or 10 }} на акк.
+              {{ (c.fb_account_ids or [])|length }} {{ t("акк. ·") }} {{ (c.person_ids or [])|length }} {{ t("чел. · до") }} {{ c.actions_per_account or 10 }} {{ t("на акк.") }}
             </td>
             <td style="color:var(--text-secondary);font-size:var(--font-size-sm)">
               {{ c.updated_at.strftime('%d.%m.%Y %H:%M') if c.updated_at else '—' }}

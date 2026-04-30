@@ -1,6 +1,6 @@
 {% extends "reddit/base.html" %}
 
-{% block title %}{% if sequence %}{{ t("Редактирование") }}{% else %}{{ t("Новый") }}{% endif %} сценарий · Reddit Master{% endblock %}
+{% block title %}{% if sequence %}{{ t("Редактирование") }}{% else %}{{ t("Новый") }}{% endif %} {{ t("сценарий · Reddit Master") }}{% endblock %}
 
 {% block content %}
 <div class="reddit-page">
@@ -8,7 +8,7 @@
     <div class="reddit-page__title-wrap">
       <h1 class="reddit-page__title">{% if sequence %}{{ t("Редактирование сценария") }}{% else %}{{ t("Новый сценарий") }}{% endif %}</h1>
       <p class="reddit-page__subtitle">
-        Узлы линейной цепочки задаются в JSON. Поддерживаемые типы:
+        {{ t("Узлы линейной цепочки задаются в JSON. Поддерживаемые типы:") }}
         {% for k in node_kinds %}<code>{{ k|ru_status }}</code>{% if not loop.last %}, {% endif %}{% endfor %}.
       </p>
     </div>

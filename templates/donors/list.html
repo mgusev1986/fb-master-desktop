@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Доноры — SOCMASTER{% endblock %}
+{% block title %}{{ t("Доноры — SOCMASTER") }}{% endblock %}
 
 {% block content %}
 <div class="page-header">
@@ -28,9 +28,9 @@
     {{ t("Массовое добавление: добавлено") }} <strong>{{ request.query_params.get('bulk_added') }}</strong>{{ t(", пропущено дубликатов") }} <strong>{{ request.query_params.get('bulk_dup', '0') }}</strong>,
     {% set bad = request.query_params.get('bulk_bad', '0') %}
     {% if bad != '0' %}
-    не распознано строк <strong>{{ bad }}</strong>,
+    {{ t("не распознано строк") }} <strong>{{ bad }}</strong>,
     {% endif %}
-    всего обработано строк со ссылками <strong>{{ request.query_params.get('bulk_total', '0') }}</strong>.
+    {{ t("всего обработано строк со ссылками") }} <strong>{{ request.query_params.get('bulk_total', '0') }}</strong>.
   </div>
 </div>
 {% endif %}

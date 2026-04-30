@@ -217,9 +217,9 @@
                 <span class="heading text-xl md:text-2xl font-semibold gold-gradient">SOCMASTER</span>
             </a>
             <div class="hidden md:flex items-center gap-7 text-sm text-white/75">
-                <a href="/{% if is_en %}?lang=en{% endif %}#ecosystem" class="hover:text-[#f5d06e]">{% if is_en %}Ecosystem{% else %}Экосистема{% endif %}</a>
-                <a href="/{% if is_en %}?lang=en{% endif %}#devices" class="hover:text-[#f5d06e]">{% if is_en %}Devices{% else %}Устройства{% endif %}</a>
-                <a href="/blog" class="text-[#f5d06e] font-medium">{% if is_en %}Knowledge Base{% else %}База знаний{% endif %}</a>
+                <a href="/{% if is_en %}?lang=en{% endif %}#ecosystem" class="hover:text-[#f5d06e]">{% if is_en %}Ecosystem{% else %}{{ t("Экосистема") }}{% endif %}</a>
+                <a href="/{% if is_en %}?lang=en{% endif %}#devices" class="hover:text-[#f5d06e]">{% if is_en %}Devices{% else %}{{ t("Устройства") }}{% endif %}</a>
+                <a href="/blog" class="text-[#f5d06e] font-medium">{% if is_en %}Knowledge Base{% else %}{{ t("База знаний") }}{% endif %}</a>
                 <a href="/#faq" class="hover:text-[#f5d06e]">FAQ</a>
             </div>
             <div class="hidden md:inline-flex items-center rounded-full border border-white/10 bg-white/[0.03] p-0.5 text-xs mr-3">
@@ -228,7 +228,7 @@
             </div>
             <a href="https://socmaster.pro/buy" class="cta-button px-5 py-2.5 rounded-full text-sm md:text-[15px] inline-flex items-center gap-2">
                 <i class="fa-solid fa-key text-xs"></i>
-                <span>{% if is_en %}Get access{% else %}Получить доступ{% endif %}</span>
+                <span>{% if is_en %}Get access{% else %}{{ t("Получить доступ") }}{% endif %}</span>
             </a>
         </div>
     </nav>
@@ -236,9 +236,9 @@
     <article class="pt-28 md:pt-36 pb-20">
         <header class="max-w-3xl mx-auto px-5 md:px-8 mb-10">
             <nav aria-label="{{ t("Хлебные крошки") }}" class="text-xs text-white/45 mb-6">
-                <a href="/" class="hover:text-[#f5d06e]">{% if is_en %}Home{% else %}Главная{% endif %}</a>
+                <a href="/" class="hover:text-[#f5d06e]">{% if is_en %}Home{% else %}{{ t("Главная") }}{% endif %}</a>
                 <span class="mx-2 text-white/25">/</span>
-                <a href="/blog" class="hover:text-[#f5d06e]">{% if is_en %}Knowledge Base{% else %}База знаний{% endif %}</a>
+                <a href="/blog" class="hover:text-[#f5d06e]">{% if is_en %}Knowledge Base{% else %}{{ t("База знаний") }}{% endif %}</a>
                 {% if category_obj %}
                 <span class="mx-2 text-white/25">/</span>
                 <a href="/blog?category={{ category_obj.slug }}{% if is_en %}&lang=en{% endif %}" class="hover:text-[#f5d06e]">{% if is_en and category_obj.name_en %}{{ category_obj.name_en }}{% else %}{{ category_obj.name }}{% endif %}</a>
@@ -257,7 +257,7 @@
             <div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-white/45 pb-6 border-b border-white/10">
                 <span><i class="fa-regular fa-calendar mr-1.5"></i><time datetime="{{ post.published_at }}">{{ post.published_at }}</time></span>
                 {% if post.reading_time_minutes %}
-                <span><i class="fa-regular fa-clock mr-1.5"></i>{{ post.reading_time_minutes }} {% if is_en %}min read{% else %}мин чтения{% endif %}</span>
+                <span><i class="fa-regular fa-clock mr-1.5"></i>{{ post.reading_time_minutes }} {% if is_en %}min read{% else %}{{ t("мин чтения") }}{% endif %}</span>
                 {% endif %}
                 {% if post.author %}
                 <span><i class="fa-solid fa-user mr-1.5"></i>{{ post.author }}</span>
@@ -303,13 +303,13 @@
             <div class="grid md:grid-cols-2 gap-5">
                 {% if post.audience %}
                 <div class="luxury-card p-6">
-                    <div class="text-xs uppercase tracking-[0.2em] text-[#f5d06e] mb-2">{% if is_en %}Who this is for{% else %}Кому будет полезно{% endif %}</div>
+                    <div class="text-xs uppercase tracking-[0.2em] text-[#f5d06e] mb-2">{% if is_en %}Who this is for{% else %}{{ t("Кому будет полезно") }}{% endif %}</div>
                     <p class="text-white/80 leading-relaxed">{{ post.audience }}</p>
                 </div>
                 {% endif %}
                 {% if post.what_youll_learn %}
                 <div class="luxury-card p-6">
-                    <div class="text-xs uppercase tracking-[0.2em] text-[#f5d06e] mb-3">{% if is_en %}What you'll learn{% else %}Что вы узнаете{% endif %}</div>
+                    <div class="text-xs uppercase tracking-[0.2em] text-[#f5d06e] mb-3">{% if is_en %}What you'll learn{% else %}{{ t("Что вы узнаете") }}{% endif %}</div>
                     <ul class="space-y-2 text-sm text-white/75">
                         {% for item in post.what_youll_learn %}
                         <li class="flex items-start gap-2.5"><i class="fa-solid fa-check text-[#51cf66] mt-1 text-xs"></i><span>{{ item }}</span></li>
@@ -327,18 +327,18 @@
 
         <div class="max-w-3xl mx-auto px-5 md:px-8 my-12">
             <div class="luxury-card p-8 text-center">
-                <h3 class="heading text-2xl md:text-3xl font-semibold mb-3">{% if is_en %}Want to automate customer acquisition from social media?{% else %}Хотите автоматизировать привлечение клиентов из&nbsp;соцсетей?{% endif %}</h3>
-                <p class="text-white/65 mb-6 max-w-xl mx-auto">{% if is_en %}SOCMASTER helps you find your audience, launch outreach, manage conversations, and work with leads and CRM — all in one system.{% else %}SOCMASTER помогает находить аудиторию, запускать касания, вести переписки, работать с&nbsp;лидами и&nbsp;CRM в&nbsp;одной системе.{% endif %}</p>
+                <h3 class="heading text-2xl md:text-3xl font-semibold mb-3">{% if is_en %}Want to automate customer acquisition from social media?{% else %}{{ t("Хотите автоматизировать привлечение клиентов из&nbsp;соцсетей?") }}{% endif %}</h3>
+                <p class="text-white/65 mb-6 max-w-xl mx-auto">{% if is_en %}SOCMASTER helps you find your audience, launch outreach, manage conversations, and work with leads and CRM — all in one system.{% else %}{{ t("SOCMASTER помогает находить аудиторию, запускать касания, вести переписки, работать с&nbsp;лидами и&nbsp;CRM в&nbsp;одной системе.") }}{% endif %}</p>
                 <a href="https://socmaster.pro/buy" class="cta-button px-7 py-3.5 rounded-2xl text-base inline-flex items-center justify-center gap-2.5">
                     <i class="fa-solid fa-key"></i>
-                    {% if is_en %}Visit website{% else %}Перейти на сайт{% endif %}
+                    {% if is_en %}Visit website{% else %}{{ t("Перейти на сайт") }}{% endif %}
                 </a>
             </div>
         </div>
 
         {% if post.faq %}
         <div class="max-w-3xl mx-auto px-5 md:px-8 mt-12">
-            <h2 class="heading text-2xl md:text-3xl font-semibold mb-6">{% if is_en %}Frequently Asked Questions{% else %}Часто задаваемые вопросы{% endif %}</h2>
+            <h2 class="heading text-2xl md:text-3xl font-semibold mb-6">{% if is_en %}Frequently Asked Questions{% else %}{{ t("Часто задаваемые вопросы") }}{% endif %}</h2>
             <div class="space-y-3">
                 {% for item in post.faq %}
                 <details class="luxury-card p-5 group">
@@ -355,7 +355,7 @@
 
         {% if tag_objs %}
         <div class="max-w-3xl mx-auto px-5 md:px-8 mt-12">
-            <div class="text-xs uppercase tracking-[0.15em] text-white/40 mb-3">{% if is_en %}Tags{% else %}Теги{% endif %}</div>
+            <div class="text-xs uppercase tracking-[0.15em] text-white/40 mb-3">{% if is_en %}Tags{% else %}{{ t("Теги") }}{% endif %}</div>
             <div class="flex flex-wrap gap-2">
                 {% for tag in tag_objs %}
                 <a href="/blog?tag={{ tag.slug }}{% if is_en %}&lang=en{% endif %}" class="chip">#{% if is_en and tag.name_en %}{{ tag.name_en }}{% else %}{{ tag.name }}{% endif %}</a>
@@ -366,15 +366,15 @@
 
         <div class="max-w-3xl mx-auto px-5 md:px-8 mt-14">
             <div class="luxury-card p-8 md:p-10 text-center hero-bg">
-                <h3 class="heading text-2xl md:text-4xl font-semibold mb-4">{% if is_en %}Less manual routine — more&nbsp;<span class="gold-gradient">leads</span>{% else %}Меньше ручной рутины — больше&nbsp;<span class="gold-gradient">{{ t("лидов") }}</span>{% endif %}</h3>
-                <p class="text-white/70 mb-7 max-w-2xl mx-auto leading-relaxed">{% if is_en %}SOCMASTER unites parsing, AI assistant, outreach, CRM, and social media automation in one platform.{% else %}SOCMASTER объединяет парсинг, AI-помощника, рассылки, CRM и&nbsp;автоматизацию соцсетей в&nbsp;одной платформе.{% endif %}</p>
+                <h3 class="heading text-2xl md:text-4xl font-semibold mb-4">{% if is_en %}Less manual routine — more&nbsp;<span class="gold-gradient">leads</span>{% else %}{{ t("Меньше ручной рутины — больше&nbsp;") }}<span class="gold-gradient">{{ t("лидов") }}</span>{% endif %}</h3>
+                <p class="text-white/70 mb-7 max-w-2xl mx-auto leading-relaxed">{% if is_en %}SOCMASTER unites parsing, AI assistant, outreach, CRM, and social media automation in one platform.{% else %}{{ t("SOCMASTER объединяет парсинг, AI-помощника, рассылки, CRM и&nbsp;автоматизацию соцсетей в&nbsp;одной платформе.") }}{% endif %}</p>
                 <div class="flex flex-col sm:flex-row gap-3 justify-center">
                     <a href="https://socmaster.pro/buy" class="cta-button px-8 py-4 rounded-2xl inline-flex items-center justify-center gap-2.5">
                         <i class="fa-solid fa-key"></i>
-                        {% if is_en %}Get access{% else %}Получить доступ{% endif %}
+                        {% if is_en %}Get access{% else %}{{ t("Получить доступ") }}{% endif %}
                     </a>
                     <a href="/blog" class="cta-secondary px-8 py-4 rounded-2xl inline-flex items-center justify-center gap-2.5">
-                        {% if is_en %}Read other articles{% else %}Читать другие статьи{% endif %}
+                        {% if is_en %}Read other articles{% else %}{{ t("Читать другие статьи") }}{% endif %}
                     </a>
                 </div>
             </div>
@@ -384,7 +384,7 @@
     {% if related_posts %}
     <section class="py-16 md:py-20 border-t border-white/8 bg-[#070707]">
         <div class="max-w-7xl mx-auto px-5 md:px-8">
-            <h2 class="heading text-2xl md:text-3xl font-semibold mb-8 text-center">{% if is_en %}You may also like{% else %}Читайте также{% endif %}</h2>
+            <h2 class="heading text-2xl md:text-3xl font-semibold mb-8 text-center">{% if is_en %}You may also like{% else %}{{ t("Читайте также") }}{% endif %}</h2>
             <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
                 {% set cat_class_map_r = {
                     'facebook': ('cover-fb', 'fa-brands fa-facebook'),
@@ -431,8 +431,8 @@
 
     <footer class="bg-black border-t border-white/8 py-10">
         <div class="max-w-7xl mx-auto px-5 md:px-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-white/45">
-            <span>© SOCMASTER. <a href="/" class="hover:text-[#f5d06e]">{% if is_en %}Home{% else %}На главную{% endif %}</a></span>
-            <a href="/blog" class="hover:text-[#f5d06e]">{% if is_en %}All articles{% else %}Все статьи{% endif %}</a>
+            <span>© SOCMASTER. <a href="/" class="hover:text-[#f5d06e]">{% if is_en %}Home{% else %}{{ t("На главную") }}{% endif %}</a></span>
+            <a href="/blog" class="hover:text-[#f5d06e]">{% if is_en %}All articles{% else %}{{ t("Все статьи") }}{% endif %}</a>
         </div>
     </footer>
 </body>

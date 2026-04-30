@@ -26,7 +26,7 @@
         {% if cancel_subscription_url %}
         <tr>
           <td style="padding:24px 40px;background:#f9fafc;border-top:1px solid #e6e9f0;">
-            <p style="margin:0;font-size:13px;line-height:1.5;color:#6c7691;">{{ t("Если хотите отменить автопродление —") }} <a href="{{ cancel_subscription_url }}" style="color:#4f6df5;text-decoration:underline;">{{ t("нажмите здесь") }}</a>. Ключ продолжит работать до {{ expires_at_label }}.</p>
+            <p style="margin:0;font-size:13px;line-height:1.5;color:#6c7691;">{{ t("Если хотите отменить автопродление —") }} <a href="{{ cancel_subscription_url }}" style="color:#4f6df5;text-decoration:underline;">{{ t("нажмите здесь") }}</a>{{ t(". Ключ продолжит работать до") }} {{ expires_at_label }}.</p>
           </td>
         </tr>
         {% endif %}

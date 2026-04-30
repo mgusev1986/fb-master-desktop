@@ -1,6 +1,6 @@
 {% extends "reddit/base.html" %}
 
-{% block title %}Диалог · u/{{ conversation.counterpart_username }}{% endblock %}
+{% block title %}{{ t("Диалог · u/") }}{{ conversation.counterpart_username }}{% endblock %}
 
 {% block content %}
 <div class="reddit-page">
@@ -18,7 +18,7 @@
 
   {% if notice %}
   <div class="reddit-card" style="border-color:{% if notice == 'sent' %}#1b873f;color:#1b873f{% else %}#c33;color:#c33{% endif %};background:color-mix(in srgb, currentColor 6%, var(--bg-surface));">
-    {% if notice == 'sent' %}<i class="ti ti-check"></i> Сообщение отправлено.
+    {% if notice == 'sent' %}<i class="ti ti-check"></i> {{ t("Сообщение отправлено.") }}
     {% else %}<i class="ti ti-alert-triangle"></i> {{ notice }}{% endif %}
   </div>
   {% endif %}
