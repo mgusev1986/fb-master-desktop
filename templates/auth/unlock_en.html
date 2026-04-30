@@ -9,28 +9,16 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    .fbm-premium-topbar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 20;
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      padding: 0.55rem 1.15rem;
-      pointer-events: none;
-    }
-    .fbm-premium-topbar-version {
-      pointer-events: auto;
-      font-size: 0.8125rem;
-      font-weight: 600;
+    .fbm-premium-eyebrow-version {
+      font-size: 0.7rem;
       letter-spacing: 0.04em;
+      font-weight: 600;
       color: rgba(196, 165, 116, 0.92);
       background: rgba(0, 0, 0, 0.25);
       border: 1px solid rgba(201, 169, 98, 0.2);
       border-radius: 999px;
-      padding: 0.35rem 0.75rem;
+      padding: 0.2rem 0.55rem;
+      text-transform: none;
     }
     .fbm-premium-page {
       min-height: 100vh;
@@ -59,6 +47,9 @@
       padding: clamp(1.85rem, 4.5vw, 2.65rem);
     }
     .fbm-premium-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
       font-size: 0.75rem;
       letter-spacing: 0.28em;
       text-transform: uppercase;
@@ -310,14 +301,12 @@
 </head>
 <body>
 <div class="fbm-premium-page">
-  {% if fbm_desktop_app_version %}
-  <div class="fbm-premium-topbar" aria-label="Application version">
-    <span class="fbm-premium-topbar-version">v{{ fbm_desktop_app_version }}</span>
-  </div>
-  {% endif %}
   <div class="fbm-premium-card{% if unlock_desktop_app %} fbm-premium-card--desktop{% endif %}">
     <div class="fbm-card-header">
-      <p class="fbm-premium-eyebrow" style="margin:0">SOCMASTER</p>
+      <p class="fbm-premium-eyebrow" style="margin:0">
+        <span class="fbm-premium-eyebrow-name">SOCMASTER</span>
+        {% if fbm_desktop_app_version %}<span class="fbm-premium-eyebrow-version" title="Application version">v{{ fbm_desktop_app_version }}</span>{% endif %}
+      </p>
       {% if not unlock_desktop_app %}
       <div class="fbm-lang-pill" role="group" aria-label="Language switcher">
         <a href="/auth/unlock" class="fbm-lang-btn">RU</a>
