@@ -2,7 +2,7 @@
 
 Документ для передачи контекста нейросети или разработчику: продукт, **архитектура клиент–сервер**, лицензирование, **обновления десктопа (macOS + Windows)**, защита, деплой, маршруты, механики, дерево файлов. Язык: русский.
 
-**Последнее обновление документа:** 30 апреля 2026 (релиз 3.0.7 + follow-up итерации: премиум-редизайн `/buy`+`/purchase`, LavaTop graceful errors, `/auth/unlock` UX × 5, Apple Pay cleanup, testimonials в `/promo3`, фикс checkpoint-hooks для worktrees — разделы §25.12 и §25.13). **Текущая версия десктопа (semver):** **3.0.5** (`desktop/fb-master-desktop/package.json`, не менялся). **Текущая публичная версия серверного релиза:** **3.0.7** (LavaTop+Brevo+blog в `/opt/fb-master/`). **Desktop-релиз 3.0.7 пока не собирался** — текущий публичный desktop-update остаётся **3.0.5**.
+**Последнее обновление документа:** 30 апреля 2026 (релиз 3.0.7 + полный RU↔EN i18n кабинета: 3242 EN-ключа, ~3937 обёрток `{{ t() }}` в 122 шаблонах, 5 двуязычных `_en.html` страниц — раздел §25.14; ранее в этот же день: премиум-редизайн `/buy`+`/purchase`, LavaTop graceful errors, `/auth/unlock` UX × 5, Apple Pay cleanup, mobile-responsive admin, testimonials в `/promo3` — §25.12 и §25.13). **Текущая версия десктопа (semver):** **3.0.5** (`desktop/fb-master-desktop/package.json`, не менялся). **Текущая публичная версия серверного релиза:** **3.0.7** (LavaTop+Brevo+blog+i18n в `/opt/fb-master/`). **Desktop-релиз 3.0.7 пока не собирался** — текущий публичный desktop-update остаётся **3.0.5**.
 
 **Важно про имя продукта:** с версии 2.5 продукт переименован с *FbMaster* в **SOCMASTER**. Все новые артефакты публикуются с префиксом **`SOCMASTER-`** (а не `FbMaster-`). Legacy-имена `FbMaster-*.dmg` остаются в историческом списке и обрабатываются скриптами как fallback, но **новые релизы пишутся только как `SOCMASTER-*`**. В коде продуктовое имя — `productName: "SOCMASTER"` в `package.json`, а класс Electron-app и bundle id остались `pro.socmaster.fbmaster` (обратная совместимость на уровне auto-update).
 
@@ -2627,6 +2627,136 @@ cp ".claude/settings.json" ".claude/worktrees/<name>/.claude/settings.json"
 
 **Долгосрочное решение (TODO):** post-create-worktree скрипт или shell-обёртка `gwt-add` в `~/.zshrc` поверх `git worktree add`, которая автоматически копирует `settings.json`.
 
+### 25.14. Полный RU↔EN i18n кабинета SOCMASTER (день 30 апр)
+
+После follow-up'а §25.12 — **самый крупный single-day delivery** проекта: построена полная инфраструктура двуязычности UI (RU/EN), переведены и обёрнуты практически все строки кабинета, страниц оплаты, лендинга, блога, страницы разблокировки. Покрытие ~100% по wrappable-строкам.
+
+#### Архитектура i18n
+
+```
+4f92a18 feat(i18n): инфраструктура UI-переводов RU↔EN (variant B foundation)
+c3e5373 feat(i18n): cookie middleware + перевод sidebar (base.html) RU↔EN
+03862d3 feat(i18n): перевод dashboard.html (главная FB Master) RU↔EN
+97a7fcc feat(i18n): +40 ключей для fb_accounts (dict) + page-header перевод
+```
+
+**Базовая модель** (`backend/services/i18n.py`):
+- `get_lang(request)` — читает `?lang=` query (ru / en, default ru). **Cookie persistence отключён** (см. ниже про cookie fix).
+- `select_template(request, base_name)` — двойной template-routing: `promo3.html` (RU) vs `promo3_en.html` (EN). Если EN-файл существует — отдаём, иначе RU fallback.
+- `translate(key, lang, **kwargs)` — словарный перевод, fallback на ключ если перевода нет (RU = ключ).
+- В `app_factory.py` зарегистрирован Jinja-global `t` через `@pass_context`, доступен в шаблонах: `{{ t("Готов") }}` или `{{ t("Привет, {name}", name=user.name) }}`.
+
+**Источник переводов** — `backend/services/i18n_dict.py`: `TRANSLATIONS["en"]` dict с ~3242 ключами. Файл состоит из **manual section** (выше маркера) + **auto-generated section** между маркерами `# === AUTO-GENERATED START === ... # === AUTO-GENERATED END ===`. Manual override имеет приоритет над auto.
+
+#### Двуязычные страницы (по `_en.html`-парам)
+
+```
+2c89149 feat(i18n): восстановить переключатель ?lang=en на лендинге promo3
+7d0024c feat(i18n): EN-версия /buy + переключатель RU/EN
+d26ea1c feat(i18n): EN-версия /purchase + i18n hook для /auth/unlock
+3d37067 feat(i18n): двуязычный блог — RU/EN через i18n.en + sitemap EN
+9d68807 feat(i18n): /auth/unlock EN-версия + фикс пропущенных слов в навбаре блога
+788325c fix(blog/i18n): сохранять ?lang=en при клике на статью из списка
+4b6fb93 ux(unlock): версия v… рядом с SOCMASTER (RU+EN), убрали плавающий topbar
+```
+
+Файлы с пара́ми `_en.html`: `templates/promo3.html` ↔ `promo3_en.html`, `buy.html` ↔ `buy_en.html`, `billing/purchase.html` ↔ `billing/purchase_en.html`, `auth/unlock.html` ↔ `auth/unlock_en.html`, `blog/list.html` ↔ `blog/list_en.html`, `blog/post.html` (общий, использует `t()`).
+
+**Двуязычный блог:** статьи в `data/blog/posts/*.json` получили опциональное поле `i18n.en` со структурой `{title, summary, body_html, ...}`. `backend/services/blog_service.py::list_posts()` фильтрует по языку, `backend/routers/blog.py` определяет lang и переключает статьи. `sitemap.xml` отдаёт `<xhtml:link rel="alternate" hreflang="en">`.
+
+**Скрипт перевода старых статей:** `scripts/translate_existing_articles.py` — Gemini-перевод существующих posts с сохранением HTML-разметки.
+
+#### Pipeline для batch-перевода (variant D)
+
+```
+3653dc6 feat(i18n): pipeline для batch-перевода UI через Gemini (variant D)
+462d32d feat(i18n): batch-перевод 2022 строк через Gemini → dict 2243 ключа
+9344745 feat(i18n): auto-wrap 2648 RU-строк в 108 шаблонах в {{ t() }}
+646edc8 feat(i18n): ручные переводы 999 строк + 1289 новых обёрток в 94 шаблонах
+```
+
+Создан 4-этапный pipeline для масштабирования переводов:
+
+1. **`scripts/i18n_extract.py`** — сканирует `templates/**/*.html`, извлекает уникальные RU-строки между тегами и в атрибутах (`title`, `placeholder`, `aria-label`, `alt`). Регексы: `_TEXT_BETWEEN_TAGS` + `_ATTR_TEXT`. Skip: `<script>`, `<style>`, `<!-- -->`, `{# #}`, уже-обёрнутые `{{ t(...) }}`, строки с `{{ var }}` внутри. Output → `data/i18n/messages.json` (3223 строки в 125 файлах).
+
+2. **`scripts/i18n_translate_batch.py`** — Gemini `gemini-2.5-flash` через `complete_gemini_conversation_with_key_rotation` (тот же helper, что используется в продукте). Чанки по 50 строк, retry 3×, idempotent `--resume`. System prompt сохраняет Jinja2-плейсхолдеры (`{name}`, `{count}`) и HTML-теги нетронутыми. Output → `data/i18n/messages_en.json` (3224 entries, 1110 identity).
+
+3. **`scripts/i18n_apply.py`** — обновляет auto-generated секцию в `i18n_dict.py` между маркерами. Manual section (выше START-маркера) сохраняется без изменений — manual override имеет приоритет.
+
+4. **`scripts/i18n_wrap_templates.py`** — auto-wrap RU-строк в `{{ t("...") }}` если ключ есть в dict. Класс `_ProtectedRegions` маскирует `<script>`, `<style>`, comments и существующие `{{ }}` / `{% %}` блоки на placeholder'ы перед regex-заменой. **Pass 2/3** обрабатывают `{% if cond %}RU1{% else %}RU2{% endif %}` и `{% if cond %}RU{% endif %}` паттерны (если обе ветки в dict). Идемпотентен.
+
+**Результаты pipeline:**
+- Gemini в первом проходе перевёл 2022 строки (1110 identity-маппинги — quota free-tier исчерпан).
+- Auto-wrap pass 1: **2648 обёрток в 108 шаблонах** (только строки, для которых есть ключ).
+- Все 133 Jinja2-шаблона парсятся без ошибок (валидация через `jinja2.Environment.parse()`).
+
+**Ручные переводы 999 строк** (повторный заход после quota): `scripts/i18n_manual_translations.py` — Python-словарь со всеми RU→EN переводами, которые Gemini не смог обработать. После merge в `messages_en.json` + apply + повторный wrap: **+1289 обёрток в 94 шаблонах**, dict вырос до **3242 EN-ключей**. Оставшиеся ~1110 identity-strings — это фрагменты, разрезанные на границе inline `{{ var }}`, их `wrap`-скрипт безопасно пропускает (нельзя nested Jinja).
+
+Финальный размер `i18n_dict.py`: **3371 строк** (был 286 до variant D).
+
+#### Critical fix: cookie persistence (выявлено user'ом)
+
+```
+423c563 fix(i18n): убрать cookie persistence из get_lang — лендинг застревал на EN
+```
+
+**Симптом:** пользователь сообщил «у меня на лендинге пропал русский язык, всё на английском». **Root cause:** `c3e5373` ввёл cookie middleware который сохранял `lang=en` на 365 дней при любом `?lang=en` запросе. `get_lang()` сначала читал cookie, и пользователи, кликнувшие EN однажды, навсегда «застревали» на английском — даже на `/` без query-параметра.
+
+**Фикс:** `get_lang()` теперь читает **только `?lang=` query**, cookie игнорируется (cookie middleware остался, но больше не читается). По умолчанию (без query) → `DEFAULT_LANG = "ru"`. Чтобы зафиксировать EN — нужен явный `?lang=en` в URL.
+
+#### UX-полировка `/buy` и `/purchase`
+
+```
+abb61d5 ux(buy/purchase): h1 в одну строку — убрать <br> между фразами
+183f7d5 fix(buy/purchase): italic glyph clipping — padding-right на .gold
+```
+
+Мелкие визуальные правки премиум-редизайна (см. §25.12): h1 теперь однострочный (gold-gradient-фразы рядом), italic-глифы в `.gold span` получили `padding-right` чтобы хвостик не обрезался.
+
+#### LavaTop checkout: paymentParams cleanup
+
+```
+869619a fix(lavatop): убрать paymentParams из checkout URL — даём пользователю выбор валюты + PayPal
+```
+
+`backend/services/lavatop_billing.py` больше не пушит `paymentParams=…` в LavaTop checkout URL. Без этого параметра LavaTop показывает пользователю **все доступные методы** (карты RU/EU + СБП + PayPal). Раньше параметр форсировал только `card`-вариант, что не давало пользователю выбрать PayPal или альтернативную карту в другой валюте.
+
+#### Mobile responsive админка
+
+```
+ce0537d feat(admin/keys): mobile-responsive + дефолт «30 дней»
+1d88cd3 feat(admin/platform): mobile-responsive главной админки
+7aa1625 feat(admin): app-like mobile UX — скрываем sidebar, sticky top-bar
+308e07c fix(admin/keys mobile): точечки FBM-•••• наезжают, кнопки уезжают вправо
+8b9caee ux(admin/keys mobile): таблица → карточный layout
+```
+
+`templates/admin/platform.html` и `templates/admin/platform_access_keys.html` доведены до полноценного mobile-experience: на <600px viewport sidebar скрывается, сверху sticky top-bar с burger, таблица ключей превращается в карточный layout (адаптивная сетка), длинные FBM-маски обрезаются с ellipsis. На странице создания ключа default duration теперь «30 дней» (было «1 день»).
+
+#### Production deploys 30 апр (10:30 → 15:10)
+
+| Время | Файлы | Заметка |
+|---|---|---|
+| `10:32–11:33` | `templates/buy*.html`, `purchase*.html`, `auth/unlock*.html`, `blog/*.html`, `promo3*.html`, sitemap | EN-версии лендинга, оплаты, блога |
+| `11:35–11:40` | `templates/buy.html`, `purchase.html`, `lavatop_billing.py` | UX-полировка + LavaTop fix |
+| `11:58–12:31` | `templates/admin/platform*.html` × 5 итераций | mobile-responsive admin |
+| `12:49–13:46` | `backend/services/i18n*.py`, `app_factory.py`, `i18n_dict.py`, **108 шаблонов** | базовая инфраструктура + Gemini batch + auto-wrap pass 1 |
+| `14:33` | `backend/services/i18n.py` | cookie persistence fix (production hot-fix по жалобе user'а) |
+| `15:08–15:09` | `backend/services/i18n_dict.py` (3371 строк), **95 шаблонов** | manual translations + wrap pass 2 (+1289 обёрток) |
+
+**Все деплои:** rsync на `46.62.230.106:/opt/fb-master/` + restart `fb-master` для backend-only коммитов (i18n.py, lavatop_billing.py); template-only deploys без restart (Jinja2 hot-reload).
+
+#### Финальное состояние i18n на 15:10 30 апр
+
+- **`i18n_dict.py`**: 3242 EN-ключа (manual + auto-generated). 3371 строка кода.
+- **Wrap-обёрток `{{ t() }}`**: ~3937 в 122 шаблонах (≈99% wrappable-coverage).
+- **Двуязычные `_en.html` файлы**: 5 (promo3, buy, purchase, auth/unlock, blog/list).
+- **Поведение лендинга**: `/` → RU (default), `/?lang=en` → EN, `/?lang=en` запоминается ТОЛЬКО в URL (cookie не пишется).
+- **Что НЕ покрыто переводом** (intentionally):
+  - Фрагменты с inline `{{ var }}` внутри строки — нельзя nested Jinja, wrap-скрипт пропускает.
+  - Backend flash-сообщения (Russian-only, помечено как «позже» в TODO).
+  - Electron desktop UI (отдельная i18n-задача в desktop-сборке).
+
 ---
 
-*Конец документа Checkpoint. Последнее обновление: 30 апреля 2026 — релиз 3.0.7 + follow-up: премиум-редизайн `/buy`+`/purchase`, LavaTop graceful errors, `/auth/unlock` UX (5 итераций), Apple Pay cleanup, testimonials в `/promo3`, фикс checkpoint-hooks для worktrees — разделы §25.12 и §25.13.*
+*Конец документа Checkpoint. Последнее обновление: 30 апреля 2026 — релиз 3.0.7 + follow-up: премиум-редизайн `/buy`+`/purchase`, LavaTop graceful errors, `/auth/unlock` UX (5 итераций), Apple Pay cleanup, testimonials в `/promo3`, фикс checkpoint-hooks для worktrees + полный RU↔EN i18n кабинета (3242 ключа, 3937 обёрток в 122 шаблонах) — разделы §25.12, §25.13, §25.14.*
