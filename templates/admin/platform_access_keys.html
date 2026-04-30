@@ -129,16 +129,69 @@
     .data-table thead th:nth-child(9),
     .data-table tbody td:nth-child(9) { display: none; }
 
-    .data-table { font-size: 0.85rem; width: 100%; }
+    .data-table { font-size: 0.82rem; width: 100%; table-layout: fixed; }
     .data-table th,
-    .data-table td { padding: 8px 6px; }
+    .data-table td {
+      padding: 8px 5px;
+      vertical-align: top;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
     .data-table td[style*="min-width"] { min-width: auto !important; max-width: none !important; }
 
-    .data-table .btn-sm {
-      padding: 8px 10px;
-      font-size: 0.8rem;
-      min-height: 36px;
+    /* Маскированный «FBM-••••••••••••••» физически выходит за ячейку и
+       наезжает на колонку даты — на мобиле прячем декорацию и оставляем
+       только кнопку «Показать» / «Скрыть». При тапе ключ всё равно
+       раскрывается полностью. */
+    .data-table .ak-masked { display: none !important; }
+    .data-table .ak-shown {
+      font-size: 0.74rem !important;
+      word-break: break-all !important;
     }
+    /* Кнопки в ячейке «Ключ» — компактно в столбик */
+    .data-table td:nth-child(4) > div {
+      flex-direction: column !important;
+      align-items: stretch !important;
+      gap: 4px !important;
+      margin-top: 0 !important;
+    }
+
+    /* Колонка «Действует до» (6) — дата на отдельных строках, чтобы
+       не «съесть» соседние колонки. */
+    .data-table td:nth-child(6) {
+      font-size: 0.74rem;
+      line-height: 1.25;
+    }
+
+    /* Колонка «Действия» (10) — кнопки «Отозвать»/«Удалить» вертикально.
+       Раньше шли в строку и их обрезало справа. */
+    .data-table td:nth-child(10) > div {
+      flex-direction: column !important;
+      align-items: stretch !important;
+      gap: 5px !important;
+    }
+    .data-table td:nth-child(10) form { width: 100%; display: block !important; }
+    .data-table td:nth-child(10) .btn,
+    .data-table td:nth-child(10) form button {
+      width: 100% !important;
+      min-height: 32px;
+      padding: 6px 8px;
+      font-size: 0.74rem;
+    }
+
+    .data-table .btn-sm {
+      padding: 6px 8px;
+      font-size: 0.74rem;
+      min-height: 30px;
+    }
+
+    /* Ширины колонок: фиксируем чтобы Подпись/Ключ/Дата/Статус/Действия
+       умещались в 360px без скролла. */
+    .data-table thead th:nth-child(2) { width: 26%; }
+    .data-table thead th:nth-child(4) { width: 16%; }
+    .data-table thead th:nth-child(6) { width: 24%; }
+    .data-table thead th:nth-child(8) { width: 14%; }
+    .data-table thead th:nth-child(10) { width: 20%; }
 
     .ak-np-card { padding: 12px 10px; }
     .ak-np-card__header {
