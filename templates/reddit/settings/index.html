@@ -6,17 +6,16 @@
 <div class="reddit-page">
   <header class="reddit-page__header">
     <div class="reddit-page__title-wrap">
-      <h1 class="reddit-page__title">Настройки Reddit</h1>
+      <h1 class="reddit-page__title">{{ t("Настройки Reddit") }}</h1>
       <p class="reddit-page__subtitle">
-        Ключи OAuth-приложения, user-agent, режимы аппрува и дневные лимиты.
-        Ключи хранятся только на вашем устройстве и не отправляются на сервер SOCMASTER.
+        {{ t("Ключи OAuth-приложения, user-agent, режимы аппрува и дневные лимиты. Ключи хранятся только на вашем устройстве и не отправляются на сервер SOCMASTER.") }}
       </p>
     </div>
   </header>
 
   {% if notice %}
   <div class="reddit-card" style="border-color:#1b873f;background:color-mix(in srgb, #1b873f 6%, var(--bg-surface));color:#1b873f;">
-    <i class="ti ti-check"></i> Настройки сохранены.
+    <i class="ti ti-check"></i> {{ t("Настройки сохранены.") }}
   </div>
   {% endif %}
   {% if error %}
@@ -27,10 +26,10 @@
 
   <form method="post" action="/reddit/settings" class="reddit-card" style="gap:20px;">
     <div>
-      <h2 class="reddit-card__title">OAuth2 приложение</h2>
+      <h2 class="reddit-card__title">{{ t("OAuth2 приложение") }}</h2>
       <p class="reddit-card__desc">
-        Создайте <strong>Reddit App</strong> на <a href="https://www.reddit.com/prefs/apps" target="_blank" rel="noreferrer noopener" style="color:var(--ws-accent)">reddit.com/prefs/apps</a>
-        (тип <em>"script"</em> или <em>"web app"</em>). Укажите redirect URI <code>{{ settings_view.redirect_uri }}</code>.
+        Создайте <strong>Reddit App</strong> {{ t("на") }} <a href="https://www.reddit.com/prefs/apps" target="_blank" rel="noreferrer noopener" style="color:var(--ws-accent)">reddit.com/prefs/apps</a>
+        {{ t("(тип") }} <em>"script"</em> {{ t("или") }} <em>"web app"</em>{{ t("). Укажите redirect URI") }} <code>{{ settings_view.redirect_uri }}</code>.
       </p>
     </div>
 
@@ -44,7 +43,7 @@
         <span style="font:600 13px/1 Inter;color:var(--text-primary)">client_secret</span>
         <input type="password" name="client_secret" placeholder="{{ settings_view.client_secret_masked or 'не задан' }}" autocomplete="off"
                style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-family:ui-monospace,monospace;"/>
-        <small style="color:var(--text-muted);font-size:12px;">Пустое поле оставляет текущее значение.</small>
+        <small style="color:var(--text-muted);font-size:12px;">{{ t("Пустое поле оставляет текущее значение.") }}</small>
       </label>
     </div>
 
@@ -59,19 +58,19 @@
       <span style="font:600 13px/1 Inter;color:var(--text-primary)">user-agent</span>
       <input type="text" name="user_agent" value="{{ settings_view.user_agent }}"
              style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;"/>
-      <small style="color:var(--text-muted);font-size:12px;">Обязателен по Reddit ToS. Формат: <code>app-name/version (by /u/yourname)</code>.</small>
+      <small style="color:var(--text-muted);font-size:12px;">{{ t("Обязателен по Reddit ToS. Формат:") }} <code>app-name/version (by /u/yourname)</code>.</small>
     </label>
 
     <div>
-      <h2 class="reddit-card__title" style="margin-top:8px;">Безопасность и отправки</h2>
+      <h2 class="reddit-card__title" style="margin-top:8px;">{{ t("Безопасность и отправки") }}</h2>
     </div>
     <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:16px;">
       <label style="display:flex;flex-direction:column;gap:6px;">
         <span style="font:600 13px/1 Inter;color:var(--text-primary)">режим аппрува</span>
         <select name="approval_mode" style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;">
-          <option value="manual" {% if settings_view.approval_mode == 'manual' %}selected{% endif %}>manual — ручное подтверждение каждой отправки</option>
-          <option value="semi" {% if settings_view.approval_mode == 'semi' %}selected{% endif %}>semi — подтверждение пачкой</option>
-          <option value="auto" {% if settings_view.approval_mode == 'auto' %}selected{% endif %}>auto — без review (не рекомендуется)</option>
+          <option value="manual" {% if settings_view.approval_mode == 'manual' %}selected{% endif %}>{{ t("manual — ручное подтверждение каждой отправки") }}</option>
+          <option value="semi" {% if settings_view.approval_mode == 'semi' %}selected{% endif %}>{{ t("semi — подтверждение пачкой") }}</option>
+          <option value="auto" {% if settings_view.approval_mode == 'auto' %}selected{% endif %}>{{ t("auto — без review (не рекомендуется)") }}</option>
         </select>
       </label>
       <label style="display:flex;flex-direction:column;gap:6px;">
@@ -80,20 +79,20 @@
                style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;"/>
       </label>
       <label style="display:flex;flex-direction:column;gap:6px;">
-        <span style="font:600 13px/1 Inter;color:var(--text-primary)">cap / сутки</span>
+        <span style="font:600 13px/1 Inter;color:var(--text-primary)">{{ t("cap / сутки") }}</span>
         <input type="number" name="per_day_cap" min="0" max="500" value="{{ settings_view.per_day_cap }}"
                style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;"/>
       </label>
       <label style="display:flex;flex-direction:column;gap:6px;">
-        <span style="font:600 13px/1 Inter;color:var(--text-primary)">cap / час</span>
+        <span style="font:600 13px/1 Inter;color:var(--text-primary)">{{ t("cap / час") }}</span>
         <input type="number" name="per_hour_cap" min="0" max="100" value="{{ settings_view.per_hour_cap }}"
                style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;"/>
       </label>
     </div>
 
     <div style="display:flex;gap:8px;">
-      <button type="submit" class="reddit-btn reddit-btn--primary"><i class="ti ti-device-floppy"></i> Сохранить</button>
-      <a href="/reddit/accounts" class="reddit-btn"><i class="ti ti-arrow-left"></i> К аккаунтам</a>
+      <button type="submit" class="reddit-btn reddit-btn--primary"><i class="ti ti-device-floppy"></i> {{ t("Сохранить") }}</button>
+      <a href="/reddit/accounts" class="reddit-btn"><i class="ti ti-arrow-left"></i> {{ t("К аккаунтам") }}</a>
     </div>
   </form>
 </div>

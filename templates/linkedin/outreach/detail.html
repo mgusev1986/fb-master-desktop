@@ -8,20 +8,19 @@
     <div class="li-page__title-wrap">
       <h1 class="li-page__title">{{ campaign.name }} <span class="li-page__beta-pill">Beta</span></h1>
       <p class="li-page__subtitle">
-        Режим <strong>{{ campaign.mode }}</strong>, approval <strong>{{ campaign.approval_mode }}</strong>,
-        статус <strong>{{ campaign.status }}</strong>.
+        {{ t("Режим") }} <strong>{{ campaign.mode }}</strong>, approval <strong>{{ campaign.approval_mode }}</strong>{{ t(", статус") }} <strong>{{ campaign.status }}</strong>.
         {% if campaign.daily_cap %}Дневной кап: <strong>{{ campaign.daily_cap }}</strong>.{% endif %}
       </p>
     </div>
-    <a href="/linkedin/outreach" class="li-btn"><i class="ti ti-arrow-left"></i> К списку</a>
+    <a href="/linkedin/outreach" class="li-btn"><i class="ti ti-arrow-left"></i> {{ t("К списку") }}</a>
   </header>
 
   <section class="li-banner">
     <div class="li-banner__icon"><i class="ti ti-bolt"></i></div>
     <div class="li-banner__body">
-      <h2 class="li-banner__title">Реальная отправка через Playwright runtime</h2>
+      <h2 class="li-banner__title">{{ t("Реальная отправка через Playwright runtime") }}</h2>
       <p class="li-banner__text">
-        Approved-items обрабатываются runtime'ом: открывает LinkedIn под профилем аккаунта, ищет кнопку Message / Connect, вводит текст по символам, отправляет. Можно запустить вручную (кнопка ниже) или включить кампанию в <strong>active</strong> — и фоновой worker обработает её сам каждые ~3 минуты.
+        {{ t("Approved-items обрабатываются runtime'ом: открывает LinkedIn под профилем аккаунта, ищет кнопку Message / Connect, вводит текст по символам, отправляет. Можно запустить вручную (кнопка ниже) или включить кампанию в") }} <strong>active</strong> — и фоновой worker обработает её сам каждые ~3 минуты.
       </p>
     </div>
   </section>
@@ -36,8 +35,8 @@
         <label style="font:400 12px/1 Inter,sans-serif;color:var(--text-secondary,#606770);">
           <input type="checkbox" name="headless" value="on" checked/> headless
         </label>
-        <button type="submit" class="li-btn li-btn--primary" title="Обработать N approved items прямо сейчас">
-          <i class="ti ti-send"></i> Запустить отправку
+        <button type="submit" class="li-btn li-btn--primary" title="{{ t("Обработать N approved items прямо сейчас") }}">
+          <i class="ti ti-send"></i> {{ t("Запустить отправку") }}
         </button>
       </form>
       <form method="post" action="/linkedin/outreach/{{ campaign.id }}/status" style="display:inline;">
@@ -71,11 +70,11 @@
         {% endfor %}
       </div>
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
-        <button type="submit" class="li-btn li-btn--primary"><i class="ti ti-list-check"></i> Поставить в очередь</button>
+        <button type="submit" class="li-btn li-btn--primary"><i class="ti ti-list-check"></i> {{ t("Поставить в очередь") }}</button>
       </div>
     </form>
     {% else %}
-    <p class="li-card__desc">Нет лидов. Сначала <a href="/linkedin/leads">импортируйте</a>.</p>
+    <p class="li-card__desc">{{ t("Нет лидов. Сначала") }} <a href="/linkedin/leads">{{ t("импортируйте") }}</a>.</p>
     {% endif %}
   </section>
 
@@ -91,10 +90,10 @@
       <table style="width:100%;border-collapse:collapse;background:var(--bg-surface,#fff);border:1px solid var(--border,#e4e6eb);border-radius:12px;">
         <thead>
           <tr style="border-bottom:1px solid var(--border);font:600 12px/1 Inter;color:var(--text-muted);text-transform:uppercase;">
-            <th style="text-align:left;padding:10px;">Лид</th>
-            <th style="text-align:left;padding:10px;">Превью</th>
-            <th style="text-align:left;padding:10px;">Статус</th>
-            <th style="text-align:right;padding:10px;">Действия</th>
+            <th style="text-align:left;padding:10px;">{{ t("Лид") }}</th>
+            <th style="text-align:left;padding:10px;">{{ t("Превью") }}</th>
+            <th style="text-align:left;padding:10px;">{{ t("Статус") }}</th>
+            <th style="text-align:right;padding:10px;">{{ t("Действия") }}</th>
           </tr>
         </thead>
         <tbody>
@@ -137,7 +136,7 @@
               {% elif it.review_state == 'approved' %}
                 <form method="post" action="/linkedin/outreach/{{ campaign.id }}/queue/{{ it.id }}/state" style="display:inline;">
                   <input type="hidden" name="state" value="sent"/>
-                  <button type="submit" class="li-btn li-btn--primary" style="font-size:12px;padding:4px 8px;" title="Пометить как отправленное (manual mode)">mark sent</button>
+                  <button type="submit" class="li-btn li-btn--primary" style="font-size:12px;padding:4px 8px;" title="{{ t("Пометить как отправленное (manual mode)") }}">mark sent</button>
                 </form>
               {% endif %}
             </td>
@@ -149,7 +148,7 @@
     {% else %}
     <div class="li-placeholder">
       <div class="li-placeholder__icon"><i class="ti ti-list"></i></div>
-      <p class="li-placeholder__text">Очередь пуста. Отметьте лидов выше и нажмите «Поставить в очередь».</p>
+      <p class="li-placeholder__text">{{ t("Очередь пуста. Отметьте лидов выше и нажмите «Поставить в очередь».") }}</p>
     </div>
     {% endif %}
   </section>

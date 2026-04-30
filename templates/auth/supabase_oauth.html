@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Перенаправление в Supabase — SOCMASTER</title>
+  <title>{{ t("Перенаправление в Supabase — SOCMASTER") }}</title>
   <style>
     body { font-family: system-ui, sans-serif; max-width: 36rem; margin: 3rem auto; padding: 0 1rem; }
   </style>
 </head>
 <body>
-  <p id="msg">Открываем провайдер входа…</p>
-  <p style="font-size:14px;color:#64748b"><a href="/auth/login">Отмена</a></p>
+  <p id="msg">{{ t("Открываем провайдер входа…") }}</p>
+  <p style="font-size:14px;color:#64748b"><a href="/auth/login">{{ t("Отмена") }}</a></p>
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.8";
     const url = {{ supabase_url | tojson }};

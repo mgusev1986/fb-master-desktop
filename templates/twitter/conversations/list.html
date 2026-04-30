@@ -6,15 +6,15 @@
 <div class="x-page">
   <header class="x-page__header">
     <div class="x-page__title-wrap">
-      <h1 class="x-page__title">Диалоги / Inbox <span class="x-page__beta-pill">Beta</span></h1>
-      <p class="x-page__subtitle">DM-треды. Кнопка «Sync inbox» на каждом аккаунте обновляет preview.</p>
+      <h1 class="x-page__title">{{ t("Диалоги / Inbox") }} <span class="x-page__beta-pill">Beta</span></h1>
+      <p class="x-page__subtitle">{{ t("DM-треды. Кнопка «Sync inbox» на каждом аккаунте обновляет preview.") }}</p>
     </div>
   </header>
 
   {% if conversations %}
   <table style="width:100%;border-collapse:collapse;background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;">
     <thead><tr style="border-bottom:1px solid var(--border);font:600 12px/1 Inter;color:var(--text-muted);text-transform:uppercase;">
-      <th style="text-align:left;padding:10px;">Counterpart</th><th style="text-align:left;padding:10px;">Аккаунт</th><th style="text-align:left;padding:10px;">Последнее</th><th style="text-align:right;padding:10px;">Unread</th><th></th>
+      <th style="text-align:left;padding:10px;">Counterpart</th><th style="text-align:left;padding:10px;">{{ t("Аккаунт") }}</th><th style="text-align:left;padding:10px;">{{ t("Последнее") }}</th><th style="text-align:right;padding:10px;">Unread</th><th></th>
     </tr></thead>
     <tbody>
       {% for c in conversations %}
@@ -23,7 +23,7 @@
         <td style="padding:10px;font-size:13px;color:var(--text-secondary);">acc#{{ c.account_id }}</td>
         <td style="padding:10px;font-size:12px;color:var(--text-muted);">{{ c.last_message_at.strftime('%d.%m %H:%M') if c.last_message_at else '—' }}{% if c.last_message_from %}<br><small>{{ c.last_message_from }}</small>{% endif %}</td>
         <td style="padding:10px;text-align:right;">{% if (c.unread_count or 0) > 0 %}<span class="compliance-cell__level compliance-cell__level--restricted">{{ c.unread_count }}</span>{% else %}—{% endif %}</td>
-        <td style="padding:10px;text-align:right;"><a href="/twitter/conversations/{{ c.id }}" class="x-btn" style="font-size:12px;padding:4px 10px;"><i class="ti ti-message-circle"></i> Открыть</a></td>
+        <td style="padding:10px;text-align:right;"><a href="/twitter/conversations/{{ c.id }}" class="x-btn" style="font-size:12px;padding:4px 10px;"><i class="ti ti-message-circle"></i> {{ t("Открыть") }}</a></td>
       </tr>
       {% endfor %}
     </tbody>
@@ -31,8 +31,8 @@
   {% else %}
   <div class="x-placeholder">
     <div class="x-placeholder__icon"><i class="ti ti-message-circle"></i></div>
-    <h2 class="x-placeholder__title">Inbox пуст</h2>
-    <p class="x-placeholder__text">Запустите «Sync inbox» на странице <a href="/twitter/accounts">аккаунтов</a>.</p>
+    <h2 class="x-placeholder__title">{{ t("Inbox пуст") }}</h2>
+    <p class="x-placeholder__text">{{ t("Запустите «Sync inbox» на странице") }} <a href="/twitter/accounts">{{ t("аккаунтов") }}</a>.</p>
   </div>
   {% endif %}
 </div>

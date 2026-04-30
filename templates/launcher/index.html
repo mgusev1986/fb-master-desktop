@@ -9,18 +9,18 @@
       <span class="fbm-launcher__logo-mark">SOC</span>
       <span class="fbm-launcher__logo-text">MASTER</span>
       {% if fbm_desktop_app_version %}
-      <span class="fbm-launcher__logo-version" title="Версия программы">v{{ fbm_desktop_app_version }}</span>
+      <span class="fbm-launcher__logo-version" title="{{ t("Версия программы") }}">v{{ fbm_desktop_app_version }}</span>
       {% endif %}
     </div>
     <div class="fbm-launcher__header-spacer"></div>
-    <button id="theme-toggle" class="fbm-launcher__theme" title="Сменить тему">
+    <button id="theme-toggle" class="fbm-launcher__theme" title="{{ t("Сменить тему") }}">
       <i id="theme-icon" class="ti ti-moon"></i>
     </button>
   </header>
 
   <section class="fbm-launcher__hero">
-    <h1 class="fbm-launcher__title">Выберите рабочее пространство</h1>
-    <p class="fbm-launcher__subtitle">Каждая соцсеть — свой модуль со своим набором аккаунтов, очередей и правил безопасности.</p>
+    <h1 class="fbm-launcher__title">{{ t("Выберите рабочее пространство") }}</h1>
+    <p class="fbm-launcher__subtitle">{{ t("Каждая соцсеть — свой модуль со своим набором аккаунтов, очередей и правил безопасности.") }}</p>
   </section>
 
   <section class="fbm-launcher__grid">
@@ -50,11 +50,11 @@
       <div class="fbm-card__actions">
         {% if card.openable %}
           <a href="/workspaces/select/{{ card.id }}" class="fbm-btn fbm-btn--primary">
-            <i class="ti ti-arrow-right"></i> Открыть
+            <i class="ti ti-arrow-right"></i> {{ t("Открыть") }}
           </a>
         {% else %}
           <button type="button" class="fbm-btn fbm-btn--disabled" disabled title="{{ card.status_description }}">
-            <i class="ti ti-lock"></i> Недоступно
+            <i class="ti ti-lock"></i> {{ t("Недоступно") }}
           </button>
         {% endif %}
       </div>
@@ -73,18 +73,17 @@
           <h2 class="fbm-card__title">Telegram Master</h2>
           <div class="fbm-card__status fbm-card__status--muted">
             <span class="fbm-card__status-dot"></span>
-            План
+            {{ t("План") }}
           </div>
         </div>
       </header>
-      <p class="fbm-card__desc">Аккаунты, парсинг чатов и каналов, рассылка в личку, AI-помощник и outreach для Telegram — в плане на будущие релизы.</p>
+      <p class="fbm-card__desc">{{ t("Аккаунты, парсинг чатов и каналов, рассылка в личку, AI-помощник и outreach для Telegram — в плане на будущие релизы.") }}</p>
     </article>
   </section>
 
   <footer class="fbm-launcher__footer">
     <p>
-      Настройки, лицензия и обновления доступны внутри любого workspace — слева в сайдбаре
-      «Система». Переключиться между пространствами можно в любой момент из панели в верхней части экрана.
+      {{ t("Настройки, лицензия и обновления доступны внутри любого workspace — слева в сайдбаре «Система». Переключиться между пространствами можно в любой момент из панели в верхней части экрана.") }}
     </p>
   </footer>
 </div>

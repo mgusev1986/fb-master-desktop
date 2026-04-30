@@ -36,13 +36,13 @@
 {% elif qp.get('segerr') == 'account' %}
 <div class="card" style="margin-bottom:16px;border-color:var(--error)">
   <div class="card-body" style="font-size:var(--font-size-sm)">
-    <i class="ti ti-alert-circle"></i> Выберите рабочий Facebook-аккаунт в активном слоте 1–3.
+    <i class="ti ti-alert-circle"></i> {{ t("Выберите рабочий Facebook-аккаунт в активном слоте 1–3.") }}
   </div>
 </div>
 {% elif qp.get('segerr') == 'no_people' %}
 <div class="card" style="margin-bottom:16px;border-color:var(--warning)">
   <div class="card-body" style="font-size:var(--font-size-sm)">
-    <i class="ti ti-alert-circle"></i> Для текущей выборки не найдено контактов, которым нужна сегментация. Снимите фильтры или включите «Перепроверить уже размеченных».
+    <i class="ti ti-alert-circle"></i> {{ t("Для текущей выборки не найдено контактов, которым нужна сегментация. Снимите фильтры или включите «Перепроверить уже размеченных».") }}
   </div>
 </div>
 {% endif %}
@@ -53,7 +53,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <i class="ti ti-loader-2 people-language-spin" style="font-size:1.2rem;color:var(--accent)"></i>
       <div style="min-width:0">
-        <div id="people-language-live-title" style="font-weight:600">Идёт сегментация языка…</div>
+        <div id="people-language-live-title" style="font-weight:600">{{ t("Идёт сегментация языка…") }}</div>
         <div id="people-language-live-detail" style="color:var(--text-secondary);margin-top:4px">
           {% if segment_running_fb_account_label %}Аккаунт Facebook: <strong>{{ segment_running_fb_account_label }}</strong>{% endif %}
         </div>
@@ -75,12 +75,12 @@
     <div class="toolbar">
       <form method="get" class="search-bar" id="people-search-form" action="/people">
         <i class="ti ti-search"></i>
-        <input type="text" name="q" id="people-q-input" value="{{ search }}" placeholder="Поиск по имени или URL…" class="form-input" autocomplete="off"/>
+        <input type="text" name="q" id="people-q-input" value="{{ search }}" placeholder="{{ t("Поиск по имени или URL…") }}" class="form-input" autocomplete="off"/>
         <input type="hidden" name="stage" id="people-stage-input" value="{{ stage }}"/>
         <input type="hidden" name="lang" id="people-lang-input" value="{{ lang }}"/>
       </form>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <a href="/people?q={{ search|urlencode }}&amp;lang={{ lang|urlencode }}" class="btn btn-sm {{ 'btn-primary' if not stage else 'btn-secondary' }}">Все</a>
+        <a href="/people?q={{ search|urlencode }}&amp;lang={{ lang|urlencode }}" class="btn btn-sm {{ 'btn-primary' if not stage else 'btn-secondary' }}">{{ t("Все") }}</a>
         {% for s in crm_stages %}
         <a href="/people?stage={{ s.slug }}&amp;q={{ search|urlencode }}&amp;lang={{ lang|urlencode }}" class="btn btn-sm {{ 'btn-primary' if stage == s.slug else 'btn-secondary' }}">{{ s.label }}</a>
         {% endfor %}
@@ -100,7 +100,7 @@
         </div>
 
         <div class="form-group" style="margin:0">
-          <label class="form-label">Быстрые сегменты</label>
+          <label class="form-label">{{ t("Быстрые сегменты") }}</label>
           <div id="people-lang-chips" style="display:flex;gap:8px;flex-wrap:wrap">
             {% for key, label in language_filter_labels.items() %}
             <button
@@ -110,7 +110,7 @@
             >{{ label }}</button>
             {% endfor %}
           </div>
-          <p class="form-hint" style="margin-bottom:0">Один клик — и база переключается на RU, EN, иностранные или неразмеченные контакты.</p>
+          <p class="form-hint" style="margin-bottom:0">{{ t("Один клик — и база переключается на RU, EN, иностранные или неразмеченные контакты.") }}</p>
         </div>
 
         <form method="post" action="/people/segment/run" id="people-segment-form" style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
@@ -118,9 +118,9 @@
           <input type="hidden" name="stage" id="people-segment-stage" value="{{ stage }}"/>
           <input type="hidden" name="lang" id="people-segment-lang" value="{{ lang }}"/>
           <div class="form-group" style="margin:0">
-            <label class="form-label" for="people-segment-account">Facebook-аккаунт для сканирования</label>
+            <label class="form-label" for="people-segment-account">{{ t("Facebook-аккаунт для сканирования") }}</label>
             <select id="people-segment-account" name="fb_account_id" class="form-select" style="min-width:220px" {% if not segment_accounts %}disabled{% endif %}>
-              <option value="">— выберите —</option>
+              <option value="">{{ t("— выберите —") }}</option>
               {% for a in segment_accounts %}
               <option value="{{ a.id }}" {% if loop.first %}selected{% endif %}>{{ a.label }}</option>
               {% endfor %}
@@ -128,7 +128,7 @@
           </div>
           <label class="form-check" style="display:flex;align-items:center;gap:8px;margin-bottom:9px;cursor:pointer">
             <input type="checkbox" name="force_rescan" value="1"/>
-            <span>Перепроверить уже размеченных</span>
+            <span>{{ t("Перепроверить уже размеченных") }}</span>
           </label>
           <button type="submit" class="btn btn-primary" {% if not segment_accounts or segment_busy %}disabled{% endif %}>
             <i class="ti ti-language"></i> Сегментировать язык
@@ -139,7 +139,7 @@
 
     <div id="people-panel-empty-db" class="empty-state" {% if total > 0 or search %}style="display:none"{% endif %}>
       <div class="empty-state-icon"><i class="ti ti-address-book"></i></div>
-      <h3>Контактов пока нет</h3>
+      <h3>{{ t("Контактов пока нет") }}</h3>
       <p>{% if cabinet_client_mode(request) %}Загрузите файл со списком или воспользуйтесь разделом «Поиск людей» — контакты появятся здесь.{% else %}Импортируйте базу из CSV/XLSX или запустите парсинг донора — контакты появятся здесь.{% endif %}</p>
       <a href="/import" class="btn btn-primary">
         <i class="ti ti-file-import"></i> {% if cabinet_client_mode(request) %}Загрузить список{% else %}Импортировать базу{% endif %}
@@ -148,7 +148,7 @@
 
     <div id="people-panel-empty-search" class="empty-state" {% if total > 0 or not search %}style="display:none"{% endif %}>
       <div class="empty-state-icon"><i class="ti ti-search"></i></div>
-      <h3>Ничего не найдено</h3>
+      <h3>{{ t("Ничего не найдено") }}</h3>
       <p>{% if cabinet_client_mode(request) %}Попробуйте другие слова в поиске или снимите фильтр по этапу.{% else %}Попробуйте другой запрос или сбросьте фильтр стадии — поиск без учёта регистра, по части имени и URL.{% endif %}</p>
     </div>
 
@@ -158,18 +158,18 @@
         <thead>
           <tr>
             <th class="people-row-num-col">№</th>
-            <th>Имя</th>
+            <th>{{ t("Имя") }}</th>
             <th>Язык</th>
-            <th>Профиль</th>
+            <th>{{ t("Профиль") }}</th>
             <th>{% if cabinet_client_mode(request) %}Этап{% else %}Стадия CRM{% endif %}</th>
-            <th>Добавлен</th>
+            <th>{{ t("Добавлен") }}</th>
             <th style="width:1%;white-space:nowrap"></th>
           </tr>
         </thead>
         <tbody id="people-tbody">
           {% for p in people %}
           <tr>
-            <td class="people-row-num-col" title="Порядковый номер в текущем списке (с учётом страницы)">{{ (page - 1) * page_size + loop.index }}</td>
+            <td class="people-row-num-col" title="{{ t("Порядковый номер в текущем списке (с учётом страницы)") }}">{{ (page - 1) * page_size + loop.index }}</td>
             <td>
               <strong>{{ p.display_name or '—' }}</strong>
             </td>
@@ -185,7 +185,7 @@
                   {{ p.canonical_url.replace('https://www.facebook.com/', '') }}
                 </a>
                 {% if p.fb_profile_restricted %}
-                <span class="badge badge-warning people-restricted-badge" title="В списке друзей Facebook отображается как ограниченный или закрытый профиль (плейсхолдер вроде «Facebook User»).">Закрытый профиль</span>
+                <span class="badge badge-warning people-restricted-badge" title="{{ t("В списке друзей Facebook отображается как ограниченный или закрытый профиль (плейсхолдер вроде «Facebook User»).") }}">{{ t("Закрытый профиль") }}</span>
                 {% endif %}
               </div>
             </td>
@@ -254,8 +254,8 @@
       </div>
     </div>
     <div style="padding:14px 20px 18px;display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;background:var(--bg-surface-hover)">
-      <button type="button" class="btn btn-secondary" id="people-delete-cancel">Отмена</button>
-      <button type="button" class="btn btn-danger" id="people-delete-confirm"><i class="ti ti-trash"></i> Удалить</button>
+      <button type="button" class="btn btn-secondary" id="people-delete-cancel">{{ t("Отмена") }}</button>
+      <button type="button" class="btn btn-danger" id="people-delete-confirm"><i class="ti ti-trash"></i> {{ t("Удалить") }}</button>
     </div>
   </div>
 </div>

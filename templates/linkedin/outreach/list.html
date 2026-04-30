@@ -8,31 +8,30 @@
     <div class="li-page__title-wrap">
       <h1 class="li-page__title">Outreach Builder <span class="li-page__beta-pill">Beta</span></h1>
       <p class="li-page__subtitle">
-        Кампании рассылки DM / invitations. По умолчанию все отправки в режиме <strong>manual review</strong>:
-        builder и queue работают, реальная отправка через Playwright runtime — следующий milestone.
+        {{ t("Кампании рассылки DM / invitations. По умолчанию все отправки в режиме") }} <strong>manual review</strong>{{ t(": builder и queue работают, реальная отправка через Playwright runtime — следующий milestone.") }}
       </p>
     </div>
   </header>
 
   {% if accounts and templates %}
   <section class="li-card li-card--accent">
-    <h2 class="li-card__title"><i class="ti ti-plus"></i> Новая кампания</h2>
+    <h2 class="li-card__title"><i class="ti ti-plus"></i> {{ t("Новая кампания") }}</h2>
     <form method="post" action="/linkedin/outreach/create" style="display:flex;flex-direction:column;gap:10px;">
-      <input type="text" name="name" required placeholder="Название кампании"
+      <input type="text" name="name" required placeholder="{{ t("Название кампании") }}"
              style="padding:8px;border-radius:8px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);"/>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <select name="account_id" required style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);">
-          <option value="">— аккаунт —</option>
+          <option value="">{{ t("— аккаунт —") }}</option>
           {% for a in accounts %}<option value="{{ a.id }}">{{ a.label }} [{{ a.status }}]</option>{% endfor %}
         </select>
         <select name="template_id" required style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);">
-          <option value="">— шаблон —</option>
+          <option value="">{{ t("— шаблон —") }}</option>
           {% for t in templates %}<option value="{{ t.id }}">{{ t.name }} · {{ t.kind }}</option>{% endfor %}
         </select>
         <select name="mode" style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);">
-          <option value="dm_first_degree">DM по 1st-degree</option>
+          <option value="dm_first_degree">{{ t("DM по 1st-degree") }}</option>
           <option value="invitation_with_note">Invitation + note</option>
-          <option value="post_accept_follow_up">Follow-up после accept</option>
+          <option value="post_accept_follow_up">{{ t("Follow-up после accept") }}</option>
         </select>
         <select name="approval_mode" style="flex:1;min-width:120px;padding:8px;border-radius:8px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);">
           <option value="manual">manual approve</option>
@@ -42,7 +41,7 @@
                style="width:120px;padding:8px;border-radius:8px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);"/>
       </div>
       <button type="submit" class="li-btn li-btn--primary" style="align-self:flex-start;">
-        <i class="ti ti-send"></i> Создать кампанию
+        <i class="ti ti-send"></i> {{ t("Создать кампанию") }}
       </button>
     </form>
   </section>
@@ -50,9 +49,9 @@
   <section class="li-banner">
     <div class="li-banner__icon"><i class="ti ti-info-circle"></i></div>
     <div class="li-banner__body">
-      <h2 class="li-banner__title">Прежде чем создать кампанию</h2>
+      <h2 class="li-banner__title">{{ t("Прежде чем создать кампанию") }}</h2>
       <p class="li-banner__text">
-        Нужно подключить минимум один <a href="/linkedin/accounts">аккаунт</a> и создать минимум один <a href="/linkedin/templates">шаблон</a>.
+        {{ t("Нужно подключить минимум один") }} <a href="/linkedin/accounts">{{ t("аккаунт") }}</a> и создать минимум один <a href="/linkedin/templates">{{ t("шаблон") }}</a>.
       </p>
     </div>
   </section>
@@ -72,11 +71,11 @@
               {% else %}compliance-cell__level--unsupported{% endif %}">{{ c.status }}</span>
           </header>
           <p class="li-card__desc" style="font-size:13px;">
-            режим: <strong>{{ c.mode }}</strong> · approval: <strong>{{ c.approval_mode }}</strong>
+            {{ t("режим:") }} <strong>{{ c.mode }}</strong> · approval: <strong>{{ c.approval_mode }}</strong>
             {% if c.daily_cap %} · cap: <strong>{{ c.daily_cap }}/day</strong>{% endif %}
           </p>
           <a href="/linkedin/outreach/{{ c.id }}" class="li-btn" style="align-self:flex-start;">
-            <i class="ti ti-eye"></i> Открыть
+            <i class="ti ti-eye"></i> {{ t("Открыть") }}
           </a>
         </article>
         {% endfor %}
@@ -84,7 +83,7 @@
     {% else %}
       <div class="li-placeholder">
         <div class="li-placeholder__icon"><i class="ti ti-send"></i></div>
-        <p class="li-placeholder__text">Кампаний пока нет.</p>
+        <p class="li-placeholder__text">{{ t("Кампаний пока нет.") }}</p>
       </div>
     {% endif %}
   </section>

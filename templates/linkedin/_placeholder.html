@@ -16,7 +16,7 @@
     </div>
     <span class="li-page__status">
       <span class="li-page__status-dot"></span>
-      В разработке · Beta
+      {{ t("В разработке · Beta") }}
     </span>
   </header>
 
@@ -24,7 +24,7 @@
     <div class="li-placeholder__icon">
       <i class="ti ti-{{ page_icon or 'tools' }}"></i>
     </div>
-    <h2 class="li-placeholder__title">Раздел подключается</h2>
+    <h2 class="li-placeholder__title">{{ t("Раздел подключается") }}</h2>
     <p class="li-placeholder__text">
       {{ placeholder_text or 'Скелет раздела готов. Функциональность подключается в следующем релизе LinkedIn Master Beta.' }}
     </p>
@@ -37,10 +37,10 @@
     {% endif %}
     <div class="li-placeholder__actions">
       <a href="/linkedin" class="li-btn li-btn--ghost">
-        <i class="ti ti-arrow-left"></i> К обзору LinkedIn Master
+        <i class="ti ti-arrow-left"></i> {{ t("К обзору LinkedIn Master") }}
       </a>
       <a href="/linkedin/compliance" class="li-btn">
-        <i class="ti ti-shield-check"></i> Правила и лимиты
+        <i class="ti ti-shield-check"></i> {{ t("Правила и лимиты") }}
       </a>
     </div>
   </div>

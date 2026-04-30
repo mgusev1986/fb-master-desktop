@@ -21,9 +21,9 @@
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       {% if campaign.status not in ('running',) %}
-      <a href="/warmup/{{ campaign.id }}/edit" class="btn btn-secondary"><i class="ti ti-edit"></i> Редактировать</a>
+      <a href="/warmup/{{ campaign.id }}/edit" class="btn btn-secondary"><i class="ti ti-edit"></i> {{ t("Редактировать") }}</a>
       {% endif %}
-      <a href="/warmup" class="btn btn-secondary"><i class="ti ti-list"></i> Все кампании</a>
+      <a href="/warmup" class="btn btn-secondary"><i class="ti ti-list"></i> {{ t("Все кампании") }}</a>
     </div>
   </div>
 </div>
@@ -31,7 +31,7 @@
 {% if request.query_params.get('built') is not none %}
 <div class="card" style="margin-bottom:16px">
   <div class="card-body" style="font-size:var(--font-size-sm)">
-    Очередь пересобрана: <strong>{{ request.query_params.get('built') }}</strong> строк.
+    {{ t("Очередь пересобрана:") }} <strong>{{ request.query_params.get('built') }}</strong> строк.
   </div>
 </div>
 {% endif %}
@@ -66,32 +66,32 @@
 {% endif %}
 
 <div class="card" style="margin-bottom:20px">
-  <div class="card-header">Действия</div>
+  <div class="card-header">{{ t("Действия") }}</div>
   <div class="card-body" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
     <form method="post" action="/warmup/{{ campaign.id }}/build-queue">
       <button type="submit" class="btn btn-primary" {% if campaign.status == 'running' %}disabled{% endif %}>
-        <i class="ti ti-list-details"></i> Собрать очередь
+        <i class="ti ti-list-details"></i> {{ t("Собрать очередь") }}
       </button>
     </form>
 
     {% if campaign.status == 'running' %}
     <form method="post" action="/warmup/{{ campaign.id }}/pause">
-      <button type="submit" class="btn btn-secondary"><i class="ti ti-player-pause"></i> Пауза</button>
+      <button type="submit" class="btn btn-secondary"><i class="ti ti-player-pause"></i> {{ t("Пауза") }}</button>
     </form>
     {% elif campaign.status == 'paused' %}
     <form method="post" action="/warmup/{{ campaign.id }}/start">
-      <button type="submit" class="btn btn-primary"><i class="ti ti-player-play"></i> Продолжить</button>
+      <button type="submit" class="btn btn-primary"><i class="ti ti-player-play"></i> {{ t("Продолжить") }}</button>
     </form>
     {% elif campaign.status in ('ready', 'draft') %}
     <form method="post" action="/warmup/{{ campaign.id }}/start">
       <button type="submit" class="btn btn-primary" {% if not cnt_by.get('queued') %}disabled title="Сначала соберите очередь"{% endif %}>
-        <i class="ti ti-flame"></i> Запустить прогрев
+        <i class="ti ti-flame"></i> {{ t("Запустить прогрев") }}
       </button>
     </form>
     {% elif campaign.status == 'completed' %}
     <form method="post" action="/warmup/{{ campaign.id }}/build-queue">
       <button type="submit" class="btn btn-secondary" {% if campaign.status == 'running' %}disabled{% endif %}>
-        <i class="ti ti-refresh"></i> Пересобрать очередь для нового прогона
+        <i class="ti ti-refresh"></i> {{ t("Пересобрать очередь для нового прогона") }}
       </button>
     </form>
     {% endif %}
@@ -128,7 +128,7 @@
 </div>
 
 <div class="card">
-  <div class="card-header">Последние строки очереди (до 150)</div>
+  <div class="card-header">{{ t("Последние строки очереди (до 150)") }}</div>
   <div class="card-body">
     {% if queue_rows %}
     <div class="table-wrap">
@@ -136,11 +136,11 @@
         <thead>
           <tr>
             <th>ID</th>
-            <th>Человек</th>
-            <th>Аккаунт</th>
-            <th>Статус</th>
-            <th>Ошибка</th>
-            <th>Время</th>
+            <th>{{ t("Человек") }}</th>
+            <th>{{ t("Аккаунт") }}</th>
+            <th>{{ t("Статус") }}</th>
+            <th>{{ t("Ошибка") }}</th>
+            <th>{{ t("Время") }}</th>
           </tr>
         </thead>
         <tbody>
@@ -155,10 +155,10 @@
             </td>
             <td>{{ accs.get(r.fb_account_id).label if accs.get(r.fb_account_id) else ('#' ~ r.fb_account_id) }}</td>
             <td>
-              {% if r.status == 'done' %}<span class="badge badge-success">Готово</span>
-              {% elif r.status == 'failed' %}<span class="badge badge-default" style="border-color:var(--error);color:var(--error)">Ошибка</span>
-              {% elif r.status == 'running' %}<span class="badge badge-default">В работе</span>
-              {% else %}<span class="badge badge-default">В очереди</span>{% endif %}
+              {% if r.status == 'done' %}<span class="badge badge-success">{{ t("Готово") }}</span>
+              {% elif r.status == 'failed' %}<span class="badge badge-default" style="border-color:var(--error);color:var(--error)">{{ t("Ошибка") }}</span>
+              {% elif r.status == 'running' %}<span class="badge badge-default">{{ t("В работе") }}</span>
+              {% else %}<span class="badge badge-default">{{ t("В очереди") }}</span>{% endif %}
             </td>
             <td style="color:var(--text-secondary);max-width:220px;font-size:var(--font-size-xs)">{{ (r.error or '')[:120] }}{% if r.error and r.error|length > 120 %}…{% endif %}</td>
             <td style="color:var(--text-secondary);font-size:var(--font-size-xs)">{{ r.processed_at.strftime('%d.%m %H:%M') if r.processed_at else '—' }}</td>
@@ -168,7 +168,7 @@
       </table>
     </div>
     {% else %}
-    <p style="color:var(--text-secondary)">Очередь пуста. Нажмите «Собрать очередь» после сохранения настроек кампании.</p>
+    <p style="color:var(--text-secondary)">{{ t("Очередь пуста. Нажмите «Собрать очередь» после сохранения настроек кампании.") }}</p>
     {% endif %}
   </div>
 </div>

@@ -13,7 +13,7 @@
     </div>
     <span class="reddit-page__status">
       <span class="reddit-page__status-dot"></span>
-      В разработке · M5
+      {{ t("В разработке · M5") }}
     </span>
   </header>
 
@@ -21,7 +21,7 @@
     <div class="reddit-placeholder__icon">
       <i class="ti ti-{{ page_icon or 'tools' }}"></i>
     </div>
-    <h2 class="reddit-placeholder__title">Раздел подключается</h2>
+    <h2 class="reddit-placeholder__title">{{ t("Раздел подключается") }}</h2>
     <p class="reddit-placeholder__text">
       {{ placeholder_text or 'Скелет раздела готов. Функциональность подключается в следующем релизе.' }}
     </p>
@@ -33,7 +33,7 @@
     </ul>
     {% endif %}
     <a href="/reddit" class="reddit-btn reddit-btn--ghost">
-      <i class="ti ti-arrow-left"></i> К обзору Reddit Master
+      <i class="ti ti-arrow-left"></i> {{ t("К обзору Reddit Master") }}
     </a>
   </div>
 </div>

@@ -8,13 +8,13 @@
   </header>
 
   <section class="ig-card">
-    <h2 class="ig-card__title"><i class="ti ti-link"></i> Связь с lead</h2>
+    <h2 class="ig-card__title"><i class="ti ti-link"></i> {{ t("Связь с lead") }}</h2>
     <form method="post" action="/instagram/conversations/{{ conversation.id }}/link-lead" style="display:flex;gap:8px;align-items:center;">
       <select name="lead_id" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
-        <option value="">— не связан —</option>
+        <option value="">{{ t("— не связан —") }}</option>
         {% for l in leads %}<option value="{{ l.id }}" {% if conversation.lead_id == l.id %}selected{% endif %}>@{{ l.handle }} · {{ l.full_name or '' }}</option>{% endfor %}
       </select>
-      <button class="ig-btn" type="submit"><i class="ti ti-check"></i> Сохранить</button>
+      <button class="ig-btn" type="submit"><i class="ti ti-check"></i> {{ t("Сохранить") }}</button>
     </form>
   </section>
 
@@ -31,16 +31,16 @@
       </div>
       {% endfor %}
     </div>
-    {% else %}<div class="ig-placeholder"><div class="ig-placeholder__icon"><i class="ti ti-message"></i></div><p class="ig-placeholder__text">Сообщений нет.</p></div>{% endif %}
+    {% else %}<div class="ig-placeholder"><div class="ig-placeholder__icon"><i class="ti ti-message"></i></div><p class="ig-placeholder__text">{{ t("Сообщений нет.") }}</p></div>{% endif %}
   </section>
 
   <section class="ig-card ig-card--accent">
-    <h2 class="ig-card__title"><i class="ti ti-send"></i> Ответить</h2>
+    <h2 class="ig-card__title"><i class="ti ti-send"></i> {{ t("Ответить") }}</h2>
     <form method="post" action="/instagram/conversations/{{ conversation.id }}/send" style="display:flex;flex-direction:column;gap:8px;" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Отправляю…';">
-      <textarea name="body" rows="4" required placeholder="Ваш ответ…" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 14px/1.5 Inter;"></textarea>
+      <textarea name="body" rows="4" required placeholder="{{ t("Ваш ответ…") }}" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 14px/1.5 Inter;"></textarea>
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <label style="font:400 12px/1 Inter;color:var(--text-secondary);"><input type="checkbox" name="headless" value="on" checked/> headless</label>
-        <button class="ig-btn ig-btn--primary" type="submit"><i class="ti ti-send"></i> Отправить</button>
+        <button class="ig-btn ig-btn--primary" type="submit"><i class="ti ti-send"></i> {{ t("Отправить") }}</button>
       </div>
     </form>
   </section>

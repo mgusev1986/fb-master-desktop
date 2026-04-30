@@ -6,7 +6,7 @@
 <div class="reddit-page">
   <header class="reddit-page__header">
     <div class="reddit-page__title-wrap">
-      <h1 class="reddit-page__title">Комментарии</h1>
+      <h1 class="reddit-page__title">{{ t("Комментарии") }}</h1>
       <p class="reddit-page__subtitle">
         Черновики комментариев с подтверждением перед публикацией. Каждый комментарий получает
         toxicity-risk score и требует ручного одобрения перед отправкой через Reddit API.
@@ -21,14 +21,14 @@
   {% endif %}
 
   <div class="reddit-card" style="flex-direction:row;gap:10px;align-items:center;flex-wrap:wrap;">
-    <a href="/reddit/comments" class="reddit-btn{% if not state %} reddit-btn--primary{% endif %}" style="padding:6px 10px;">все</a>
+    <a href="/reddit/comments" class="reddit-btn{% if not state %} reddit-btn--primary{% endif %}" style="padding:6px 10px;">{{ t("все") }}</a>
     {% for s in review_states %}
     <a href="/reddit/comments?state={{ s }}" class="reddit-btn{% if state == s %} reddit-btn--primary{% endif %}" style="padding:6px 10px;">{{ s|ru_status }}</a>
     {% endfor %}
   </div>
 
   <form method="post" action="/reddit/comments/new" class="reddit-card" style="gap:12px;">
-    <h2 class="reddit-card__title">Новый комментарий-draft</h2>
+    <h2 class="reddit-card__title">{{ t("Новый комментарий-draft") }}</h2>
     <div style="display:grid;grid-template-columns:1fr 2fr;gap:12px;">
       <label style="display:flex;flex-direction:column;gap:4px;">
         <span style="font:600 12px/1 Inter;color:var(--text-muted)">от аккаунта</span>
@@ -36,24 +36,24 @@
           {% for a in accounts %}
           <option value="{{ a.id }}">u/{{ a.username_snapshot or a.label }}</option>
           {% else %}
-          <option value="">— нет подключённых аккаунтов —</option>
+          <option value="">{{ t("— нет подключённых аккаунтов —") }}</option>
           {% endfor %}
         </select>
       </label>
       <label style="display:flex;flex-direction:column;gap:4px;">
-        <span style="font:600 12px/1 Inter;color:var(--text-muted)">target permalink (пост или комментарий)</span>
-        <input type="text" name="target_ref" required placeholder="/r/askreddit/comments/abc123/slug/ или /…/efg456"
+        <span style="font:600 12px/1 Inter;color:var(--text-muted)">{{ t("target permalink (пост или комментарий)") }}</span>
+        <input type="text" name="target_ref" required placeholder="{{ t("/r/askreddit/comments/abc123/slug/ или /…/efg456") }}"
                style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;"/>
       </label>
     </div>
     <label style="display:flex;flex-direction:column;gap:4px;">
-      <span style="font:600 12px/1 Inter;color:var(--text-muted)">текст</span>
+      <span style="font:600 12px/1 Inter;color:var(--text-muted)">{{ t("текст") }}</span>
       <textarea name="body" rows="4" required
-                placeholder="Аккуратный, релевантный комментарий…"
+                placeholder="{{ t("Аккуратный, релевантный комментарий…") }}"
                 style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-family:ui-monospace,monospace;"></textarea>
     </label>
     <div>
-      <button type="submit" class="reddit-btn reddit-btn--primary"><i class="ti ti-plus"></i> Создать draft</button>
+      <button type="submit" class="reddit-btn reddit-btn--primary"><i class="ti ti-plus"></i> {{ t("Создать draft") }}</button>
     </div>
   </form>
 
@@ -89,7 +89,7 @@
         <form method="post" action="/reddit/comments/{{ d.id }}/edit">
           <textarea name="body" rows="3"
                     style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--border);border-radius:10px;font-family:ui-monospace,monospace;">{{ d.body }}</textarea>
-          <button type="submit" class="reddit-btn" style="margin-top:6px;padding:4px 10px;font-size:12px;">Сохранить текст</button>
+          <button type="submit" class="reddit-btn" style="margin-top:6px;padding:4px 10px;font-size:12px;">{{ t("Сохранить текст") }}</button>
         </form>
         {% else %}
         <pre style="white-space:pre-wrap;font:400 13px/1.5 ui-monospace,monospace;background:color-mix(in srgb,#000 4%,transparent);padding:10px;border-radius:8px;margin:0;">{{ d.body }}</pre>
@@ -102,10 +102,10 @@
         <footer style="display:flex;gap:6px;flex-wrap:wrap;">
           {% if d.review_state == 'pending_review' %}
           <form method="post" action="/reddit/comments/{{ d.id }}/approve" style="display:inline">
-            <button type="submit" class="reddit-btn reddit-btn--primary">Одобрить</button>
+            <button type="submit" class="reddit-btn reddit-btn--primary">{{ t("Одобрить") }}</button>
           </form>
           <form method="post" action="/reddit/comments/{{ d.id }}/reject" style="display:inline">
-            <button type="submit" class="reddit-btn">Отклонить</button>
+            <button type="submit" class="reddit-btn">{{ t("Отклонить") }}</button>
           </form>
           {% elif d.review_state == 'approved' %}
           <form method="post" action="/reddit/comments/{{ d.id }}/publish" style="display:inline">

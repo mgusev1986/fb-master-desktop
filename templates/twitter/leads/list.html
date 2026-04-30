@@ -13,14 +13,14 @@
   </header>
 
   <section class="x-card x-card--accent">
-    <h2 class="x-card__title"><i class="ti ti-search"></i> Поиск через X Search (Playwright)</h2>
-    <p class="x-card__desc" style="font-size:13px;">Открывает <code>/search?q=&f=user</code> или <code>&f=live</code> под выбранным аккаунтом и сохраняет handles как leads.</p>
+    <h2 class="x-card__title"><i class="ti ti-search"></i> {{ t("Поиск через X Search (Playwright)") }}</h2>
+    <p class="x-card__desc" style="font-size:13px;">{{ t("Открывает") }} <code>/search?q=&f=user</code> {{ t("или") }} <code>&f=live</code> под выбранным аккаунтом и сохраняет handles как leads.</p>
     <form method="post" action="/twitter/leads/audience-search" style="display:flex;flex-direction:column;gap:8px;"
           onsubmit="this.querySelector('button.search-go').disabled=true; this.querySelector('button.search-go').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Ищу…';">
       <input type="hidden" name="return_to" value="{{ '/twitter/audience' if is_audience_page else '/twitter/leads' }}"/>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <select name="account_id" required style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
-          <option value="">— аккаунт —</option>
+          <option value="">{{ t("— аккаунт —") }}</option>
           {% for a in (account_options or []) %}<option value="{{ a.id }}">{{ a.label }} [{{ a.status }}]</option>{% endfor %}
         </select>
         <input type="text" name="keywords" required placeholder="founder fintech berlin" style="flex:2;min-width:240px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
@@ -28,16 +28,16 @@
           <option value="users">users</option><option value="tweets">tweets</option>
         </select>
         <input type="number" name="max_results" min="5" max="50" value="15" style="width:80px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
-        <button type="submit" class="x-btn x-btn--primary search-go"><i class="ti ti-search"></i> Найти</button>
+        <button type="submit" class="x-btn x-btn--primary search-go"><i class="ti ti-search"></i> {{ t("Найти") }}</button>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <select name="segment_id" style="flex:1;min-width:200px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font-size:12px;">
-          <option value="">— или сохранённый сегмент —</option>
+          <option value="">{{ t("— или сохранённый сегмент —") }}</option>
           {% for s in (segments or []) %}<option value="{{ s.id }}">{{ s.name }} ({{ s.last_run_count or 0 }} рез.)</option>{% endfor %}
         </select>
         <label style="font:400 12px/1 Inter;color:var(--text-secondary);display:inline-flex;align-items:center;gap:4px;">
-          <input type="checkbox" name="save_as_segment" value="on"/> сохранить как сегмент:
-          <input type="text" name="save_segment_name" placeholder="название" style="padding:4px;border-radius:6px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font-size:12px;width:160px;"/>
+          <input type="checkbox" name="save_as_segment" value="on"/> {{ t("сохранить как сегмент:") }}
+          <input type="text" name="save_segment_name" placeholder="{{ t("название") }}" style="padding:4px;border-radius:6px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font-size:12px;width:160px;"/>
         </label>
       </div>
     </form>
@@ -45,22 +45,22 @@
 
   <div class="x-grid">
     <section class="x-card">
-      <h2 class="x-card__title"><i class="ti ti-plus"></i> Добавить вручную</h2>
+      <h2 class="x-card__title"><i class="ti ti-plus"></i> {{ t("Добавить вручную") }}</h2>
       <form method="post" action="/twitter/leads/create" style="display:flex;flex-direction:column;gap:8px;">
-        <input type="text" name="handle" required placeholder="@username или username" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
-        <input type="text" name="full_name" placeholder="Имя Фамилия" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+        <input type="text" name="handle" required placeholder="{{ t("@username или username") }}" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+        <input type="text" name="full_name" placeholder="{{ t("Имя Фамилия") }}" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
         <textarea name="bio" rows="2" placeholder="bio" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"></textarea>
         <input type="text" name="location" placeholder="локация" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
-        <button type="submit" class="x-btn x-btn--primary" style="align-self:flex-start;"><i class="ti ti-plus"></i> Добавить</button>
+        <button type="submit" class="x-btn x-btn--primary" style="align-self:flex-start;"><i class="ti ti-plus"></i> {{ t("Добавить") }}</button>
       </form>
     </section>
 
     <section class="x-card">
       <h2 class="x-card__title"><i class="ti ti-upload"></i> Bulk-import handles</h2>
-      <p class="x-card__desc" style="font-size:13px;">Каждая строка — handle, @handle или URL.</p>
+      <p class="x-card__desc" style="font-size:13px;">{{ t("Каждая строка — handle, @handle или URL.") }}</p>
       <form method="post" action="/twitter/leads/bulk-import" style="display:flex;flex-direction:column;gap:8px;">
         <textarea name="handles_blob" rows="6" placeholder="elonmusk&#10;@sama&#10;https://x.com/jack" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 13px/1.4 ui-monospace,Menlo,monospace;"></textarea>
-        <button type="submit" class="x-btn" style="align-self:flex-start;">Импорт</button>
+        <button type="submit" class="x-btn" style="align-self:flex-start;">{{ t("Импорт") }}</button>
       </form>
     </section>
   </div>
@@ -89,7 +89,7 @@
     <div style="overflow-x:auto;">
       <table style="width:100%;border-collapse:collapse;background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;">
         <thead><tr style="border-bottom:1px solid var(--border);font:600 12px/1 Inter;color:var(--text-muted);text-transform:uppercase;">
-          <th style="text-align:left;padding:10px;">Handle</th><th style="text-align:left;padding:10px;">Bio</th><th style="text-align:left;padding:10px;">Источник</th><th style="text-align:left;padding:10px;">Стадия</th><th></th>
+          <th style="text-align:left;padding:10px;">Handle</th><th style="text-align:left;padding:10px;">Bio</th><th style="text-align:left;padding:10px;">{{ t("Источник") }}</th><th style="text-align:left;padding:10px;">{{ t("Стадия") }}</th><th></th>
         </tr></thead>
         <tbody>
           {% for l in leads %}
@@ -105,7 +105,7 @@
       </table>
     </div>
     {% else %}
-    <div class="x-placeholder"><div class="x-placeholder__icon"><i class="ti ti-address-book"></i></div><p class="x-placeholder__text">Лидов пока нет.</p></div>
+    <div class="x-placeholder"><div class="x-placeholder__icon"><i class="ti ti-address-book"></i></div><p class="x-placeholder__text">{{ t("Лидов пока нет.") }}</p></div>
     {% endif %}
   </section>
 </div>

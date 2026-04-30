@@ -5,9 +5,9 @@
 <div class="page-header">
   <h1>{% if cabinet_client_mode(request) %}Темп работы{% else %}Скорость и паузы{% endif %}</h1>
   <p class="subtitle">{% if cabinet_client_mode(request) %}
-  Насколько быстро программа делает паузы между действиями в Facebook. Для стабильности удобнее <strong>«Медленно»</strong> или <strong>«Средне»</strong>; «Быстро» и «Очень быстро» — заметно выше риск ограничений.
+  Насколько быстро программа делает паузы между действиями в Facebook. Для стабильности удобнее <strong>{{ t("«Медленно»") }}</strong> {{ t("или") }} <strong>{{ t("«Средне»") }}</strong>; «Быстро» и «Очень быстро» — заметно выше риск ограничений.
   {% else %}
-  Глобальный темп работы по умолчанию. Для устойчивости и поведения «как человек» чаще выбирайте <strong>«Медленно»</strong> или <strong>«Средне»</strong>; «Быстро» и особенно <strong>«Очень быстро»</strong> — только если осознанно принимаете больший риск ограничений со стороны сети.
+  Глобальный темп работы по умолчанию. Для устойчивости и поведения «как человек» чаще выбирайте <strong>{{ t("«Медленно»") }}</strong> {{ t("или") }} <strong>{{ t("«Средне»") }}</strong>{{ t("; «Быстро» и особенно") }} <strong>{{ t("«Очень быстро»") }}</strong> — только если осознанно принимаете больший риск ограничений со стороны сети.
   {% endif %}</p>
 </div>
 
@@ -23,31 +23,31 @@
         <div class="preset-card {{ 'selected' if current_preset == 'ulitka' }}" data-preset="ulitka" role="button" tabindex="0" aria-pressed="{{ 'true' if current_preset == 'ulitka' else 'false' }}">
           <div class="preset-icon">🐌</div>
           <h3>Улитка</h3>
-          <p>Очень медленно — ориентир <strong>~20 сообщений в час</strong> (пауза между контактами в рассылке). Максимальная осторожность.</p>
+          <p>{{ t("Очень медленно — ориентир") }} <strong>{{ t("~20 сообщений в час") }}</strong> {{ t("(пауза между контактами в рассылке). Максимальная осторожность.") }}</p>
         </div>
 
         <div class="preset-card {{ 'selected' if current_preset == 'slow' }}" data-preset="slow" role="button" tabindex="0" aria-pressed="{{ 'true' if current_preset == 'slow' else 'false' }}">
           <div class="preset-icon">🐢</div>
-          <h3>Медленно</h3>
-          <p>Рекомендовано: <strong>~30 сообщений в час</strong>. Длинные паузы, ниже риск ограничений со стороны сети.</p>
+          <h3>{{ t("Медленно") }}</h3>
+          <p>{{ t("Рекомендовано:") }} <strong>{{ t("~30 сообщений в час") }}</strong>{{ t(". Длинные паузы, ниже риск ограничений со стороны сети.") }}</p>
         </div>
 
         <div class="preset-card {{ 'selected' if current_preset == 'medium' }}" data-preset="medium" role="button" tabindex="0" aria-pressed="{{ 'true' if current_preset == 'medium' else 'false' }}">
           <div class="preset-icon">🏎</div>
           <h3>Средне</h3>
-          <p>Баланс: <strong>~45 сообщений в час</strong>. Умеренные задержки между действиями.</p>
+          <p>{{ t("Баланс:") }} <strong>{{ t("~45 сообщений в час") }}</strong>{{ t(". Умеренные задержки между действиями.") }}</p>
         </div>
 
         <div class="preset-card {{ 'selected' if current_preset == 'fast' }}" data-preset="fast" role="button" tabindex="0" aria-pressed="{{ 'true' if current_preset == 'fast' else 'false' }}">
           <div class="preset-icon">🚀</div>
-          <h3>Быстро</h3>
-          <p style="color:var(--warning)">⚠ До <strong>~60 сообщений в час</strong>. Повышенный риск блокировки.</p>
+          <h3>{{ t("Быстро") }}</h3>
+          <p style="color:var(--warning)">⚠ До <strong>{{ t("~60 сообщений в час") }}</strong>{{ t(". Повышенный риск блокировки.") }}</p>
         </div>
 
         <div class="preset-card {{ 'selected' if current_preset == 'very_fast' }}" data-preset="very_fast" role="button" tabindex="0" aria-pressed="{{ 'true' if current_preset == 'very_fast' else 'false' }}">
           <div class="preset-icon">⚡️</div>
-          <h3>Очень быстро</h3>
-          <p style="color:var(--error)">⚠ Ориентир <strong>~100 сообщений в час</strong>. Очень высокий риск ограничений и блокировки.</p>
+          <h3>{{ t("Очень быстро") }}</h3>
+          <p style="color:var(--error)">⚠ Ориентир <strong>{{ t("~100 сообщений в час") }}</strong>{{ t(". Очень высокий риск ограничений и блокировки.") }}</p>
         </div>
 
       </div>
@@ -61,24 +61,22 @@
 
 <div class="card" style="margin-bottom:24px">
   <div class="card-header">
-    Задержки для режима «<span id="speed-delays-preset-label">{{ preset_labels.get(current_preset, current_preset) }}</span>»
+    {{ t("Задержки для режима «") }}<span id="speed-delays-preset-label">{{ preset_labels.get(current_preset, current_preset) }}</span>»
     <span style="font-weight:400;color:var(--text-secondary);font-size:var(--font-size-xs)">
       — каждая пауза случайная в указанном диапазоне
     </span>
   </div>
   <p class="card-subnote" style="margin:-8px 0 12px;font-size:var(--font-size-xs);color:var(--text-secondary);padding:0 1.25rem">
-    При переключении карточек выше таблица <strong>обновляется сразу</strong> (до кнопки «Сохранить режим»).
-    Все типы пауз (лайк, комментарий, заявка в друзья, ЛС и т.д.) привязаны к тому же ориентиру сообщений в час;
-    колонка «Нижний пол» не меняется от режима — меняются только мин. и макс. паузы.
+    {{ t("При переключении карточек выше таблица") }} <strong>обновляется сразу</strong> {{ t("(до кнопки «Сохранить режим»). Все типы пауз (лайк, комментарий, заявка в друзья, ЛС и т.д.) привязаны к тому же ориентиру сообщений в час; колонка «Нижний пол» не меняется от режима — меняются только мин. и макс. паузы.") }}
   </p>
   <div class="card-body">
     <div class="table-wrap">
       <table class="delays-table">
         <thead>
           <tr>
-            <th>Действие</th>
-            <th>Мин. пауза</th>
-            <th>Макс. пауза</th>
+            <th>{{ t("Действие") }}</th>
+            <th>{{ t("Мин. пауза") }}</th>
+            <th>{{ t("Макс. пауза") }}</th>
             <th title="{% if cabinet_client_mode(request) %}Минимальная пауза даже на быстром режиме{% else %}Одинаково для всех режимов: пауза никогда не короче этого значения (в т.ч. на «Быстро» и «Очень быстро»).{% endif %}">{% if cabinet_client_mode(request) %}Минимум{% else %}Нижний пол{% endif %}</th>
           </tr>
         </thead>
@@ -122,7 +120,7 @@
       Сейчас: <strong>{{ sequence_timezone_effective }}</strong>
       {% else %}
       Сейчас используется: <strong>{{ sequence_timezone_effective }}</strong>
-      {% if not sequence_timezone_saved %}<span> (из .env, т.к. в БД не задано)</span>{% endif %}
+      {% if not sequence_timezone_saved %}<span> {{ t("(из .env, т.к. в БД не задано)") }}</span>{% endif %}
       {% endif %}
     </p>
     <form method="post" action="/system/speed/sequence-timezone" style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end">
@@ -165,9 +163,7 @@
       {% if cabinet_client_mode(request) %}
       В настройках отдельных задач (поиск людей, прогрев, рассылка, сценарий) можно включить режим, при котором программа <strong>сама подбирает паузы</strong>, чтобы уложиться в выбранный срок. В рассылке лимит задаётся в минутах.
       {% else %}
-      Этот режим доступен <strong>в настройках каждой задачи</strong> (парсинг, прогрев, рассылка, сценарий).
-      Система сама распределит задержки с джиттером, чтобы уложиться в указанное время.
-      В <strong>рассылке</strong> бюджет задаётся в <strong>минутах</strong> (с теми же пресетами, что ниже).
+      Этот режим доступен <strong>в настройках каждой задачи</strong> {{ t("(парсинг, прогрев, рассылка, сценарий). Система сама распределит задержки с джиттером, чтобы уложиться в указанное время. В") }} <strong>рассылке</strong> бюджет задаётся в <strong>{{ t("минутах") }}</strong> (с теми же пресетами, что ниже).
       {% endif %}
     </p>
     <p style="color:var(--text-secondary);margin-bottom:12px;font-size:var(--font-size-sm)">
@@ -177,12 +173,12 @@
       {% for key, label, _ in time_budget_presets %}
       <span class="badge badge-default">{{ label }}</span>
       {% endfor %}
-      <span class="badge badge-default">Своё время</span>
+      <span class="badge badge-default">{{ t("Своё время") }}</span>
     </div>
   </div>
 </div>
 
-<form method="post" action="/system/speed/reset" style="margin-top:24px" data-confirm="Сбросить все настройки темпа к заводским?" data-confirm-title="Сброс настроек" data-confirm-variant="danger">
+<form method="post" action="/system/speed/reset" style="margin-top:24px" data-confirm="Сбросить все настройки темпа к заводским?" data-confirm-title="{{ t("Сброс настроек") }}" data-confirm-variant="danger">
   <button type="submit" class="btn btn-ghost">
     <i class="ti ti-refresh"></i> Сбросить к заводским
   </button>

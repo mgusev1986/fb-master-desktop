@@ -7,15 +7,15 @@
       <h1 class="ig-page__title">{{ campaign.name }} <span class="ig-page__beta-pill">Beta</span></h1>
       <p class="ig-page__subtitle">Mode <strong>{{ campaign.mode }}</strong>, approval <strong>{{ campaign.approval_mode }}</strong>, status <strong>{{ campaign.status }}</strong>.{% if campaign.autoresponder_enabled %} 🤖 AI-{{ campaign.autoresponder_goal }}{% endif %}</p>
     </div>
-    <a href="/instagram/outreach" class="ig-btn"><i class="ti ti-arrow-left"></i> К списку</a>
+    <a href="/instagram/outreach" class="ig-btn"><i class="ti ti-arrow-left"></i> {{ t("К списку") }}</a>
   </header>
 
   <section class="ig-card ig-card--accent">
-    <h2 class="ig-card__title"><i class="ti ti-list-check"></i> Собрать очередь</h2>
+    <h2 class="ig-card__title"><i class="ti ti-list-check"></i> {{ t("Собрать очередь") }}</h2>
     {% if leads %}
     <form method="post" action="/instagram/outreach/{{ campaign.id }}/build-queue">
       {% if campaign.mode in ['comment','story_reply'] %}
-      <input type="text" name="target_post_url" required placeholder="https://www.instagram.com/p/AAA/ (URL поста)" style="width:100%;margin-bottom:8px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+      <input type="text" name="target_post_url" required placeholder="{{ t("https://www.instagram.com/p/AAA/ (URL поста)") }}" style="width:100%;margin-bottom:8px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
       {% endif %}
       <div style="max-height:280px;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:8px;">
         {% for l in leads %}
@@ -27,18 +27,18 @@
         </label>
         {% endfor %}
       </div>
-      <div style="display:flex;justify-content:flex-end;margin-top:8px;"><button type="submit" class="ig-btn ig-btn--primary"><i class="ti ti-list-check"></i> В очередь</button></div>
+      <div style="display:flex;justify-content:flex-end;margin-top:8px;"><button type="submit" class="ig-btn ig-btn--primary"><i class="ti ti-list-check"></i> {{ t("В очередь") }}</button></div>
     </form>
-    {% else %}<p class="ig-card__desc">Нет лидов.</p>{% endif %}
+    {% else %}<p class="ig-card__desc">{{ t("Нет лидов.") }}</p>{% endif %}
   </section>
 
   <section class="ig-card">
-    <h2 class="ig-card__title"><i class="ti ti-bolt"></i> Управление</h2>
+    <h2 class="ig-card__title"><i class="ti ti-bolt"></i> {{ t("Управление") }}</h2>
     <div style="display:flex;gap:12px;flex-wrap:wrap;">
       <form method="post" action="/instagram/outreach/{{ campaign.id }}/run-once" style="display:flex;gap:6px;align-items:center;" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Send…';">
         <input type="number" name="max_items" min="1" max="20" value="3" style="width:70px;padding:6px;border-radius:6px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
         <label style="font:400 12px/1 Inter;color:var(--text-secondary);"><input type="checkbox" name="headless" value="on" checked/> headless</label>
-        <button type="submit" class="ig-btn ig-btn--primary"><i class="ti ti-send"></i> Запустить</button>
+        <button type="submit" class="ig-btn ig-btn--primary"><i class="ti ti-send"></i> {{ t("Запустить") }}</button>
       </form>
       <form method="post" action="/instagram/outreach/{{ campaign.id }}/status" style="display:inline;"><input type="hidden" name="status" value="{% if campaign.status == 'active' %}paused{% else %}active{% endif %}"/><button class="ig-btn" type="submit">{% if campaign.status == 'active' %}<i class="ti ti-player-pause"></i> Пауза{% else %}<i class="ti ti-player-play"></i> Активировать{% endif %}</button></form>
     </div>
@@ -48,7 +48,7 @@
     <h2 class="ig-card__title" style="margin:8px 0 12px;">Очередь · {{ summary.total }} <small style="color:var(--text-muted);font-weight:400;">pending {{ summary.pending_review }} · approved {{ summary.approved }} · sent {{ summary.sent }} · failed {{ summary.failed }} · skipped {{ summary.skipped }}</small></h2>
     {% if items %}
     <table style="width:100%;border-collapse:collapse;background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;">
-      <thead><tr style="border-bottom:1px solid var(--border);font:600 12px/1 Inter;color:var(--text-muted);text-transform:uppercase;"><th style="text-align:left;padding:10px;">Лид</th><th style="text-align:left;padding:10px;">Превью</th><th style="text-align:left;padding:10px;">Статус</th><th></th></tr></thead>
+      <thead><tr style="border-bottom:1px solid var(--border);font:600 12px/1 Inter;color:var(--text-muted);text-transform:uppercase;"><th style="text-align:left;padding:10px;">{{ t("Лид") }}</th><th style="text-align:left;padding:10px;">{{ t("Превью") }}</th><th style="text-align:left;padding:10px;">{{ t("Статус") }}</th><th></th></tr></thead>
       <tbody>{% for it in items %}
         <tr style="border-bottom:1px solid var(--border);vertical-align:top;">
           <td style="padding:10px;">{% set l = lead_map.get(it.lead_id) %}{% if l %}<a href="{{ l.profile_url }}" target="_blank" style="color:var(--ws-accent);text-decoration:none;">@{{ l.handle }}</a>{% else %}lead#{{ it.lead_id }}{% endif %}</td>
@@ -65,7 +65,7 @@
         </tr>
       {% endfor %}</tbody>
     </table>
-    {% else %}<div class="ig-placeholder"><div class="ig-placeholder__icon"><i class="ti ti-list"></i></div><p class="ig-placeholder__text">Очередь пуста.</p></div>{% endif %}
+    {% else %}<div class="ig-placeholder"><div class="ig-placeholder__icon"><i class="ti ti-list"></i></div><p class="ig-placeholder__text">{{ t("Очередь пуста.") }}</p></div>{% endif %}
   </section>
 </div>
 {% endblock %}

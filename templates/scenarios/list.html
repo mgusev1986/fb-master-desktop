@@ -34,8 +34,7 @@
     {% if cabinet_client_mode(request) %}
     У вас есть <strong>{{ legacy_warmups_count }}</strong> старых кампаний прогрева по контактам — они по-прежнему открываются из меню (раздел «Прогрев по контактам»), а новые цепочки удобнее вести здесь.
     {% else %}
-    Найдено старых кампаний из раздела прогрева: <strong>{{ legacy_warmups_count }}</strong>.
-    Они не потеряны и пока доступны по прямой ссылке <a href="/warmup">/warmup</a>, но новый рабочий раздел теперь один: <strong>Режим агента</strong>.
+    Найдено старых кампаний из раздела прогрева: <strong>{{ legacy_warmups_count }}</strong>{{ t(". Они не потеряны и пока доступны по прямой ссылке") }} <a href="/warmup">/warmup</a>{{ t(", но новый рабочий раздел теперь один:") }} <strong>{{ t("Режим агента") }}</strong>.
     {% endif %}
   </div>
 </div>
@@ -61,9 +60,9 @@
         <strong>Шаблоны сообщений</strong>
         <p style="margin:8px 0 0;color:var(--text-secondary);font-size:var(--font-size-sm)">
           {% if cabinet_client_mode(request) %}
-          Тексты для комментариев и сообщений берите из раздела <a href="/templates">«Тексты сообщений»</a>.
+          Тексты для комментариев и сообщений берите из раздела <a href="/templates">{{ t("«Тексты сообщений»") }}</a>.
           {% else %}
-          Для комментариев и личных сообщений можно использовать шаблоны из раздела <a href="/templates">Шаблоны</a>.
+          Для комментариев и личных сообщений можно использовать шаблоны из раздела <a href="/templates">{{ t("Шаблоны") }}</a>.
           {% endif %}
         </p>
       </div>
@@ -102,11 +101,11 @@
       <table>
         <thead>
           <tr>
-            <th>Название</th>
-            <th>Статус</th>
-            <th>Аккаунты</th>
-            <th>Автоматизация</th>
-            <th>Обновлено</th>
+            <th>{{ t("Название") }}</th>
+            <th>{{ t("Статус") }}</th>
+            <th>{{ t("Аккаунты") }}</th>
+            <th>{{ t("Автоматизация") }}</th>
+            <th>{{ t("Обновлено") }}</th>
             <th></th>
           </tr>
         </thead>
@@ -132,11 +131,11 @@
             </td>
             <td>
               {% if c.status == 'active' %}
-              <span class="badge badge-success">Активен</span>
+              <span class="badge badge-success">{{ t("Активен") }}</span>
               {% elif c.status == 'paused' %}
-              <span class="badge badge-warning">Пауза</span>
+              <span class="badge badge-warning">{{ t("Пауза") }}</span>
               {% else %}
-              <span class="badge badge-default">Черновик</span>
+              <span class="badge badge-default">{{ t("Черновик") }}</span>
               {% endif %}
             </td>
             <td style="color:var(--text-secondary);font-size:var(--font-size-sm)">
@@ -152,7 +151,7 @@
             <td style="color:var(--text-secondary);font-size:var(--font-size-sm)">
               {{ c.updated_at.strftime('%d.%m.%Y %H:%M') if c.updated_at else '—' }}
             </td>
-            <td><a href="/scenarios/{{ c.id }}" class="btn btn-sm btn-secondary">Открыть</a></td>
+            <td><a href="/scenarios/{{ c.id }}" class="btn btn-sm btn-secondary">{{ t("Открыть") }}</a></td>
           </tr>
           {% endfor %}
         </tbody>
@@ -160,7 +159,7 @@
     </div>
     {% else %}
     <p style="color:var(--text-secondary)">
-      Режимов агента пока нет. Создайте первый: выберите аккаунты, базу контактов, настройте партию и соберите цепочку шагов.
+      {{ t("Режимов агента пока нет. Создайте первый: выберите аккаунты, базу контактов, настройте партию и соберите цепочку шагов.") }}
     </p>
     {% endif %}
   </div>

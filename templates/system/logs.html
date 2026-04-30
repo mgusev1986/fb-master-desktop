@@ -259,8 +259,8 @@
       {% endif %}</p>
     </div>
     <div class="logs-header-actions">
-      <a href="{{ jobs_export_url }}" class="btn btn-secondary btn-sm"><i class="ti ti-file-download"></i> CSV задач</a>
-      <a href="{{ errors_export_url }}" class="btn btn-secondary btn-sm"><i class="ti ti-bug"></i> CSV ошибок</a>
+      <a href="{{ jobs_export_url }}" class="btn btn-secondary btn-sm"><i class="ti ti-file-download"></i> {{ t("CSV задач") }}</a>
+      <a href="{{ errors_export_url }}" class="btn btn-secondary btn-sm"><i class="ti ti-bug"></i> {{ t("CSV ошибок") }}</a>
       <a href="/crm/funnel/export.csv" class="btn btn-primary btn-sm"><i class="ti ti-report"></i> CRM CSV</a>
     </div>
   </div>
@@ -283,7 +283,7 @@
 
 <div class="stats-grid" style="margin-bottom:24px">
   <div class="stat-card">
-    <div class="stat-label">Всего задач</div>
+    <div class="stat-label">{{ t("Всего задач") }}</div>
     <div class="stat-value">{{ summary.total_jobs }}</div>
   </div>
   <div class="stat-card">
@@ -295,7 +295,7 @@
     <div class="stat-value">{{ summary.failed_jobs }}</div>
   </div>
   <div class="stat-card">
-    <div class="stat-label">Проблемные события</div>
+    <div class="stat-label">{{ t("Проблемные события") }}</div>
     <div class="stat-value">{{ summary.problem_events }}</div>
   </div>
 </div>
@@ -305,7 +305,7 @@
     <div class="logs-tabs">
       <a href="{{ tab_urls.jobs }}" class="btn btn-sm {{ 'btn-primary' if active_tab == 'jobs' else 'btn-secondary' }}">Задачи ({{ jobs_total }})</a>
       <a href="{{ tab_urls.errors }}" class="btn btn-sm {{ 'btn-primary' if active_tab == 'errors' else 'btn-secondary' }}">Ошибки ({{ failed_jobs_total + problem_events_total }})</a>
-      <a href="{{ tab_urls.reports }}" class="btn btn-sm {{ 'btn-primary' if active_tab == 'reports' else 'btn-secondary' }}">Отчёты и выгрузки</a>
+      <a href="{{ tab_urls.reports }}" class="btn btn-sm {{ 'btn-primary' if active_tab == 'reports' else 'btn-secondary' }}">{{ t("Отчёты и выгрузки") }}</a>
     </div>
 
     <form method="get" action="/system/logs" class="logs-filters">
@@ -314,11 +314,11 @@
       <input type="hidden" name="scenario_id" value="{{ scenario_id }}"/>
       {% endif %}
       <div>
-        <label class="form-label" for="logs-q">Поиск</label>
-        <input id="logs-q" type="text" name="q" value="{{ search_q }}" class="form-input" placeholder="ID, тип задачи, correlation, текст ошибки"/>
+        <label class="form-label" for="logs-q">{{ t("Поиск") }}</label>
+        <input id="logs-q" type="text" name="q" value="{{ search_q }}" class="form-input" placeholder="{{ t("ID, тип задачи, correlation, текст ошибки") }}"/>
       </div>
       <div>
-        <label class="form-label" for="logs-days">Период</label>
+        <label class="form-label" for="logs-days">{{ t("Период") }}</label>
         <select id="logs-days" name="days" class="form-select">
           {% for value, label in days_options %}
           <option value="{{ value }}" {% if days == value %}selected{% endif %}>{{ label }}</option>
@@ -328,7 +328,7 @@
       <div>
         <label class="form-label" for="logs-job-type">Тип задачи</label>
         <select id="logs-job-type" name="job_type" class="form-select">
-          <option value="">Все типы</option>
+          <option value="">{{ t("Все типы") }}</option>
           {% for value, label in job_type_options %}
           <option value="{{ value }}" {% if job_type == value %}selected{% endif %}>{{ label }}</option>
           {% endfor %}
@@ -350,13 +350,12 @@
           {% endfor %}
         </select>
       </div>
-      <button type="submit" class="btn btn-primary btn-sm"><i class="ti ti-filter"></i> Применить</button>
-      <a href="/system/logs?tab={{ active_tab }}" class="btn btn-secondary btn-sm">Сбросить</a>
+      <button type="submit" class="btn btn-primary btn-sm"><i class="ti ti-filter"></i> {{ t("Применить") }}</button>
+      <a href="/system/logs?tab={{ active_tab }}" class="btn btn-secondary btn-sm">{{ t("Сбросить") }}</a>
     </form>
 
     <p class="logs-mini-note">
-      Последняя активность системы: <strong>{{ format_dt_madrid(summary.last_activity_at) }}</strong>.
-      Фильтры применяются к таблицам ниже и к CSV-кнопкам вверху страницы.
+      {{ t("Последняя активность системы:") }} <strong>{{ format_dt_madrid(summary.last_activity_at) }}</strong>{{ t(". Фильтры применяются к таблицам ниже и к CSV-кнопкам вверху страницы.") }}
     </p>
   </div>
 </div>
@@ -371,11 +370,11 @@
         <thead>
           <tr>
             <th>#</th>
-            <th>Тип</th>
-            <th>Статус</th>
-            <th>Время</th>
+            <th>{{ t("Тип") }}</th>
+            <th>{{ t("Статус") }}</th>
+            <th>{{ t("Время") }}</th>
             <th>События</th>
-            <th>Контекст</th>
+            <th>{{ t("Контекст") }}</th>
           </tr>
         </thead>
         <tbody>
@@ -400,13 +399,13 @@
             <td>
               <div class="logs-time-block">
                 <div class="logs-time-main">
-                  <span>Создано</span>
+                  <span>{{ t("Создано") }}</span>
                   {{ format_dt_madrid(job.created_at) }}
                 </div>
                 <div class="logs-time-grid">
                   <div><strong>Старт</strong> {{ format_dt_madrid(job.started_at) }}</div>
                   <div><strong>Финиш</strong> {{ format_dt_madrid(job.ended_at) }}</div>
-                  <div><strong>Длительность</strong> {% set _d = job_durations.get(job.id) %}{% if _d is not none %}{{ _d }} с{% else %}—{% endif %}</div>
+                  <div><strong>{{ t("Длительность") }}</strong> {% set _d = job_durations.get(job.id) %}{% if _d is not none %}{{ _d }} с{% else %}—{% endif %}</div>
                 </div>
               </div>
             </td>
@@ -424,11 +423,11 @@
                 {% if job.status == 'success' and not job.error_summary %}
                 <div class="logs-outcome-ok">Успешно завершено — ошибок в журнале не зафиксировано.</div>
                 {% elif job.status == 'running' %}
-                <div class="logs-outcome-wait">Задача в работе или ожидает запуска.</div>
+                <div class="logs-outcome-wait">{{ t("Задача в работе или ожидает запуска.") }}</div>
                 {% elif job.status == 'queued' %}
-                <div class="logs-outcome-wait">В очереди на выполнение.</div>
+                <div class="logs-outcome-wait">{{ t("В очереди на выполнение.") }}</div>
                 {% elif job.status == 'cancelled' %}
-                <div class="logs-outcome-wait">Задача отменена.</div>
+                <div class="logs-outcome-wait">{{ t("Задача отменена.") }}</div>
                 {% endif %}
                 {% if job.error_summary or err_raw %}
                 {% if err_hint %}
@@ -467,8 +466,8 @@
     {% else %}
     <div class="empty-state">
       <div class="empty-state-icon"><i class="ti ti-clipboard-list"></i></div>
-      <h3>Под выбранные фильтры задач не найдено</h3>
-      <p>Измените период, статус или строку поиска — журнал обновится сразу.</p>
+      <h3>{{ t("Под выбранные фильтры задач не найдено") }}</h3>
+      <p>{{ t("Измените период, статус или строку поиска — журнал обновится сразу.") }}</p>
     </div>
     {% endif %}
   </div>
@@ -484,9 +483,9 @@
           <thead>
             <tr>
               <th>#</th>
-              <th>Тип</th>
-              <th>Когда</th>
-              <th>Ошибка</th>
+              <th>{{ t("Тип") }}</th>
+              <th>{{ t("Когда") }}</th>
+              <th>{{ t("Ошибка") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -500,12 +499,12 @@
               <td>
                 <div class="logs-time-block">
                   <div class="logs-time-main">
-                    <span>Создано</span>
+                    <span>{{ t("Создано") }}</span>
                     {{ format_dt_madrid(job.created_at) }}
                   </div>
                   <div class="logs-time-grid">
                     <div><strong>Финиш</strong> {{ format_dt_madrid(job.ended_at) }}</div>
-                    <div><strong>Длительность</strong> {% set _df = job_durations.get(job.id) %}{% if _df is not none %}{{ _df }} с{% else %}—{% endif %}</div>
+                    <div><strong>{{ t("Длительность") }}</strong> {% set _df = job_durations.get(job.id) %}{% if _df is not none %}{{ _df }} с{% else %}—{% endif %}</div>
                   </div>
                 </div>
               </td>
@@ -547,8 +546,8 @@
       {% else %}
       <div class="empty-state">
         <div class="empty-state-icon"><i class="ti ti-shield-check"></i></div>
-        <h3>Падений по этим фильтрам нет</h3>
-        <p>Либо всё прошло успешно, либо нужно расширить период и снять часть фильтров.</p>
+        <h3>{{ t("Падений по этим фильтрам нет") }}</h3>
+        <p>{{ t("Либо всё прошло успешно, либо нужно расширить период и снять часть фильтров.") }}</p>
       </div>
       {% endif %}
     </div>
@@ -562,10 +561,10 @@
         <table class="logs-table">
           <thead>
             <tr>
-              <th>Время</th>
+              <th>{{ t("Время") }}</th>
               <th>Событие</th>
-              <th>Задача</th>
-              <th>Контекст</th>
+              <th>{{ t("Задача") }}</th>
+              <th>{{ t("Контекст") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -578,9 +577,9 @@
                     {{ format_dt_madrid(event.ts) }}
                   </div>
                   <div class="logs-time-grid">
-                    <div><strong>Итог</strong> {{ event.outcome or '—' }}</div>
+                    <div><strong>{{ t("Итог") }}</strong> {{ event.outcome or '—' }}</div>
                     {% if event.duration_ms %}
-                    <div><strong>Длительность</strong> {{ (event.duration_ms / 1000)|round(2) }} с</div>
+                    <div><strong>{{ t("Длительность") }}</strong> {{ (event.duration_ms / 1000)|round(2) }} с</div>
                     {% endif %}
                   </div>
                 </div>
@@ -625,7 +624,7 @@
                   <div class="logs-context-intent">{{ intent_e or job_type_labels.get(job.job_type, job.job_type) }}</div>
                   {% if job.error_summary or raw_e %}
                   {% if hint_e %}
-                  <div class="logs-error-hint" style="margin-top:10px"><strong>Ошибка задачи:</strong> {{ hint_e }}</div>
+                  <div class="logs-error-hint" style="margin-top:10px"><strong>{{ t("Ошибка задачи:") }}</strong> {{ hint_e }}</div>
                   {% endif %}
                   {% if raw_e %}
                   <div class="logs-error-raw">{{ raw_e }}</div>
@@ -655,8 +654,8 @@
       {% else %}
       <div class="empty-state">
         <div class="empty-state-icon"><i class="ti ti-bug-off"></i></div>
-        <h3>Проблемных событий не найдено</h3>
-        <p>По выбранному периоду и фильтрам warning/error событий в `job_events` сейчас нет.</p>
+        <h3>{{ t("Проблемных событий не найдено") }}</h3>
+        <p>{{ t("По выбранному периоду и фильтрам warning/error событий в `job_events` сейчас нет.") }}</p>
       </div>
       {% endif %}
     </div>
@@ -665,16 +664,16 @@
 {% else %}
 <div class="logs-report-grid" style="margin-bottom:24px">
   <div class="logs-report-card">
-    <h3>Журнальные выгрузки</h3>
+    <h3>{{ t("Журнальные выгрузки") }}</h3>
     <p>Экспортируют текущий срез раздела по активным фильтрам: период, тип задачи, статус и строка поиска.</p>
     <div class="logs-actions-row">
-      <a href="{{ jobs_export_url }}" class="btn btn-secondary btn-sm"><i class="ti ti-file-download"></i> CSV задач</a>
-      <a href="{{ errors_export_url }}" class="btn btn-secondary btn-sm"><i class="ti ti-alert-triangle"></i> CSV ошибок</a>
+      <a href="{{ jobs_export_url }}" class="btn btn-secondary btn-sm"><i class="ti ti-file-download"></i> {{ t("CSV задач") }}</a>
+      <a href="{{ errors_export_url }}" class="btn btn-secondary btn-sm"><i class="ti ti-alert-triangle"></i> {{ t("CSV ошибок") }}</a>
     </div>
   </div>
   <div class="logs-report-card">
     <h3>CRM</h3>
-    <p>Быстрая выгрузка рабочей CRM-воронки для анализа, ручной обработки и обмена со сторонними таблицами.</p>
+    <p>{{ t("Быстрая выгрузка рабочей CRM-воронки для анализа, ручной обработки и обмена со сторонними таблицами.") }}</p>
     <div class="logs-actions-row">
       <a href="/crm/funnel/export.csv" class="btn btn-primary btn-sm"><i class="ti ti-chart-funnel"></i> Скачать CRM CSV</a>
     </div>
@@ -683,24 +682,24 @@
     <h3>Что уже видно</h3>
     <p>В базе сейчас {{ summary.total_jobs }} задач, {{ summary.problem_events }} проблемных событий и {{ recent_batches|length }} недавних импортов для быстрых выгрузок отсюда.</p>
     <div class="logs-actions-row">
-      <a href="{{ tab_urls.jobs }}" class="btn btn-secondary btn-sm">Открыть задачи</a>
-      <a href="{{ tab_urls.errors }}" class="btn btn-secondary btn-sm">Открыть ошибки</a>
+      <a href="{{ tab_urls.jobs }}" class="btn btn-secondary btn-sm">{{ t("Открыть задачи") }}</a>
+      <a href="{{ tab_urls.errors }}" class="btn btn-secondary btn-sm">{{ t("Открыть ошибки") }}</a>
     </div>
   </div>
 </div>
 
 <div class="card" style="margin-bottom:24px">
-  <div class="card-header">Последние импорты и файлы</div>
+  <div class="card-header">{{ t("Последние импорты и файлы") }}</div>
   <div class="card-body">
     {% if recent_batches %}
     <div class="table-wrap">
       <table class="logs-table">
         <thead>
           <tr>
-            <th>Партия</th>
-            <th>Источник</th>
+            <th>{{ t("Партия") }}</th>
+            <th>{{ t("Источник") }}</th>
             <th>Статистика</th>
-            <th>Действия</th>
+            <th>{{ t("Действия") }}</th>
           </tr>
         </thead>
         <tbody>
@@ -739,24 +738,24 @@
     {% else %}
     <div class="empty-state">
       <div class="empty-state-icon"><i class="ti ti-file-import"></i></div>
-      <h3>История импортов пуста</h3>
-      <p>После загрузки CSV/XLSX здесь появятся быстрые ссылки на выгрузки и детали пропусков.</p>
+      <h3>{{ t("История импортов пуста") }}</h3>
+      <p>{{ t("После загрузки CSV/XLSX здесь появятся быстрые ссылки на выгрузки и детали пропусков.") }}</p>
     </div>
     {% endif %}
   </div>
 </div>
 
 <div class="card">
-  <div class="card-header">Выгрузки по донорам</div>
+  <div class="card-header">{{ t("Выгрузки по донорам") }}</div>
   <div class="card-body">
     {% if recent_donor_reports %}
     <div class="table-wrap">
       <table class="logs-table">
         <thead>
           <tr>
-            <th>Донор</th>
-            <th>Контакты</th>
-            <th>Выгрузка</th>
+            <th>{{ t("Донор") }}</th>
+            <th>{{ t("Контакты") }}</th>
+            <th>{{ t("Выгрузка") }}</th>
           </tr>
         </thead>
         <tbody>
@@ -778,8 +777,8 @@
     {% else %}
     <div class="empty-state">
       <div class="empty-state-icon"><i class="ti ti-users-group"></i></div>
-      <h3>Нет доноров с контактами</h3>
-      <p>Как только в базе появятся люди, связанные с донорами, здесь станут доступны быстрые выгрузки.</p>
+      <h3>{{ t("Нет доноров с контактами") }}</h3>
+      <p>{{ t("Как только в базе появятся люди, связанные с донорами, здесь станут доступны быстрые выгрузки.") }}</p>
     </div>
     {% endif %}
   </div>

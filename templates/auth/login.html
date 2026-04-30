@@ -22,7 +22,7 @@
 <body>
 <div class="login-page">
   <div class="login-card">
-    <h1 class="login-title-row">SOCMASTER{% if fbm_client_version or fbm_desktop_app_version %} <span class="login-app-version" title="Версия установленного приложения">v{{ fbm_client_version or fbm_desktop_app_version }}</span>{% endif %}</h1>
+    <h1 class="login-title-row">SOCMASTER{% if fbm_client_version or fbm_desktop_app_version %} <span class="login-app-version" title="{{ t("Версия установленного приложения") }}">v{{ fbm_client_version or fbm_desktop_app_version }}</span>{% endif %}</h1>
     <p class="login-subtitle">Управление парсингом и рассылкой</p>
 
     {% if request.query_params.get('error') %}
@@ -53,7 +53,7 @@
 
     {% if supabase_auth_configured %}
     <p style="font-size:var(--font-size-xs);color:var(--text-secondary);margin:0 0 14px;line-height:1.5">
-      <strong>Рекомендуемый вход</strong> — через Google (Supabase). Один раз настройте проект в Supabase и Google Cloud; IP клиентов указывать не нужно.
+      <strong>{{ t("Рекомендуемый вход") }}</strong> — через Google (Supabase). Один раз настройте проект в Supabase и Google Cloud; IP клиентов указывать не нужно.
     </p>
     <a href="{% if fbm_client_version %}/auth/supabase/oauth-page/google?fbm_app={{ fbm_client_version|urlencode }}{% else %}/auth/supabase/oauth-page/google{% endif %}" class="btn-google" style="text-decoration:none;justify-content:center;width:100%;margin-bottom:16px">
       <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true">
@@ -62,13 +62,13 @@
         <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
         <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
       </svg>
-      Войти через Google
+      {{ t("Войти через Google") }}
     </a>
-    <div class="login-divider">или</div>
+    <div class="login-divider">{{ t("или") }}</div>
     <form method="post" action="/auth/supabase/password" style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px">
       <input type="email" name="email" class="form-input" required autocomplete="username" placeholder="Email (Supabase)"/>
-      <input type="password" name="password" class="form-input" required autocomplete="current-password" placeholder="Пароль"/>
-      <button type="submit" class="btn btn-secondary" style="width:100%">Войти по email и паролю</button>
+      <input type="password" name="password" class="form-input" required autocomplete="current-password" placeholder="{{ t("Пароль") }}"/>
+      <button type="submit" class="btn btn-secondary" style="width:100%">{{ t("Войти по email и паролю") }}</button>
     </form>
     <p style="font-size:11px;color:var(--text-secondary);margin:0 0 12px">Тот же allowlist email, что и для Google, если список задан в настройках.</p>
     {% endif %}
@@ -81,50 +81,49 @@
         <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
         <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
       </svg>
-      Войти через Google (прямой OAuth)
+      {{ t("Войти через Google (прямой OAuth)") }}
     </a>
     {% elif not supabase_auth_configured and not oauth_configured %}
     <div class="login-error">
-      Вход не настроен. Укажите в <span class="settings-mono">.env</span> или в «Система → Настройки» параметры
-      <strong>Supabase</strong> (<span class="settings-mono">SUPABASE_URL</span> и <span class="settings-mono">SUPABASE_ANON_KEY</span>) — рекомендуется;
-      либо <span class="settings-mono">GOOGLE_CLIENT_ID</span> / <span class="settings-mono">GOOGLE_CLIENT_SECRET</span> для прямого OAuth.
+      {{ t("Вход не настроен. Укажите в") }} <span class="settings-mono">.env</span> или в «Система → Настройки» параметры
+      <strong>Supabase</strong> (<span class="settings-mono">SUPABASE_URL</span> и <span class="settings-mono">SUPABASE_ANON_KEY</span>{{ t(") — рекомендуется; либо") }} <span class="settings-mono">GOOGLE_CLIENT_ID</span> / <span class="settings-mono">GOOGLE_CLIENT_SECRET</span> для прямого OAuth.
     </div>
     {% endif %}
 
     {% if dev_login_allowed %}
     {% if supabase_auth_configured or oauth_configured %}
-    <div class="login-divider">или</div>
+    <div class="login-divider">{{ t("или") }}</div>
     {% endif %}
     <a href="{% if fbm_client_version %}/auth/dev-login?fbm_app={{ fbm_client_version|urlencode }}{% else %}/auth/dev-login{% endif %}" class="btn btn-secondary" style="width:100%">
-      Войти как Developer (без OAuth)
+      {{ t("Войти как Developer (без OAuth)") }}
     </a>
     {% endif %}
 
     {% if supabase_auth_configured %}
     <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border)">
       <p style="font-size:var(--font-size-xs);color:var(--text-secondary);line-height:1.5;margin:0 0 8px">
-        <strong>Один раз в Google Cloud</strong> (тот же Web OAuth client, что в Supabase → Providers → Google):<br/>
-        Authorized redirect URIs — вставьте <strong>точно</strong> Callback URL из Supabase (Authentication → Providers → Google → кнопка копирования).
+        <strong>{{ t("Один раз в Google Cloud") }}</strong> {{ t("(тот же Web OAuth client, что в Supabase → Providers → Google):") }}<br/>
+        {{ t("Authorized redirect URIs — вставьте") }} <strong>точно</strong> {{ t("Callback URL из Supabase (Authentication → Providers → Google → кнопка копирования).") }}
       </p>
       <p style="font-size:var(--font-size-xs);color:var(--text-secondary);line-height:1.5;margin:0 0 8px">
-        <strong>В Supabase</strong> → Authentication → URL Configuration → <strong>Redirect URLs</strong> добавьте адрес возврата в это приложение (скопируйте ниже) и при необходимости вариант с <code>localhost</code> вместо <code>127.0.0.1</code>:
+        <strong>{{ t("В Supabase") }}</strong> → Authentication → URL Configuration → <strong>Redirect URLs</strong> добавьте адрес возврата в это приложение (скопируйте ниже) и при необходимости вариант с <code>localhost</code> вместо <code>127.0.0.1</code>:
       </p>
       <p style="margin:8px 0 12px">
         <code style="display:block;padding:10px 12px;background:var(--bg-surface-hover);border-radius:6px;font-size:12px;word-break:break-all;border:1px solid var(--border)">{{ supabase_callback_full_url }}</code>
       </p>
       <p style="font-size:var(--font-size-xs);color:var(--text-secondary)">
-        Прямой OAuth приложения на этом экране скрыт: при настроенном Supabase используйте кнопку «Войти через Google» выше.
+        {{ t("Прямой OAuth приложения на этом экране скрыт: при настроенном Supabase используйте кнопку «Войти через Google» выше.") }}
       </p>
     </div>
     {% elif oauth_configured %}
     <p style="margin-top:24px;font-size:var(--font-size-xs);color:var(--text-secondary);line-height:1.5">
-      <strong>Google Cloud</strong> (прямой OAuth) → APIs &amp; Services → Credentials → Authorized redirect URIs — добавьте:
+      <strong>Google Cloud</strong> {{ t("(прямой OAuth) → APIs &amp; Services → Credentials → Authorized redirect URIs — добавьте:") }}
     </p>
     <p style="margin:8px 0 16px">
       <code style="display:block;padding:10px 12px;background:var(--bg-surface-hover);border-radius:6px;font-size:12px;word-break:break-all;border:1px solid var(--border)">{{ oauth_callback_url }}</code>
     </p>
     <p style="font-size:var(--font-size-xs);color:var(--text-secondary)">
-      Если заходите и с <code>localhost</code>, и с <code>127.0.0.1</code> — в Google добавьте <strong>оба</strong> варианта callback.
+      {{ t("Если заходите и с") }} <code>localhost</code>{{ t(", и с") }} <code>127.0.0.1</code> — в Google добавьте <strong>оба</strong> варианта callback.
     </p>
     {% endif %}
   </div>

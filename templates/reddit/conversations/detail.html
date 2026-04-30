@@ -13,7 +13,7 @@
         {{ conversation.subject or '— без темы —' }} · last message: {{ format_dt_madrid(conversation.last_message_at) }} · state: {{ conversation.state }}
       </p>
     </div>
-    <a href="/reddit/conversations" class="reddit-btn"><i class="ti ti-arrow-left"></i> К диалогам</a>
+    <a href="/reddit/conversations" class="reddit-btn"><i class="ti ti-arrow-left"></i> {{ t("К диалогам") }}</a>
   </header>
 
   {% if notice %}
@@ -45,7 +45,7 @@
           <textarea name="body" rows="6"
                     style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--border);border-radius:10px;font-family:ui-monospace,monospace;">{{ d.body }}</textarea>
           <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
-            <button type="submit" class="reddit-btn">Сохранить текст</button>
+            <button type="submit" class="reddit-btn">{{ t("Сохранить текст") }}</button>
           </div>
         </form>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
@@ -61,7 +61,7 @@
         <form method="post" action="/reddit/conversations/{{ conversation.id }}/draft/{{ d.id }}/send" style="display:inline">
           <button type="submit" class="reddit-btn reddit-btn--primary"
                   onclick="return confirm('Отправить сообщение u/{{ conversation.counterpart_username }}?');">
-            <i class="ti ti-send"></i> Отправить через Reddit
+            <i class="ti ti-send"></i> {{ t("Отправить через Reddit") }}
           </button>
         </form>
         {% else %}
@@ -87,12 +87,12 @@
     <input type="hidden" name="account_id" value="{{ conversation.account_id }}"/>
     <input type="hidden" name="to" value="{{ conversation.counterpart_username }}"/>
     <input type="hidden" name="subject" value="{{ conversation.subject or '' }}"/>
-    <h3 class="reddit-card__title" style="margin:0;">Добавить draft в этот тред</h3>
+    <h3 class="reddit-card__title" style="margin:0;">{{ t("Добавить draft в этот тред") }}</h3>
     <textarea name="body" rows="5" required
-              placeholder="Новое сообщение…"
+              placeholder="{{ t("Новое сообщение…") }}"
               style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-family:ui-monospace,monospace;"></textarea>
     <div>
-      <button type="submit" class="reddit-btn reddit-btn--primary"><i class="ti ti-plus"></i> Создать draft</button>
+      <button type="submit" class="reddit-btn reddit-btn--primary"><i class="ti ti-plus"></i> {{ t("Создать draft") }}</button>
     </div>
   </form>
 </div>

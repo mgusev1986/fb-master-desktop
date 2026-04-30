@@ -6,16 +6,15 @@
 <div class="x-page">
   <header class="x-page__header">
     <div class="x-page__title-wrap">
-      <h1 class="x-page__title">X-аккаунты <span class="x-page__beta-pill">Beta</span></h1>
+      <h1 class="x-page__title">{{ t("X-аккаунты") }} <span class="x-page__beta-pill">Beta</span></h1>
       <p class="x-page__subtitle">
-        Подключение через browser-профиль (Chromium + cookies <code>auth_token</code>, <code>ct0</code>).
-        На каждый аккаунт — свой profile_dir и свой прокси.
+        {{ t("Подключение через browser-профиль (Chromium + cookies") }} <code>auth_token</code>, <code>ct0</code>{{ t("). На каждый аккаунт — свой profile_dir и свой прокси.") }}
       </p>
     </div>
     <div class="x-stats">
-      <span class="x-stats__pill"><strong>{{ summary.total }}</strong> всего</span>
-      <span class="x-stats__pill x-stats__pill--ok"><strong>{{ summary.connected }}</strong> подключено</span>
-      <span class="x-stats__pill x-stats__pill--warn"><strong>{{ summary.needs_attention or 0 }}</strong> внимание</span>
+      <span class="x-stats__pill"><strong>{{ summary.total }}</strong> {{ t("всего") }}</span>
+      <span class="x-stats__pill x-stats__pill--ok"><strong>{{ summary.connected }}</strong> {{ t("подключено") }}</span>
+      <span class="x-stats__pill x-stats__pill--warn"><strong>{{ summary.needs_attention or 0 }}</strong> {{ t("внимание") }}</span>
     </div>
   </header>
 
@@ -23,89 +22,89 @@
   <div class="x-banner">
     <div class="x-banner__icon"><i class="ti ti-check"></i></div>
     <div class="x-banner__body">
-      <h2 class="x-banner__title">Импорт завершён</h2>
-      <p class="x-banner__text">Добавлено: <strong>{{ imported }}</strong>. Ошибок: <strong>{{ errors_count }}</strong>.</p>
+      <h2 class="x-banner__title">{{ t("Импорт завершён") }}</h2>
+      <p class="x-banner__text">{{ t("Добавлено:") }} <strong>{{ imported }}</strong>{{ t(". Ошибок:") }} <strong>{{ errors_count }}</strong>.</p>
     </div>
   </div>
   {% elif notice == 'credentials_imported' %}
   <div class="x-banner">
     <div class="x-banner__icon"><i class="ti ti-check"></i></div>
     <div class="x-banner__body">
-      <h2 class="x-banner__title">Аккаунт добавлен</h2>
-      <p class="x-banner__text">Сохранили логин и пароль для <strong>{{ request.query_params.get('label') or 'X-аккаунта' }}</strong>. Осталось нажать «Войти» — система откроет Chromium, автоматически введёт учётные данные и сохранит cookies сессии.</p>
+      <h2 class="x-banner__title">{{ t("Аккаунт добавлен") }}</h2>
+      <p class="x-banner__text">{{ t("Сохранили логин и пароль для") }} <strong>{{ request.query_params.get('label') or 'X-аккаунта' }}</strong>{{ t(". Осталось нажать «Войти» — система откроет Chromium, автоматически введёт учётные данные и сохранит cookies сессии.") }}</p>
     </div>
   </div>
   {% elif notice == 'credentials_error' %}
   <div class="x-banner" style="border-color:#c33;">
     <div class="x-banner__icon" style="color:#c33;"><i class="ti ti-alert-triangle"></i></div>
     <div class="x-banner__body">
-      <h2 class="x-banner__title">Не удалось сохранить аккаунт</h2>
+      <h2 class="x-banner__title">{{ t("Не удалось сохранить аккаунт") }}</h2>
       <p class="x-banner__text">{{ request.query_params.get('err') or 'Проверьте логин и пароль.' }}</p>
     </div>
   </div>
   {% endif %}
 
   <div class="x-tabs">
-    <button type="button" class="x-tab x-tab--active" data-tab="bought"><i class="ti ti-shopping-cart"></i> Купленный аккаунт (cookies)</button>
-    <button type="button" class="x-tab" data-tab="credentials"><i class="ti ti-key"></i> Свой личный (логин + пароль)</button>
+    <button type="button" class="x-tab x-tab--active" data-tab="bought"><i class="ti ti-shopping-cart"></i> {{ t("Купленный аккаунт (cookies)") }}</button>
+    <button type="button" class="x-tab" data-tab="credentials"><i class="ti ti-key"></i> {{ t("Свой личный (логин + пароль)") }}</button>
   </div>
 
   <section class="x-card x-card--accent x-tab-panel x-tab-panel--active" data-panel="bought">
-    <h2 class="x-card__title"><i class="ti ti-upload"></i> Импорт купленных X-аккаунтов</h2>
-    <p class="x-card__desc">Поддерживаемые форматы (одна строка = один аккаунт):</p>
+    <h2 class="x-card__title"><i class="ti ti-upload"></i> {{ t("Импорт купленных X-аккаунтов") }}</h2>
+    <p class="x-card__desc">{{ t("Поддерживаемые форматы (одна строка = один аккаунт):") }}</p>
     <ul style="margin:0;padding-left:20px;color:var(--text-secondary,#606770);font:400 13px/1.6 Inter,sans-serif;">
       <li><strong>JSON</strong>: <code>{"label":"@handle","handle":"handle","cookies":[...],"proxy_url":"http://user:pass@host:port","user_agent":"..."}</code></li>
-      <li><strong>Массив cookies</strong>: <code>[{"name":"auth_token","value":"...","domain":".x.com"},{"name":"ct0","value":"..."}]</code></li>
+      <li><strong>{{ t("Массив cookies") }}</strong>: <code>[{"name":"auth_token","value":"...","domain":".x.com"},{"name":"ct0","value":"..."}]</code></li>
       <li><strong>TSV</strong>: <code>label&lt;TAB&gt;cookies_json&lt;TAB&gt;proxy_url</code></li>
     </ul>
-    <p class="x-card__desc" style="margin-top:8px;color:var(--text-muted,#888);font-size:12px;">Обязательные cookies: <code>auth_token</code> + <code>ct0</code>.</p>
+    <p class="x-card__desc" style="margin-top:8px;color:var(--text-muted,#888);font-size:12px;">{{ t("Обязательные cookies:") }} <code>auth_token</code> + <code>ct0</code>.</p>
     <form method="post" action="/twitter/accounts/import" style="display:flex;flex-direction:column;gap:10px;">
       <textarea name="blob" rows="7" placeholder='{"label":"@my","handle":"my","cookies":[{"name":"auth_token","value":"a"},{"name":"ct0","value":"c"}]}'
                 style="padding:12px;border-radius:10px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);font:400 13px/1.4 ui-monospace,Menlo,monospace;resize:vertical;"></textarea>
-      <div style="display:flex;justify-content:flex-end;"><button type="submit" class="x-btn x-btn--primary"><i class="ti ti-upload"></i> Импортировать</button></div>
+      <div style="display:flex;justify-content:flex-end;"><button type="submit" class="x-btn x-btn--primary"><i class="ti ti-upload"></i> {{ t("Импортировать") }}</button></div>
     </form>
   </section>
 
   <section class="x-card x-card--accent x-tab-panel" data-panel="credentials" style="display:none;">
     <h2 class="x-card__title"><i class="ti ti-key"></i> Свой личный X через логин и пароль</h2>
-    <p class="x-card__desc">Для ваших <strong>собственных</strong> аккаунтов. После сохранения на карточке появится кнопка «Войти» — система откроет Chromium, автоматически введёт логин и пароль, пройдёт возможный 2FA-код (если задан секрет) и сохранит cookies сессии.</p>
+    <p class="x-card__desc">{{ t("Для ваших") }} <strong>{{ t("собственных") }}</strong> {{ t("аккаунтов. После сохранения на карточке появится кнопка «Войти» — система откроет Chromium, автоматически введёт логин и пароль, пройдёт возможный 2FA-код (если задан секрет) и сохранит cookies сессии.") }}</p>
     <form method="post" action="/twitter/accounts/import-credentials" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
       <label style="display:flex;flex-direction:column;gap:4px;grid-column:span 2;">
-        <span style="font:500 12px/1 Inter,sans-serif;color:var(--text-secondary);">Логин / email / телефон X (Twitter) *</span>
-        <input type="text" name="username" required autocomplete="off" placeholder="my_handle или user@mail.com или +380..." style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 14px/1.2 Inter,sans-serif;"/>
+        <span style="font:500 12px/1 Inter,sans-serif;color:var(--text-secondary);">{{ t("Логин / email / телефон X (Twitter) *") }}</span>
+        <input type="text" name="username" required autocomplete="off" placeholder="{{ t("my_handle или user@mail.com или +380...") }}" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 14px/1.2 Inter,sans-serif;"/>
       </label>
       <label style="display:flex;flex-direction:column;gap:4px;">
-        <span style="font:500 12px/1 Inter,sans-serif;color:var(--text-secondary);">Пароль *</span>
+        <span style="font:500 12px/1 Inter,sans-serif;color:var(--text-secondary);">{{ t("Пароль *") }}</span>
         <input type="password" name="password" required autocomplete="off" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 14px/1.2 Inter,sans-serif;"/>
       </label>
       <label style="display:flex;flex-direction:column;gap:4px;">
-        <span style="font:500 12px/1 Inter,sans-serif;color:var(--text-secondary);">2FA-секрет (Base32, необязательно)</span>
+        <span style="font:500 12px/1 Inter,sans-serif;color:var(--text-secondary);">{{ t("2FA-секрет (Base32, необязательно)") }}</span>
         <input type="text" name="totp_secret" autocomplete="off" placeholder="JBSWY3DPEHPK3PXP" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 13px/1.2 ui-monospace,monospace;"/>
       </label>
       <label style="display:flex;flex-direction:column;gap:4px;grid-column:span 2;">
-        <span style="font:500 12px/1 Inter,sans-serif;color:var(--text-secondary);">Название в списке (необязательно)</span>
-        <input type="text" name="label" autocomplete="off" placeholder="Мой основной X" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 14px/1.2 Inter,sans-serif;"/>
+        <span style="font:500 12px/1 Inter,sans-serif;color:var(--text-secondary);">{{ t("Название в списке (необязательно)") }}</span>
+        <input type="text" name="label" autocomplete="off" placeholder="{{ t("Мой основной X") }}" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 14px/1.2 Inter,sans-serif;"/>
       </label>
       <label style="display:flex;flex-direction:column;gap:4px;grid-column:span 2;">
-        <span style="font:500 12px/1 Inter,sans-serif;color:var(--text-secondary);">Прокси <small style="color:var(--text-muted,#888);font-weight:400;">(residential / mobile рекомендуется)</small></span>
-        <input id="x-imp-proxy" type="text" name="proxy_url" autocomplete="off" placeholder="host:port:user:pass или http://user:pass@host:port" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 13px/1.2 ui-monospace,monospace;"/>
+        <span style="font:500 12px/1 Inter,sans-serif;color:var(--text-secondary);">{{ t("Прокси") }} <small style="color:var(--text-muted,#888);font-weight:400;">{{ t("(residential / mobile рекомендуется)") }}</small></span>
+        <input id="x-imp-proxy" type="text" name="proxy_url" autocomplete="off" placeholder="{{ t("host:port:user:pass или http://user:pass@host:port") }}" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 13px/1.2 ui-monospace,monospace;"/>
         <input type="hidden" name="proxy_username"/>
         <input type="hidden" name="proxy_password"/>
         <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:6px;">
           <button type="button" id="x-imp-geo-btn" class="x-btn" style="padding:6px 10px;font-size:12px;">
-            <i class="ti ti-map-pin"></i> Страна по прокси
+            <i class="ti ti-map-pin"></i> {{ t("Страна по прокси") }}
           </button>
-          <span style="color:var(--text-secondary);font:400 12px/1.4 Inter,sans-serif;">Страна определяется <strong>через ваш прокси</strong>, как при работе с Facebook Master.</span>
+          <span style="color:var(--text-secondary);font:400 12px/1.4 Inter,sans-serif;">{{ t("Страна определяется") }} <strong>{{ t("через ваш прокси") }}</strong>{{ t(", как при работе с Facebook Master.") }}</span>
         </div>
         <div id="x-imp-geo-result" style="display:none;margin-top:6px;font:400 12px/1.45 Inter,sans-serif;color:var(--text-secondary);max-width:48rem;"></div>
       </label>
       <label style="display:flex;flex-direction:column;gap:4px;grid-column:span 2;">
-        <span style="font:500 12px/1 Inter,sans-serif;color:var(--text-secondary);">Дата и время окончания прокси у провайдера (необязательно)</span>
+        <span style="font:500 12px/1 Inter,sans-serif;color:var(--text-secondary);">{{ t("Дата и время окончания прокси у провайдера (необязательно)") }}</span>
         <input type="text" name="proxy_lease_ends_at" autocomplete="off" placeholder="18.04.26, 16:12" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 13px/1.2 ui-monospace,monospace;"/>
-        <p style="margin:4px 0 0;color:var(--text-muted,#888);font:400 12px/1.45 Inter,sans-serif;">Можно <strong>вставить из кабинета</strong> как у продавца (например <code>18.04.26, 16:12</code>) или ISO <code>2026-04-18T16:12</code>. Часовой пояс ввода — <strong>Europe/Madrid</strong>. Пустое поле — не отслеживать. Автоостановка — за <strong>1 ч</strong> до этого момента.</p>
+        <p style="margin:4px 0 0;color:var(--text-muted,#888);font:400 12px/1.45 Inter,sans-serif;">{{ t("Можно") }} <strong>{{ t("вставить из кабинета") }}</strong> {{ t("как у продавца (например") }} <code>18.04.26, 16:12</code>{{ t(") или ISO") }} <code>2026-04-18T16:12</code>{{ t(". Часовой пояс ввода —") }} <strong>Europe/Madrid</strong>{{ t(". Пустое поле — не отслеживать. Автоостановка — за") }} <strong>{{ t("1 ч") }}</strong> {{ t("до этого момента.") }}</p>
       </label>
       <label style="display:flex;flex-direction:column;gap:4px;grid-column:span 2;">
-        <span style="font:500 12px/1 Inter,sans-serif;color:var(--text-secondary);">Страна / язык в браузере</span>
+        <span style="font:500 12px/1 Inter,sans-serif;color:var(--text-secondary);">{{ t("Страна / язык в браузере") }}</span>
         <select id="x-imp-region" name="stealth_region" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 13px/1.2 Inter,sans-serif;">
           {% for key, label in stealth_region_choices() %}
             {% if key != 'custom' %}
@@ -115,7 +114,7 @@
           {% endfor %}
         </select>
       </label>
-      <div style="display:flex;justify-content:flex-end;grid-column:span 2;"><button type="submit" class="x-btn x-btn--primary"><i class="ti ti-key"></i> Сохранить и войти позже</button></div>
+      <div style="display:flex;justify-content:flex-end;grid-column:span 2;"><button type="submit" class="x-btn x-btn--primary"><i class="ti ti-key"></i> {{ t("Сохранить и войти позже") }}</button></div>
     </form>
   </section>
 
@@ -239,7 +238,7 @@
   </script>
 
   <section>
-    <h2 class="x-card__title" style="margin:8px 0 12px;">Подключённые аккаунты</h2>
+    <h2 class="x-card__title" style="margin:8px 0 12px;">{{ t("Подключённые аккаунты") }}</h2>
     {% if accounts %}
       <div class="x-grid x-grid--wide">
         {% for a in accounts %}
@@ -260,7 +259,7 @@
             {% if a.cookies_imported_at %} · импорт: {{ a.cookies_imported_at.strftime('%d.%m.%Y %H:%M') }}{% endif %}
           </p>
           {% if a.status == 'needs_login' %}
-          <p style="margin:0;padding:8px 10px;border-radius:8px;background:color-mix(in srgb,#b26a00 14%,transparent);color:#b26a00;font:500 12px/1.4 Inter,sans-serif;"><i class="ti ti-key"></i> Нужен первый вход: откроется Chromium, система введёт логин/пароль и сохранит cookies.</p>
+          <p style="margin:0;padding:8px 10px;border-radius:8px;background:color-mix(in srgb,#b26a00 14%,transparent);color:#b26a00;font:500 12px/1.4 Inter,sans-serif;"><i class="ti ti-key"></i> {{ t("Нужен первый вход: откроется Chromium, система введёт логин/пароль и сохранит cookies.") }}</p>
           {% endif %}
           {% if a.login_blocked_reason %}
           <p style="margin:0;padding:8px 10px;border-radius:8px;background:color-mix(in srgb,#c33 12%,transparent);color:#c33;font:400 12px/1.4 Inter,sans-serif;">
@@ -268,31 +267,31 @@
           </p>
           {% endif %}
           <details>
-            <summary style="cursor:pointer;color:var(--ws-accent);font:500 13px/1 Inter,sans-serif;">Прокси</summary>
+            <summary style="cursor:pointer;color:var(--ws-accent);font:500 13px/1 Inter,sans-serif;">{{ t("Прокси") }}</summary>
             <form method="post" action="/twitter/accounts/{{ a.id }}/proxy" style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">
               <input type="text" name="proxy_url" value="{{ a.proxy_url or '' }}" placeholder="http://host:port" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 12px/1 Inter,sans-serif;"/>
               <div style="display:flex;gap:6px;">
                 <input type="text" name="proxy_username" value="{{ a.proxy_username or '' }}" placeholder="user" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 12px/1 Inter,sans-serif;"/>
                 <input type="password" name="proxy_password" value="{{ a.proxy_password or '' }}" placeholder="pass" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 12px/1 Inter,sans-serif;"/>
               </div>
-              <label style="font:400 12px/1.2 Inter,sans-serif;color:var(--text-secondary);"><input type="checkbox" name="proxy_enabled" value="on" {% if a.proxy_enabled %}checked{% endif %}/> использовать прокси</label>
-              <button type="submit" class="x-btn" style="font-size:12px;padding:6px 10px;align-self:flex-start;">Сохранить</button>
+              <label style="font:400 12px/1.2 Inter,sans-serif;color:var(--text-secondary);"><input type="checkbox" name="proxy_enabled" value="on" {% if a.proxy_enabled %}checked{% endif %}/> {{ t("использовать прокси") }}</label>
+              <button type="submit" class="x-btn" style="font-size:12px;padding:6px 10px;align-self:flex-start;">{{ t("Сохранить") }}</button>
             </form>
           </details>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
             {% if a.status == 'needs_login' and a.login_username %}
             <form method="post" action="/twitter/accounts/{{ a.id }}/login" style="margin:0;" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Войти…';">
-              <button class="x-btn x-btn--primary" type="submit" style="font-size:12px;padding:6px 10px;"><i class="ti ti-login"></i> Войти</button>
+              <button class="x-btn x-btn--primary" type="submit" style="font-size:12px;padding:6px 10px;"><i class="ti ti-login"></i> {{ t("Войти") }}</button>
             </form>
             {% endif %}
             <form method="post" action="/twitter/accounts/{{ a.id }}/probe" style="margin:0;" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Проверяю…';">
-              <button class="x-btn" type="submit" style="font-size:12px;padding:6px 10px;"><i class="ti ti-refresh"></i> Проверить</button>
+              <button class="x-btn" type="submit" style="font-size:12px;padding:6px 10px;"><i class="ti ti-refresh"></i> {{ t("Проверить") }}</button>
             </form>
             <form method="post" action="/twitter/accounts/{{ a.id }}/inbox-sync" style="margin:0;" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Sync…';">
               <button class="x-btn" type="submit" style="font-size:12px;padding:6px 10px;"><i class="ti ti-mail-down"></i> Sync inbox</button>
             </form>
             <form method="post" action="/twitter/accounts/{{ a.id }}/delete" style="margin:0;" onsubmit="return confirm('Удалить аккаунт {{ a.label }}?');">
-              <button class="x-btn" type="submit" style="background:transparent;border-color:#c33;color:#c33;font-size:12px;padding:6px 10px;"><i class="ti ti-trash"></i> Удалить</button>
+              <button class="x-btn" type="submit" style="background:transparent;border-color:#c33;color:#c33;font-size:12px;padding:6px 10px;"><i class="ti ti-trash"></i> {{ t("Удалить") }}</button>
             </form>
           </div>
         </article>
@@ -301,8 +300,8 @@
     {% else %}
       <div class="x-placeholder">
         <div class="x-placeholder__icon"><i class="ti ti-brand-twitter"></i></div>
-        <h2 class="x-placeholder__title">Аккаунтов пока нет</h2>
-        <p class="x-placeholder__text">Импортируйте купленные X-аккаунты через JSON / cookies-array / TSV выше.</p>
+        <h2 class="x-placeholder__title">{{ t("Аккаунтов пока нет") }}</h2>
+        <p class="x-placeholder__text">{{ t("Импортируйте купленные X-аккаунты через JSON / cookies-array / TSV выше.") }}</p>
       </div>
     {% endif %}
   </section>

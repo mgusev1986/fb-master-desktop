@@ -6,7 +6,7 @@
 <div class="reddit-page">
   <header class="reddit-page__header">
     <div class="reddit-page__title-wrap">
-      <h1 class="reddit-page__title">Лиды</h1>
+      <h1 class="reddit-page__title">{{ t("Лиды") }}</h1>
       <p class="reddit-page__subtitle">
         Единое хранилище собранных пользователей. Источник, теги, CRM-стадия,
         статус и связь с кампаниями. Всего: {{ total }}.
@@ -16,7 +16,7 @@
 
   {% if notice %}
   <div class="reddit-card" style="border-color:#1b873f;background:color-mix(in srgb,#1b873f 6%,var(--bg-surface));color:#1b873f;">
-    <i class="ti ti-check"></i> Изменения применены.
+    <i class="ti ti-check"></i> {{ t("Изменения применены.") }}
   </div>
   {% endif %}
 
@@ -44,7 +44,7 @@
         <option value="yes" {% if filter.has_campaign == 'yes' %}selected{% endif %}>в кампании</option>
         <option value="no"  {% if filter.has_campaign == 'no'  %}selected{% endif %}>без кампании</option>
       </select>
-      <button type="submit" class="reddit-btn reddit-btn--primary"><i class="ti ti-filter"></i> Применить</button>
+      <button type="submit" class="reddit-btn reddit-btn--primary"><i class="ti ti-filter"></i> {{ t("Применить") }}</button>
     </div>
   </form>
 
@@ -52,7 +52,7 @@
     <input type="hidden" name="ids" id="reddit-leads-ids"/>
 
     <div class="reddit-card" style="flex-direction:row;align-items:center;gap:10px;flex-wrap:wrap;">
-      <span id="reddit-leads-count" style="font:500 14px/1 Inter;color:var(--text-secondary);">0 выбрано</span>
+      <span id="reddit-leads-count" style="font:500 14px/1 Inter;color:var(--text-secondary);">{{ t("0 выбрано") }}</span>
       <span style="flex:1 1 auto;"></span>
       <select name="status" id="reddit-leads-status-select" style="padding:8px 10px;border:1px solid var(--border);border-radius:10px;">
         <option value="">статус…</option>
@@ -60,11 +60,11 @@
       </select>
       <button type="submit" class="reddit-btn" name="action" value="set_status"
               onclick="if(!document.getElementById('reddit-leads-status-select').value){alert('Выберите статус');return false;}">
-        Применить статус
+        {{ t("Применить статус") }}
       </button>
       <button type="submit" class="reddit-btn" name="action" value="delete"
               onclick="return confirm('Удалить выбранных лидов?');">
-        <i class="ti ti-trash"></i> Удалить
+        <i class="ti ti-trash"></i> {{ t("Удалить") }}
       </button>
     </div>
 
@@ -73,10 +73,10 @@
         <tr style="border-bottom:1px solid var(--border);font:600 12px/1.2 Inter;color:var(--text-muted);text-transform:uppercase;">
           <th style="text-align:left;padding:10px;"><input type="checkbox" id="reddit-leads-select-all"/></th>
           <th style="text-align:left;padding:10px;">Username</th>
-          <th style="text-align:left;padding:10px;">Статус</th>
-          <th style="text-align:left;padding:10px;">Источник</th>
-          <th style="text-align:left;padding:10px;">Активность</th>
-          <th style="text-align:left;padding:10px;">Карма / Возраст</th>
+          <th style="text-align:left;padding:10px;">{{ t("Статус") }}</th>
+          <th style="text-align:left;padding:10px;">{{ t("Источник") }}</th>
+          <th style="text-align:left;padding:10px;">{{ t("Активность") }}</th>
+          <th style="text-align:left;padding:10px;">{{ t("Карма / Возраст") }}</th>
           <th style="text-align:left;padding:10px;">Notes</th>
           <th style="text-align:left;padding:10px;"></th>
         </tr>
@@ -121,13 +121,13 @@
                 <select name="status" style="padding:6px 8px;border:1px solid var(--border);border-radius:8px;">
                   {% for s in statuses %}<option value="{{ s }}" {% if r.status == s %}selected{% endif %}>{{ s|ru_status }}</option>{% endfor %}
                 </select>
-                <button type="submit" class="reddit-btn reddit-btn--primary" style="padding:6px 10px;">Сохранить</button>
+                <button type="submit" class="reddit-btn reddit-btn--primary" style="padding:6px 10px;">{{ t("Сохранить") }}</button>
               </form>
             </details>
           </td>
         </tr>
         {% else %}
-        <tr><td colspan="8" style="padding:32px;text-align:center;color:var(--text-muted);">Лидов пока нет — начните с «Поиска аудитории» или «Недавней активности».</td></tr>
+        <tr><td colspan="8" style="padding:32px;text-align:center;color:var(--text-muted);">{{ t("Лидов пока нет — начните с «Поиска аудитории» или «Недавней активности».") }}</td></tr>
         {% endfor %}
       </tbody>
     </table>

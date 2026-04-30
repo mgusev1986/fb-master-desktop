@@ -3,10 +3,10 @@
   <div id="tpl-neuro-dialog" role="dialog" aria-labelledby="tpl-neuro-title" style="background:var(--bg-surface);border-radius:var(--radius);max-width:640px;width:100%;max-height:90vh;overflow:auto;box-shadow:0 16px 48px rgba(0,0,0,.2);border:1px solid var(--border)">
     <div style="padding:18px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
       <div>
-        <h2 id="tpl-neuro-title" style="margin:0;font-size:1.1rem">Нейро-варианты шаблона</h2>
+        <h2 id="tpl-neuro-title" style="margin:0;font-size:1.1rem">{{ t("Нейро-варианты шаблона") }}</h2>
         <p id="tpl-neuro-subtitle" style="margin:6px 0 0;font-size:var(--font-size-sm);color:var(--text-secondary)"></p>
       </div>
-      <button type="button" class="btn btn-sm btn-ghost" id="tpl-neuro-close-x" aria-label="Закрыть"><i class="ti ti-x"></i></button>
+      <button type="button" class="btn btn-sm btn-ghost" id="tpl-neuro-close-x" aria-label="{{ t("Закрыть") }}"><i class="ti ti-x"></i></button>
     </div>
     <div style="padding:18px 20px">
       <div id="tpl-neuro-form-block">
@@ -21,7 +21,7 @@
             <span id="tpl-neuro-count-hint" class="form-hint" style="margin:0">от 1 до 40</span>
           </div>
           <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
-            <span class="form-hint" style="margin:0">Быстро:</span>
+            <span class="form-hint" style="margin:0">{{ t("Быстро:") }}</span>
             <button type="button" class="btn btn-sm btn-secondary tpl-neuro-count-preset" data-count="5">5</button>
             <button type="button" class="btn btn-sm btn-secondary tpl-neuro-count-preset" data-count="10">10</button>
             <button type="button" class="btn btn-sm btn-secondary tpl-neuro-count-preset" data-count="15">15</button>
@@ -37,7 +37,7 @@
         {% set provider_count = (1 if has_openai else 0) + (1 if has_gemini else 0) %}
         {% if provider_count > 1 %}
         <div class="form-group">
-          <label class="form-label" for="tpl-neuro-provider">Провайдер</label>
+          <label class="form-label" for="tpl-neuro-provider">{{ t("Провайдер") }}</label>
           <select id="tpl-neuro-provider" class="form-select" style="max-width:280px">
             <option value="openai" {% if neuro_eff_provider == 'openai' %}selected{% endif %} {% if not has_openai %}disabled{% endif %}>OpenAI</option>
             <option value="gemini" {% if neuro_eff_provider == 'gemini' %}selected{% endif %} {% if not has_gemini %}disabled{% endif %}>Gemini</option>
@@ -50,11 +50,11 @@
         {% endif %}
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
           <button type="button" class="btn btn-primary" id="tpl-neuro-run"><i class="ti ti-sparkles"></i> Сгенерировать</button>
-          <button type="button" class="btn btn-secondary" id="tpl-neuro-close-btn">Закрыть</button>
+          <button type="button" class="btn btn-secondary" id="tpl-neuro-close-btn">{{ t("Закрыть") }}</button>
         </div>
       </div>
       <div id="tpl-neuro-loading" style="display:none;padding:20px 0;text-align:center;color:var(--text-secondary)">
-        <i class="ti ti-loader-2" style="animation:spin 1s linear infinite;display:inline-block"></i> Запрос к модели…
+        <i class="ti ti-loader-2" style="animation:spin 1s linear infinite;display:inline-block"></i> {{ t("Запрос к модели…") }}
       </div>
       <div id="tpl-neuro-error" style="display:none;margin-top:12px;padding:12px;border-radius:8px;border:1px solid var(--error);color:var(--error);font-size:var(--font-size-sm)"></div>
       <div id="tpl-neuro-results" style="display:none;margin-top:16px"></div>

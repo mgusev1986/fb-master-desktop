@@ -190,10 +190,9 @@
 <div class="reddit-page">
   <header class="reddit-page__header">
     <div class="reddit-page__title-wrap">
-      <h1 class="reddit-page__title">Диалоги / Inbox</h1>
+      <h1 class="reddit-page__title">{{ t("Диалоги / Inbox") }}</h1>
       <p class="reddit-page__subtitle">
-        Полноценный мессенджер по Reddit PM. Входящие тянутся фоном из <code>/message/inbox</code>,
-        исходящие отправляются через официальный <code>/api/compose</code>.
+        {{ t("Полноценный мессенджер по Reddit PM. Входящие тянутся фоном из") }} <code>/message/inbox</code>{{ t(", исходящие отправляются через официальный") }} <code>/api/compose</code>.
       </p>
     </div>
     <div class="reddit-msg__toolbar">
@@ -201,23 +200,23 @@
         <input type="checkbox" id="reddit-msg-autosync"/> Auto-sync
       </label>
       <button id="reddit-msg-sync" class="reddit-btn"><i class="ti ti-refresh"></i> Sync now</button>
-      <a href="/reddit/conversations/compose" class="reddit-btn reddit-btn--primary"><i class="ti ti-edit"></i> Новый диалог</a>
+      <a href="/reddit/conversations/compose" class="reddit-btn reddit-btn--primary"><i class="ti ti-edit"></i> {{ t("Новый диалог") }}</a>
     </div>
   </header>
 
   {% if not has_account %}
   <div class="reddit-card reddit-card--accent">
-    <h2 class="reddit-card__title"><i class="ti ti-alert-triangle"></i> Нужен подключенный Reddit-аккаунт</h2>
-    <div><a href="/reddit/accounts" class="reddit-btn reddit-btn--primary">К аккаунтам</a></div>
+    <h2 class="reddit-card__title"><i class="ti ti-alert-triangle"></i> {{ t("Нужен подключенный Reddit-аккаунт") }}</h2>
+    <div><a href="/reddit/accounts" class="reddit-btn reddit-btn--primary">{{ t("К аккаунтам") }}</a></div>
   </div>
   {% else %}
   <div class="reddit-msg">
     <div class="reddit-msg__col">
       <div class="reddit-msg__head">
-        <input id="reddit-msg-search" class="reddit-msg__search" type="search" placeholder="Поиск по u/…"/>
+        <input id="reddit-msg-search" class="reddit-msg__search" type="search" placeholder="{{ t("Поиск по u/…") }}"/>
       </div>
       <div id="reddit-msg-list" class="reddit-msg__list">
-        <div class="reddit-msg__empty">Загружаю…</div>
+        <div class="reddit-msg__empty">{{ t("Загружаю…") }}</div>
       </div>
       <div class="reddit-msg__head" style="border-top:1px solid var(--border);border-bottom:none;justify-content:space-between;">
         <span id="reddit-msg-sync-status" class="reddit-msg__sync">—</span>
@@ -225,17 +224,17 @@
     </div>
     <div class="reddit-msg__col">
       <div class="reddit-msg__head">
-        <h2 id="reddit-msg-thread-title">Выберите диалог</h2>
-        <a id="reddit-msg-thread-link" target="_blank" rel="noreferrer noopener" style="display:none;color:var(--ws-accent);font:500 12px/1 Inter;text-decoration:none;"><i class="ti ti-external-link"></i> Открыть в Reddit</a>
+        <h2 id="reddit-msg-thread-title">{{ t("Выберите диалог") }}</h2>
+        <a id="reddit-msg-thread-link" target="_blank" rel="noreferrer noopener" style="display:none;color:var(--ws-accent);font:500 12px/1 Inter;text-decoration:none;"><i class="ti ti-external-link"></i> {{ t("Открыть в Reddit") }}</a>
       </div>
       <div id="reddit-msg-thread" class="reddit-msg__thread">
         <div class="reddit-msg__empty">Слева — список диалогов. Кликните, чтобы открыть переписку.</div>
       </div>
       <form id="reddit-msg-compose" class="reddit-msg__compose" style="display:none;">
-        <textarea id="reddit-msg-text" placeholder="Введите сообщение u/… (по умолчанию — manual approval)"></textarea>
+        <textarea id="reddit-msg-text" placeholder="{{ t("Введите сообщение u/… (по умолчанию — manual approval)") }}"></textarea>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <button type="submit" class="reddit-btn reddit-btn--primary"><i class="ti ti-send"></i> Создать draft</button>
-          <span id="reddit-msg-compose-hint" style="font:400 12px/1.4 Inter;color:var(--text-muted);">Approval-mode определяет автосенд.</span>
+          <button type="submit" class="reddit-btn reddit-btn--primary"><i class="ti ti-send"></i> {{ t("Создать draft") }}</button>
+          <span id="reddit-msg-compose-hint" style="font:400 12px/1.4 Inter;color:var(--text-muted);">{{ t("Approval-mode определяет автосенд.") }}</span>
         </div>
       </form>
     </div>

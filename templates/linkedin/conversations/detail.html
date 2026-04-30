@@ -19,10 +19,10 @@
   </header>
 
   <section class="li-card">
-    <h2 class="li-card__title"><i class="ti ti-link"></i> Связь с lead</h2>
+    <h2 class="li-card__title"><i class="ti ti-link"></i> {{ t("Связь с lead") }}</h2>
     <form method="post" action="/linkedin/conversations/{{ conversation.id }}/link-lead" style="display:flex;gap:8px;align-items:center;">
       <select name="lead_id" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);">
-        <option value="">— не связан —</option>
+        <option value="">{{ t("— не связан —") }}</option>
         {% for l in leads %}
         <option value="{{ l.id }}" {% if conversation.lead_id == l.id %}selected{% endif %}>
           {{ l.full_name or l.public_identifier or l.profile_url }}
@@ -31,7 +31,7 @@
       </select>
       <button class="li-btn" type="submit"><i class="ti ti-check"></i> Сохранить связь</button>
     </form>
-    <small style="color:var(--text-muted,#888);">Привязка нужна для отправки DM прямо из треда — sender откроет профиль lead'а в LinkedIn.</small>
+    <small style="color:var(--text-muted,#888);">{{ t("Привязка нужна для отправки DM прямо из треда — sender откроет профиль lead'а в LinkedIn.") }}</small>
   </section>
 
   <section>
@@ -63,20 +63,20 @@
   </section>
 
   <section class="li-card li-card--accent">
-    <h2 class="li-card__title"><i class="ti ti-send"></i> Ответить</h2>
+    <h2 class="li-card__title"><i class="ti ti-send"></i> {{ t("Ответить") }}</h2>
     {% if linked_lead %}
     <p class="li-card__desc" style="font-size:13px;">
-      Будет отправлено через dm_sender: открытие <a href="{{ linked_lead.profile_url }}" target="_blank">{{ linked_lead.full_name or linked_lead.profile_url }}</a> → Message → ввод текста → send.
+      {{ t("Будет отправлено через dm_sender: открытие") }} <a href="{{ linked_lead.profile_url }}" target="_blank">{{ linked_lead.full_name or linked_lead.profile_url }}</a> → Message → ввод текста → send.
     </p>
     <form method="post" action="/linkedin/conversations/{{ conversation.id }}/send" style="display:flex;flex-direction:column;gap:8px;"
           onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Отправляю…';">
-      <textarea name="body" rows="4" required placeholder="Ваш ответ…"
+      <textarea name="body" rows="4" required placeholder="{{ t("Ваш ответ…") }}"
                 style="padding:10px;border-radius:8px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);font:400 14px/1.5 Inter,sans-serif;"></textarea>
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <label style="font:400 12px/1 Inter,sans-serif;color:var(--text-secondary,#606770);">
           <input type="checkbox" name="headless" value="on" checked/> headless
         </label>
-        <button class="li-btn li-btn--primary" type="submit"><i class="ti ti-send"></i> Отправить</button>
+        <button class="li-btn li-btn--primary" type="submit"><i class="ti ti-send"></i> {{ t("Отправить") }}</button>
       </div>
     </form>
     {% else %}

@@ -5,7 +5,7 @@
 <div class="page-header">
   <h1>{% if cabinet_client_mode(request) %}Загрузка списка контактов{% else %}Импорт базы{% endif %}</h1>
   <p class="subtitle">{% if cabinet_client_mode(request) %}
-  Загрузите файл Excel или CSV со ссылками на людей в Facebook и именами. Программа сама разберёт колонки. Список появится в разделе <strong>«Мои контакты»</strong>.
+  Загрузите файл Excel или CSV со ссылками на людей в Facebook и именами. Программа сама разберёт колонки. Список появится в разделе <strong>{{ t("«Мои контакты»") }}</strong>.
   {% else %}
   Загрузите один или несколько файлов CSV / XLSX с контактами Facebook. База из парсера по донору — одна строка в истории; при повторном прогоне обновляются счётчики за последний запуск.
   {% endif %}</p>
@@ -16,36 +16,35 @@
     <div id="import-status" class="import-status" role="status" aria-live="polite" hidden></div>
     <div class="import-steps">
       {% if cabinet_client_mode(request) %}
-      <strong>Как загрузить:</strong> 1) выберите файл (или несколько) в области ниже → 2) проверьте список → 3) нажмите <strong>«Загрузить и импортировать»</strong>. До кнопки файлы только у вас на экране, на сервер не уходят.
+      <strong>{{ t("Как загрузить:") }}</strong> {{ t("1) выберите файл (или несколько) в области ниже → 2) проверьте список → 3) нажмите") }} <strong>{{ t("«Загрузить и импортировать»") }}</strong>. До кнопки файлы только у вас на экране, на сервер не уходят.
       {% else %}
-      <strong>Как импортировать:</strong> 1) выберите один или несколько файлов в области ниже → 2) убедитесь, что они отображаются в списке →
-      3) нажмите <strong>«Загрузить и импортировать»</strong> — до нажатия кнопки на сервер ничего не отправляется.
+      <strong>{{ t("Как импортировать:") }}</strong> {{ t("1) выберите один или несколько файлов в области ниже → 2) убедитесь, что они отображаются в списке → 3) нажмите") }} <strong>{{ t("«Загрузить и импортировать»") }}</strong> — до нажатия кнопки на сервер ничего не отправляется.
       {% endif %}
     </div>
     <form id="import-form" method="post" action="/import/upload" enctype="multipart/form-data">
       <div class="upload-zone" id="import-upload-zone">
         <input type="file" name="files" id="import-file-input" multiple accept=".csv,.xlsx,.xls" class="file-input-hidden"/>
         <i class="ti ti-cloud-upload"></i>
-        <p><strong>Нажмите</strong> или перетащите файлы сюда</p>
+        <p><strong>{{ t("Нажмите") }}</strong> или перетащите файлы сюда</p>
         <p class="upload-hint">{% if cabinet_client_mode(request) %}
         Подойдут таблицы <strong>Excel (.xlsx)</strong> или CSV. Нужны ссылка на профиль Facebook и имя — можно в двух колонках или в одной ячейке через запятую. Удобнее всего файл, выгруженный из программы после поиска людей.
         {% else %}
-        CSV или XLSX · Две колонки «Ссылка» и «ФИО» или одна ячейка вида <code>https://facebook.com/… , Имя</code> (через запятую) — при импорте разберётся автоматически. Чтобы в Excel колонки не были «сжаты», как у CSV, удобнее работать с выгрузками <strong>.xlsx</strong> из парсера или кнопки у донора «скачать CRM».
+        CSV или XLSX · Две колонки «Ссылка» и «ФИО» или одна ячейка вида <code>{{ t("https://facebook.com/… , Имя") }}</code> {{ t("(через запятую) — при импорте разберётся автоматически. Чтобы в Excel колонки не были «сжаты», как у CSV, удобнее работать с выгрузками") }} <strong>.xlsx</strong> из парсера или кнопки у донора «скачать CRM».
         {% endif %}</p>
       </div>
       <div id="import-file-panel" class="import-file-panel" hidden>
         <div class="import-file-panel-title">
-          <span>Выбранные файлы</span>
-          <button type="button" id="import-file-clear" class="btn btn-ghost btn-sm">Сбросить выбор</button>
+          <span>{{ t("Выбранные файлы") }}</span>
+          <button type="button" id="import-file-clear" class="btn btn-ghost btn-sm">{{ t("Сбросить выбор") }}</button>
         </div>
         <ul id="import-file-list" class="import-file-list"></ul>
         <p class="import-file-hint">
           Файлы только подготовлены к отправке. Чтобы записать их в базу, нажмите кнопку
-          <kbd>Загрузить и импортировать</kbd> ниже.
+          <kbd>{{ t("Загрузить и импортировать") }}</kbd> ниже.
         </p>
       </div>
       <button type="submit" id="import-submit" class="btn btn-primary" style="margin-top:16px;width:100%">
-        <i class="ti ti-upload"></i> Загрузить и импортировать
+        <i class="ti ti-upload"></i> {{ t("Загрузить и импортировать") }}
       </button>
     </form>
   </div>
@@ -291,10 +290,10 @@
 {% if batches %}
 <div class="card">
   <div class="card-header" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px">
-    <span>История импортов</span>
+    <span>{{ t("История импортов") }}</span>
     <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px">
-      <span id="import-bulk-count" class="form-hint" style="margin:0;display:none">Выбрано: <strong id="import-bulk-n">0</strong></span>
-      <button type="button" id="import-bulk-download" class="btn btn-sm btn-secondary" disabled title="Один ZIP-архив с отдельным Excel на каждую выбранную партию">
+      <span id="import-bulk-count" class="form-hint" style="margin:0;display:none">{{ t("Выбрано:") }} <strong id="import-bulk-n">0</strong></span>
+      <button type="button" id="import-bulk-download" class="btn btn-sm btn-secondary" disabled title="{{ t("Один ZIP-архив с отдельным Excel на каждую выбранную партию") }}">
         <i class="ti ti-archive"></i> Скачать выбранные (ZIP)
       </button>
     </div>
@@ -309,14 +308,14 @@
         <thead>
           <tr>
             <th style="width:44px;text-align:center;vertical-align:middle;padding-left:10px;padding-right:4px" scope="col">
-              <input type="checkbox" id="import-batch-select-all" title="Выбрать все" aria-label="Выбрать все партии в таблице"/>
+              <input type="checkbox" id="import-batch-select-all" title="{{ t("Выбрать все") }}" aria-label="{{ t("Выбрать все партии в таблице") }}"/>
             </th>
             <th>Файл</th>
-            <th>Всего строк</th>
-            <th>Новых</th>
-            <th>Обновлено</th>
-            <th>Пропущено <span class="form-hint" style="font-weight:400">(нажмите число)</span></th>
-            <th>Последний прогон</th>
+            <th>{{ t("Всего строк") }}</th>
+            <th>{{ t("Новых") }}</th>
+            <th>{{ t("Обновлено") }}</th>
+            <th>{{ t("Пропущено") }} <span class="form-hint" style="font-weight:400">{{ t("(нажмите число)") }}</span></th>
+            <th>{{ t("Последний прогон") }}</th>
             <th style="width:1%;white-space:nowrap"></th>
           </tr>
         </thead>
@@ -324,7 +323,7 @@
           {% for b in batches %}
           <tr>
             <td style="text-align:center;vertical-align:middle">
-              <input type="checkbox" class="import-batch-cb" value="{{ b.id }}" aria-label="Выбрать партию для скачивания"/>
+              <input type="checkbox" class="import-batch-cb" value="{{ b.id }}" aria-label="{{ t("Выбрать партию для скачивания") }}"/>
             </td>
             <td><strong>{{ b.filename }}</strong></td>
             <td>{{ b.rows_total }}</td>
@@ -350,8 +349,8 @@
             </td>
             <td>
               <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end">
-                <a href="/import/batch/{{ b.id }}/export" class="btn btn-sm btn-secondary" title="Excel: ссылка, имя, фамилия, ID">
-                  <i class="ti ti-download"></i> Скачать
+                <a href="/import/batch/{{ b.id }}/export" class="btn btn-sm btn-secondary" title="{{ t("Excel: ссылка, имя, фамилия, ID") }}">
+                  <i class="ti ti-download"></i> {{ t("Скачать") }}
                 </a>
                 <button type="button" class="btn btn-sm btn-danger import-delete-open"
                         data-batch-id="{{ b.id }}"
@@ -381,8 +380,8 @@
       </div>
     </div>
     <div style="padding:14px 20px 18px;display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;background:var(--bg-surface-hover)">
-      <button type="button" class="btn btn-secondary" id="import-delete-cancel">Отмена</button>
-      <button type="button" class="btn btn-danger" id="import-delete-confirm"><i class="ti ti-trash"></i> Удалить</button>
+      <button type="button" class="btn btn-secondary" id="import-delete-cancel">{{ t("Отмена") }}</button>
+      <button type="button" class="btn btn-danger" id="import-delete-confirm"><i class="ti ti-trash"></i> {{ t("Удалить") }}</button>
     </div>
   </div>
 </div>
@@ -391,10 +390,10 @@
   <div class="import-skipped-dialog" role="dialog" aria-labelledby="import-skipped-title" style="background:var(--bg-surface);border-radius:var(--radius);max-width:920px;width:100%;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;border:1px solid var(--border);box-shadow:0 16px 48px rgba(0,0,0,.25)">
     <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
       <div>
-        <h2 id="import-skipped-title" style="margin:0;font-size:1.05rem">Пропущенные строки</h2>
+        <h2 id="import-skipped-title" style="margin:0;font-size:1.05rem">{{ t("Пропущенные строки") }}</h2>
         <p id="import-skipped-sub" class="form-hint" style="margin:6px 0 0;font-size:var(--font-size-sm)"></p>
       </div>
-      <button type="button" class="btn btn-sm btn-ghost" id="import-skipped-close" aria-label="Закрыть"><i class="ti ti-x"></i></button>
+      <button type="button" class="btn btn-sm btn-ghost" id="import-skipped-close" aria-label="{{ t("Закрыть") }}"><i class="ti ti-x"></i></button>
     </div>
     <div id="import-skipped-body" style="padding:14px 18px;overflow:auto;flex:1;font-size:var(--font-size-sm)"></div>
   </div>

@@ -16,7 +16,7 @@
     </div>
     {% if not donor %}
     <a href="/donors/bulk" class="btn btn-secondary">
-      <i class="ti ti-list-details"></i> Массово
+      <i class="ti ti-list-details"></i> {{ t("Массово") }}
     </a>
     {% endif %}
   </div>
@@ -34,28 +34,28 @@
         <input id="url" name="url" type="text" class="form-input" required inputmode="url" autocomplete="url"
                placeholder="https://www.facebook.com/groups/449966585121701/members"
                value="{{ donor.url if donor else '' }}"/>
-        <p class="form-hint">Профиль, …/friends, …/friends_mutual, …/friends_all, …/followers, …/following, или группа <code>…/groups/&lt;id&gt;/members</code> (достаточно <code>…/groups/&lt;id&gt;</code> — подставится <code>/members</code>). Допустимы параметры в адресе, например <code>?locale=ru_RU</code> после <code>/members</code> — они будут убраны при сохранении.</p>
+        <p class="form-hint">{{ t("Профиль, …/friends, …/friends_mutual, …/friends_all, …/followers, …/following, или группа") }} <code>…/groups/&lt;id&gt;/members</code> {{ t("(достаточно") }} <code>…/groups/&lt;id&gt;</code> — подставится <code>/members</code>{{ t("). Допустимы параметры в адресе, например") }} <code>?locale=ru_RU</code> после <code>/members</code> — они будут убраны при сохранении.</p>
       </div>
 
       <div class="form-group">
-        <label class="form-label" for="name">Имя донора</label>
+        <label class="form-label" for="name">{{ t("Имя донора") }}</label>
         <input id="name" name="name" type="text" class="form-input"
-               placeholder="Имя Фамилия (необязательно)"
+               placeholder="{{ t("Имя Фамилия (необязательно)") }}"
                value="{{ donor.name if donor else '' }}"/>
-        <p class="form-hint">Заполнится автоматически при парсинге, если оставить пустым</p>
+        <p class="form-hint">{{ t("Заполнится автоматически при парсинге, если оставить пустым") }}</p>
       </div>
 
       <div class="form-group">
-        <label class="form-label" for="notes">Заметки</label>
+        <label class="form-label" for="notes">{{ t("Заметки") }}</label>
         <textarea id="notes" name="notes" class="form-textarea"
-                  placeholder="Любые пометки о доноре…">{{ donor.notes if donor else '' }}</textarea>
+                  placeholder="{{ t("Любые пометки о доноре…") }}">{{ donor.notes if donor else '' }}</textarea>
       </div>
 
       <div style="display:flex;gap:12px;margin-top:24px">
         <button type="submit" class="btn btn-primary">
-          <i class="ti ti-device-floppy"></i> Сохранить
+          <i class="ti ti-device-floppy"></i> {{ t("Сохранить") }}
         </button>
-        <a href="/donors" class="btn btn-secondary">Отмена</a>
+        <a href="/donors" class="btn btn-secondary">{{ t("Отмена") }}</a>
       </div>
     </form>
   </div>

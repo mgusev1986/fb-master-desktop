@@ -6,18 +6,17 @@
 <div class="reddit-page">
   <header class="reddit-page__header">
     <div class="reddit-page__title-wrap">
-      <h1 class="reddit-page__title">Правила и лимиты</h1>
+      <h1 class="reddit-page__title">{{ t("Правила и лимиты") }}</h1>
       <p class="reddit-page__subtitle">
         Честный список поддерживаемых действий Reddit API, текущие ограничения по аккаунтам и недавние события безопасности.
-        Параметры безопасности по умолчанию: режим подтверждения — <strong>{{ approval_mode }}</strong>,
-        лимиты — <strong>{{ per_day_cap }}/сутки</strong>, <strong>{{ per_hour_cap }}/час</strong>.
+        Параметры безопасности по умолчанию: режим подтверждения — <strong>{{ approval_mode }}</strong>{{ t(", лимиты —") }} <strong>{{ per_day_cap }}/сутки</strong>, <strong>{{ per_hour_cap }}/час</strong>.
       </p>
     </div>
-    <a href="/reddit/settings" class="reddit-btn"><i class="ti ti-settings"></i> Настройки</a>
+    <a href="/reddit/settings" class="reddit-btn"><i class="ti ti-settings"></i> {{ t("Настройки") }}</a>
   </header>
 
   <section>
-    <h2 class="reddit-card__title" style="margin:0 0 12px;">Что умеет модуль</h2>
+    <h2 class="reddit-card__title" style="margin:0 0 12px;">{{ t("Что умеет модуль") }}</h2>
     <div class="compliance-grid">
       {% for level, label, tone in [
         ('supported', 'Поддерживается', 'supported'),
@@ -42,12 +41,12 @@
     <table style="width:100%;border-collapse:collapse;">
       <thead>
         <tr style="border-bottom:1px solid var(--border);font:600 12px/1.2 Inter;color:var(--text-muted);text-transform:uppercase;">
-          <th style="text-align:left;padding:10px;">Аккаунт</th>
-          <th style="text-align:left;padding:10px;">Статус</th>
-          <th style="text-align:left;padding:10px;">Канал</th>
-          <th style="text-align:left;padding:10px;">Осталось</th>
-          <th style="text-align:left;padding:10px;">Сброс лимита</th>
-          <th style="text-align:left;padding:10px;">Проверено</th>
+          <th style="text-align:left;padding:10px;">{{ t("Аккаунт") }}</th>
+          <th style="text-align:left;padding:10px;">{{ t("Статус") }}</th>
+          <th style="text-align:left;padding:10px;">{{ t("Канал") }}</th>
+          <th style="text-align:left;padding:10px;">{{ t("Осталось") }}</th>
+          <th style="text-align:left;padding:10px;">{{ t("Сброс лимита") }}</th>
+          <th style="text-align:left;padding:10px;">{{ t("Проверено") }}</th>
         </tr>
       </thead>
       <tbody>
@@ -73,11 +72,11 @@
           <tr style="border-bottom:1px solid var(--border);">
             <td style="padding:10px;">u/{{ a.username_snapshot or a.label }}</td>
             <td style="padding:10px;">{{ a.status }}</td>
-            <td style="padding:10px;color:var(--text-muted);" colspan="4">Пока нет данных о лимитах</td>
+            <td style="padding:10px;color:var(--text-muted);" colspan="4">{{ t("Пока нет данных о лимитах") }}</td>
           </tr>
         {% endif %}
         {% else %}
-        <tr><td colspan="6" style="padding:32px;text-align:center;color:var(--text-muted);">Нет подключённых аккаунтов.</td></tr>
+        <tr><td colspan="6" style="padding:32px;text-align:center;color:var(--text-muted);">{{ t("Нет подключённых аккаунтов.") }}</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -85,7 +84,7 @@
   </section>
 
   <section>
-    <h2 class="reddit-card__title" style="margin:20px 0 12px;">Недавние события безопасности</h2>
+    <h2 class="reddit-card__title" style="margin:20px 0 12px;">{{ t("Недавние события безопасности") }}</h2>
     {% if events %}
     <div class="reddit-grid">
       {% for e in events %}

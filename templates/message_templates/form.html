@@ -50,13 +50,13 @@
       {% endif %}
 
       <div class="form-group">
-        <label class="form-label" for="name">Название</label>
+        <label class="form-label" for="name">{{ t("Название") }}</label>
         <input id="name" name="name" type="text" class="form-input" required maxlength="255"
-               value="{{ row.name if row else '' }}" placeholder="Кратко, для списка"/>
+               value="{{ row.name if row else '' }}" placeholder="{{ t("Кратко, для списка") }}"/>
       </div>
 
       <div class="form-group">
-        <label class="form-label" for="category">Категория</label>
+        <label class="form-label" for="category">{{ t("Категория") }}</label>
         <select id="category" name="category" class="form-select">
           {% for val, label in categories %}
           <option value="{{ val }}" {% if row and row.category == val %}selected{% elif not row and val == 'outreach' %}selected{% endif %}>{{ label }}</option>
@@ -67,9 +67,8 @@
       <div class="form-group">
         <label class="form-label">Текст сообщения</label>
         <p class="form-hint" style="margin-top:0;margin-bottom:12px">
-          Каждый блок — отдельный вариант. При рассылке контакту уходит <strong>один</strong> вариант (случайно или по очереди — см. ниже).
-          Пустые строки внутри одного блока — это <strong>абзацы сообщения</strong>, они сохраняются как есть.
-          Маркеры <code>{{ "{{first_name}}" }}</code> / <code>{{ "{{full_name}}" }}</code> вставляйте в активное поле кнопками под редактором.
+          {{ t("Каждый блок — отдельный вариант. При рассылке контакту уходит") }} <strong>один</strong> вариант (случайно или по очереди — см. ниже).
+          Пустые строки внутри одного блока — это <strong>абзацы сообщения</strong>{{ t(", они сохраняются как есть. Маркеры") }} <code>{{ "{{first_name}}" }}</code> / <code>{{ "{{full_name}}" }}</code> вставляйте в активное поле кнопками под редактором.
           Чтобы вставить <strong>несколько готовых текстов</strong> и сделать из них варианты — используйте блок «Импорт пакета» ниже и нажмите «Разнести по вариантам».
           Слово <code>NAME</code> как отдельное слово (латиницей) будет заменено на <code>{{ "{{first_name}}" }}</code>.
           {% if row %}
@@ -78,38 +77,38 @@
           {% endif %}
         </p>
         <script type="application/json" id="tpl-variants-initial">{{ variants_for_editor|tojson }}</script>
-        <div id="tpl-variants-editor" class="tpl-variants-editor" aria-label="Варианты текста"></div>
+        <div id="tpl-variants-editor" class="tpl-variants-editor" aria-label="{{ t("Варианты текста") }}"></div>
         <textarea id="body" name="body" class="form-textarea" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" tabindex="-1" aria-hidden="true"></textarea>
         <div class="tpl-variants-toolbar">
           <button type="button" class="btn btn-sm btn-secondary" id="tpl-add-variant">
-            <i class="ti ti-plus"></i> Добавить вариант
+            <i class="ti ti-plus"></i> {{ t("Добавить вариант") }}
           </button>
         </div>
         <details class="card" style="margin-top:14px;background:var(--bg-surface-hover)">
-          <summary class="card-body" style="padding:10px 14px;cursor:pointer;font-weight:600">Импорт пакета (несколько сообщений через пустую строку)</summary>
+          <summary class="card-body" style="padding:10px 14px;cursor:pointer;font-weight:600">{{ t("Импорт пакета (несколько сообщений через пустую строку)") }}</summary>
           <div class="card-body" style="padding-top:0">
-            <label class="form-label" for="tpl-package-paste">Вставьте весь пакет сюда</label>
+            <label class="form-label" for="tpl-package-paste">{{ t("Вставьте весь пакет сюда") }}</label>
             <textarea id="tpl-package-paste" class="form-textarea" rows="10" style="min-height:180px;font-size:var(--font-size-sm)"
               placeholder="NAME, hey! …&#10;&#10;Hi NAME, …&#10;&#10;Hey NAME, …"></textarea>
-            <p class="form-hint" style="margin:8px 0 10px">Между сообщениями — пустая строка. Кнопка ниже разнесёт текст по карточкам вариантов (можно сразу нажать «Сохранить» без кнопки — пакет разберётся и на сервере).</p>
+            <p class="form-hint" style="margin:8px 0 10px">{{ t("Между сообщениями — пустая строка. Кнопка ниже разнесёт текст по карточкам вариантов (можно сразу нажать «Сохранить» без кнопки — пакет разберётся и на сервере).") }}</p>
             <button type="button" class="btn btn-sm btn-secondary" id="tpl-package-parse">
-              <i class="ti ti-files"></i> Разнести по вариантам
+              <i class="ti ti-files"></i> {{ t("Разнести по вариантам") }}
             </button>
           </div>
         </details>
         <p class="form-hint" style="margin-top:14px;margin-bottom:8px">
-          Вставить маркер в активное поле варианта:
+          {{ t("Вставить маркер в активное поле варианта:") }}
         </p>
         <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:6px">
           <button type="button" class="btn btn-sm btn-secondary tpl-insert-marker" data-marker="{{ '{{first_name}}' }}"
-                  title="Вставить в активный вариант" aria-label="Вставить {{ '{{first_name}}' }}">
+                  title="{{ t("Вставить в активный вариант") }}" aria-label="Вставить {{ '{{first_name}}' }}">
             <code style="font-family:ui-monospace,monospace;font-size:12px">{{ "{{first_name}}" }}</code>
           </button>
           <span class="form-hint" style="margin:0">— только имя</span>
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
           <button type="button" class="btn btn-sm btn-secondary tpl-insert-marker" data-marker="{{ '{{full_name}}' }}"
-                  title="Вставить в активный вариант" aria-label="Вставить {{ '{{full_name}}' }}">
+                  title="{{ t("Вставить в активный вариант") }}" aria-label="Вставить {{ '{{full_name}}' }}">
             <code style="font-family:ui-monospace,monospace;font-size:12px">{{ "{{full_name}}" }}</code>
           </button>
           <span class="form-hint" style="margin:0">— имя и фамилия целиком</span>
@@ -118,10 +117,10 @@
 
       {% if row %}
       <div class="form-group">
-        <label class="form-label" for="variant_pick_mode">Как выбирать вариант при рассылке</label>
+        <label class="form-label" for="variant_pick_mode">{{ t("Как выбирать вариант при рассылке") }}</label>
         <select id="variant_pick_mode" name="variant_pick_mode" class="form-select" style="max-width:420px">
           <option value="random" {% if (row.variant_pick_mode or 'random') != 'sequential' %}selected{% endif %}>Случайно — каждому контакту свой случайный текст</option>
-          <option value="sequential" {% if row.variant_pick_mode == 'sequential' %}selected{% endif %}>По очереди — 1-й, 2-й, 3-й… затем снова с начала</option>
+          <option value="sequential" {% if row.variant_pick_mode == 'sequential' %}selected{% endif %}>{{ t("По очереди — 1-й, 2-й, 3-й… затем снова с начала") }}</option>
         </select>
       </div>
       {% else %}
@@ -131,19 +130,19 @@
       {% if row %}
       <div class="card" style="background:var(--bg-surface-hover);margin-bottom:16px">
         <div class="card-body" style="padding:14px 16px">
-          <div style="font-size:var(--font-size-xs);font-weight:600;color:var(--text-secondary);margin-bottom:6px">Пример с подстановкой</div>
+          <div style="font-size:var(--font-size-xs);font-weight:600;color:var(--text-secondary);margin-bottom:6px">{{ t("Пример с подстановкой") }}</div>
           <div id="preview-text" style="font-size:var(--font-size-sm);white-space:pre-wrap">{{ preview_sample(row.body) }}</div>
         </div>
       </div>
       {% endif %}
 
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;align-items:center">
-        <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy"></i> Сохранить</button>
-        <a href="/templates" class="btn btn-secondary">К списку</a>
+        <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy"></i> {{ t("Сохранить") }}</button>
+        <a href="/templates" class="btn btn-secondary">{{ t("К списку") }}</a>
         {% if row and (has_openai or has_gemini or is_platform_owner(user)) %}
         <button type="button" class="btn btn-secondary tpl-neuro-open" data-template-id="{{ row.id }}" data-template-name="{{ row.name|e }}"
                 title="Сгенерировать через ИИ несколько вариантов текста: плейсхолдеры ({{ '{{full_name}}' }}, {{ '{{first_name}}' }}) сохраняются. В открывшемся окне выберите формулировки и сохраните их в этот шаблон.">
-          <i class="ti ti-sparkles"></i> Нейро-варианты
+          <i class="ti ti-sparkles"></i> {{ t("Нейро-варианты") }}
         </button>
         {% endif %}
       </div>

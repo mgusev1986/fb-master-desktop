@@ -7,23 +7,22 @@
 <div id="outreach-agent" class="card outreach-agent-card" style="margin-bottom:16px;scroll-margin-top:72px">
   <div class="card-body">
     <h2 style="margin:0 0 6px;font-size:1.15rem;display:flex;align-items:center;gap:8px">
-      <i class="ti ti-robot"></i> Режим агента
+      <i class="ti ti-robot"></i> {{ t("Режим агента") }}
     </h2>
     <p style="margin:0 0 10px;font-size:var(--font-size-xs);color:var(--text-secondary);display:flex;align-items:center;gap:6px">
       <i class="ti ti-brain" style="font-size:15px;opacity:.8" aria-hidden="true"></i>
-      <span>Magic mode · нейросеть</span>
+      <span>{{ t("Magic mode · нейросеть") }}</span>
     </p>
     <p class="subtitle" style="margin:0 0 12px;font-size:var(--font-size-sm);color:var(--text-secondary)">
-      Генерация черновиков для контактов из «Базы контактов» (OpenAI или Gemini API, либо готовые тексты «первое касание»).
-      Запуск <strong>в этом же окне</strong> — дождитесь окончания, затем смотрите журнал ниже.
+      {{ t("Генерация черновиков для контактов из «Базы контактов» (OpenAI или Gemini API, либо готовые тексты «первое касание»). Запуск") }} <strong>в этом же окне</strong> — дождитесь окончания, затем смотрите журнал ниже.
       Паузы между запросами к ИИ — как «следующий контакт» в
-      <a href="/system/speed">Система → Скорость и паузы</a>
+      <a href="/system/speed">{{ t("Система → Скорость и паузы") }}</a>
       (<strong>{{ throttle_preset_label }}</strong>).
     </p>
 
     {% if not has_openai and not has_gemini and not is_platform_owner(user) %}
     <div style="margin-bottom:12px;padding:12px;border:1px solid var(--error);border-radius:8px;font-size:var(--font-size-sm);color:var(--error)">
-      В <code>.env</code> не заданы <code>OPENAI_API_KEY</code> и <code>GOOGLE_API_KEY</code>. Для режима «Свой шаблон + ИИ» добавьте хотя бы один ключ. Режим «Первое касание (EN)» работает без ключей.
+      В <code>.env</code> не заданы <code>OPENAI_API_KEY</code> и <code>GOOGLE_API_KEY</code>{{ t(". Для режима «Свой шаблон + ИИ» добавьте хотя бы один ключ. Режим «Первое касание (EN)» работает без ключей.") }}
     </div>
     {% endif %}
 
@@ -42,7 +41,7 @@
 
     {% if agent_done and batch_contacts %}
     <div style="margin-bottom:12px;padding:12px;border:1px solid var(--success);border-radius:8px;font-size:var(--font-size-sm)">
-      Готово: обработано <strong>{{ batch_contacts }}</strong> контактов
+      {{ t("Готово: обработано") }} <strong>{{ batch_contacts }}</strong> контактов
       {% if batch_rows and batch_contacts and batch_rows|int > batch_contacts|int %}
       → <strong>{{ batch_rows }}</strong> записей в журнале (несколько вариантов на человека)
       {% elif batch_rows %}
@@ -53,7 +52,7 @@
 
     {% if saved_agent_settings %}
     <div style="margin-bottom:12px;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:var(--font-size-sm)">
-      Настройки промптов и моделей сохранены.
+      {{ t("Настройки промптов и моделей сохранены.") }}
     </div>
     {% endif %}
 
@@ -62,7 +61,7 @@
       <div class="card-body">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:12px">
           <div>
-            <strong>Запуск из журнала</strong>
+            <strong>{{ t("Запуск из журнала") }}</strong>
             · {{ ai_provider_label(highlight_run.provider) }} / <code>{{ highlight_run.model }}</code>
             · {% if highlight_run.context_type == 'first_touch' %}первое касание (EN){% elif highlight_run.context_type == 'dm' %}переписка{% else %}комментарий{% endif %}
             · {{ format_dt_madrid(highlight_run.created_at) }}
@@ -70,14 +69,14 @@
             · {{ person_labels.get(highlight_run.person_id) }}
             {% endif %}
             {% if highlight_run.outcome == 'success' %}
-            <span style="color:var(--success)">успех</span>
+            <span style="color:var(--success)">{{ t("успех") }}</span>
             {% else %}
-            <span style="color:var(--error)">ошибка</span>
+            <span style="color:var(--error)">{{ t("ошибка") }}</span>
             {% endif %}
             {% if highlight_run.duration_ms %}· {{ highlight_run.duration_ms }} мс{% endif %}
           </div>
           {% if highlight_run.outcome == 'success' and highlight_run.output_preview %}
-          <button type="button" class="btn btn-sm btn-secondary" id="outreach-ai-copy-draft">Копировать черновик</button>
+          <button type="button" class="btn btn-sm btn-secondary" id="outreach-ai-copy-draft">{{ t("Копировать черновик") }}</button>
           {% endif %}
         </div>
         {% if highlight_run.input_preview %}
@@ -97,25 +96,25 @@
     </div>
     {% endif %}
 
-    <h3 style="margin:0 0 12px;font-size:1.05rem">Запуск агента</h3>
+    <h3 style="margin:0 0 12px;font-size:1.05rem">{{ t("Запуск агента") }}</h3>
     <p class="form-hint" style="margin-top:0">
       Сколько человек обработать (до 200), донор или все последние контакты в базе.
       В шаблоне используйте <code>{{ "{{full_name}}" }}</code> и <code>{{ "{{first_name}}" }}</code>.
     </p>
     <form method="post" action="/outreach/agent/batch-generate">
       <div class="form-group">
-        <label class="form-label">Задача</label>
+        <label class="form-label">{{ t("Задача") }}</label>
         <div style="display:flex;flex-wrap:wrap;gap:16px">
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-            <input type="radio" name="context_type" value="dm" id="ctx_dm" checked/> Переписка (Messenger)
+            <input type="radio" name="context_type" value="dm" id="ctx_dm" checked/> {{ t("Переписка (Messenger)") }}
           </label>
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-            <input type="radio" name="context_type" value="comment" id="ctx_comment"/> Комментарий к посту
+            <input type="radio" name="context_type" value="comment" id="ctx_comment"/> {{ t("Комментарий к посту") }}
           </label>
         </div>
       </div>
       <div class="form-group" id="dm_mode_block">
-        <label class="form-label">Режим для переписки</label>
+        <label class="form-label">{{ t("Режим для переписки") }}</label>
         <div style="display:flex;flex-direction:column;gap:8px">
           <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer">
             <input type="radio" name="dm_mode" value="custom" id="dm_mode_custom" checked/>
@@ -123,7 +122,7 @@
           </label>
           <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer">
             <input type="radio" name="dm_mode" value="first_touch" id="dm_mode_ft"/>
-            <span><strong>Первое касание (EN)</strong> — несколько готовых вариантов; подставляется <strong>имя</strong> (<code>{{ "{{first_name}}" }}</code>). Без ИИ и без API-ключа.</span>
+            <span><strong>{{ t("Первое касание (EN)") }}</strong> — несколько готовых вариантов; подставляется <strong>{{ t("имя") }}</strong> (<code>{{ "{{first_name}}" }}</code>{{ t("). Без ИИ и без API-ключа.") }}</span>
           </label>
         </div>
       </div>
@@ -133,7 +132,7 @@
         <p class="form-hint">Случайный выбор из 10 базовых шаблонов.</p>
       </div>
       <div class="form-group" id="provider_block">
-        <label class="form-label" for="batch_provider">Провайдер (только для своего шаблона + ИИ)</label>
+        <label class="form-label" for="batch_provider">{{ t("Провайдер (только для своего шаблона + ИИ)") }}</label>
         <select id="batch_provider" name="provider" class="form-input" style="max-width:280px">
           <option value="">По умолчанию ({% if settings.default_provider == 'gemini' %}Gemini{% elif settings.default_provider == 'ollama' %}Gemini{% else %}OpenAI{% endif %})</option>
           <option value="openai" {% if not has_openai %}disabled{% endif %}>OpenAI</option>
@@ -141,9 +140,9 @@
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label" for="donor_id">Донор (фильтр «База контактов»)</label>
+        <label class="form-label" for="donor_id">{{ t("Донор (фильтр «База контактов»)") }}</label>
         <select id="donor_id" name="donor_id" class="form-input" style="max-width:100%">
-          <option value="">Все контакты (последние по ID)</option>
+          <option value="">{{ t("Все контакты (последние по ID)") }}</option>
           {% for d in donors %}
           <option value="{{ d.id }}">{{ d.name or d.url[:48] }}</option>
           {% endfor %}
@@ -162,7 +161,7 @@
         <i class="ti ti-users-group"></i> Сгенерировать черновики
       </button>
       {% if worker_busy %}
-      <p class="form-hint" style="margin-top:8px">Кнопка недоступна, пока идёт рассылка.</p>
+      <p class="form-hint" style="margin-top:8px">{{ t("Кнопка недоступна, пока идёт рассылка.") }}</p>
       {% endif %}
     </form>
   </div>
@@ -178,18 +177,18 @@
 
 <div class="card" style="margin-bottom:16px">
   <div class="card-body">
-    <h3 style="margin:0 0 16px;font-size:1.1rem">Журнал запусков агента</h3>
+    <h3 style="margin:0 0 16px;font-size:1.1rem">{{ t("Журнал запусков агента") }}</h3>
     {% if runs %}
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
-            <th>Время</th>
-            <th>Тип</th>
-            <th>Контакт</th>
-            <th>Провайдер</th>
-            <th>Модель</th>
-            <th>Результат</th>
+            <th>{{ t("Время") }}</th>
+            <th>{{ t("Тип") }}</th>
+            <th>{{ t("Контакт") }}</th>
+            <th>{{ t("Провайдер") }}</th>
+            <th>{{ t("Модель") }}</th>
+            <th>{{ t("Результат") }}</th>
             <th>Токены</th>
             <th>мс</th>
           </tr>
@@ -208,7 +207,7 @@
               {% if r.outcome == 'success' %}
               <span style="color:var(--success)">OK</span>
               {% elif r.outcome == 'error' %}
-              <span style="color:var(--error)" title="{{ r.error or '' }}">ошибка</span>
+              <span style="color:var(--error)" title="{{ r.error or '' }}">{{ t("ошибка") }}</span>
               {% else %}
               —
               {% endif %}
@@ -224,7 +223,7 @@
     </div>
     <p class="form-hint" style="margin-top:12px">Фрагменты запроса и ответа сохраняются в БД (ограничение по длине).</p>
     {% else %}
-    <p style="color:var(--text-secondary);margin:0">Запусков ещё не было.</p>
+    <p style="color:var(--text-secondary);margin:0">{{ t("Запусков ещё не было.") }}</p>
     {% endif %}
   </div>
 </div>

@@ -6,12 +6,12 @@
 <div class="reddit-page">
   <header class="reddit-page__header">
     <div class="reddit-page__title-wrap">
-      <h1 class="reddit-page__title">Кампании</h1>
+      <h1 class="reddit-page__title">{{ t("Кампании") }}</h1>
       <p class="reddit-page__subtitle">
-        Очереди сообщений и комментариев с подтверждение перед отправкой по умолчанию. Лимиты по аккаунту, окно отправки, manual approval.
+        {{ t("Очереди сообщений и комментариев с подтверждение перед отправкой по умолчанию. Лимиты по аккаунту, окно отправки, manual approval.") }}
       </p>
     </div>
-    <a href="/reddit/campaigns/new" class="reddit-btn reddit-btn--primary"><i class="ti ti-plus"></i> Новая кампания</a>
+    <a href="/reddit/campaigns/new" class="reddit-btn reddit-btn--primary"><i class="ti ti-plus"></i> {{ t("Новая кампания") }}</a>
   </header>
 
   {% if items %}
@@ -24,16 +24,16 @@
         <span style="font:500 11px/1 Inter;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,#777 14%,transparent);color:#555;">{{ it.row.status|ru_status }}</span>
       </header>
       <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:4px 12px;font:400 13px/1.4 Inter;">
-        <div><span style="color:var(--text-muted)">Ожидают</span> {{ it.counts.pending_review }}</div>
-        <div><span style="color:var(--text-muted)">Одобрено</span> {{ it.counts.approved }}</div>
-        <div><span style="color:var(--text-muted)">Отправлено</span> {{ it.counts.sent }}</div>
-        <div><span style="color:var(--text-muted)">Отклонено</span> {{ it.counts.rejected }}</div>
-        <div><span style="color:var(--text-muted)">Ошибка</span> {{ it.counts.failed }}</div>
-        <div><span style="color:var(--text-muted)">Пропущено</span> {{ it.counts.skipped }}</div>
+        <div><span style="color:var(--text-muted)">{{ t("Ожидают") }}</span> {{ it.counts.pending_review }}</div>
+        <div><span style="color:var(--text-muted)">{{ t("Одобрено") }}</span> {{ it.counts.approved }}</div>
+        <div><span style="color:var(--text-muted)">{{ t("Отправлено") }}</span> {{ it.counts.sent }}</div>
+        <div><span style="color:var(--text-muted)">{{ t("Отклонено") }}</span> {{ it.counts.rejected }}</div>
+        <div><span style="color:var(--text-muted)">{{ t("Ошибка") }}</span> {{ it.counts.failed }}</div>
+        <div><span style="color:var(--text-muted)">{{ t("Пропущено") }}</span> {{ it.counts.skipped }}</div>
       </div>
       <div class="reddit-card__desc">approval: <strong>{{ it.row.approval_mode }}</strong> · всего в очереди: {{ it.total }}</div>
       <footer style="display:flex;gap:6px;">
-        <a href="/reddit/campaigns/{{ it.row.id }}" class="reddit-btn reddit-btn--primary"><i class="ti ti-arrow-right"></i> Открыть</a>
+        <a href="/reddit/campaigns/{{ it.row.id }}" class="reddit-btn reddit-btn--primary"><i class="ti ti-arrow-right"></i> {{ t("Открыть") }}</a>
         <form method="post" action="/reddit/campaigns/{{ it.row.id }}/delete" style="display:inline"
               onsubmit="return confirm('Удалить «{{ it.row.name }}»?');">
           <button type="submit" class="reddit-btn"><i class="ti ti-trash"></i></button>
@@ -45,8 +45,8 @@
   {% else %}
   <div class="reddit-placeholder">
     <div class="reddit-placeholder__icon"><i class="ti ti-send"></i></div>
-    <p class="reddit-placeholder__text">Кампаний пока нет — создайте первую.</p>
-    <a href="/reddit/campaigns/new" class="reddit-btn reddit-btn--primary"><i class="ti ti-plus"></i> Новая кампания</a>
+    <p class="reddit-placeholder__text">{{ t("Кампаний пока нет — создайте первую.") }}</p>
+    <a href="/reddit/campaigns/new" class="reddit-btn reddit-btn--primary"><i class="ti ti-plus"></i> {{ t("Новая кампания") }}</a>
   </div>
   {% endif %}
 </div>

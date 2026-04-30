@@ -6,23 +6,23 @@
 <div class="x-page">
   <header class="x-page__header">
     <div class="x-page__title-wrap">
-      <h1 class="x-page__title">Шаблоны и AI <span class="x-page__beta-pill">Beta</span></h1>
-      <p class="x-page__subtitle">DM / reply / quote-tweet. Плейсхолдеры: <code>{handle}</code>, <code>{full_name}</code>, <code>{first_name}</code>, <code>{bio}</code>, <code>{location}</code>, <code>{recent_tweet}</code>, <code>{topic}</code>.</p>
+      <h1 class="x-page__title">{{ t("Шаблоны и AI") }} <span class="x-page__beta-pill">Beta</span></h1>
+      <p class="x-page__subtitle">{{ t("DM / reply / quote-tweet. Плейсхолдеры:") }} <code>{handle}</code>, <code>{full_name}</code>, <code>{first_name}</code>, <code>{bio}</code>, <code>{location}</code>, <code>{recent_tweet}</code>, <code>{topic}</code>.</p>
     </div>
   </header>
 
   <section class="x-card x-card--accent">
-    <h2 class="x-card__title"><i class="ti ti-plus"></i> Создать шаблон</h2>
+    <h2 class="x-card__title"><i class="ti ti-plus"></i> {{ t("Создать шаблон") }}</h2>
     <form method="post" action="/twitter/templates/create" style="display:flex;flex-direction:column;gap:10px;">
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <input type="text" name="name" required placeholder="Название" style="flex:2;min-width:200px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+        <input type="text" name="name" required placeholder="{{ t("Название") }}" style="flex:2;min-width:200px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
         <select name="kind" style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
           {% for k in kinds %}<option value="{{ k }}">{{ k }}</option>{% endfor %}
         </select>
         <input type="text" name="tone" placeholder="tone (casual/direct...)" style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
       </div>
-      <textarea name="body" rows="5" required placeholder="Hey @{handle}! Заметил твой bio про {bio}..." style="padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"></textarea>
-      <button type="submit" class="x-btn x-btn--primary" style="align-self:flex-start;"><i class="ti ti-plus"></i> Создать</button>
+      <textarea name="body" rows="5" required placeholder="{{ t("Hey @{handle}! Заметил твой bio про {bio}...") }}" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"></textarea>
+      <button type="submit" class="x-btn x-btn--primary" style="align-self:flex-start;"><i class="ti ti-plus"></i> {{ t("Создать") }}</button>
     </form>
   </section>
 
@@ -45,7 +45,7 @@
               <form method="post" action="/twitter/templates/{{ t.id }}/ai" style="margin:0;display:inline-flex;gap:4px;align-items:center;">
                 <input type="hidden" name="op" value="variations"/>
                 <input type="number" name="n" min="2" max="6" value="3" style="width:48px;padding:4px;border-radius:6px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font-size:12px;"/>
-                <button class="x-btn" type="submit" style="font-size:12px;padding:4px 8px;"><i class="ti ti-arrows-shuffle"></i> Варианты</button>
+                <button class="x-btn" type="submit" style="font-size:12px;padding:4px 8px;"><i class="ti ti-arrows-shuffle"></i> {{ t("Варианты") }}</button>
               </form>
               <form method="post" action="/twitter/templates/{{ t.id }}/ai" style="margin:0;"><input type="hidden" name="op" value="shorten"/><button class="x-btn" type="submit" style="font-size:12px;padding:4px 8px;"><i class="ti ti-text-decrease"></i> Сократить (280)</button></form>
               <form method="post" action="/twitter/templates/{{ t.id }}/ai" style="margin:0;"><input type="hidden" name="op" value="soften"/><button class="x-btn" type="submit" style="font-size:12px;padding:4px 8px;"><i class="ti ti-leaf"></i> Soften</button></form>
@@ -61,13 +61,13 @@
           </details>
 
           <form method="post" action="/twitter/templates/{{ t.id }}/delete" style="margin:0;align-self:flex-end;" onsubmit="return confirm('Архивировать?');">
-            <button type="submit" class="x-btn" style="background:transparent;border-color:#c33;color:#c33;font-size:12px;padding:4px 10px;"><i class="ti ti-archive"></i> Архив</button>
+            <button type="submit" class="x-btn" style="background:transparent;border-color:#c33;color:#c33;font-size:12px;padding:4px 10px;"><i class="ti ti-archive"></i> {{ t("Архив") }}</button>
           </form>
         </article>
         {% endfor %}
       </div>
     {% else %}
-      <div class="x-placeholder"><div class="x-placeholder__icon"><i class="ti ti-template"></i></div><p class="x-placeholder__text">Шаблонов нет.</p></div>
+      <div class="x-placeholder"><div class="x-placeholder__icon"><i class="ti ti-template"></i></div><p class="x-placeholder__text">{{ t("Шаблонов нет.") }}</p></div>
     {% endif %}
   </section>
 </div>

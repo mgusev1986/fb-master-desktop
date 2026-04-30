@@ -12,14 +12,14 @@
 {% elif qp.get('err') == 'other' %}
 <div class="card" style="margin-bottom:16px;border-color:var(--error)">
   <div class="card-body" style="font-size:var(--font-size-sm)">
-    <i class="ti ti-alert-circle"></i> Нельзя загрузить сообщения, пока идёт прогрев, сценарий или рассылка.
+    <i class="ti ti-alert-circle"></i> {{ t("Нельзя загрузить сообщения, пока идёт прогрев, сценарий или рассылка.") }}
   </div>
 </div>
 {% endif %}
 {% if qp.get('load_started') == '1' %}
 <div class="card" style="margin-bottom:16px;border-color:var(--success)">
   <div class="card-body" style="font-size:var(--font-size-sm)">
-    <i class="ti ti-check"></i> Загрузка текста чата из Facebook запущена. Обновите страницу через минуту.
+    <i class="ti ti-check"></i> {{ t("Загрузка текста чата из Facebook запущена. Обновите страницу через минуту.") }}
   </div>
 </div>
 {% endif %}
@@ -27,12 +27,12 @@
 <div class="page-header">
   <div class="page-header-actions">
     <div>
-      <a href="{{ messenger_url_base|default('/messenger') }}" class="btn btn-sm btn-secondary" style="margin-bottom:8px"><i class="ti ti-arrow-left"></i> К списку</a>
+      <a href="{{ messenger_url_base|default('/messenger') }}" class="btn btn-sm btn-secondary" style="margin-bottom:8px"><i class="ti ti-arrow-left"></i> {{ t("К списку") }}</a>
       <h1>{{ conv.peer_name or 'Диалог' }}</h1>
       <p class="subtitle">
-        Аккаунт: <strong>{% if account %}{{ messenger_fb_account_label(account.label) or '—' }}{% else %}—{% endif %}</strong>
+        {{ t("Аккаунт:") }} <strong>{% if account %}{{ messenger_fb_account_label(account.label) or '—' }}{% else %}—{% endif %}</strong>
         {% if conv.peer_url %}
-        · <a href="{{ conv.peer_url }}" target="_blank" rel="noopener" class="table-link">Открыть в Facebook</a>
+        · <a href="{{ conv.peer_url }}" target="_blank" rel="noopener" class="table-link">{{ t("Открыть в Facebook") }}</a>
         {% endif %}
         {% if person %}
         · <a href="/people" class="table-link">{{ person.display_name or 'Контакт в CRM' }}</a>
@@ -57,11 +57,11 @@
   <div class="card-body">
     <h3 style="margin:0 0 8px;font-size:var(--font-size-md)">Сообщения из Facebook</h3>
     <p style="color:var(--text-secondary);font-size:var(--font-size-sm);margin:0 0 12px">
-      Подгружает видимые сообщения из открытого чата. Направление (входящее / исходящее) определяется эвристикой по позиции пузыря, стилям и подписям доступности — при смене вёрстки Facebook возможны ошибки.
+      {{ t("Подгружает видимые сообщения из открытого чата. Направление (входящее / исходящее) определяется эвристикой по позиции пузыря, стилям и подписям доступности — при смене вёрстки Facebook возможны ошибки.") }}
     </p>
     <form method="post" action="{{ messenger_url_base|default('/messenger') }}/thread/{{ conv.id }}/load-messages">
       <button type="submit" class="btn btn-primary" {% if sync_busy %}disabled{% endif %}>
-        <i class="ti ti-download"></i> Загрузить / обновить сообщения
+        <i class="ti ti-download"></i> {{ t("Загрузить / обновить сообщения") }}
       </button>
     </form>
   </div>

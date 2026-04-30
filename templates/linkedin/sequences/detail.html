@@ -9,20 +9,20 @@
       <h1 class="li-page__title">{{ sequence.name }} <span class="li-page__beta-pill">Beta</span></h1>
       <p class="li-page__subtitle">{{ (sequence.nodes_json or [])|length }} узлов · {{ runs|length }} runs</p>
     </div>
-    <a href="/linkedin/sequences" class="li-btn"><i class="ti ti-arrow-left"></i> К списку</a>
+    <a href="/linkedin/sequences" class="li-btn"><i class="ti ti-arrow-left"></i> {{ t("К списку") }}</a>
   </header>
 
   <section class="li-card">
-    <h2 class="li-card__title"><i class="ti ti-binary-tree"></i> Граф (read-only)</h2>
+    <h2 class="li-card__title"><i class="ti ti-binary-tree"></i> {{ t("Граф (read-only)") }}</h2>
     <pre style="white-space:pre-wrap;font:400 12px/1.4 ui-monospace,Menlo,monospace;background:color-mix(in srgb,#000 4%,transparent);padding:12px;border-radius:8px;margin:0;overflow-x:auto;">{{ graph_json }}</pre>
   </section>
 
   <section class="li-card li-card--accent">
-    <h2 class="li-card__title"><i class="ti ti-player-play"></i> Запустить runs для лидов</h2>
+    <h2 class="li-card__title"><i class="ti ti-player-play"></i> {{ t("Запустить runs для лидов") }}</h2>
     {% if accounts and leads %}
     <form method="post" action="/linkedin/sequences/{{ sequence.id }}/start-run" style="display:flex;flex-direction:column;gap:8px;">
       <select name="account_id" required style="padding:8px;border-radius:8px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);">
-        <option value="">— аккаунт —</option>
+        <option value="">{{ t("— аккаунт —") }}</option>
         {% for a in accounts %}<option value="{{ a.id }}">{{ a.label }} [{{ a.status }}]</option>{% endfor %}
       </select>
       <div style="max-height:240px;overflow:auto;border:1px solid var(--border,#e4e6eb);border-radius:8px;padding:8px;">
@@ -35,11 +35,11 @@
         {% endfor %}
       </div>
       <button class="li-btn li-btn--primary" type="submit" style="align-self:flex-start;">
-        <i class="ti ti-player-play"></i> Запустить
+        <i class="ti ti-player-play"></i> {{ t("Запустить") }}
       </button>
     </form>
     {% else %}
-    <p class="li-card__desc">Нужен минимум один аккаунт и один лид.</p>
+    <p class="li-card__desc">{{ t("Нужен минимум один аккаунт и один лид.") }}</p>
     {% endif %}
   </section>
 
@@ -51,9 +51,9 @@
         <thead>
           <tr style="border-bottom:1px solid var(--border);font:600 12px/1 Inter;color:var(--text-muted);text-transform:uppercase;">
             <th style="text-align:left;padding:10px;">Run</th>
-            <th style="text-align:left;padding:10px;">Лид</th>
+            <th style="text-align:left;padding:10px;">{{ t("Лид") }}</th>
             <th style="text-align:left;padding:10px;">Текущий узел</th>
-            <th style="text-align:left;padding:10px;">Статус</th>
+            <th style="text-align:left;padding:10px;">{{ t("Статус") }}</th>
             <th style="text-align:left;padding:10px;">Next action</th>
             <th style="text-align:right;padding:10px;"></th>
           </tr>
@@ -77,7 +77,7 @@
               {% if r.state in ['active','waiting'] %}
               <form method="post" action="/linkedin/sequences/{{ sequence.id }}/step-now" style="display:inline;">
                 <input type="hidden" name="run_id" value="{{ r.id }}"/>
-                <button class="li-btn" type="submit" style="font-size:12px;padding:4px 10px;" title="Игнорировать next_action_at и сделать шаг прямо сейчас">step now</button>
+                <button class="li-btn" type="submit" style="font-size:12px;padding:4px 10px;" title="{{ t("Игнорировать next_action_at и сделать шаг прямо сейчас") }}">step now</button>
               </form>
               {% endif %}
             </td>
@@ -89,7 +89,7 @@
     {% else %}
     <div class="li-placeholder">
       <div class="li-placeholder__icon"><i class="ti ti-rocket"></i></div>
-      <p class="li-placeholder__text">Runs пока нет. Запустите выше.</p>
+      <p class="li-placeholder__text">{{ t("Runs пока нет. Запустите выше.") }}</p>
     </div>
     {% endif %}
   </section>

@@ -6,19 +6,18 @@
 <div class="reddit-page">
   <header class="reddit-page__header">
     <div class="reddit-page__title-wrap">
-      <h1 class="reddit-page__title">Поиск сабреддитов</h1>
+      <h1 class="reddit-page__title">{{ t("Поиск сабреддитов") }}</h1>
       <p class="reddit-page__subtitle">
-        Поиск по ключевым словам и темам. Каждая карточка показывает subscribers,
-        активных пользователей, флаг «для взрослых» и эвристические оценки пригодности и риска.
+        {{ t("Поиск по ключевым словам и темам. Каждая карточка показывает subscribers, активных пользователей, флаг «для взрослых» и эвристические оценки пригодности и риска.") }}
       </p>
     </div>
   </header>
 
   {% if not has_account %}
   <div class="reddit-card reddit-card--accent">
-    <h2 class="reddit-card__title"><i class="ti ti-alert-triangle"></i> Нужен подключенный Reddit-аккаунт</h2>
-    <p class="reddit-card__desc">Discovery использует OAuth-аккаунт для запросов к API. Подключите аккаунт в разделе «Reddit-аккаунты».</p>
-    <div><a href="/reddit/accounts" class="reddit-btn reddit-btn--primary">К аккаунтам</a></div>
+    <h2 class="reddit-card__title"><i class="ti ti-alert-triangle"></i> {{ t("Нужен подключенный Reddit-аккаунт") }}</h2>
+    <p class="reddit-card__desc">{{ t("Discovery использует OAuth-аккаунт для запросов к API. Подключите аккаунт в разделе «Reddit-аккаунты».") }}</p>
+    <div><a href="/reddit/accounts" class="reddit-btn reddit-btn--primary">{{ t("К аккаунтам") }}</a></div>
   </div>
   {% endif %}
 
@@ -42,7 +41,7 @@
                style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;"/>
       </label>
       <button type="submit" class="reddit-btn reddit-btn--primary" style="align-self:end;">
-        <i class="ti ti-search"></i> Искать
+        <i class="ti ti-search"></i> {{ t("Искать") }}
       </button>
     </div>
   </form>
@@ -74,21 +73,21 @@
         <p class="reddit-card__desc">{{ c.summary or '—' }}</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 18px;font:400 13px/1.4 Inter,sans-serif;">
           <div><span style="color:var(--text-muted)">subscribers</span> {{ c.subscribers or '—' }}</div>
-          <div><span style="color:var(--text-muted)">Активно</span> {{ c.active_users or '—' }}</div>
+          <div><span style="color:var(--text-muted)">{{ t("Активно") }}</span> {{ c.active_users or '—' }}</div>
           <div><span style="color:var(--text-muted)">suitability</span> {{ c.suitability_score }}</div>
           <div><span style="color:var(--text-muted)">risk</span> {{ c.risk_score }}</div>
         </div>
         <footer style="display:flex;gap:6px;">
           <a href="{{ c.url }}" target="_blank" rel="noreferrer noopener" class="reddit-btn">
-            <i class="ti ti-external-link"></i> На Reddit
+            <i class="ti ti-external-link"></i> {{ t("На Reddit") }}
           </a>
           {% if c.saved %}
           <span class="reddit-btn" style="opacity:.7;pointer-events:none;">
             <i class="ti ti-bookmark-filled"></i> Сохранено
           </span>
           {% else %}
-          <span class="reddit-btn" style="opacity:.7;" title="Сабреддит уже сохранён автоматически при поиске">
-            <i class="ti ti-bookmark"></i> В списке
+          <span class="reddit-btn" style="opacity:.7;" title="{{ t("Сабреддит уже сохранён автоматически при поиске") }}">
+            <i class="ti ti-bookmark"></i> {{ t("В списке") }}
           </span>
           {% endif %}
         </footer>
@@ -123,7 +122,7 @@
     {% else %}
     <div class="reddit-placeholder">
       <div class="reddit-placeholder__icon"><i class="ti ti-radar-2"></i></div>
-      <p class="reddit-placeholder__text">Выполните поиск — найденные сабреддиты сохранятся в этом списке автоматически.</p>
+      <p class="reddit-placeholder__text">{{ t("Выполните поиск — найденные сабреддиты сохранятся в этом списке автоматически.") }}</p>
     </div>
     {% endif %}
   </section>

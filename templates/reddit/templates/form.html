@@ -11,7 +11,7 @@
         Плейсхолдеры рендерятся при отправке: {% for p in known_placeholders %}<code>{{ '{' + p + '}' }}</code>{% if not loop.last %}, {% endif %}{% endfor %}.
       </p>
     </div>
-    <a href="/reddit/templates" class="reddit-btn"><i class="ti ti-arrow-left"></i> К списку</a>
+    <a href="/reddit/templates" class="reddit-btn"><i class="ti ti-arrow-left"></i> {{ t("К списку") }}</a>
   </header>
 
   <form method="post" action="/reddit/templates/save" class="reddit-card" style="gap:16px;" id="reddit-template-form">
@@ -19,7 +19,7 @@
 
     <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;">
       <label style="display:flex;flex-direction:column;gap:4px;">
-        <span style="font:600 12px/1 Inter;color:var(--text-muted)">имя</span>
+        <span style="font:600 12px/1 Inter;color:var(--text-muted)">{{ t("имя") }}</span>
         <input type="text" name="name" value="{{ row.name if row else '' }}" required
                style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;"/>
       </label>
@@ -59,7 +59,7 @@
 {% endfor %}{% endif %}</textarea>
       </label>
       <label style="display:flex;flex-direction:column;gap:4px;">
-        <span style="font:600 12px/1 Inter;color:var(--text-muted)">banned phrases (по одному на строку)</span>
+        <span style="font:600 12px/1 Inter;color:var(--text-muted)">{{ t("banned phrases (по одному на строку)") }}</span>
         <textarea name="banned_phrases_text" id="reddit-template-banned" rows="5"
                   placeholder="click here&#10;dm me"
                   style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-family:ui-monospace,monospace;">{% if row %}{% for b in row.banned_phrases %}{{ b }}
@@ -78,9 +78,9 @@
       <span style="flex:1;"></span>
       <button type="button" class="reddit-btn" id="reddit-template-generate-btn"
               {% if not row %}disabled title="Сначала сохраните шаблон, чтобы сгенерировать AI-варианты"{% endif %}>
-        <i class="ti ti-sparkles"></i> AI-варианты
+        <i class="ti ti-sparkles"></i> {{ t("AI-варианты") }}
       </button>
-      <button type="submit" class="reddit-btn reddit-btn--primary"><i class="ti ti-device-floppy"></i> Сохранить</button>
+      <button type="submit" class="reddit-btn reddit-btn--primary"><i class="ti ti-device-floppy"></i> {{ t("Сохранить") }}</button>
     </div>
 
     <div id="reddit-template-ai-output" style="display:none;padding:14px;border-radius:10px;background:var(--ws-accent-soft);color:var(--text-primary);font-size:14px;">

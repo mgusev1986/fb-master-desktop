@@ -10,7 +10,7 @@
     <div>
       <h1>{{ campaign.name }}</h1>
       <p class="subtitle">
-        {% if campaign.status == 'running' %}<strong>Выполняется</strong>
+        {% if campaign.status == 'running' %}<strong>{{ t("Выполняется") }}</strong>
         {% elif campaign.status == 'paused' %}Пауза
         {% elif campaign.status == 'completed' %}Завершена
         {% elif campaign.status == 'ready' %}Очередь готова
@@ -24,9 +24,9 @@
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       {% if campaign.status != 'running' %}
-      <a href="/outreach/{{ campaign.id }}/edit" class="btn btn-secondary"><i class="ti ti-edit"></i> Редактировать</a>
+      <a href="/outreach/{{ campaign.id }}/edit" class="btn btn-secondary"><i class="ti ti-edit"></i> {{ t("Редактировать") }}</a>
       {% endif %}
-      <a href="/outreach" class="btn btn-secondary"><i class="ti ti-list"></i> Все кампании</a>
+      <a href="/outreach" class="btn btn-secondary"><i class="ti ti-list"></i> {{ t("Все кампании") }}</a>
     </div>
   </div>
 </div>
@@ -34,7 +34,7 @@
 {% if request.query_params.get('built') is not none %}
 <div class="card" style="margin-bottom:16px{% if request.query_params.get('built') == '0' and request.query_params.get('why') %};border-color:var(--warning){% endif %}">
   <div class="card-body" style="font-size:var(--font-size-sm)">
-    В очереди: <strong>{{ request.query_params.get('built') }}</strong> строк.
+    {{ t("В очереди:") }} <strong>{{ request.query_params.get('built') }}</strong> строк.
     {% if not is_comment_campaign %}
     {% if request.query_params.get('skipped') != '0' %}
     Пропущено (уже контактировали): <strong>{{ request.query_params.get('skipped') }}</strong>.
@@ -81,7 +81,7 @@
     {% if e == 'no_queue' %}
     Нет строк в очереди — сначала «Собрать очередь».
     {% set qw = request.query_params.get('why') %}
-    {% if qw == 'no_accounts' %} <strong>Причина:</strong> не выбраны аккаунты-отправители (вкладка «Редактировать»).{% elif qw == 'no_people' %} <strong>Причина:</strong> нет контактов в выбранном источнике или не заданы ID.{% elif qw == 'need_template' %} <strong>Причина:</strong> для режима «Шаблон» нужно выбрать шаблон сообщения.{% elif qw == 'all_contacted' %} <strong>Причина:</strong> все отсеяны по общему «Уже контактировали» (вся установка).{% elif qw == 'empty_template_body' %} <strong>Причина:</strong> шаблон даёт пустой текст.{% elif qw == 'no_valid_rows' %} <strong>Причина:</strong> нет валидных контактов в базе по id.{% elif qw %} <strong>Код:</strong> {{ qw|e }}{% endif %}
+    {% if qw == 'no_accounts' %} <strong>{{ t("Причина:") }}</strong> не выбраны аккаунты-отправители (вкладка «Редактировать»).{% elif qw == 'no_people' %} <strong>{{ t("Причина:") }}</strong> нет контактов в выбранном источнике или не заданы ID.{% elif qw == 'need_template' %} <strong>{{ t("Причина:") }}</strong> для режима «Шаблон» нужно выбрать шаблон сообщения.{% elif qw == 'all_contacted' %} <strong>{{ t("Причина:") }}</strong> все отсеяны по общему «Уже контактировали» (вся установка).{% elif qw == 'empty_template_body' %} <strong>{{ t("Причина:") }}</strong> шаблон даёт пустой текст.{% elif qw == 'no_valid_rows' %} <strong>{{ t("Причина:") }}</strong> нет валидных контактов в базе по id.{% elif qw %} <strong>{{ t("Код:") }}</strong> {{ qw|e }}{% endif %}
     {% endif %}
     {% if e == 'state' %}Некорректное состояние кампании.{% endif %}
     {% if e == 'job_running' %}Задача уже выполняется.{% endif %}
@@ -104,11 +104,11 @@
 
 {% if cfg.get('batch_from_donor', true) %}
 <div class="card" style="margin-bottom:16px">
-  <div class="card-header">Очередь из выбранной базы</div>
+  <div class="card-header">{{ t("Очередь из выбранной базы") }}</div>
   <div class="card-body" style="font-size:var(--font-size-sm);color:var(--text-secondary)">
     <p style="margin:0 0 10px">
       Уже <strong>успешно</strong> {{ 'обработано в этой кампании' if is_comment_campaign else 'отправлено в этой кампании' }}: <strong>{{ done_campaign|length }}</strong>
-      · Ещё можно взять в очередь: <strong>{{ candidates_remaining }}</strong>
+      {{ t("· Ещё можно взять в очередь:") }} <strong>{{ candidates_remaining }}</strong>
       {% if donor_total is not none %}
       {% if cfg.get('batch_all_donors') %}
       · Всего в «Базе контактов»: <strong>{{ donor_total }}</strong>
@@ -125,7 +125,7 @@
     {% if campaign.status != 'running' and candidates_remaining == 0 %}
     <p style="margin:0">Сейчас некого добавить в очередь — список из источника закончился. При необходимости смените источник в «Редактировать».</p>
     {% endif %}
-    <p style="margin:12px 0 0;font-size:var(--font-size-xs)">«Собрать очередь из базы» — следующая группа контактов; затем «Запустить».</p>
+    <p style="margin:12px 0 0;font-size:var(--font-size-xs)">{{ t("«Собрать очередь из базы» — следующая группа контактов; затем «Запустить».") }}</p>
   </div>
 </div>
 {% endif %}
@@ -140,29 +140,27 @@
       Отметьте галочками одного или нескольких человек и нажмите «Вернуть в очередь выбранных» или действуйте по одному кнопкой в строке.
       Это убирает их из учёта кампании, после чего можно снова «Собрать очередь из базы».
       {% else %}
-      Это те же <strong>{{ done_campaign_people|length }}</strong>, кого считает строка «успешно отправлено… (не попадут в очередь снова)».
-      Отметьте галочками одного или нескольких человек и нажмите «Вернуть в очередь выбранных» или действуйте по одному кнопкой в строке.
-      Это убирает их из учёта кампании и из глобального
-      <a href="/contacted" class="table-link">«Уже контактировали»</a> для аккаунтов этой кампании — затем «Собрать очередь из базы».
+      Это те же <strong>{{ done_campaign_people|length }}</strong>{{ t(", кого считает строка «успешно отправлено… (не попадут в очередь снова)». Отметьте галочками одного или нескольких человек и нажмите «Вернуть в очередь выбранных» или действуйте по одному кнопкой в строке. Это убирает их из учёта кампании и из глобального") }}
+      <a href="/contacted" class="table-link">{{ t("«Уже контактировали»") }}</a> для аккаунтов этой кампании — затем «Собрать очередь из базы».
       {% endif %}
     </p>
     <form id="outreach-bulk-forget-form" method="post" action="/outreach/{{ campaign.id }}/forget-campaign-done-bulk" style="display:none" aria-hidden="true"></form>
     <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px">
       <button type="button" class="btn btn-sm btn-primary" id="outreach-bulk-forget-open" disabled
               {% if campaign.status == 'running' %}disabled data-locked="1" title="Сначала остановите {{ 'комментинг' if is_comment_campaign else 'рассылку' }}"{% endif %}>
-        <i class="ti ti-repeat"></i> Вернуть в очередь выбранных (<span id="outreach-bulk-cnt">0</span>)
+        <i class="ti ti-repeat"></i> {{ t("Вернуть в очередь выбранных (") }}<span id="outreach-bulk-cnt">0</span>)
       </button>
     </div>
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
-            <th class="outreach-done-col-chk" style="width:42px;text-align:center" title="Выбрать всех">
+            <th class="outreach-done-col-chk" style="width:42px;text-align:center" title="{{ t("Выбрать всех") }}">
               <input type="checkbox" class="outreach-done-select-all outreach-done-checkbox" aria-label="Выбрать всех в списке {{ 'обработанных' if is_comment_campaign else 'отправленных' }}"
                      {% if campaign.status == 'running' %}disabled{% endif %}/>
             </th>
-            <th>Имя</th>
-            <th>Профиль</th>
+            <th>{{ t("Имя") }}</th>
+            <th>{{ t("Профиль") }}</th>
             <th style="width:1%;white-space:nowrap"></th>
           </tr>
         </thead>
@@ -182,7 +180,7 @@
               <button type="button" class="btn btn-sm btn-secondary outreach-forget-open" {% if campaign.status == 'running' %}disabled title="Сначала остановите {{ 'комментинг' if is_comment_campaign else 'рассылку' }}"{% endif %}
                       data-person-id="{{ p.id }}"
                       data-name="{{ (p.display_name or p.first_name or ('#' ~ p.id))|e }}">
-                <i class="ti ti-repeat"></i> Вернуть в очередь
+                <i class="ti ti-repeat"></i> {{ t("Вернуть в очередь") }}
               </button>
             </td>
           </tr>
@@ -203,7 +201,7 @@
   <div class="card-body" style="display:flex;gap:12px;align-items:flex-start">
     <i class="ti ti-alert-triangle" style="font-size:22px;color:var(--warning, #d48806);flex-shrink:0;margin-top:2px"></i>
     <div>
-      <div style="font-weight:600;margin-bottom:4px">Рассылка на паузе: нужно ваше действие</div>
+      <div style="font-weight:600;margin-bottom:4px">{{ t("Рассылка на паузе: нужно ваше действие") }}</div>
       <div style="font-size:var(--font-size-sm);color:var(--text-secondary);line-height:1.5">{{ _wait_ru }}</div>
       {% if _wait_details %}
       <div style="font-size:var(--font-size-xs, 12px);color:var(--text-muted, #888);margin-top:4px">Детали: {{ _wait_details }}</div>
@@ -220,7 +218,7 @@
 {% endif %}
 
 <div class="card" style="margin-bottom:20px">
-  <div class="card-header">Действия</div>
+  <div class="card-header">{{ t("Действия") }}</div>
   <div class="card-body" style="display:flex;flex-wrap:wrap;gap:10px">
     <form method="post" action="/outreach/{{ campaign.id }}/build-queue">
       <button type="submit" class="btn btn-primary" {% if campaign.status == 'running' %}disabled{% endif %}>
@@ -229,11 +227,11 @@
     </form>
     {% if campaign.status == 'running' %}
     <form method="post" action="/outreach/{{ campaign.id }}/pause">
-      <button type="submit" class="btn btn-secondary"><i class="ti ti-player-pause"></i> Пауза</button>
+      <button type="submit" class="btn btn-secondary"><i class="ti ti-player-pause"></i> {{ t("Пауза") }}</button>
     </form>
     {% elif campaign.status == 'paused' %}
     <form method="post" action="/outreach/{{ campaign.id }}/start">
-      <button type="submit" class="btn btn-primary"><i class="ti ti-player-play"></i> Продолжить</button>
+      <button type="submit" class="btn btn-primary"><i class="ti ti-player-play"></i> {{ t("Продолжить") }}</button>
     </form>
     {% elif campaign.status in ('ready', 'draft') %}
     <form method="post" action="/outreach/{{ campaign.id }}/start">
@@ -249,7 +247,7 @@
     {% elif campaign.status == 'completed' %}
     <form method="post" action="/outreach/{{ campaign.id }}/build-queue">
       <button type="submit" class="btn btn-secondary" {% if campaign.status == 'running' %}disabled{% endif %}>
-        <i class="ti ti-refresh"></i> Новая очередь из базы
+        <i class="ti ti-refresh"></i> {{ t("Новая очередь из базы") }}
       </button>
     </form>
     {% endif %}
@@ -259,13 +257,13 @@
     </button>
     {% endif %}
     <button type="button" class="btn btn-ghost outreach-delete-open" style="color:var(--error)" {% if campaign.status == 'running' %}disabled{% endif %}>
-      <i class="ti ti-trash"></i> Удалить
+      <i class="ti ti-trash"></i> {{ t("Удалить") }}
     </button>
   </div>
 </div>
 
 <div class="card" style="margin-bottom:20px">
-  <div class="card-header">Параметры</div>
+  <div class="card-header">{{ t("Параметры") }}</div>
   <div class="card-body" style="font-size:var(--font-size-sm);color:var(--text-secondary)">
     {% if is_comment_campaign %}
     Режим комментария:
@@ -313,7 +311,7 @@
 </div>
 
 <div class="card" style="margin-bottom:20px">
-  <div class="card-header">Очередь</div>
+  <div class="card-header">{{ t("Очередь") }}</div>
   <div class="card-body">
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;font-size:var(--font-size-sm)">
       <span class="badge badge-default">В очереди: {{ cnt_by.get('queued', 0) }}</span>
@@ -323,9 +321,7 @@
     </div>
     {% if not is_comment_campaign %}
     <p class="form-hint" style="margin:0 0 14px;line-height:1.55;color:var(--text-secondary);max-width:920px">
-      Каждая строка очереди — это <strong>отдельный контакт</strong>. «Отправлено» значит: ЛС ушло в <strong>переписку с человеком из этой строки</strong> (его имя в колонке «Кому»).
-      Чтобы увидеть сообщение, откройте в Messenger <strong>диалог именно с этим контактом</strong>, а не только с первым в списке отчёта.
-      Если у Facebook включено ограничение истории чата, часть старых сообщений в интерфейсе может не показываться.
+      {{ t("Каждая строка очереди — это") }} <strong>отдельный контакт</strong>{{ t(". «Отправлено» значит: ЛС ушло в") }} <strong>переписку с человеком из этой строки</strong> {{ t("(его имя в колонке «Кому»). Чтобы увидеть сообщение, откройте в Messenger") }} <strong>диалог именно с этим контактом</strong>{{ t(", а не только с первым в списке отчёта. Если у Facebook включено ограничение истории чата, часть старых сообщений в интерфейсе может не показываться.") }}
     </p>
     {% endif %}
     {% if queue_rows %}
@@ -333,11 +329,11 @@
       <table>
         <thead>
           <tr>
-            <th>Кому</th>
-            <th>Аккаунт</th>
-            <th>Статус</th>
-            <th>Ошибка</th>
-            <th>Время</th>
+            <th>{{ t("Кому") }}</th>
+            <th>{{ t("Аккаунт") }}</th>
+            <th>{{ t("Статус") }}</th>
+            <th>{{ t("Ошибка") }}</th>
+            <th>{{ t("Время") }}</th>
           </tr>
         </thead>
         <tbody>
@@ -352,9 +348,9 @@
             <td style="font-size:var(--font-size-xs)">{{ accs.get(r.fb_account_id).label if accs.get(r.fb_account_id) else ('#' ~ r.fb_account_id) }}</td>
             <td>
               {% if r.status == 'done' %}<span class="badge badge-success">{{ 'Готово' if is_comment_campaign else 'Отправлено' }}</span>
-              {% elif r.status == 'failed' %}<span class="badge badge-default" style="border-color:var(--error);color:var(--error)">Ошибка</span>
-              {% elif r.status == 'running' %}<span class="badge badge-default">В работе</span>
-              {% else %}<span class="badge badge-default">В очереди</span>{% endif %}
+              {% elif r.status == 'failed' %}<span class="badge badge-default" style="border-color:var(--error);color:var(--error)">{{ t("Ошибка") }}</span>
+              {% elif r.status == 'running' %}<span class="badge badge-default">{{ t("В работе") }}</span>
+              {% else %}<span class="badge badge-default">{{ t("В очереди") }}</span>{% endif %}
             </td>
             {% set err_raw = r.error or '' %}
             {% set err_disp = humanize_outreach_row_error(err_raw) %}
@@ -366,7 +362,7 @@
       </table>
     </div>
     {% else %}
-    <p style="color:var(--text-secondary)">Очередь пуста. Сохраните настройки в «Редактировать», затем «Собрать очередь».</p>
+    <p style="color:var(--text-secondary)">{{ t("Очередь пуста. Сохраните настройки в «Редактировать», затем «Собрать очередь».") }}</p>
     {% endif %}
   </div>
 </div>
@@ -382,12 +378,12 @@
     <div style="padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px">
       <span style="flex-shrink:0;width:40px;height:40px;border-radius:10px;background:rgba(99,102,241,.2);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:1.25rem" aria-hidden="true"><i class="ti ti-users"></i></span>
       <div style="min-width:0">
-        <h2 id="outreach-bulk-forget-title" style="margin:0;font-size:1.08rem;font-weight:600">Вернуть выбранных в очередь?</h2>
+        <h2 id="outreach-bulk-forget-title" style="margin:0;font-size:1.08rem;font-weight:600">{{ t("Вернуть выбранных в очередь?") }}</h2>
         <p id="outreach-bulk-forget-text" class="form-hint" style="margin:10px 0 0;font-size:var(--font-size-sm);line-height:1.55;color:var(--text-secondary)"></p>
       </div>
     </div>
     <div style="padding:14px 20px 18px;display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;background:var(--bg-surface-hover)">
-      <button type="button" class="btn btn-secondary" data-outreach-bulk-forget-cancel>Отмена</button>
+      <button type="button" class="btn btn-secondary" data-outreach-bulk-forget-cancel>{{ t("Отмена") }}</button>
       <button type="button" class="btn btn-primary" data-outreach-bulk-forget-confirm><i class="ti ti-repeat"></i> Снять с учёта</button>
     </div>
   </div>
@@ -403,8 +399,8 @@
       </div>
     </div>
     <div style="padding:14px 20px 18px;display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;background:var(--bg-surface-hover)">
-      <button type="button" class="btn btn-secondary" data-outreach-forget-cancel>Отмена</button>
-      <button type="button" class="btn btn-primary" data-outreach-forget-confirm><i class="ti ti-repeat"></i> Вернуть в очередь</button>
+      <button type="button" class="btn btn-secondary" data-outreach-forget-cancel>{{ t("Отмена") }}</button>
+      <button type="button" class="btn btn-primary" data-outreach-forget-confirm><i class="ti ti-repeat"></i> {{ t("Вернуть в очередь") }}</button>
     </div>
   </div>
 </div>
@@ -414,13 +410,13 @@
     <div style="padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px">
       <span style="flex-shrink:0;width:40px;height:40px;border-radius:10px;background:rgba(99,102,241,.2);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:1.25rem" aria-hidden="true"><i class="ti ti-repeat"></i></span>
       <div style="min-width:0">
-        <h2 id="outreach-retry-title" style="margin:0;font-size:1.08rem;font-weight:600">Повторить неудачные?</h2>
+        <h2 id="outreach-retry-title" style="margin:0;font-size:1.08rem;font-weight:600">{{ t("Повторить неудачные?") }}</h2>
         <p id="outreach-retry-text" class="form-hint" style="margin:10px 0 0;font-size:var(--font-size-sm);line-height:1.55;color:var(--text-secondary)"></p>
       </div>
     </div>
     <div style="padding:14px 20px 18px;display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;background:var(--bg-surface-hover)">
-      <button type="button" class="btn btn-secondary" data-outreach-retry-cancel>Отмена</button>
-      <button type="button" class="btn btn-primary" data-outreach-retry-confirm><i class="ti ti-repeat"></i> Повторить</button>
+      <button type="button" class="btn btn-secondary" data-outreach-retry-cancel>{{ t("Отмена") }}</button>
+      <button type="button" class="btn btn-primary" data-outreach-retry-confirm><i class="ti ti-repeat"></i> {{ t("Повторить") }}</button>
     </div>
   </div>
 </div>
@@ -435,8 +431,8 @@
       </div>
     </div>
     <div style="padding:14px 20px 18px;display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;background:var(--bg-surface-hover)">
-      <button type="button" class="btn btn-secondary" data-outreach-delete-cancel>Отмена</button>
-      <button type="button" class="btn btn-danger" data-outreach-delete-confirm><i class="ti ti-trash"></i> Удалить</button>
+      <button type="button" class="btn btn-secondary" data-outreach-delete-cancel>{{ t("Отмена") }}</button>
+      <button type="button" class="btn btn-danger" data-outreach-delete-confirm><i class="ti ti-trash"></i> {{ t("Удалить") }}</button>
     </div>
   </div>
 </div>

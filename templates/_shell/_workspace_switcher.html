@@ -4,7 +4,7 @@
   Ожидает в контексте переменные `available_workspaces` и `current_workspace_id`.
 #}
 {% if available_workspaces and current_workspace_id %}
-<nav class="fbm-ws-tabs" role="tablist" aria-label="Рабочие пространства">
+<nav class="fbm-ws-tabs" role="tablist" aria-label="{{ t("Рабочие пространства") }}">
   {% for ws in available_workspaces %}
     {% if ws.openable %}
       <a class="fbm-ws-tab {% if ws.id == current_workspace_id %}fbm-ws-tab--active{% endif %}"
@@ -27,9 +27,9 @@
       </span>
     {% endif %}
   {% endfor %}
-  <a class="fbm-ws-tab fbm-ws-tab--all" href="/workspaces" title="Все рабочие пространства">
+  <a class="fbm-ws-tab fbm-ws-tab--all" href="/workspaces" title="{{ t("Все рабочие пространства") }}">
     <i class="ti ti-layout-grid"></i>
-    <span class="fbm-ws-tab__label">Все</span>
+    <span class="fbm-ws-tab__label">{{ t("Все") }}</span>
   </a>
 </nav>
 {% endif %}

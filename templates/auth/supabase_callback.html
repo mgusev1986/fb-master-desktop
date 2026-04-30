@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Вход Supabase — SOCMASTER</title>
+  <title>{{ t("Вход Supabase — SOCMASTER") }}</title>
   <style>
     body { font-family: system-ui, sans-serif; max-width: 36rem; margin: 3rem auto; padding: 0 1rem; }
     #msg { line-height: 1.5; }
@@ -11,7 +11,7 @@
   </style>
 </head>
 <body>
-  <p id="msg">Завершение входа через Supabase…</p>
+  <p id="msg">{{ t("Завершение входа через Supabase…") }}</p>
   <p id="sub" style="display:none;font-size:14px;color:#64748b"></p>
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.8";

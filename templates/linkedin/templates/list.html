@@ -6,7 +6,7 @@
 <div class="li-page">
   <header class="li-page__header">
     <div class="li-page__title-wrap">
-      <h1 class="li-page__title">Шаблоны и AI <span class="li-page__beta-pill">Beta</span></h1>
+      <h1 class="li-page__title">{{ t("Шаблоны и AI") }} <span class="li-page__beta-pill">Beta</span></h1>
       <p class="li-page__subtitle">
         Шаблоны invitation / DM / follow-up. Плейсхолдеры: <code>{first_name}</code>, <code>{full_name}</code>, <code>{company}</code>, <code>{job_title}</code>, <code>{headline}</code>, <code>{industry}</code>, <code>{location}</code>.
       </p>
@@ -14,23 +14,23 @@
   </header>
 
   <section class="li-card li-card--accent">
-    <h2 class="li-card__title"><i class="ti ti-plus"></i> Создать шаблон</h2>
+    <h2 class="li-card__title"><i class="ti ti-plus"></i> {{ t("Создать шаблон") }}</h2>
     <form method="post" action="/linkedin/templates/create" style="display:flex;flex-direction:column;gap:10px;">
       <div style="display:flex;gap:8px;">
-        <input type="text" name="name" required placeholder="Название (внутреннее)"
+        <input type="text" name="name" required placeholder="{{ t("Название (внутреннее)") }}"
                style="flex:2;padding:8px;border-radius:8px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);"/>
         <select name="kind" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);">
           {% for k in kinds %}
           <option value="{{ k }}">{{ k }}</option>
           {% endfor %}
         </select>
-        <input type="text" name="tone" placeholder="tone (опц.)"
+        <input type="text" name="tone" placeholder="{{ t("tone (опц.)") }}"
                style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);"/>
       </div>
-      <textarea name="body" rows="5" required placeholder="Привет, {first_name}! Заметил, что вы работаете в {company}..."
+      <textarea name="body" rows="5" required placeholder="{{ t("Привет, {first_name}! Заметил, что вы работаете в {company}...") }}"
                 style="padding:10px;border-radius:8px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);font:400 13px/1.5 Inter,sans-serif;"></textarea>
       <button type="submit" class="li-btn li-btn--primary" style="align-self:flex-start;">
-        <i class="ti ti-plus"></i> Создать
+        <i class="ti ti-plus"></i> {{ t("Создать") }}
       </button>
     </form>
   </section>
@@ -50,18 +50,18 @@
 
           <details>
             <summary style="cursor:pointer;color:var(--ws-accent);font:500 13px/1 Inter,sans-serif;">
-              <i class="ti ti-sparkles"></i> AI-инструменты
+              <i class="ti ti-sparkles"></i> {{ t("AI-инструменты") }}
             </summary>
             <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px;">
               <div style="display:flex;gap:6px;flex-wrap:wrap;">
                 <form method="post" action="/linkedin/templates/{{ t.id }}/ai" style="margin:0;display:inline-flex;gap:4px;align-items:center;">
                   <input type="hidden" name="op" value="variations"/>
                   <input type="number" name="n" min="2" max="6" value="3" style="width:50px;padding:4px;border-radius:6px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);font-size:12px;"/>
-                  <button class="li-btn" style="font-size:12px;padding:4px 8px;" type="submit"><i class="ti ti-arrows-shuffle"></i> Варианты</button>
+                  <button class="li-btn" style="font-size:12px;padding:4px 8px;" type="submit"><i class="ti ti-arrows-shuffle"></i> {{ t("Варианты") }}</button>
                 </form>
                 <form method="post" action="/linkedin/templates/{{ t.id }}/ai" style="margin:0;">
                   <input type="hidden" name="op" value="shorten"/>
-                  <button class="li-btn" style="font-size:12px;padding:4px 8px;" type="submit"><i class="ti ti-text-decrease"></i> Сократить</button>
+                  <button class="li-btn" style="font-size:12px;padding:4px 8px;" type="submit"><i class="ti ti-text-decrease"></i> {{ t("Сократить") }}</button>
                 </form>
                 <form method="post" action="/linkedin/templates/{{ t.id }}/ai" style="margin:0;">
                   <input type="hidden" name="op" value="soften"/>
@@ -93,7 +93,7 @@
           <form method="post" action="/linkedin/templates/{{ t.id }}/delete" style="margin:0;align-self:flex-end;"
                 onsubmit="return confirm('Архивировать шаблон {{ t.name }}?');">
             <button type="submit" class="li-btn" style="background:transparent;border-color:#c33;color:#c33;font-size:12px;padding:4px 10px;">
-              <i class="ti ti-archive"></i> Архив
+              <i class="ti ti-archive"></i> {{ t("Архив") }}
             </button>
           </form>
         </article>

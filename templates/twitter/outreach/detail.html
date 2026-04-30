@@ -9,11 +9,11 @@
       <h1 class="x-page__title">{{ campaign.name }} <span class="x-page__beta-pill">Beta</span></h1>
       <p class="x-page__subtitle">Mode <strong>{{ campaign.mode }}</strong>, approval <strong>{{ campaign.approval_mode }}</strong>, status <strong>{{ campaign.status }}</strong>.{% if campaign.autoresponder_enabled %} 🤖 AI-{{ campaign.autoresponder_goal }}{% endif %}</p>
     </div>
-    <a href="/twitter/outreach" class="x-btn"><i class="ti ti-arrow-left"></i> К списку</a>
+    <a href="/twitter/outreach" class="x-btn"><i class="ti ti-arrow-left"></i> {{ t("К списку") }}</a>
   </header>
 
   <section class="x-card x-card--accent">
-    <h2 class="x-card__title"><i class="ti ti-list-check"></i> Собрать очередь</h2>
+    <h2 class="x-card__title"><i class="ti ti-list-check"></i> {{ t("Собрать очередь") }}</h2>
     {% if leads %}
     <form method="post" action="/twitter/outreach/{{ campaign.id }}/build-queue">
       {% if campaign.mode == 'reply' %}
@@ -29,20 +29,20 @@
         </label>
         {% endfor %}
       </div>
-      <div style="display:flex;justify-content:flex-end;margin-top:8px;"><button type="submit" class="x-btn x-btn--primary"><i class="ti ti-list-check"></i> В очередь</button></div>
+      <div style="display:flex;justify-content:flex-end;margin-top:8px;"><button type="submit" class="x-btn x-btn--primary"><i class="ti ti-list-check"></i> {{ t("В очередь") }}</button></div>
     </form>
     {% else %}
-    <p class="x-card__desc">Нет лидов. Сначала <a href="/twitter/leads">импортируйте</a>.</p>
+    <p class="x-card__desc">{{ t("Нет лидов. Сначала") }} <a href="/twitter/leads">{{ t("импортируйте") }}</a>.</p>
     {% endif %}
   </section>
 
   <section class="x-card">
-    <h2 class="x-card__title"><i class="ti ti-bolt"></i> Управление</h2>
+    <h2 class="x-card__title"><i class="ti ti-bolt"></i> {{ t("Управление") }}</h2>
     <div style="display:flex;gap:12px;flex-wrap:wrap;">
       <form method="post" action="/twitter/outreach/{{ campaign.id }}/run-once" style="display:flex;gap:6px;align-items:center;" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Send…';">
         <input type="number" name="max_items" min="1" max="20" value="3" style="width:70px;padding:6px;border-radius:6px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
         <label style="font:400 12px/1 Inter;color:var(--text-secondary);"><input type="checkbox" name="headless" value="on" checked/> headless</label>
-        <button type="submit" class="x-btn x-btn--primary"><i class="ti ti-send"></i> Запустить</button>
+        <button type="submit" class="x-btn x-btn--primary"><i class="ti ti-send"></i> {{ t("Запустить") }}</button>
       </form>
       <form method="post" action="/twitter/outreach/{{ campaign.id }}/status" style="display:inline;">
         <input type="hidden" name="status" value="{% if campaign.status == 'active' %}paused{% else %}active{% endif %}"/>
@@ -56,7 +56,7 @@
     {% if items %}
     <div style="overflow-x:auto;">
       <table style="width:100%;border-collapse:collapse;background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;">
-        <thead><tr style="border-bottom:1px solid var(--border);font:600 12px/1 Inter;color:var(--text-muted);text-transform:uppercase;"><th style="text-align:left;padding:10px;">Лид</th><th style="text-align:left;padding:10px;">Превью</th><th style="text-align:left;padding:10px;">Статус</th><th></th></tr></thead>
+        <thead><tr style="border-bottom:1px solid var(--border);font:600 12px/1 Inter;color:var(--text-muted);text-transform:uppercase;"><th style="text-align:left;padding:10px;">{{ t("Лид") }}</th><th style="text-align:left;padding:10px;">{{ t("Превью") }}</th><th style="text-align:left;padding:10px;">{{ t("Статус") }}</th><th></th></tr></thead>
         <tbody>
           {% for it in items %}
           <tr style="border-bottom:1px solid var(--border);vertical-align:top;">
@@ -79,7 +79,7 @@
       </table>
     </div>
     {% else %}
-    <div class="x-placeholder"><div class="x-placeholder__icon"><i class="ti ti-list"></i></div><p class="x-placeholder__text">Очередь пуста.</p></div>
+    <div class="x-placeholder"><div class="x-placeholder__icon"><i class="ti ti-list"></i></div><p class="x-placeholder__text">{{ t("Очередь пуста.") }}</p></div>
     {% endif %}
   </section>
 </div>

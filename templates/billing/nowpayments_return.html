@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Оплата — SOCMASTER</title>
+  <title>{{ t("Оплата — SOCMASTER") }}</title>
   <link rel="stylesheet" href="{{ url_for('static', path='css/main.css') }}"/>
   <style>
     .np-premium-page {
@@ -196,8 +196,8 @@
 <div class="np-premium-page">
   <div class="np-premium-card">
     <p class="np-premium-eyebrow">FB MASTER</p>
-    <h1>После оплаты</h1>
-    <p class="np-premium-wait" id="np-msg">Проверяем платёж… Как только NOWPayments подтвердит оплату, здесь появится новый ключ доступа.</p>
+    <h1>{{ t("После оплаты") }}</h1>
+    <p class="np-premium-wait" id="np-msg">{{ t("Проверяем платёж… Как только NOWPayments подтвердит оплату, здесь появится новый ключ доступа.") }}</p>
     <div id="np-key-wrap" hidden>
       <p class="np-key-label"><strong>Сохраните ключ</strong> — он показан один раз:</p>
       <div class="np-key">
@@ -212,7 +212,7 @@
           </svg>
         </button>
       </div>
-      <p class="np-instruction">Скопируйте ключ и вставьте на экране «Ключ доступа», затем нажмите «Войти». <strong>Один ключ — один компьютер</strong> (в программе SOCMASTER — привязка к железу).</p>
+      <p class="np-instruction">Скопируйте ключ и вставьте на экране «Ключ доступа», затем нажмите «Войти». <strong>{{ t("Один ключ — один компьютер") }}</strong> {{ t("(в программе SOCMASTER — привязка к железу).") }}</p>
       <div id="np-dl-block" class="np-dl-stack" hidden>
         <p class="np-dl-cap-line" style="margin:0 0 0.5rem;font-weight:600">Скачать установщик SOCMASTER:</p>
         <a id="np-dl-win" class="np-premium-cta" href="#" rel="noopener" hidden>
@@ -225,11 +225,11 @@
           <span>macOS Intel</span> <small style="opacity:.85;margin-left:.5rem">2017–2020 · .dmg</small>
         </a>
         <div class="np-dl-captions">
-          <span class="np-dl-cap-sub">Выберите версию для вашего компьютера</span>
+          <span class="np-dl-cap-sub">{{ t("Выберите версию для вашего компьютера") }}</span>
         </div>
         {# macOS helper удалён — инструкция живёт внутри bundle.zip («1. Инструкция.html»). #}
       </div>
-      <a href="/purchase" class="np-premium-outline">Оформить ещё один доступ</a>
+      <a href="/purchase" class="np-premium-outline">{{ t("Оформить ещё один доступ") }}</a>
     </div>
     <p id="np-err" style="display:none"></p>
   </div>

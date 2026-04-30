@@ -6,7 +6,7 @@
 <div class="reddit-page">
   <header class="reddit-page__header">
     <div class="reddit-page__title-wrap">
-      <h1 class="reddit-page__title">Поиск аудитории</h1>
+      <h1 class="reddit-page__title">{{ t("Поиск аудитории") }}</h1>
       <p class="reddit-page__subtitle">
         Соберите пользователей из постов сабреддита, комментаторов конкретного поста или любого релевантного треда.
         Найденных можно массово добавить в «Лиды».
@@ -16,15 +16,15 @@
 
   {% if not has_account and not browser_accounts %}
   <div class="reddit-card reddit-card--accent">
-    <h2 class="reddit-card__title"><i class="ti ti-alert-triangle"></i> Нужен подключенный Reddit-аккаунт</h2>
-    <div><a href="/reddit/accounts" class="reddit-btn reddit-btn--primary">К аккаунтам</a></div>
+    <h2 class="reddit-card__title"><i class="ti ti-alert-triangle"></i> {{ t("Нужен подключенный Reddit-аккаунт") }}</h2>
+    <div><a href="/reddit/accounts" class="reddit-btn reddit-btn--primary">{{ t("К аккаунтам") }}</a></div>
   </div>
   {% endif %}
 
   {% if browser_accounts %}
   <section class="reddit-card reddit-card--accent">
-    <h2 class="reddit-card__title"><i class="ti ti-search"></i> Поиск через браузер (Playwright, browser-mode аккаунты)</h2>
-    <p class="reddit-card__desc">Открывает Reddit под выбранным аккаунтом и парсит первые N результатов в leads с дедупликацией по username.</p>
+    <h2 class="reddit-card__title"><i class="ti ti-search"></i> {{ t("Поиск через браузер (Playwright, browser-mode аккаунты)") }}</h2>
+    <p class="reddit-card__desc">{{ t("Открывает Reddit под выбранным аккаунтом и парсит первые N результатов в leads с дедупликацией по username.") }}</p>
 
     <form method="post" action="/reddit/audience/scan-subreddit-browser" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px;"
           onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Сканирую…';">
@@ -46,9 +46,9 @@
         <option value="">— browser-mode аккаунт —</option>
         {% for a in browser_accounts %}<option value="{{ a.id }}">{{ a.label }} [{{ a.status }}]</option>{% endfor %}
       </select>
-      <input type="text" name="keywords" required placeholder="kw для поиска users" style="flex:2;min-width:240px;padding:8px;border-radius:8px;border:1px solid var(--border);"/>
+      <input type="text" name="keywords" required placeholder="{{ t("kw для поиска users") }}" style="flex:2;min-width:240px;padding:8px;border-radius:8px;border:1px solid var(--border);"/>
       <input type="number" name="limit" min="5" max="100" value="25" style="width:80px;padding:8px;border-radius:8px;border:1px solid var(--border);"/>
-      <button type="submit" class="reddit-btn"><i class="ti ti-search"></i> Найти users</button>
+      <button type="submit" class="reddit-btn"><i class="ti ti-search"></i> {{ t("Найти users") }}</button>
     </form>
 
     {% if notice and notice.startswith('scan_ok') or notice and notice.startswith('search_ok') %}
@@ -63,26 +63,26 @@
     <div style="display:flex;gap:12px;flex-wrap:wrap;">
       <label style="display:flex;align-items:center;gap:6px;">
         <input type="radio" name="source" value="by_subreddit" {% if source == 'by_subreddit' %}checked{% endif %}/>
-        По сабреддиту (авторы постов)
+        {{ t("По сабреддиту (авторы постов)") }}
       </label>
       <label style="display:flex;align-items:center;gap:6px;">
         <input type="radio" name="source" value="by_subreddit_comments" {% if source == 'by_subreddit_comments' %}checked{% endif %}/>
-        По сабреддиту (комментаторы)
+        {{ t("По сабреддиту (комментаторы)") }}
       </label>
       <label style="display:flex;align-items:center;gap:6px;">
         <input type="radio" name="source" value="by_post_permalink" {% if source == 'by_post_permalink' %}checked{% endif %}/>
-        По permalink поста
+        {{ t("По permalink поста") }}
       </label>
     </div>
 
     <div style="display:grid;grid-template-columns:2fr 2fr 1fr auto;gap:10px;">
       <label style="display:flex;flex-direction:column;gap:4px;">
-        <span style="font:600 12px/1 Inter;color:var(--text-muted)">subreddit (без r/)</span>
+        <span style="font:600 12px/1 Inter;color:var(--text-muted)">{{ t("subreddit (без r/)") }}</span>
         <input type="text" name="subreddit" value="{{ subreddit }}" placeholder="askreddit"
                style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;"/>
       </label>
       <label style="display:flex;flex-direction:column;gap:4px;">
-        <span style="font:600 12px/1 Inter;color:var(--text-muted)">permalink поста</span>
+        <span style="font:600 12px/1 Inter;color:var(--text-muted)">{{ t("permalink поста") }}</span>
         <input type="text" name="permalink" value="{{ permalink }}" placeholder="/r/askreddit/comments/abc/..."
                style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;"/>
       </label>
@@ -92,7 +92,7 @@
                style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;"/>
       </label>
       <button type="submit" class="reddit-btn reddit-btn--primary" style="align-self:end;">
-        <i class="ti ti-search"></i> Искать
+        <i class="ti ti-search"></i> {{ t("Искать") }}
       </button>
     </div>
   </form>
@@ -117,7 +117,7 @@
         <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-muted);">
           <input type="checkbox" id="reddit-audience-select-all" checked/> выбрать всех
         </label>
-        <button type="submit" class="reddit-btn reddit-btn--primary"><i class="ti ti-plus"></i> Добавить в лиды</button>
+        <button type="submit" class="reddit-btn reddit-btn--primary"><i class="ti ti-plus"></i> {{ t("Добавить в лиды") }}</button>
       </div>
     </div>
 
@@ -177,7 +177,7 @@
   {% elif has_account and (subreddit or permalink) and not error %}
   <div class="reddit-placeholder">
     <div class="reddit-placeholder__icon"><i class="ti ti-user-search"></i></div>
-    <p class="reddit-placeholder__text">Пользователей не найдено. Попробуйте другой источник или увеличьте limit.</p>
+    <p class="reddit-placeholder__text">{{ t("Пользователей не найдено. Попробуйте другой источник или увеличьте limit.") }}</p>
   </div>
   {% endif %}
 </div>

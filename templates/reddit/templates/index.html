@@ -12,12 +12,12 @@
         {{ '{last_post_title}' }}. AI-варианты генерируются через общий сервис SOCMASTER (если ключи настроены).
       </p>
     </div>
-    <a href="/reddit/templates/new" class="reddit-btn reddit-btn--primary"><i class="ti ti-plus"></i> Новый шаблон</a>
+    <a href="/reddit/templates/new" class="reddit-btn reddit-btn--primary"><i class="ti ti-plus"></i> {{ t("Новый шаблон") }}</a>
   </header>
 
   <div class="reddit-card" style="flex-direction:row;gap:10px;align-items:center;flex-wrap:wrap;">
     <span style="font:500 13px/1 Inter;color:var(--text-muted);">Фильтр по типу:</span>
-    <a href="/reddit/templates" class="reddit-btn{% if not active_kind %} reddit-btn--primary{% endif %}" style="padding:6px 10px;">Все</a>
+    <a href="/reddit/templates" class="reddit-btn{% if not active_kind %} reddit-btn--primary{% endif %}" style="padding:6px 10px;">{{ t("Все") }}</a>
     {% for k in template_kinds %}
     <a href="/reddit/templates?kind={{ k }}" class="reddit-btn{% if active_kind == k %} reddit-btn--primary{% endif %}" style="padding:6px 10px;">{{ k|ru_status }}</a>
     {% endfor %}
@@ -42,7 +42,7 @@
       <div style="font-size:12px;color:var(--text-muted);">Вариантов: {{ t.variants|length }} ({{ t.variant_mode }})</div>
       {% endif %}
       <footer style="display:flex;gap:6px;flex-wrap:wrap;">
-        <a href="/reddit/templates/{{ t.id }}/edit" class="reddit-btn"><i class="ti ti-edit"></i> Редактировать</a>
+        <a href="/reddit/templates/{{ t.id }}/edit" class="reddit-btn"><i class="ti ti-edit"></i> {{ t("Редактировать") }}</a>
         <form method="post" action="/reddit/templates/{{ t.id }}/delete" style="display:inline"
               onsubmit="return confirm('Удалить шаблон «{{ t.name }}»?');">
           <button type="submit" class="reddit-btn"><i class="ti ti-trash"></i></button>
@@ -55,7 +55,7 @@
   <div class="reddit-placeholder">
     <div class="reddit-placeholder__icon"><i class="ti ti-template"></i></div>
     <p class="reddit-placeholder__text">Шаблонов пока нет — создайте первый.</p>
-    <a href="/reddit/templates/new" class="reddit-btn reddit-btn--primary"><i class="ti ti-plus"></i> Новый шаблон</a>
+    <a href="/reddit/templates/new" class="reddit-btn reddit-btn--primary"><i class="ti ti-plus"></i> {{ t("Новый шаблон") }}</a>
   </div>
   {% endif %}
 </div>

@@ -45,11 +45,11 @@
         <div class="card" style="border-color:var(--error);margin:0">
           <div class="card-body" style="font-size:var(--font-size-sm);color:var(--error)">
             {% if form_err == 'no_senders' %}
-            <strong>Не выбран аккаунт-отправитель.</strong> Отметьте хотя бы один Facebook-аккаунт ниже — без него очередь рассылки не соберётся.
+            <strong>{{ t("Не выбран аккаунт-отправитель.") }}</strong> Отметьте хотя бы один Facebook-аккаунт ниже — без него очередь рассылки не соберётся.
             {% elif form_err == 'batch_scope' %}
-            <strong>Источник не подходит для очереди.</strong> Выберите «Вся база контактов» или партию из «Импорт базы».
+            <strong>{{ t("Источник не подходит для очереди.") }}</strong> Выберите «Вся база контактов» или партию из «Импорт базы».
             {% elif form_err == 'no_source' %}
-            <strong>Не выбран источник контактов.</strong> Укажите «Вся база контактов» или партию из истории <a href="/import">импорта</a> / <a href="/parser">парсера</a>.
+            <strong>{{ t("Не выбран источник контактов.") }}</strong> Укажите «Вся база контактов» или партию из истории <a href="/import">{{ t("импорта") }}</a> / <a href="/parser">парсера</a>.
             {% elif form_err == 'accounts' %}
             Выбраны недопустимые аккаунты. Обновите страницу и выберите аккаунты из списка.
             {% else %}
@@ -60,37 +60,37 @@
       </div>
       {% endif %}
       <div class="form-group">
-        <label class="form-label" for="name">Название</label>
+        <label class="form-label" for="name">{{ t("Название") }}</label>
         <input id="name" name="name" type="text" class="form-input" maxlength="255" value="{{ campaign.name if campaign else '' }}"/>
       </div>
 
       <div class="form-group">
-        <label class="form-label" for="status">Статус</label>
+        <label class="form-label" for="status">{{ t("Статус") }}</label>
         <select id="status" name="status" class="form-select">
-          <option value="draft" {% if not campaign or campaign.status == 'draft' %}selected{% endif %}>Черновик</option>
-          <option value="active" {% if campaign and campaign.status == 'active' %}selected{% endif %}>Активен</option>
+          <option value="draft" {% if not campaign or campaign.status == 'draft' %}selected{% endif %}>{{ t("Черновик") }}</option>
+          <option value="active" {% if campaign and campaign.status == 'active' %}selected{% endif %}>{{ t("Активен") }}</option>
         </select>
       </div>
 
       <div class="form-group">
         <label class="form-label" for="template_id">{{ 'Шаблон комментария' if is_comment_campaign else 'Шаблон сообщения' }}</label>
         <select id="template_id" name="template_id" class="form-select">
-          <option value="">— выберите —</option>
+          <option value="">{{ t("— выберите —") }}</option>
           {% for t in templates %}
           <option value="{{ t.id }}" {% if campaign and campaign.template_id == t.id %}selected{% endif %}>{{ t.name }} ({{ t.category }})</option>
           {% endfor %}
         </select>
         <p id="outreach-template-hint" class="form-hint">
-          <a href="/templates" target="_blank">Все шаблоны</a> · <a href="/templates/new" target="_blank">Новый шаблон</a><span id="outreach-template-hint-extra"></span>
+          <a href="/templates" target="_blank">{{ t("Все шаблоны") }}</a> · <a href="/templates/new" target="_blank">{{ t("Новый шаблон") }}</a><span id="outreach-template-hint-extra"></span>
         </p>
       </div>
 
       <div class="card" style="background:var(--bg-surface-hover);margin-bottom:16px">
         <div class="card-body" style="padding:14px 16px">
           {% if is_comment_campaign %}
-          <div style="font-weight:600;margin-bottom:8px">Режим комментария</div>
+          <div style="font-weight:600;margin-bottom:8px">{{ t("Режим комментария") }}</div>
           <p class="form-hint" style="margin-top:0;margin-bottom:12px">
-            Внутри кампании можно оставить обычный шаблон комментария или включить генерацию комментария через нейросеть по тексту выбранного поста.
+            {{ t("Внутри кампании можно оставить обычный шаблон комментария или включить генерацию комментария через нейросеть по тексту выбранного поста.") }}
           </p>
           <div style="display:flex;flex-direction:column;gap:10px">
             <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer">
@@ -99,24 +99,24 @@
             </label>
             <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer">
               <input type="radio" name="comment_mode" value="ai_comment" {% if comment_mode == 'ai_comment' %}checked{% endif %}/>
-              <span><strong>Комментарий через нейросеть</strong> — как в сценариях: модель читает выбранный пост в профиле и пишет короткий осмысленный комментарий.</span>
+              <span><strong>{{ t("Комментарий через нейросеть") }}</strong> — как в сценариях: модель читает выбранный пост в профиле и пишет короткий осмысленный комментарий.</span>
             </label>
           </div>
 
           <div id="outreach-ai-comment-settings" class="scenario-like-settings" style="margin-top:14px;{% if comment_mode != 'ai_comment' %}display:none;{% endif %}">
             <div class="scenario-like-settings__head">
-              <span class="scenario-like-settings__title"><i class="ti ti-message-circle"></i> Комментарий через нейросеть</span>
-              <p class="form-hint" style="margin:6px 0 0">Откроется профиль, снимется текст выбранного поста в ленте, и модель сгенерирует готовый комментарий под его контекст.</p>
+              <span class="scenario-like-settings__title"><i class="ti ti-message-circle"></i> {{ t("Комментарий через нейросеть") }}</span>
+              <p class="form-hint" style="margin:6px 0 0">{{ t("Откроется профиль, снимется текст выбранного поста в ленте, и модель сгенерирует готовый комментарий под его контекст.") }}</p>
             </div>
             <div class="scenario-like-settings__fields" style="display:flex;flex-direction:column;gap:12px">
               {% if not has_openai and not has_gemini and not is_platform_owner(user) %}
-              <p class="form-hint" style="margin:0;color:var(--error)">Нет API-ключа: задайте <code>OPENAI_API_KEY</code> или <code>GOOGLE_API_KEY</code> в <code>.env</code> или в настройках кабинета.</p>
+              <p class="form-hint" style="margin:0;color:var(--error)">{{ t("Нет API-ключа: задайте") }} <code>OPENAI_API_KEY</code> {{ t("или") }} <code>GOOGLE_API_KEY</code> в <code>.env</code> или в настройках кабинета.</p>
               {% endif %}
-              <p class="form-hint" style="margin:0">Провайдер по умолчанию и названия моделей задаются в блоке <strong>«Настройки промптов и моделей»</strong> ниже на этой странице.</p>
+              <p class="form-hint" style="margin:0">{{ t("Провайдер по умолчанию и названия моделей задаются в блоке") }} <strong>{{ t("«Настройки промптов и моделей»") }}</strong> ниже на этой странице.</p>
               <div class="form-group" style="margin:0">
-                <label class="form-label" for="comment_post_mode">Как выбрать пост для комментария</label>
+                <label class="form-label" for="comment_post_mode">{{ t("Как выбрать пост для комментария") }}</label>
                 <select id="comment_post_mode" name="comment_post_mode" class="form-select" style="max-width:320px">
-                  <option value="first" {% if cfg.get('comment_post_mode', 'first') != 'random' %}selected{% endif %}>Первый пост сверху</option>
+                  <option value="first" {% if cfg.get('comment_post_mode', 'first') != 'random' %}selected{% endif %}>{{ t("Первый пост сверху") }}</option>
                   <option value="random" {% if cfg.get('comment_post_mode') == 'random' %}selected{% endif %}>Случайный из верхних постов</option>
                 </select>
               </div>
@@ -124,21 +124,21 @@
                 <label class="form-label" for="comment_pool_size">Сколько верхних постов в пуле</label>
                 <input id="comment_pool_size" name="comment_pool_size" type="number" class="form-input" min="1" max="10" style="max-width:160px"
                        value="{{ cfg.get('comment_pool_size', 5) }}"/>
-                <p class="form-hint" style="margin-top:6px">Например, 5 = случайный комментарий только среди верхних пяти записей.</p>
+                <p class="form-hint" style="margin-top:6px">{{ t("Например, 5 = случайный комментарий только среди верхних пяти записей.") }}</p>
               </div>
               <div class="form-group" style="margin:0">
-                <label class="form-label" for="ai_comment_hint">Тон и пожелания (необязательно)</label>
+                <label class="form-label" for="ai_comment_hint">{{ t("Тон и пожелания (необязательно)") }}</label>
                 <textarea id="ai_comment_hint" name="ai_comment_hint" class="form-textarea" rows="2"
-                          placeholder="Например: дружелюбно, без эмодзи, коротко"
+                          placeholder="{{ t("Например: дружелюбно, без эмодзи, коротко") }}"
                           style="min-height:64px;resize:vertical">{{ cfg.get('ai_comment_hint', '') }}</textarea>
-                <p class="form-hint" style="margin-top:6px">Здесь можно уточнить стиль, длину и ограничения для комментария.</p>
+                <p class="form-hint" style="margin-top:6px">{{ t("Здесь можно уточнить стиль, длину и ограничения для комментария.") }}</p>
               </div>
             </div>
           </div>
           {% else %}
-          <div style="font-weight:600;margin-bottom:8px">Режим личного сообщения</div>
+          <div style="font-weight:600;margin-bottom:8px">{{ t("Режим личного сообщения") }}</div>
           <p class="form-hint" style="margin-top:0;margin-bottom:12px">
-            Внутри кампании можно оставить обычный шаблон рассылки или включить генерацию ЛС через нейросеть как в режиме агента.
+            {{ t("Внутри кампании можно оставить обычный шаблон рассылки или включить генерацию ЛС через нейросеть как в режиме агента.") }}
           </p>
           <div style="display:flex;flex-direction:column;gap:10px">
             <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer">
@@ -147,53 +147,53 @@
             </label>
             <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer">
               <input type="radio" name="message_mode" value="ai_dm" {% if message_mode == 'ai_dm' %}checked{% endif %}/>
-              <span><strong>Личное сообщение через нейросеть</strong> — как в режиме агента: каждый человек получает новую формулировку по примеру, шаблону и контексту профиля.</span>
+              <span><strong>{{ t("Личное сообщение через нейросеть") }}</strong> — как в режиме агента: каждый человек получает новую формулировку по примеру, шаблону и контексту профиля.</span>
             </label>
             {% if show_first_touch_ui %}
             <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer">
               <input type="radio" name="message_mode" value="first_touch" {% if message_mode == 'first_touch' %}checked{% endif %}/>
-              <span><strong>Первое касание (EN)</strong> — готовые англоязычные варианты без API-ключа и без шаблона.</span>
+              <span><strong>{{ t("Первое касание (EN)") }}</strong> — готовые англоязычные варианты без API-ключа и без шаблона.</span>
             </label>
             {% endif %}
           </div>
 
           <div id="outreach-ai-dm-settings" class="scenario-like-settings" style="margin-top:14px;{% if message_mode != 'ai_dm' %}display:none;{% endif %}">
             <div class="scenario-like-settings__head">
-              <span class="scenario-like-settings__title"><i class="ti ti-sparkles"></i> Личное сообщение через нейросеть</span>
+              <span class="scenario-like-settings__title"><i class="ti ti-sparkles"></i> {{ t("Личное сообщение через нейросеть") }}</span>
               <p class="form-hint" style="margin:6px 0 0">Сначала задайте пример сообщения: модель будет каждый раз перефразировать его, сохраняя смысл. Если пример пустой, опорой станет шаблон рассылки выше.</p>
             </div>
             <div class="scenario-like-settings__fields" style="display:flex;flex-direction:column;gap:12px">
               {% if not has_openai and not has_gemini and not is_platform_owner(user) %}
-              <p class="form-hint" style="margin:0;color:var(--error)">Нет API-ключа: задайте <code>OPENAI_API_KEY</code> или <code>GOOGLE_API_KEY</code> в <code>.env</code> или в настройках кабинета.</p>
+              <p class="form-hint" style="margin:0;color:var(--error)">{{ t("Нет API-ключа: задайте") }} <code>OPENAI_API_KEY</code> {{ t("или") }} <code>GOOGLE_API_KEY</code> в <code>.env</code> или в настройках кабинета.</p>
               {% endif %}
-              <p class="form-hint" style="margin:0">Провайдер по умолчанию и названия моделей задаются в блоке <strong>«Настройки промптов и моделей»</strong> ниже на этой странице.</p>
+              <p class="form-hint" style="margin:0">{{ t("Провайдер по умолчанию и названия моделей задаются в блоке") }} <strong>{{ t("«Настройки промптов и моделей»") }}</strong> ниже на этой странице.</p>
               <label class="form-check" style="margin:0">
                 <input type="checkbox" id="ai_dm_use_profile_post" name="ai_dm_use_profile_post" value="1"
                        {% if cfg.get('ai_dm_use_profile_post') %}checked{% endif %}/>
-                <span>Учитывать верхний пост в ленте профиля (контекст)</span>
+                <span>{{ t("Учитывать верхний пост в ленте профиля (контекст)") }}</span>
               </label>
               <div class="form-group" style="margin:0">
-                <label class="form-label" for="ai_dm_example">Опорный текст / пример сообщения</label>
+                <label class="form-label" for="ai_dm_example">{{ t("Опорный текст / пример сообщения") }}</label>
                 <textarea id="ai_dm_example" name="ai_dm_example" class="form-textarea" rows="4"
                           placeholder="Например: Привет, {{ '{{first_name}}' }}! Увидел твой пост про … Хотел написать и поздороваться."
                           style="min-height:100px;resize:vertical">{{ cfg.get('ai_dm_example', '') }}</textarea>
-                <p class="form-hint" style="margin-top:6px">Доступны <a href="#" class="insert-marker" data-marker="{{ '{{first_name}}' }}">{{ '{{first_name}}' }}</a>, <a href="#" class="insert-marker" data-marker="{{ '{{full_name}}' }}">{{ '{{full_name}}' }}</a>. Если поле пустое, нейросеть возьмёт за основу шаблон рассылки выше.</p>
+                <p class="form-hint" style="margin-top:6px">{{ t("Доступны") }} <a href="#" class="insert-marker" data-marker="{{ '{{first_name}}' }}">{{ '{{first_name}}' }}</a>, <a href="#" class="insert-marker" data-marker="{{ '{{full_name}}' }}">{{ '{{full_name}}' }}</a>{{ t(". Если поле пустое, нейросеть возьмёт за основу шаблон рассылки выше.") }}</p>
                 {{ mailing_warmup_placeholders('form-hint') }}
               </div>
               <div class="form-group" style="margin:0">
-                <label class="form-label" for="ai_dm_hint">Тон и пожелания (необязательно)</label>
+                <label class="form-label" for="ai_dm_hint">{{ t("Тон и пожелания (необязательно)") }}</label>
                 <textarea id="ai_dm_hint" name="ai_dm_hint" class="form-textarea" rows="2"
-                          placeholder="Например: дружелюбно; варьируй первое предложение; в конце — открытый вопрос про интерес к идеям"
+                          placeholder="{{ t("Например: дружелюбно; варьируй первое предложение; в конце — открытый вопрос про интерес к идеям") }}"
                           style="min-height:64px;resize:vertical">{{ cfg.get('ai_dm_hint', '') }}</textarea>
-                <p class="form-hint" style="margin-top:6px">Здесь можно уточнить стиль, длину, вариативность и требования к вопросу в конце сообщения.</p>
+                <p class="form-hint" style="margin-top:6px">{{ t("Здесь можно уточнить стиль, длину, вариативность и требования к вопросу в конце сообщения.") }}</p>
               </div>
             </div>
           </div>
 
           <div id="outreach-first-touch-note" class="scenario-like-settings" style="display:none">
             <div class="scenario-like-settings__head">
-              <span class="scenario-like-settings__title"><i class="ti ti-messages"></i> Первое касание (EN)</span>
-              <p class="form-hint" style="margin:6px 0 0">Для каждого контакта будет выбран один из готовых англоязычных текстов первого касания. API-ключ не нужен; выбранный шаблон рассылки выше в этом режиме не используется.</p>
+              <span class="scenario-like-settings__title"><i class="ti ti-messages"></i> {{ t("Первое касание (EN)") }}</span>
+              <p class="form-hint" style="margin:6px 0 0">{{ t("Для каждого контакта будет выбран один из готовых англоязычных текстов первого касания. API-ключ не нужен; выбранный шаблон рассылки выше в этом режиме не используется.") }}</p>
             </div>
           </div>
           {% endif %}
@@ -202,7 +202,7 @@
             {% if saved_agent_settings %}
             <div class="card" style="margin-bottom:12px">
               <div class="card-body" style="font-size:var(--font-size-sm)">
-                Настройки промптов и моделей сохранены.
+                {{ t("Настройки промптов и моделей сохранены.") }}
               </div>
             </div>
             {% endif %}
@@ -224,7 +224,7 @@
             <span>{{ a.label }}{% if a.active_slot %} — слот {{ a.active_slot }}{% else %} — ожидание{% endif %}</span>
           </label>
           {% else %}
-          <p style="color:var(--warning)">Нет аккаунтов. <a href="/fb-accounts">Добавьте</a>.</p>
+          <p style="color:var(--warning)">{{ t("Нет аккаунтов.") }} <a href="/fb-accounts">{{ t("Добавьте") }}</a>.</p>
           {% endfor %}
         </div>
       </div>
@@ -233,7 +233,7 @@
         <label class="form-label" for="messages_per_account">{{ 'Макс. комментариев на один аккаунт' if is_comment_campaign else 'Максимум отправленных сообщений с одного аккаунта.' }}</label>
         <input id="messages_per_account" name="messages_per_account" type="number" class="form-input" min="1" max="500"
                value="{{ campaign.messages_per_account if campaign else 20 }}"/>
-        <p class="form-hint" style="margin-top:6px;margin-bottom:0">При включённой ротации это <strong>суточный лимит (UTC)</strong> на один аккаунт; после исчерпания очередь переключается на следующий из пула.</p>
+        <p class="form-hint" style="margin-top:6px;margin-bottom:0">{{ t("При включённой ротации это") }} <strong>суточный лимит (UTC)</strong> на один аккаунт; после исчерпания очередь переключается на следующий из пула.</p>
       </div>
 
       <div class="card" style="background:var(--bg-surface-hover);margin-bottom:16px">
@@ -241,68 +241,67 @@
           <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;cursor:pointer">
             <input type="checkbox" name="account_rotation" value="1" style="margin-top:3px"
                    {% if cfg.get('account_rotation') %}checked{% endif %}/>
-            <span><strong>Ротация аккаунтов</strong> — после суточного лимита сообщений с одного аккаунта брать следующий из выбранного пула (счётчик сбрасывается в полночь UTC).</span>
+            <span><strong>{{ t("Ротация аккаунтов") }}</strong> — после суточного лимита сообщений с одного аккаунта брать следующий из выбранного пула (счётчик сбрасывается в полночь UTC).</span>
           </label>
           <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer">
             <input type="checkbox" name="auto_slot_rotation" value="1" style="margin-top:3px"
                    {% if cfg.get('auto_slot_rotation') %}checked{% endif %}/>
-            <span><strong>Автосмена слотов 1–3</strong> — если следующий аккаунт в «ожидании», забрать его слот у другого аккаунта из <em>этого же пула</em> кампании (осторожно: меняет глобальные слоты кабинета).</span>
+            <span><strong>{{ t("Автосмена слотов 1–3") }}</strong> — если следующий аккаунт в «ожидании», забрать его слот у другого аккаунта из <em>{{ t("этого же пула") }}</em> кампании (осторожно: меняет глобальные слоты кабинета).</span>
           </label>
         </div>
       </div>
 
       <div class="card" style="background:var(--bg-surface-hover);margin-bottom:16px">
         <div class="card-body" style="padding:14px 16px">
-          <div style="font-weight:600;margin-bottom:8px">Время отправки</div>
+          <div style="font-weight:600;margin-bottom:8px">{{ t("Время отправки") }}</div>
           <p class="form-hint" style="margin-top:0;margin-bottom:10px">
-            Считается по часовому поясу сценариев — задайте его в <a href="/system/speed" target="_blank" rel="noopener">Система → Скорость и паузы</a> (поле «Часовой пояс для сценариев»).
+            Считается по часовому поясу сценариев — задайте его в <a href="/system/speed" target="_blank" rel="noopener">{{ t("Система → Скорость и паузы") }}</a> {{ t("(поле «Часовой пояс для сценариев»).") }}
           </p>
           <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:12px;cursor:pointer">
             <input type="checkbox" name="send_window_24h" value="1" style="margin-top:3px"
                    {% if cfg.get('send_window_24h') %}checked{% endif %}/>
-            <span><strong>Круглосуточно</strong> — не останавливать рассылку ночью.</span>
+            <span><strong>{{ t("Круглосуточно") }}</strong> — не останавливать рассылку ночью.</span>
           </label>
           <p class="form-hint" style="margin-bottom:10px">
-            Если не отмечено: по умолчанию только дневное окно <strong>с 8:00 до 22:00</strong> (локально); можно задать свой интервал. Граница «до часа» не включается (22 — работа до 21:59).
-            Ночью воркер ждёт, строки очереди остаются в очереди.
+            {{ t("Если не отмечено: по умолчанию только дневное окно") }} <strong>с 8:00 до 22:00</strong> {{ t("(локально); можно задать свой интервал. Граница «до часа» не включается (22 — работа до 21:59). Ночью воркер ждёт, строки очереди остаются в очереди.") }}
           </p>
           <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">
             <div class="form-group" style="margin-bottom:0">
-              <label class="form-label" for="send_window_start_hour">С часа (0–23)</label>
+              <label class="form-label" for="send_window_start_hour">{{ t("С часа (0–23)") }}</label>
               <input id="send_window_start_hour" name="send_window_start_hour" type="number" class="form-input" min="0" max="23" style="max-width:120px"
                      value="{{ cfg.get('send_window_start_hour', 8) }}"/>
             </div>
             <div class="form-group" style="margin-bottom:0">
-              <label class="form-label" for="send_window_end_hour">До часа (0–23), не включая</label>
+              <label class="form-label" for="send_window_end_hour">{{ t("До часа (0–23), не включая") }}</label>
               <input id="send_window_end_hour" name="send_window_end_hour" type="number" class="form-input" min="0" max="23" style="max-width:120px"
                      value="{{ cfg.get('send_window_end_hour', 22) }}"/>
             </div>
           </div>
-          <p class="form-hint" style="margin-top:10px;margin-bottom:0">Если «конец» меньше «начала» (например 22→6), окно считается через полночь.</p>
+          <p class="form-hint" style="margin-top:10px;margin-bottom:0">{{ t("Если «конец» меньше «начала» (например 22→6), окно считается через полночь.") }}</p>
         </div>
       </div>
 
       <div class="form-group">
-        <label class="form-label" for="donor_id">Источник контактов (база для рассылки)</label>
+        <label class="form-label" for="donor_id">{{ t("Источник контактов (база для рассылки)") }}</label>
         <p class="form-hint" style="margin:0 0 10px">
-          Откуда брать контакты при «Собрать очередь»: <strong>вся «База контактов»</strong> или <strong>партия из <a href="/import" target="_blank">импорта</a></strong> (файл или парсер).
+          {{ t("Откуда брать контакты при «Собрать очередь»:") }} <strong>вся «База контактов»</strong> {{ t("или") }} <strong>партия из <a href="/import" target="_blank">{{ t("импорта") }}</a></strong> {{ t("(файл или парсер).") }}
         </p>
         {% set legacy_donor_only = campaign and (cfg.get('ui_donor_id') is not none) and (cfg.get('ui_import_batch_id') is none) and not cfg.get('batch_all_donors') %}
         {% if legacy_donor_only %}
         <div class="card" style="border-color:var(--warning);margin-bottom:12px">
           <div class="card-body" style="font-size:var(--font-size-sm);margin:0">
-            <strong>Раньше источником был донор.</strong> Теперь в списке только «Вся база контактов» и партии из «Импорт базы». Выберите нужный вариант и сохраните кампанию.
+            <strong>{{ t("Раньше источником был донор.") }}</strong> Теперь в списке только «Вся база контактов» и партии из «Импорт базы». Выберите нужный вариант и сохраните кампанию.
           </div>
         </div>
         {% endif %}
         {% if not import_batches and not parser_import_batches|default([]) %}
         <p class="form-hint" style="margin:0 0 10px;color:var(--warning)">
-          Пока нет партий в «Импорт базы» — в списке доступна только «Вся база контактов». Чтобы рассылать по отдельному файлу или базе парсера, сначала добавьте контакты через <a href="/import">импорт</a> или <a href="/parser">парсер</a>.
+          {{ t("Пока нет партий в «Импорт базы» — в списке доступна только «Вся база контактов». Чтобы рассылать по отдельному файлу или базе парсера, сначала добавьте контакты через") }} <a href="/import">{{ t("импорт") }}</a> {{ t("или") }} <a href="/parser">{{ t("парсер") }}</a>.
         </p>
         {% endif %}
         <select id="donor_id" name="donor_id" class="form-select">
           <option value="">— выберите источник контактов —</option>
-          <option value="all" {% if cfg.get('batch_all_donors') %}selected{% endif %}>Вся база контактов (все записи в «Базе контактов»)</option>
+          <option value="all" {% if cfg.get('batch_all_donors') %}selected{% endif %}>{{ t("Вся база контактов (все записи в «Базе контактов»)") }}</option>
           {% if import_batches %}
           <optgroup label="Импорт файлов (CSV / XLSX)">
             {% for b in import_batches %}
@@ -342,7 +341,7 @@
           <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;cursor:pointer">
             <input type="checkbox" name="skip_contacted" value="1" id="outreach_skip_contacted_cb" style="margin-top:3px"
                    {% if not campaign or cfg.get('skip_contacted', true) %}checked{% endif %}/>
-            <span>Не ставить в очередь тех, кому <strong>уже когда-либо</strong> уходило исходящее сообщение или комментарий <strong>на этом сервере</strong> (любой кабинет, любой FB-аккаунт, любая рассылка или сценарий): общий реестр, успешные строки рассылки, диалоги Messenger. В воронке CRM — колонка <strong>«Уже контактировали»</strong>. Чтобы написать снова, снимите отметку вручную: <a href="/contacted" target="_blank" rel="noopener">Уже контактировали</a>.</span>
+            <span>{{ t("Не ставить в очередь тех, кому") }} <strong>уже когда-либо</strong> уходило исходящее сообщение или комментарий <strong>на этом сервере</strong> {{ t("(любой кабинет, любой FB-аккаунт, любая рассылка или сценарий): общий реестр, успешные строки рассылки, диалоги Messenger. В воронке CRM — колонка") }} <strong>{{ t("«Уже контактировали»") }}</strong>{{ t(". Чтобы написать снова, снимите отметку вручную:") }} <a href="/contacted" target="_blank" rel="noopener">{{ t("Уже контактировали") }}</a>.</span>
           </label>
           <input type="hidden" name="skip_contacted_scope" value="global"/>
           <div id="outreach_skip_scope_block" style="margin:-2px 0 12px 28px;padding:10px 12px;border-left:2px solid var(--border);background:var(--bg-surface)">
@@ -352,7 +351,7 @@
           <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;cursor:pointer">
             <input type="checkbox" name="skip_previously_failed" value="1" style="margin-top:3px"
                    {% if not campaign or cfg.get('skip_previously_failed', true) %}checked{% endif %}/>
-            <span>Не ставить в очередь людей, которым <strong>ранее не удалось отправить</strong> сообщение (ошибка, закрытый профиль, нет кнопки «Сообщение» и т.д.) — в любой предыдущей рассылке. Снимите галочку, если хотите повторить попытку для таких контактов.</span>
+            <span>{{ t("Не ставить в очередь людей, которым") }} <strong>ранее не удалось отправить</strong> сообщение (ошибка, закрытый профиль, нет кнопки «Сообщение» и т.д.) — в любой предыдущей рассылке. Снимите галочку, если хотите повторить попытку для таких контактов.</span>
           </label>
           <label class="form-check" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;cursor:pointer">
             <input type="checkbox" name="like_first" value="1" id="outreach_like_first_cb"
@@ -366,14 +365,14 @@
           {% set lc = 1 if (_lc < 1 or _lc > 10) else _lc %}
           <div id="outreach_like_options" style="margin:-4px 0 12px 28px;padding:12px 14px;border-left:2px solid var(--border);background:var(--bg-surface)">
             <p class="form-hint" style="margin-top:0;margin-bottom:10px">
-              Если включён лайк: можно лайкать посты сверху ленты по порядку или случайные среди верхних N постов; число лайков — сколько раз нажать «Нравится» (разные посты).
+              {{ t("Если включён лайк: можно лайкать посты сверху ленты по порядку или случайные среди верхних N постов; число лайков — сколько раз нажать «Нравится» (разные посты).") }}
             </p>
             <div class="form-group" style="margin-bottom:10px">
-              <span class="form-label" style="margin-bottom:6px;display:block">Режим</span>
+              <span class="form-label" style="margin-bottom:6px;display:block">{{ t("Режим") }}</span>
               <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:6px">
                 <input type="radio" name="like_mode" value="first" class="like-mode-radio"
                        {% if lm != 'random' %}checked{% endif %}/>
-                <span>Первые посты сверху — по очереди (1-й видимый, затем 2-й, 3-й…)</span>
+                <span>{{ t("Первые посты сверху — по очереди (1-й видимый, затем 2-й, 3-й…)") }}</span>
               </label>
               <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
                 <input type="radio" name="like_mode" value="random" class="like-mode-radio"
@@ -382,7 +381,7 @@
               </label>
             </div>
             <div class="form-group" id="like_pool_row" style="margin-bottom:10px">
-              <label class="form-label" for="like_pool_size">Размер пула для случайного (верхние посты)</label>
+              <label class="form-label" for="like_pool_size">{{ t("Размер пула для случайного (верхние посты)") }}</label>
               <select id="like_pool_size" name="like_pool_size" class="form-select" style="max-width:220px">
                 <option value="2" {% if lps == 2 %}selected{% endif %}>2</option>
                 <option value="3" {% if lps == 3 %}selected{% endif %}>3</option>
@@ -394,30 +393,27 @@
               <label class="form-label" for="like_count">Сколько лайков поставить</label>
               <input id="like_count" name="like_count" type="number" class="form-input" min="1" max="10" style="max-width:120px"
                      value="{{ lc }}"/>
-              <p class="form-hint" style="margin-bottom:0">От 1 до 10. Каждый лайк — отдельный пост (после каждого листаем ленту чуть ниже).</p>
+              <p class="form-hint" style="margin-bottom:0">{{ t("От 1 до 10. Каждый лайк — отдельный пост (после каждого листаем ленту чуть ниже).") }}</p>
             </div>
           </div>
           {% if not is_comment_campaign %}
           <label class="form-check" style="display:flex;align-items:center;gap:8px;cursor:pointer">
             <input type="checkbox" name="add_friend_first" value="1" id="outreach_add_friend_cb" {% if cfg.get('add_friend_first') %}checked{% endif %}/>
-            <span>Перед ЛС: заявка в друзья</span>
+            <span>{{ t("Перед ЛС: заявка в друзья") }}</span>
           </label>
           <label class="form-check" style="display:flex;align-items:center;gap:8px;margin-top:6px;cursor:pointer">
             <input type="checkbox" name="react_reel_first" value="1" id="outreach_react_reel_cb" {% if cfg.get('react_reel_first') %}checked{% endif %}/>
-            <span>Перед ЛС: реакция на Reel/Story получателя</span>
+            <span>{{ t("Перед ЛС: реакция на Reel/Story получателя") }}</span>
           </label>
           <p class="form-hint" style="margin:4px 0 0 28px;color:var(--text-muted)">
-            Откроет вкладку Reels/Видео на профиле получателя, проиграет первое видео и поставит реакцию (heart/like) — это
-            генерирует push-уведомление в Messenger получателя. Помогает «разбудить» E2EE-pending получателей: после открытия
-            ими Messenger пара отправитель ↔ получатель разблокируется и ЛС начинают доходить. Если у получателя нет Reels —
-            шаг тихо пропускается, ЛС всё равно отправляется.
+            {{ t("Откроет вкладку Reels/Видео на профиле получателя, проиграет первое видео и поставит реакцию (heart/like) — это генерирует push-уведомление в Messenger получателя. Помогает «разбудить» E2EE-pending получателей: после открытия ими Messenger пара отправитель ↔ получатель разблокируется и ЛС начинают доходить. Если у получателя нет Reels — шаг тихо пропускается, ЛС всё равно отправляется.") }}
           </p>
           {% endif %}
         </div>
       </div>
 
       <div class="form-group">
-        <label class="form-label" for="preset">Пресет темпа</label>
+        <label class="form-label" for="preset">{{ t("Пресет темпа") }}</label>
         <select id="preset" name="preset" class="form-select">
           {% for key, label in preset_labels.items() %}
           <option value="{{ key }}" {% if cfg.get('preset', 'slow') == key %}selected{% endif %}>{{ label }}</option>
@@ -427,35 +423,34 @@
 
       <div class="card" id="time-budget-block" style="background:var(--bg-surface-hover);margin-bottom:16px;scroll-margin-top:72px">
         <div class="card-body" style="padding:14px 16px">
-          <div style="font-weight:600;margin-bottom:8px">Режим «Уложиться во время»</div>
+          <div style="font-weight:600;margin-bottom:8px">{{ t("Режим «Уложиться во время»") }}</div>
           <p class="form-hint" style="margin-top:0;margin-bottom:12px">
-            Опционально: общий лимит на всю очередь. Укажите время в <strong>минутах</strong> (можно дробно, например 1,5).
-            Система сохранит его в секундах и разложит паузы с джиттером, как в
-            <a href="/system/speed">Скорость и паузы</a>.
+            {{ t("Опционально: общий лимит на всю очередь. Укажите время в") }} <strong>{{ t("минутах") }}</strong> {{ t("(можно дробно, например 1,5). Система сохранит его в секундах и разложит паузы с джиттером, как в") }}
+            <a href="/system/speed">{{ t("Скорость и паузы") }}</a>.
           </p>
-          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px" id="time_budget_preset_row" role="group" aria-label="Пресеты бюджета">
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px" id="time_budget_preset_row" role="group" aria-label="{{ t("Пресеты бюджета") }}">
             {% for _key, label, sec in time_budget_presets %}
             <button type="button" class="btn btn-sm btn-secondary time-budget-preset" data-tb-sec="{{ sec }}" style="border-radius:999px">
               {{ label }}
             </button>
             {% endfor %}
             <button type="button" class="btn btn-sm btn-secondary time-budget-custom" id="time_budget_custom_btn" style="border-radius:999px">
-              Своё время
+              {{ t("Своё время") }}
             </button>
           </div>
           <div class="form-group" style="margin-bottom:0">
-            <label class="form-label" for="time_budget_minutes">Бюджет на всю очередь (минуты), опционально</label>
+            <label class="form-label" for="time_budget_minutes">{{ t("Бюджет на всю очередь (минуты), опционально") }}</label>
             <input id="time_budget_minutes" name="time_budget_minutes" type="text" class="form-input" inputmode="decimal"
-                   placeholder="Например 10 или оставьте пустым"
+                   placeholder="{{ t("Например 10 или оставьте пустым") }}"
                    value="{% set _ts = cfg.get('time_budget_seconds') %}{% if _ts is not none and _ts != '' %}{{ '%.10g'|format((_ts|float) / 60) }}{% endif %}"/>
-            <p class="form-hint" style="margin-bottom:0">Пустое поле — без ограничения по времени, только пресет темпа выше.</p>
+            <p class="form-hint" style="margin-bottom:0">{{ t("Пустое поле — без ограничения по времени, только пресет темпа выше.") }}</p>
           </div>
         </div>
       </div>
 
       <div style="display:flex;gap:12px;flex-wrap:wrap">
-        <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy"></i> Сохранить</button>
-        <a href="{{ '/outreach/' ~ campaign.id if campaign else '/outreach' }}" class="btn btn-secondary">Назад</a>
+        <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy"></i> {{ t("Сохранить") }}</button>
+        <a href="{{ '/outreach/' ~ campaign.id if campaign else '/outreach' }}" class="btn btn-secondary">{{ t("Назад") }}</a>
       </div>
     </form>
   </div>

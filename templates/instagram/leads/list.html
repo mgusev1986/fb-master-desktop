@@ -4,26 +4,26 @@
 <div class="ig-page">
   <header class="ig-page__header">
     <div class="ig-page__title-wrap">
-      <h1 class="ig-page__title">Лиды <span class="ig-page__beta-pill">Beta</span></h1>
-      <p class="ig-page__subtitle">Хранилище IG-handles. Поиск через <a href="/instagram/audience">Audience search</a> или <a href="/instagram/competitor-audience">парсер конкурентов</a>.</p>
+      <h1 class="ig-page__title">{{ t("Лиды") }} <span class="ig-page__beta-pill">Beta</span></h1>
+      <p class="ig-page__subtitle">Хранилище IG-handles. Поиск через <a href="/instagram/audience">Audience search</a> {{ t("или") }} <a href="/instagram/competitor-audience">парсер конкурентов</a>.</p>
     </div>
   </header>
 
   <div class="ig-grid">
     <section class="ig-card">
-      <h2 class="ig-card__title"><i class="ti ti-plus"></i> Добавить вручную</h2>
+      <h2 class="ig-card__title"><i class="ti ti-plus"></i> {{ t("Добавить вручную") }}</h2>
       <form method="post" action="/instagram/leads/create" style="display:flex;flex-direction:column;gap:8px;">
-        <input type="text" name="handle" required placeholder="@username или username" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
-        <input type="text" name="full_name" placeholder="Имя" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+        <input type="text" name="handle" required placeholder="{{ t("@username или username") }}" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+        <input type="text" name="full_name" placeholder="{{ t("Имя") }}" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
         <textarea name="bio" rows="2" placeholder="bio" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"></textarea>
-        <button type="submit" class="ig-btn ig-btn--primary" style="align-self:flex-start;"><i class="ti ti-plus"></i> Добавить</button>
+        <button type="submit" class="ig-btn ig-btn--primary" style="align-self:flex-start;"><i class="ti ti-plus"></i> {{ t("Добавить") }}</button>
       </form>
     </section>
     <section class="ig-card">
       <h2 class="ig-card__title"><i class="ti ti-upload"></i> Bulk-import handles</h2>
       <form method="post" action="/instagram/leads/bulk-import" style="display:flex;flex-direction:column;gap:8px;">
         <textarea name="handles_blob" rows="6" placeholder="elonmusk&#10;@cristiano&#10;https://www.instagram.com/leomessi/" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font:400 13px/1.4 ui-monospace,Menlo,monospace;"></textarea>
-        <button type="submit" class="ig-btn" style="align-self:flex-start;">Импорт</button>
+        <button type="submit" class="ig-btn" style="align-self:flex-start;">{{ t("Импорт") }}</button>
       </form>
     </section>
   </div>
@@ -34,7 +34,7 @@
     <div style="overflow-x:auto;">
       <table style="width:100%;border-collapse:collapse;background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;">
         <thead><tr style="border-bottom:1px solid var(--border);font:600 12px/1 Inter;color:var(--text-muted);text-transform:uppercase;">
-          <th style="text-align:left;padding:10px;">Handle</th><th style="text-align:left;padding:10px;">Bio</th><th style="text-align:left;padding:10px;">Источник</th><th style="text-align:left;padding:10px;">Стадия</th><th></th>
+          <th style="text-align:left;padding:10px;">Handle</th><th style="text-align:left;padding:10px;">Bio</th><th style="text-align:left;padding:10px;">{{ t("Источник") }}</th><th style="text-align:left;padding:10px;">{{ t("Стадия") }}</th><th></th>
         </tr></thead>
         <tbody>{% for l in leads %}
           <tr style="border-bottom:1px solid var(--border);">
@@ -48,7 +48,7 @@
       </table>
     </div>
     {% else %}
-    <div class="ig-placeholder"><div class="ig-placeholder__icon"><i class="ti ti-address-book"></i></div><p class="ig-placeholder__text">Лидов пока нет.</p></div>
+    <div class="ig-placeholder"><div class="ig-placeholder__icon"><i class="ti ti-address-book"></i></div><p class="ig-placeholder__text">{{ t("Лидов пока нет.") }}</p></div>
     {% endif %}
   </section>
 </div>

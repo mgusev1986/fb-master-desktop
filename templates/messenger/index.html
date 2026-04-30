@@ -22,7 +22,7 @@
   <form method="post" action="{{ mb }}/conversation/{{ conv.id }}/action" class="vk-ms-dropdown-form">
     {{ _messenger_ret(ret_thread) }}
     <input type="hidden" name="action" value="mark_unread"/>
-    <button type="submit" class="vk-ms-dropdown-item"><i class="ti ti-rotate-clockwise"></i> Отметить непрочитанным</button>
+    <button type="submit" class="vk-ms-dropdown-item"><i class="ti ti-rotate-clockwise"></i> {{ t("Отметить непрочитанным") }}</button>
   </form>
   <form method="post" action="{{ mb }}/conversation/{{ conv.id }}/action" class="vk-ms-dropdown-form">
     {{ _messenger_ret(ret_thread) }}
@@ -34,34 +34,34 @@
     <button type="submit" class="vk-ms-dropdown-item"><i class="ti ti-archive"></i> {% if conv.is_archived %}Вернуть из архива{% else %}Архивировать{% endif %}</button>
   </form>
   <div class="vk-ms-dropdown-item vk-ms-has-sub" role="group">
-    <span class="vk-ms-has-sub-label"><i class="ti ti-bell-off"></i> Отключить уведомления</span>
+    <span class="vk-ms-has-sub-label"><i class="ti ti-bell-off"></i> {{ t("Отключить уведомления") }}</span>
     <div class="vk-ms-chat-dropdown vk-ms-chat-dropdown--sub">
       <form method="post" action="{{ mb }}/conversation/{{ conv.id }}/action" class="vk-ms-dropdown-form">
         {{ _messenger_ret(ret_thread) }}<input type="hidden" name="action" value="mute_1h"/>
-        <button type="submit" class="vk-ms-dropdown-item">На 1 час</button>
+        <button type="submit" class="vk-ms-dropdown-item">{{ t("На 1 час") }}</button>
       </form>
       <form method="post" action="{{ mb }}/conversation/{{ conv.id }}/action" class="vk-ms-dropdown-form">
         {{ _messenger_ret(ret_thread) }}<input type="hidden" name="action" value="mute_8h"/>
-        <button type="submit" class="vk-ms-dropdown-item">На 8 часов</button>
+        <button type="submit" class="vk-ms-dropdown-item">{{ t("На 8 часов") }}</button>
       </form>
       <form method="post" action="{{ mb }}/conversation/{{ conv.id }}/action" class="vk-ms-dropdown-form">
         {{ _messenger_ret(ret_thread) }}<input type="hidden" name="action" value="mute_forever"/>
-        <button type="submit" class="vk-ms-dropdown-item">Навсегда</button>
+        <button type="submit" class="vk-ms-dropdown-item">{{ t("Навсегда") }}</button>
       </form>
       {% if notif_muted %}
       <div class="vk-ms-dropdown-divider"></div>
       <form method="post" action="{{ mb }}/conversation/{{ conv.id }}/action" class="vk-ms-dropdown-form">
         {{ _messenger_ret(ret_thread) }}<input type="hidden" name="action" value="mute_off"/>
-        <button type="submit" class="vk-ms-dropdown-item"><i class="ti ti-bell"></i> Включить уведомления</button>
+        <button type="submit" class="vk-ms-dropdown-item"><i class="ti ti-bell"></i> {{ t("Включить уведомления") }}</button>
       </form>
       {% endif %}
     </div>
   </div>
   <div class="vk-ms-dropdown-divider"></div>
-  <form method="post" action="{{ mb }}/conversation/{{ conv.id }}/action" class="vk-ms-dropdown-form" data-confirm="Удалить все сообщения этого чата из базы SOCMASTER? Синхронизацию с Facebook можно запустить снова." data-confirm-title="Очистить историю" data-confirm-variant="danger">
+  <form method="post" action="{{ mb }}/conversation/{{ conv.id }}/action" class="vk-ms-dropdown-form" data-confirm="Удалить все сообщения этого чата из базы SOCMASTER? Синхронизацию с Facebook можно запустить снова." data-confirm-title="{{ t("Очистить историю") }}" data-confirm-variant="danger">
     {{ _messenger_ret(ret_thread) }}
     <input type="hidden" name="action" value="clear_history"/>
-    <button type="submit" class="vk-ms-dropdown-item vk-ms-dropdown-item--danger"><i class="ti ti-trash"></i> Очистить историю</button>
+    <button type="submit" class="vk-ms-dropdown-item vk-ms-dropdown-item--danger"><i class="ti ti-trash"></i> {{ t("Очистить историю") }}</button>
   </form>
 </div>
 {% endmacro %}
@@ -76,14 +76,14 @@
     <div class="vk-ms-topbar-actions">
       <div class="vk-ms-topbar-sync-controls" role="group" aria-label="Синхронизация с Facebook">
         <div class="vk-ms-auto-sync-pair">
-          <label class="vk-ms-switch" title="Один фоновый цикл: список чатов и недавние диалоги (Playwright по расписанию сервера)">
-            <input type="checkbox" id="vk-ms-auto-pull" {% if messenger_auto_sync_on %}checked{% endif %} {% if sync_busy %}disabled{% endif %} aria-label="Автосинхронизация с Facebook"/>
+          <label class="vk-ms-switch" title="{{ t("Один фоновый цикл: список чатов и недавние диалоги (Playwright по расписанию сервера)") }}">
+            <input type="checkbox" id="vk-ms-auto-pull" {% if messenger_auto_sync_on %}checked{% endif %} {% if sync_busy %}disabled{% endif %} aria-label="{{ t("Автосинхронизация с Facebook") }}"/>
             <span class="vk-ms-switch-slider" aria-hidden="true"></span>
           </label>
-          <span class="vk-ms-auto-sync-text">Автосинхронизация с Facebook</span>
+          <span class="vk-ms-auto-sync-text">{{ t("Автосинхронизация с Facebook") }}</span>
         </div>
         <button type="button" class="vk-ms-btn-primary vk-ms-pull-now-topbar-btn" id="vk-ms-pull-now-btn" {% if sync_busy %}disabled{% endif %} title="{% if thread_id %}Обновить открытый чат{% else %}Обновить список чатов со всех аккаунтов{% endif %}">
-          <i class="ti ti-refresh"></i> Ручная синхронизация
+          <i class="ti ti-refresh"></i> {{ t("Ручная синхронизация") }}
         </button>
       </div>
     </div>
@@ -92,7 +92,7 @@
   {% if qp.get('err') == 'busy' %}
   <div class="vk-ms-alert vk-ms-alert--err">Сейчас уже выполняется синхронизация мессенджера. Дождитесь окончания.</div>
   {% elif qp.get('err') == 'other' %}
-  <div class="vk-ms-alert vk-ms-alert--err">Нельзя запустить синхронизацию, пока идёт прогрев, сценарий по дням или рассылка.</div>
+  <div class="vk-ms-alert vk-ms-alert--err">{{ t("Нельзя запустить синхронизацию, пока идёт прогрев, сценарий по дням или рассылка.") }}</div>
   {% endif %}
   <div class="vk-ms-main">
     <section class="vk-ms-list" aria-label="Список чатов">
@@ -101,12 +101,12 @@
         <form method="get" class="vk-ms-search-form" action="{{ mb }}">
           <input type="hidden" name="folder" value="{{ folder }}"/>
           {% if filter_account_id %}<input type="hidden" name="account_id" value="{{ filter_account_id }}"/>{% endif %}
-          <input type="search" name="q" value="{{ search }}" class="vk-ms-search" placeholder="Поиск" autocomplete="off"/>
-          <button type="submit" class="vk-ms-btn-icon" title="Найти"><i class="ti ti-search"></i></button>
+          <input type="search" name="q" value="{{ search }}" class="vk-ms-search" placeholder="{{ t("Поиск") }}" autocomplete="off"/>
+          <button type="submit" class="vk-ms-btn-icon" title="{{ t("Найти") }}"><i class="ti ti-search"></i></button>
         </form>
       </div>
       <div class="vk-ms-list-tools">
-        <button type="button" class="vk-ms-btn-icon" id="vk-ms-toggle-select" title="Режим выбора"><i class="ti ti-checkbox"></i></button>
+        <button type="button" class="vk-ms-btn-icon" id="vk-ms-toggle-select" title="{{ t("Режим выбора") }}"><i class="ti ti-checkbox"></i></button>
       </div>
       <div class="vk-ms-chats-scroll">
         {% if chat_rows %}
@@ -124,9 +124,9 @@
             </div>
             <div class="vk-ms-chat-body">
               <div class="vk-ms-chat-top">
-                <span class="vk-ms-chat-name">{% if c.is_pinned %}<i class="ti ti-pin vk-ms-ico-pin" title="Закреплён"></i>{% endif %}{{ c.peer_name or 'Диалог' }}</span>
+                <span class="vk-ms-chat-name">{% if c.is_pinned %}<i class="ti ti-pin vk-ms-ico-pin" title="{{ t("Закреплён") }}"></i>{% endif %}{{ c.peer_name or 'Диалог' }}</span>
                 <div class="vk-ms-chat-meta-right">
-                  {% if row.notif_muted %}<i class="ti ti-bell-off vk-ms-ico-muted" title="Без звука"></i>{% endif %}
+                  {% if row.notif_muted %}<i class="ti ti-bell-off vk-ms-ico-muted" title="{{ t("Без звука") }}"></i>{% endif %}
                   <time class="vk-ms-chat-time" {% if c.last_at %}datetime="{{ c.last_at.isoformat() }}"{% endif %} title="{{ row.time_title }}">{{ row.time_s }}</time>
                   {% if row.unread_n > 0 %}
                   <span class="vk-ms-unread-pill {% if row.unread_n > 9 %}vk-ms-unread-pill--wide{% endif %}" title="Непрочитанных: {{ row.unread_n }}">{{ row.unread_n if row.unread_n < 100 else '99+' }}</span>
@@ -140,28 +140,28 @@
             </div>
           </a>
           <div class="vk-ms-row-menu-wrap">
-            <button type="button" class="vk-ms-btn-icon vk-ms-chat-menu-btn" title="Действия" aria-haspopup="true" aria-expanded="false"><i class="ti ti-dots-vertical"></i></button>
+            <button type="button" class="vk-ms-btn-icon vk-ms-chat-menu-btn" title="{{ t("Действия") }}" aria-haspopup="true" aria-expanded="false"><i class="ti ti-dots-vertical"></i></button>
             {{ _conv_menu_dropdown(c, '', row.notif_muted) }}
           </div>
         </div>
         {% endfor %}
         {% else %}
         <div style="padding:32px 16px;text-align:center;color:var(--vk-muted)">
-          <p style="margin:0 0 8px">Нет диалогов в этой папке.</p>
-          <p style="margin:0;font-size:12px">Запустите синхронизацию или смените фильтр.</p>
+          <p style="margin:0 0 8px">{{ t("Нет диалогов в этой папке.") }}</p>
+          <p style="margin:0;font-size:12px">{{ t("Запустите синхронизацию или смените фильтр.") }}</p>
         </div>
         {% endif %}
       </div>
       <div class="vk-ms-list-footer" role="toolbar" aria-label="Фильтр чатов">
         <span class="vk-ms-list-footer-unread-label"><i class="ti ti-message"></i> Только непрочитанные</span>
-        <label class="vk-ms-switch" title="Показывать только непрочитанные">
+        <label class="vk-ms-switch" title="{{ t("Показывать только непрочитанные") }}">
           <input type="checkbox" id="vk-ms-only-unread" {% if folder == 'unread' %}checked{% endif %} aria-label="Только непрочитанные"/>
           <span class="vk-ms-switch-slider" aria-hidden="true"></span>
         </label>
       </div>
     </section>
 
-    <section class="vk-ms-thread" id="vk-ms-thread-panel" aria-label="Переписка"
+    <section class="vk-ms-thread" id="vk-ms-thread-panel" aria-label="{{ t("Переписка") }}"
       data-messenger-sync-interval-sec="{{ messenger_effective_autosync_interval_sec }}"
       data-auto-pull-enabled="{{ 'true' if messenger_auto_sync_on else 'false' }}"
       {% if thread_id %}data-thread-id="{{ thread_id }}" data-pause-auto-pull="{{ 'true' if messenger_pause_auto_pull else 'false' }}" data-thread-block-hint="{{ messenger_thread_error_hint | e }}"{% endif %}
@@ -171,7 +171,7 @@
       {% if active_conv and active_account %}
       <header class="vk-ms-thread-header">
         {% set close_qs = nav_qs.all if folder == 'all' else (nav_qs.unread if folder == 'unread' else nav_qs.archive) %}
-        <a class="vk-ms-thread-close" href="{{ mb }}{{ close_qs }}" title="Закрыть чат">✕</a>
+        <a class="vk-ms-thread-close" href="{{ mb }}{{ close_qs }}" title="{{ t("Закрыть чат") }}">✕</a>
         <div class="vk-ms-avatar" style="width:40px;height:40px;font-size:14px">
           {% if active_conv.avatar_url %}
           <img src="{{ active_conv.avatar_url }}" alt="" referrerpolicy="no-referrer" onerror="this.remove();"/>
@@ -185,12 +185,12 @@
             {{ messenger_fb_account_label(active_account.label) }}
             {% if active_conv.peer_url %}· <a href="{{ active_conv.peer_url }}" target="_blank" rel="noopener" style="color:var(--vk-blue)">Facebook</a>{% endif %}
             <span id="vk-ms-header-funnel-link-wrap" {% if not active_person %}hidden{% endif %}>
-              · <a id="vk-ms-header-funnel-link" href="{% if active_person %}/crm/funnel?q={{ (active_person.display_name or active_person.canonical_url or '')|urlencode }}{% else %}/crm/funnel{% endif %}" style="color:var(--vk-blue)" title="Открыть воронку">Воронка</a>
+              · <a id="vk-ms-header-funnel-link" href="{% if active_person %}/crm/funnel?q={{ (active_person.display_name or active_person.canonical_url or '')|urlencode }}{% else %}/crm/funnel{% endif %}" style="color:var(--vk-blue)" title="{{ t("Открыть воронку") }}">{{ t("Воронка") }}</a>
             </span>
           </p>
         </div>
         {% if active_conv and crm_stages_messenger %}
-        <div class="vk-ms-thread-crm" role="group" aria-label="Поставить контакт в стадию воронки CRM">
+        <div class="vk-ms-thread-crm" role="group" aria-label="{{ t("Поставить контакт в стадию воронки CRM") }}">
           {% for st in crm_stages_messenger %}
           <button type="button"
                   class="vk-ms-crm-stage-btn {% if active_person and active_person.crm_stage == st.slug %}is-active{% endif %}"
@@ -204,31 +204,31 @@
           <span class="vk-ms-crm-funnel-status{% if not active_person %} vk-ms-crm-funnel-status--muted{% endif %}" id="vk-ms-crm-funnel-status" role="status" aria-live="polite">{% if not active_person %}Контакт ещё не связан с «Базой контактов»: нажмите нужную стадию, и система сама привяжет или создаст его.{% endif %}</span>
         </div>
         {% endif %}
-        <div class="vk-ms-thread-ai-bar" id="vk-ms-ai-bar" role="group" aria-label="AI-ассистент переписки">
-          <label class="vk-ms-switch vk-ms-ai-switch" title="После синхронизации с Facebook, если последнее сообщение от собеседника, нейросеть сгенерирует ответ и поставит его в очередь отправки">
-            <input type="checkbox" id="vk-ms-ai-toggle" {% if active_conv.ai_assistant_enabled %}checked{% endif %} {% if not messenger_ai_llm_ready %}disabled{% endif %} aria-label="AI-ассистент для этого чата"/>
+        <div class="vk-ms-thread-ai-bar" id="vk-ms-ai-bar" role="group" aria-label="{{ t("AI-ассистент переписки") }}">
+          <label class="vk-ms-switch vk-ms-ai-switch" title="{{ t("После синхронизации с Facebook, если последнее сообщение от собеседника, нейросеть сгенерирует ответ и поставит его в очередь отправки") }}">
+            <input type="checkbox" id="vk-ms-ai-toggle" {% if active_conv.ai_assistant_enabled %}checked{% endif %} {% if not messenger_ai_llm_ready %}disabled{% endif %} aria-label="{{ t("AI-ассистент для этого чата") }}"/>
             <span class="vk-ms-switch-slider" aria-hidden="true"></span>
           </label>
-          <span class="vk-ms-ai-label">AI-ассистент</span>
-          <button type="button" class="vk-ms-btn-text" id="vk-ms-ai-settings-open">Промпт и ссылки</button>
-          <button type="button" class="vk-ms-btn-text" id="vk-ms-ai-reset-fp" title="Сбросить отметку «уже отвечали на этот транскрипт»">Сбросить отметку</button>
-          <button type="button" class="vk-ms-btn-text" id="vk-ms-ai-reset-steps" title="Обнулить счётчик ответов AI в этом чате">Сброс шагов</button>
+          <span class="vk-ms-ai-label">{{ t("AI-ассистент") }}</span>
+          <button type="button" class="vk-ms-btn-text" id="vk-ms-ai-settings-open">{{ t("Промпт и ссылки") }}</button>
+          <button type="button" class="vk-ms-btn-text" id="vk-ms-ai-reset-fp" title="Сбросить отметку «уже отвечали на этот транскрипт»">{{ t("Сбросить отметку") }}</button>
+          <button type="button" class="vk-ms-btn-text" id="vk-ms-ai-reset-steps" title="{{ t("Обнулить счётчик ответов AI в этом чате") }}">{{ t("Сброс шагов") }}</button>
           <span id="vk-ms-ai-steps" style="font-size:12px;color:var(--vk-muted)" aria-live="polite"></span>
         </div>
         <p style="margin:6px 0 0;font-size:11px;line-height:1.45;color:var(--vk-muted)">
-          Отвечает только на <strong>входящие</strong> (последнее в чате — от собеседника). Первое ЛС в диалоге AI сам не отправляет.
+          {{ t("Отвечает только на") }} <strong>входящие</strong> {{ t("(последнее в чате — от собеседника). Первое ЛС в диалоге AI сам не отправляет.") }}
         </p>
         <div class="vk-ms-ai-chat-extra-wrap" style="margin-top:8px">
           <label for="vk-ms-ai-chat-extra" style="font-size:12px;color:var(--vk-muted)">Уточнения только для этого чата (тон, оффер, что не говорить)</label>
-          <textarea id="vk-ms-ai-chat-extra" class="vk-ms-ai-chat-extra" rows="2" maxlength="8000" placeholder="Необязательно. Сохраняется отдельно от общего промпта.">{{ (active_conv.ai_extra_instructions or '') | e }}</textarea>
-          <button type="button" class="vk-ms-btn-text" id="vk-ms-ai-chat-extra-save" style="margin-top:4px">Сохранить для чата</button>
+          <textarea id="vk-ms-ai-chat-extra" class="vk-ms-ai-chat-extra" rows="2" maxlength="8000" placeholder="{{ t("Необязательно. Сохраняется отдельно от общего промпта.") }}">{{ (active_conv.ai_extra_instructions or '') | e }}</textarea>
+          <button type="button" class="vk-ms-btn-text" id="vk-ms-ai-chat-extra-save" style="margin-top:4px">{{ t("Сохранить для чата") }}</button>
         </div>
         {% if not messenger_ai_llm_ready %}
-        <p class="vk-ms-ai-warn" style="margin:4px 0 0;font-size:12px;color:#b42318">Задайте ключ OpenAI или Google (Gemini) в «Настройках» кабинета — иначе AI не сможет отвечать.</p>
+        <p class="vk-ms-ai-warn" style="margin:4px 0 0;font-size:12px;color:#b42318">{{ t("Задайте ключ OpenAI или Google (Gemini) в «Настройках» кабинета — иначе AI не сможет отвечать.") }}</p>
         {% endif %}
         <div class="vk-ms-thread-actions">
           <div class="vk-ms-row-menu-wrap vk-ms-thread-menu-wrap">
-            <button type="button" class="vk-ms-btn-icon vk-ms-chat-menu-btn" title="Ещё" aria-haspopup="true"><i class="ti ti-dots-vertical"></i></button>
+            <button type="button" class="vk-ms-btn-icon vk-ms-chat-menu-btn" title="{{ t("Ещё") }}" aria-haspopup="true"><i class="ti ti-dots-vertical"></i></button>
             {{ _conv_menu_dropdown(active_conv, (thread_id or '')|string, active_notif_muted) }}
           </div>
         </div>
@@ -251,7 +251,7 @@
         <div class="vk-ms-composer">
           <textarea id="vk-ms-compose-input" class="vk-ms-compose-input" rows="3" maxlength="4000" placeholder="Сообщение…"></textarea>
           <div class="vk-ms-composer-actions">
-            <button type="button" class="vk-ms-btn-primary" id="vk-ms-send-btn"><i class="ti ti-send"></i> Отправить</button>
+            <button type="button" class="vk-ms-btn-primary" id="vk-ms-send-btn"><i class="ti ti-send"></i> {{ t("Отправить") }}</button>
           </div>
         </div>
         <p class="vk-ms-live-status-line" id="vk-ms-live-status" role="status" aria-live="polite"></p>
@@ -260,30 +260,30 @@
         </p>
         <!-- Скрыта дублирующая подтяжка: тот же worker, что у кнопки refresh (POST /api/.../pull), но через форму с перезагрузкой страницы. Чтобы вернуть ссылку — уберите атрибут hidden. -->
         <form method="post" action="{{ mb }}/thread/{{ active_conv.id }}/load-messages" class="vk-ms-fallback-sync-form" hidden>
-          <button type="submit" class="vk-ms-btn-text" {% if sync_busy %}disabled{% endif %}>Классическая синхронизация (как раньше)</button>
+          <button type="submit" class="vk-ms-btn-text" {% if sync_busy %}disabled{% endif %}>{{ t("Классическая синхронизация (как раньше)") }}</button>
         </form>
       </footer>
       {% else %}
       <div class="vk-ms-thread-empty">
         <div>
-          <p style="margin:0 0 8px;font-weight:500;color:var(--vk-text)">Выберите чат слева</p>
+          <p style="margin:0 0 8px;font-weight:500;color:var(--vk-text)">{{ t("Выберите чат слева") }}</p>
           <p style="margin:0;font-size:13px">Сообщения выбранного диалога появятся здесь. Используйте папки и аккаунты справа, как в VK.</p>
         </div>
       </div>
       {% endif %}
     </section>
 
-    <aside class="vk-ms-rail" aria-label="Папки и аккаунты">
-      <div class="vk-ms-rail-label">Папки</div>
-      <a class="vk-ms-folder {% if folder == 'all' %}is-active{% endif %}" href="{{ mb }}{{ nav_qs.all }}">Все</a>
-      <a class="vk-ms-folder {% if folder == 'unread' %}is-active{% endif %}" href="{{ mb }}{{ nav_qs.unread }}">Непрочитанные</a>
-      <a class="vk-ms-folder {% if folder == 'archive' %}is-active{% endif %}" href="{{ mb }}{{ nav_qs.archive }}">Архив</a>
+    <aside class="vk-ms-rail" aria-label="{{ t("Папки и аккаунты") }}">
+      <div class="vk-ms-rail-label">{{ t("Папки") }}</div>
+      <a class="vk-ms-folder {% if folder == 'all' %}is-active{% endif %}" href="{{ mb }}{{ nav_qs.all }}">{{ t("Все") }}</a>
+      <a class="vk-ms-folder {% if folder == 'unread' %}is-active{% endif %}" href="{{ mb }}{{ nav_qs.unread }}">{{ t("Непрочитанные") }}</a>
+      <a class="vk-ms-folder {% if folder == 'archive' %}is-active{% endif %}" href="{{ mb }}{{ nav_qs.archive }}">{{ t("Архив") }}</a>
 
       <div class="vk-ms-acc-dock">
-        <div class="vk-ms-acc-dock-title">Аккаунты</div>
-        <a class="vk-ms-acc-pill {% if not filter_account_id %}is-active{% endif %}" href="{{ mb }}{{ all_accounts_qs }}" title="Все аккаунты">
+        <div class="vk-ms-acc-dock-title">{{ t("Аккаунты") }}</div>
+        <a class="vk-ms-acc-pill {% if not filter_account_id %}is-active{% endif %}" href="{{ mb }}{{ all_accounts_qs }}" title="{{ t("Все аккаунты") }}">
           <span class="vk-ms-acc-dot" style="background:linear-gradient(135deg,#64748b,#475569)">∑</span>
-          <span>Все</span>
+          <span>{{ t("Все") }}</span>
         </a>
         {% for a, acc_qs in account_dock %}
         <a class="vk-ms-acc-pill {% if filter_account_id == (a.id|string) %}is-active{% endif %}" href="{{ mb }}{{ acc_qs }}">
@@ -298,37 +298,37 @@
   <dialog id="vk-ms-ai-dialog" class="vk-ms-ai-dialog" style="max-width:min(640px,96vw);border:1px solid var(--vk-border);border-radius:12px;padding:0">
     <form method="dialog" style="margin:0">
       <div style="padding:16px 18px;border-bottom:1px solid var(--vk-border)">
-        <h3 style="margin:0;font-size:16px">Настройки AI-ассистента Messenger</h3>
-        <p style="margin:8px 0 0;font-size:12px;color:var(--vk-muted)">Провайдер и модель — как в разделе «Рассылка» → AI-агент. Здесь — ваш бизнес-контекст, ссылки (Zoom, сайт, Telegram, YouTube) и пауза перед отправкой (имитация живого ответа).</p>
+        <h3 style="margin:0;font-size:16px">{{ t("Настройки AI-ассистента Messenger") }}</h3>
+        <p style="margin:8px 0 0;font-size:12px;color:var(--vk-muted)">{{ t("Провайдер и модель — как в разделе «Рассылка» → AI-агент. Здесь — ваш бизнес-контекст, ссылки (Zoom, сайт, Telegram, YouTube) и пауза перед отправкой (имитация живого ответа).") }}</p>
       </div>
       <div style="padding:16px 18px;display:flex;flex-direction:column;gap:12px">
-        <label style="display:flex;flex-direction:column;gap:4px;font-size:13px"><span>Доп. промпт (продукт, оффер, ограничения)</span>
+        <label style="display:flex;flex-direction:column;gap:4px;font-size:13px"><span>{{ t("Доп. промпт (продукт, оффер, ограничения)") }}</span>
           <textarea id="vk-ms-ai-f-prompt" rows="5" style="width:100%;box-sizing:border-box;font-family:inherit"></textarea>
         </label>
         <label style="display:flex;flex-direction:column;gap:4px;font-size:13px"><span>Ссылки и материалы (по одной строке: подпись — URL)</span>
-          <textarea id="vk-ms-ai-f-materials" rows="4" placeholder="Сайт — https://…&#10;Запись звонка — https://zoom.us/…" style="width:100%;box-sizing:border-box;font-family:inherit"></textarea>
+          <textarea id="vk-ms-ai-f-materials" rows="4" placeholder="{{ t("Сайт — https://…&#10;Запись звонка — https://zoom.us/…") }}" style="width:100%;box-sizing:border-box;font-family:inherit"></textarea>
         </label>
         <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
-          <label style="font-size:13px">Пауза мин, с <input type="number" id="vk-ms-ai-f-dmin" step="1" min="0" style="width:72px;margin-left:6px"/></label>
-          <label style="font-size:13px">макс, с <input type="number" id="vk-ms-ai-f-dmax" step="1" min="0" style="width:72px;margin-left:6px"/></label>
+          <label style="font-size:13px">{{ t("Пауза мин, с") }} <input type="number" id="vk-ms-ai-f-dmin" step="1" min="0" style="width:72px;margin-left:6px"/></label>
+          <label style="font-size:13px">{{ t("макс, с") }} <input type="number" id="vk-ms-ai-f-dmax" step="1" min="0" style="width:72px;margin-left:6px"/></label>
           <label style="font-size:13px">Temperature <input type="number" id="vk-ms-ai-f-temp" step="0.05" min="0" max="2" style="width:64px;margin-left:6px"/></label>
           <label style="font-size:13px">Max tokens <input type="number" id="vk-ms-ai-f-mt" step="10" min="80" max="4096" style="width:72px;margin-left:6px"/></label>
         </div>
-        <label style="font-size:13px">Макс. ответов AI на чат (0 = без лимита)
+        <label style="font-size:13px">{{ t("Макс. ответов AI на чат (0 = без лимита)") }}
           <input type="number" id="vk-ms-ai-f-mrs" step="1" min="0" max="500" style="width:72px;margin-left:6px"/>
         </label>
         <p id="vk-ms-ai-dlg-status" style="margin:0;font-size:12px;min-height:16px;color:var(--vk-muted)"></p>
       </div>
       <div style="padding:12px 18px;border-top:1px solid var(--vk-border);display:flex;gap:10px;justify-content:flex-end">
-        <button type="button" class="vk-ms-btn-text" id="vk-ms-ai-dlg-cancel" value="cancel">Отмена</button>
-        <button type="button" class="vk-ms-btn-primary" id="vk-ms-ai-dlg-save">Сохранить</button>
+        <button type="button" class="vk-ms-btn-text" id="vk-ms-ai-dlg-cancel" value="cancel">{{ t("Отмена") }}</button>
+        <button type="button" class="vk-ms-btn-primary" id="vk-ms-ai-dlg-save">{{ t("Сохранить") }}</button>
       </div>
     </form>
   </dialog>
 
   <div class="vk-ms-selection-bar" id="vk-ms-selection-bar" role="status">
-    <span id="vk-ms-sel-count">Выбрано: 0</span>
-    <a href="/outreach" class="vk-ms-btn-primary" style="text-decoration:none;background:#555">Рассылка</a>
+    <span id="vk-ms-sel-count">{{ t("Выбрано: 0") }}</span>
+    <a href="/outreach" class="vk-ms-btn-primary" style="text-decoration:none;background:#555">{{ t("Рассылка") }}</a>
     <button type="button" class="vk-ms-btn-icon" style="background:transparent;color:#fff" id="vk-ms-sel-clear" title="Снять выбор">✕</button>
   </div>
 </div>

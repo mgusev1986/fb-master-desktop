@@ -7,26 +7,26 @@
   <header class="x-page__header">
     <div class="x-page__title-wrap">
       <h1 class="x-page__title">Outreach Builder <span class="x-page__beta-pill">Beta</span></h1>
-      <p class="x-page__subtitle">Кампании DM / reply / quote-tweet. Default approval = manual. AI-автоответчик опционально.</p>
+      <p class="x-page__subtitle">{{ t("Кампании DM / reply / quote-tweet. Default approval = manual. AI-автоответчик опционально.") }}</p>
     </div>
   </header>
 
   {% if accounts and templates %}
   <section class="x-card x-card--accent">
-    <h2 class="x-card__title"><i class="ti ti-plus"></i> Новая кампания</h2>
+    <h2 class="x-card__title"><i class="ti ti-plus"></i> {{ t("Новая кампания") }}</h2>
     <form method="post" action="/twitter/outreach/create" style="display:flex;flex-direction:column;gap:10px;">
-      <input type="text" name="name" required placeholder="Название" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+      <input type="text" name="name" required placeholder="{{ t("Название") }}" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <select name="account_id" required style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
-          <option value="">— аккаунт —</option>
+          <option value="">{{ t("— аккаунт —") }}</option>
           {% for a in accounts %}<option value="{{ a.id }}">{{ a.label }} [{{ a.status }}]</option>{% endfor %}
         </select>
         <select name="template_id" required style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
-          <option value="">— шаблон —</option>
+          <option value="">{{ t("— шаблон —") }}</option>
           {% for t in templates %}<option value="{{ t.id }}">{{ t.name }} · {{ t.kind }}</option>{% endfor %}
         </select>
         <select name="mode" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
-          <option value="dm">DM</option><option value="reply">Reply (к tweet)</option><option value="quote_tweet">Quote-tweet</option>
+          <option value="dm">DM</option><option value="reply">{{ t("Reply (к tweet)") }}</option><option value="quote_tweet">Quote-tweet</option>
         </select>
         <select name="approval_mode" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
           <option value="manual">manual approve</option><option value="semi">semi (batch)</option>
@@ -34,32 +34,32 @@
         <input type="number" name="daily_cap" min="1" max="200" placeholder="cap/day" style="width:120px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
       </div>
       <details style="border:1px dashed var(--border);border-radius:10px;padding:8px 12px;">
-        <summary style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:var(--ws-accent);"><i class="ti ti-robot"></i> AI-автоответчик (опционально)</summary>
+        <summary style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:var(--ws-accent);"><i class="ti ti-robot"></i> {{ t("AI-автоответчик (опционально)") }}</summary>
         <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px;">
-          <label style="font:400 13px/1 Inter,sans-serif;"><input type="checkbox" name="autoresponder_enabled" value="on"/> Включить AI-автоответчик при первом входящем ответе</label>
+          <label style="font:400 13px/1 Inter,sans-serif;"><input type="checkbox" name="autoresponder_enabled" value="on"/> {{ t("Включить AI-автоответчик при первом входящем ответе") }}</label>
           <div style="display:flex;gap:8px;">
             <select name="autoresponder_persona_id" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
               <option value="">— persona —</option>
               {% for p in (personas or []) %}<option value="{{ p.id }}">{{ p.name }} · {{ p.role or '' }}</option>{% endfor %}
             </select>
             <select name="autoresponder_goal" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
-              <option value="">— цель —</option>
-              <option value="book_call">book_call (созвон)</option>
-              <option value="share_info">share_info (отправить материалы)</option>
-              <option value="qualify_lead">qualify_lead (квалификация)</option>
-              <option value="nurture">nurture (прогрев)</option>
+              <option value="">{{ t("— цель —") }}</option>
+              <option value="book_call">{{ t("book_call (созвон)") }}</option>
+              <option value="share_info">{{ t("share_info (отправить материалы)") }}</option>
+              <option value="qualify_lead">{{ t("qualify_lead (квалификация)") }}</option>
+              <option value="nurture">{{ t("nurture (прогрев)") }}</option>
             </select>
           </div>
-          <small style="color:var(--text-muted);">Если personas нет — создайте на <a href="/twitter/autoresponder">странице AI-автоответчика</a>.</small>
+          <small style="color:var(--text-muted);">{{ t("Если personas нет — создайте на") }} <a href="/twitter/autoresponder">странице AI-автоответчика</a>.</small>
         </div>
       </details>
-      <button type="submit" class="x-btn x-btn--primary" style="align-self:flex-start;"><i class="ti ti-send"></i> Создать кампанию</button>
+      <button type="submit" class="x-btn x-btn--primary" style="align-self:flex-start;"><i class="ti ti-send"></i> {{ t("Создать кампанию") }}</button>
     </form>
   </section>
   {% else %}
   <section class="x-banner">
     <div class="x-banner__icon"><i class="ti ti-info-circle"></i></div>
-    <div class="x-banner__body"><h2 class="x-banner__title">Сначала</h2><p class="x-banner__text">Подключите минимум один <a href="/twitter/accounts">аккаунт</a> и создайте <a href="/twitter/templates">шаблон</a>.</p></div>
+    <div class="x-banner__body"><h2 class="x-banner__title">{{ t("Сначала") }}</h2><p class="x-banner__text">{{ t("Подключите минимум один") }} <a href="/twitter/accounts">{{ t("аккаунт") }}</a> {{ t("и создайте") }} <a href="/twitter/templates">{{ t("шаблон") }}</a>.</p></div>
   </section>
   {% endif %}
 
@@ -76,13 +76,13 @@
               {% elif c.status == 'draft' %}compliance-cell__level--partial
               {% else %}compliance-cell__level--unsupported{% endif %}">{{ c.status }}</span>
           </header>
-          <p class="x-card__desc" style="font-size:13px;">режим: <strong>{{ c.mode }}</strong> · approval: <strong>{{ c.approval_mode }}</strong>{% if c.daily_cap %} · cap: <strong>{{ c.daily_cap }}/d</strong>{% endif %}{% if c.autoresponder_enabled %} · 🤖 AI-{{ c.autoresponder_goal or 'auto' }}{% endif %}</p>
-          <a href="/twitter/outreach/{{ c.id }}" class="x-btn" style="align-self:flex-start;"><i class="ti ti-eye"></i> Открыть</a>
+          <p class="x-card__desc" style="font-size:13px;">{{ t("режим:") }} <strong>{{ c.mode }}</strong> · approval: <strong>{{ c.approval_mode }}</strong>{% if c.daily_cap %} · cap: <strong>{{ c.daily_cap }}/d</strong>{% endif %}{% if c.autoresponder_enabled %} · 🤖 AI-{{ c.autoresponder_goal or 'auto' }}{% endif %}</p>
+          <a href="/twitter/outreach/{{ c.id }}" class="x-btn" style="align-self:flex-start;"><i class="ti ti-eye"></i> {{ t("Открыть") }}</a>
         </article>
         {% endfor %}
       </div>
     {% else %}
-      <div class="x-placeholder"><div class="x-placeholder__icon"><i class="ti ti-send"></i></div><p class="x-placeholder__text">Кампаний нет.</p></div>
+      <div class="x-placeholder"><div class="x-placeholder__icon"><i class="ti ti-send"></i></div><p class="x-placeholder__text">{{ t("Кампаний нет.") }}</p></div>
     {% endif %}
   </section>
 </div>

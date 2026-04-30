@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>SOCMASTER — сборка для разработчика</title>
+  <title>{{ t("SOCMASTER — сборка для разработчика") }}</title>
   <link rel="stylesheet" href="{{ url_for('static', path='css/main.css') }}"/>
   <style>
     .fbm-premium-page {
@@ -90,33 +90,33 @@
 <div class="fbm-premium-page">
   <div class="fbm-premium-card">
     <div class="fbm-dev-banner">
-      <strong>Только для разработчика.</strong> Эта страница и манифест <code>/api/public/desktop-update-dev</code> не совпадают с клиентским каналом. После проверки выкладывайте финальную сборку в обычный <code>static/releases/</code> и обновляйте <code>FB_DESKTOP_*</code> (см. <code>deploy/DEVELOPER_RELEASE.md</code>).
+      <strong>Только для разработчика.</strong> Эта страница и манифест <code>/api/public/desktop-update-dev</code> не совпадают с клиентским каналом. После проверки выкладывайте финальную сборку в обычный <code>static/releases/</code> и обновляйте <code>FB_DESKTOP_*</code> {{ t("(см.") }} <code>deploy/DEVELOPER_RELEASE.md</code>).
     </div>
     <p class="fbm-premium-eyebrow">SOCMASTER · developer</p>
-    <h1>Превью-сборка macOS (Apple Silicon)</h1>
+    <h1>{{ t("Превью-сборка macOS (Apple Silicon)") }}</h1>
 
     {% if dev_latest_version %}
     <p class="fbm-premium-note">Текущая версия канала: <strong>v{{ dev_latest_version }}</strong>{% if dev_release_notes %} — {{ dev_release_notes }}{% endif %}</p>
     {% endif %}
 
     {% if download_urls %}
-    <p class="fbm-premium-section-label">Скачать</p>
+    <p class="fbm-premium-section-label">{{ t("Скачать") }}</p>
     <ul class="fbm-premium-dl">
       {% if download_urls.get('darwin_arm64_bundle') %}
-      <li><a href="{{ download_urls['darwin_arm64_bundle'] }}" rel="noopener">macOS — архив установки (.zip)</a></li>
+      <li><a href="{{ download_urls['darwin_arm64_bundle'] }}" rel="noopener">{{ t("macOS — архив установки (.zip)") }}</a></li>
       {% endif %}
       {% if download_urls.get('darwin_arm64') and not download_urls.get('darwin_arm64_bundle') %}
-      <li><a href="{{ download_urls['darwin_arm64'] }}" rel="noopener">macOS — установщик (.dmg)</a></li>
+      <li><a href="{{ download_urls['darwin_arm64'] }}" rel="noopener">{{ t("macOS — установщик (.dmg)") }}</a></li>
       {% endif %}
     </ul>
     {% else %}
-    <p class="fbm-premium-note">Ссылки недоступны: задайте <code>FB_DESKTOP_DEV_LATEST_VERSION</code> и положите файлы в <code>static/releases/dev/</code>, либо явные URL в .env (<code>FB_DESKTOP_DEV_DOWNLOAD_*</code>).</p>
+    <p class="fbm-premium-note">Ссылки недоступны: задайте <code>FB_DESKTOP_DEV_LATEST_VERSION</code> и положите файлы в <code>static/releases/dev/</code>{{ t(", либо явные URL в .env (") }}<code>FB_DESKTOP_DEV_DOWNLOAD_*</code>).</p>
     {% endif %}
 
-    <p class="fbm-premium-section-label">Проверка API</p>
-    <p class="fbm-premium-note">JSON манифеста: <code>{{ dev_manifest_url }}</code></p>
+    <p class="fbm-premium-section-label">{{ t("Проверка API") }}</p>
+    <p class="fbm-premium-note">{{ t("JSON манифеста:") }} <code>{{ dev_manifest_url }}</code></p>
 
-    <a class="fbm-premium-link-muted" href="/buy">Клиентская страница скачивания (/buy)</a>
+    <a class="fbm-premium-link-muted" href="/buy">{{ t("Клиентская страница скачивания (/buy)") }}</a>
   </div>
 </div>
 </body>

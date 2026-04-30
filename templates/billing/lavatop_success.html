@@ -24,16 +24,16 @@
 <body>
   <div class="lava-success-card">
     <div class="lava-success-icon">✓</div>
-    <h1>Спасибо за покупку!</h1>
-    <p class="lava-success-lead">Ваш ключ доступа SOCMASTER отправлен на email,<br>который вы указали при оплате.</p>
-    <p class="lava-success-email">Проверьте папку «Входящие». Если письма нет за 5 минут — загляните в «Спам».</p>
+    <h1>{{ t("Спасибо за покупку!") }}</h1>
+    <p class="lava-success-lead">{{ t("Ваш ключ доступа SOCMASTER отправлен на email,") }}<br>который вы указали при оплате.</p>
+    <p class="lava-success-email">{{ t("Проверьте папку «Входящие». Если письма нет за 5 минут — загляните в «Спам».") }}</p>
     <div class="lava-success-actions">
-      <a href="/auth/unlock" class="lava-btn lava-btn-primary">Перейти к активации ключа</a>
-      <a href="/" class="lava-btn lava-btn-secondary">Вернуться на главную</a>
+      <a href="/auth/unlock" class="lava-btn lava-btn-primary">{{ t("Перейти к активации ключа") }}</a>
+      <a href="/" class="lava-btn lava-btn-secondary">{{ t("Вернуться на главную") }}</a>
     </div>
     <p class="lava-success-hint">
-      Не пришло письмо? Напишите нам в Telegram: <a href="https://t.me/socmaster_support" style="color: #6384ff;">@socmaster_support</a><br>
-      Подписка автоматически продлится через выбранный период. Отменить можно в любой момент.
+      {{ t("Не пришло письмо? Напишите нам в Telegram:") }} <a href="https://t.me/socmaster_support" style="color: #6384ff;">@socmaster_support</a><br>
+      {{ t("Подписка автоматически продлится через выбранный период. Отменить можно в любой момент.") }}
     </p>
   </div>
 </body>

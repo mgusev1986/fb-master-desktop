@@ -3,28 +3,28 @@
 {% block content %}
 <div class="ig-page">
   <header class="ig-page__header">
-    <div class="ig-page__title-wrap"><h1 class="ig-page__title">AI-автоответчик <span class="ig-page__beta-pill">Beta</span></h1><p class="ig-page__subtitle">Нейросеть ведёт DM-переписку до достижения цели (созвон / отправка материалов / квалификация).</p></div>
+    <div class="ig-page__title-wrap"><h1 class="ig-page__title">{{ t("AI-автоответчик") }} <span class="ig-page__beta-pill">Beta</span></h1><p class="ig-page__subtitle">{{ t("Нейросеть ведёт DM-переписку до достижения цели (созвон / отправка материалов / квалификация).") }}</p></div>
   </header>
 
   <section class="ig-card ig-card--accent">
     <h2 class="ig-card__title"><i class="ti ti-id"></i> Personas</h2>
     <details>
-      <summary style="cursor:pointer;color:var(--ws-accent);font:500 13px/1 Inter;"><i class="ti ti-plus"></i> Создать persona</summary>
+      <summary style="cursor:pointer;color:var(--ws-accent);font:500 13px/1 Inter;"><i class="ti ti-plus"></i> {{ t("Создать persona") }}</summary>
       <form method="post" action="/instagram/autoresponder/personas/create" style="display:flex;flex-direction:column;gap:10px;margin-top:10px;">
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <input type="text" name="name" required placeholder="Имя" style="flex:2;min-width:200px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
-          <input type="text" name="role" placeholder="Роль" style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
-          <input type="text" name="company" placeholder="Компания" style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+          <input type="text" name="name" required placeholder="{{ t("Имя") }}" style="flex:2;min-width:200px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+          <input type="text" name="role" placeholder="{{ t("Роль") }}" style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+          <input type="text" name="company" placeholder="{{ t("Компания") }}" style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
           <input type="text" name="tone" placeholder="tone" style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
         </div>
         <textarea name="offer_summary" rows="3" placeholder="Что предлагаешь" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"></textarea>
-        <textarea name="knowledge_base" rows="4" placeholder="Знания (FAQ, цены, кейсы)" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"></textarea>
+        <textarea name="knowledge_base" rows="4" placeholder="{{ t("Знания (FAQ, цены, кейсы)") }}" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"></textarea>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <input type="url" name="cta_call_link" placeholder="ссылка на созвон" style="flex:1;min-width:240px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
           <input type="url" name="cta_info_link" placeholder="ссылка на info-pack" style="flex:1;min-width:240px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
         </div>
-        <textarea name="forbidden_topics" rows="2" placeholder="НЕ обсуждать" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"></textarea>
-        <button type="submit" class="ig-btn ig-btn--primary" style="align-self:flex-start;"><i class="ti ti-plus"></i> Создать persona</button>
+        <textarea name="forbidden_topics" rows="2" placeholder="{{ t("НЕ обсуждать") }}" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"></textarea>
+        <button type="submit" class="ig-btn ig-btn--primary" style="align-self:flex-start;"><i class="ti ti-plus"></i> {{ t("Создать persona") }}</button>
       </form>
     </details>
     {% if personas %}
@@ -43,10 +43,10 @@
 
   {% if accounts and leads and personas %}
   <section class="ig-card ig-card--accent">
-    <h2 class="ig-card__title"><i class="ti ti-plus"></i> Новая AI-сессия</h2>
+    <h2 class="ig-card__title"><i class="ti ti-plus"></i> {{ t("Новая AI-сессия") }}</h2>
     <form method="post" action="/instagram/autoresponder/sessions/create" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
       <select name="account_id" required style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
-        <option value="">— аккаунт —</option>{% for a in accounts %}<option value="{{ a.id }}">{{ a.label }} [{{ a.status }}]</option>{% endfor %}
+        <option value="">{{ t("— аккаунт —") }}</option>{% for a in accounts %}<option value="{{ a.id }}">{{ a.label }} [{{ a.status }}]</option>{% endfor %}
       </select>
       <select name="lead_id" required style="flex:1;min-width:200px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
         <option value="">— lead —</option>{% for l in leads %}<option value="{{ l.id }}">@{{ l.handle }} · {{ l.full_name or '' }}</option>{% endfor %}
@@ -60,11 +60,11 @@
       <select name="approval_mode" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
         <option value="manual">manual</option><option value="auto">auto-send</option>
       </select>
-      <button type="submit" class="ig-btn ig-btn--primary"><i class="ti ti-robot"></i> Запустить</button>
+      <button type="submit" class="ig-btn ig-btn--primary"><i class="ti ti-robot"></i> {{ t("Запустить") }}</button>
     </form>
   </section>
   {% else %}
-  <section class="ig-banner"><div class="ig-banner__icon"><i class="ti ti-info-circle"></i></div><div class="ig-banner__body"><h2 class="ig-banner__title">Прежде чем запускать</h2><p class="ig-banner__text">Нужны: 1 <a href="/instagram/accounts">аккаунт</a>, 1 <a href="/instagram/leads">lead</a>, 1 persona.</p></div></section>
+  <section class="ig-banner"><div class="ig-banner__icon"><i class="ti ti-info-circle"></i></div><div class="ig-banner__body"><h2 class="ig-banner__title">{{ t("Прежде чем запускать") }}</h2><p class="ig-banner__text">{{ t("Нужны: 1") }} <a href="/instagram/accounts">{{ t("аккаунт") }}</a>, 1 <a href="/instagram/leads">lead</a>, 1 persona.</p></div></section>
   {% endif %}
 
   <section>
@@ -83,7 +83,7 @@
           <small style="color:var(--text-muted);">in: {{ s.msg_count_in }} · out: {{ s.msg_count_out }}{% if s.final_outcome %} · outcome: <strong>{{ s.final_outcome }}</strong>{% endif %}</small>
           <div style="display:flex;gap:6px;flex-wrap:wrap;">
             {% if s.state == 'active' %}
-            <form method="post" action="/instagram/autoresponder/sessions/{{ s.id }}/think-now" style="margin:0;" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i>…';"><button class="ig-btn" type="submit" style="font-size:12px;padding:4px 10px;"><i class="ti ti-bolt"></i> Думать</button></form>
+            <form method="post" action="/instagram/autoresponder/sessions/{{ s.id }}/think-now" style="margin:0;" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i>…';"><button class="ig-btn" type="submit" style="font-size:12px;padding:4px 10px;"><i class="ti ti-bolt"></i> {{ t("Думать") }}</button></form>
             <form method="post" action="/instagram/autoresponder/sessions/{{ s.id }}/state" style="margin:0;"><input type="hidden" name="state" value="paused"/><button class="ig-btn" type="submit" style="font-size:12px;padding:4px 10px;"><i class="ti ti-player-pause"></i></button></form>
             {% else %}
             <form method="post" action="/instagram/autoresponder/sessions/{{ s.id }}/state" style="margin:0;"><input type="hidden" name="state" value="active"/><button class="ig-btn" type="submit" style="font-size:12px;padding:4px 10px;"><i class="ti ti-player-play"></i></button></form>
@@ -93,7 +93,7 @@
         </article>
       {% endfor %}</div>
     {% else %}
-      <div class="ig-placeholder"><div class="ig-placeholder__icon"><i class="ti ti-robot"></i></div><p class="ig-placeholder__text">AI-сессий нет.</p></div>
+      <div class="ig-placeholder"><div class="ig-placeholder__icon"><i class="ti ti-robot"></i></div><p class="ig-placeholder__text">{{ t("AI-сессий нет.") }}</p></div>
     {% endif %}
   </section>
 </div>

@@ -8,13 +8,13 @@
     <div>
       <h1>{% if cabinet_client_mode(request) %}Лайки по списку людей{% else %}Прогрев по контактам{% endif %}</h1>
       <p class="subtitle">{% if cabinet_client_mode(request) %}
-      Лайки (и при желании короткие комментарии) к постам на страницах людей из <strong>«Мои контакты»</strong> — без личных сообщений. Скорость задаётся в <a href="/system/speed">«Темп работы»</a> и в самой кампании. Мягкий многодневный прогрев самого аккаунта Facebook — в разделе <a href="/account-warming">«Прогрев профиля»</a>.
+      Лайки (и при желании короткие комментарии) к постам на страницах людей из <strong>{{ t("«Мои контакты»") }}</strong> — без личных сообщений. Скорость задаётся в <a href="/system/speed">{{ t("«Темп работы»") }}</a> и в самой кампании. Мягкий многодневный прогрев самого аккаунта Facebook — в разделе <a href="/account-warming">{{ t("«Прогрев профиля»") }}</a>.
       {% else %}
-      Лайки и опционально комментарии к постам на профилях из базы — без личных сообщений. Темп как в «Скорость и паузы» и в настройках кампании. Для многодневного «естественного» прогрева купленных аккаунтов см. раздел <a href="/account-warming">Прогрев аккаунтов</a> в меню Facebook.
+      Лайки и опционально комментарии к постам на профилях из базы — без личных сообщений. Темп как в «Скорость и паузы» и в настройках кампании. Для многодневного «естественного» прогрева купленных аккаунтов см. раздел <a href="/account-warming">{{ t("Прогрев аккаунтов") }}</a> в меню Facebook.
       {% endif %}</p>
       {{ mailing_warmup_placeholders('subtitle') }}
     </div>
-    <a href="/warmup/new" class="btn btn-primary"><i class="ti ti-plus"></i> Новая кампания</a>
+    <a href="/warmup/new" class="btn btn-primary"><i class="ti ti-plus"></i> {{ t("Новая кампания") }}</a>
   </div>
 </div>
 
@@ -34,10 +34,10 @@
       <table>
         <thead>
           <tr>
-            <th>Название</th>
-            <th>Статус</th>
-            <th>Аккаунты / люди (настройка)</th>
-            <th>Обновлено</th>
+            <th>{{ t("Название") }}</th>
+            <th>{{ t("Статус") }}</th>
+            <th>{{ t("Аккаунты / люди (настройка)") }}</th>
+            <th>{{ t("Обновлено") }}</th>
             <th></th>
           </tr>
         </thead>
@@ -47,15 +47,15 @@
             <td><strong>{{ c.name }}</strong></td>
             <td>
               {% if c.status == 'running' %}
-              <span class="badge badge-default">Выполняется</span>
+              <span class="badge badge-default">{{ t("Выполняется") }}</span>
               {% elif c.status == 'paused' %}
-              <span class="badge badge-default">Пауза</span>
+              <span class="badge badge-default">{{ t("Пауза") }}</span>
               {% elif c.status == 'completed' %}
-              <span class="badge badge-success">Завершена</span>
+              <span class="badge badge-success">{{ t("Завершена") }}</span>
               {% elif c.status == 'ready' %}
-              <span class="badge badge-default">Готова к старту</span>
+              <span class="badge badge-default">{{ t("Готова к старту") }}</span>
               {% else %}
-              <span class="badge badge-default">Черновик</span>
+              <span class="badge badge-default">{{ t("Черновик") }}</span>
               {% endif %}
             </td>
             <td style="color:var(--text-secondary);font-size:var(--font-size-sm)">
@@ -65,7 +65,7 @@
               {{ c.updated_at.strftime('%d.%m.%Y %H:%M') if c.updated_at else '—' }}
             </td>
             <td>
-              <a href="/warmup/{{ c.id }}" class="btn btn-sm btn-secondary">Открыть</a>
+              <a href="/warmup/{{ c.id }}" class="btn btn-sm btn-secondary">{{ t("Открыть") }}</a>
             </td>
           </tr>
           {% endfor %}
@@ -73,7 +73,7 @@
       </table>
     </div>
     {% else %}
-    <p style="color:var(--text-secondary)">Кампаний пока нет. Создайте первую — выберите аккаунты Facebook, донора или список контактов, соберите очередь и запустите прогрев.</p>
+    <p style="color:var(--text-secondary)">{{ t("Кампаний пока нет. Создайте первую — выберите аккаунты Facebook, донора или список контактов, соберите очередь и запустите прогрев.") }}</p>
     {% endif %}
   </div>
 </div>

@@ -5,16 +5,13 @@
 <div class="page-header">
   <div class="page-header-actions">
     <div>
-      <h1>Уже контактировали</h1>
+      <h1>{{ t("Уже контактировали") }}</h1>
       <p class="subtitle">
-        Глобальный учёт: с какого FB-аккаунта кому уже уходило ЛС. Пока включён пропуск «уже писали» в кампании,
-        эти пары не попадут в очередь. Удаление строки здесь снимает только <strong>глобальную</strong> отметку.
+        {{ t("Глобальный учёт: с какого FB-аккаунта кому уже уходило ЛС. Пока включён пропуск «уже писали» в кампании, эти пары не попадут в очередь. Удаление строки здесь снимает только") }} <strong>глобальную</strong> отметку.
       </p>
       <p class="subtitle" style="margin-top:8px;font-size:var(--font-size-sm);color:var(--text-secondary)">
-        Если человек уже был <strong>успешно отправлен в конкретной кампании с партиями</strong>, его id может
-        дополнительно числиться в учёте этой кампании — тогда на странице рассылки у строки «Отправлено» есть
-        «Снова в партию» (снимает и глобальную отметку для этой пары, и учёт кампании).
-        <a href="/outreach" class="table-link">К кампаниям рассылки</a>
+        {{ t("Если человек уже был") }} <strong>успешно отправлен в конкретной кампании с партиями</strong>{{ t(", его id может дополнительно числиться в учёте этой кампании — тогда на странице рассылки у строки «Отправлено» есть «Снова в партию» (снимает и глобальную отметку для этой пары, и учёт кампании).") }}
+        <a href="/outreach" class="table-link">{{ t("К кампаниям рассылки") }}</a>
       </p>
     </div>
   </div>
@@ -25,13 +22,13 @@
     <form method="get" class="contacted-toolbar-form" action="/contacted">
       <div class="contacted-search-field">
         <i class="ti ti-search" aria-hidden="true"></i>
-        <input type="text" name="q" value="{{ search }}" placeholder="Имя, URL или метка аккаунта…" class="form-input" autocomplete="off"/>
+        <input type="text" name="q" value="{{ search }}" placeholder="{{ t("Имя, URL или метка аккаунта…") }}" class="form-input" autocomplete="off"/>
       </div>
-      <button type="submit" class="btn btn-sm btn-primary">Найти</button>
+      <button type="submit" class="btn btn-sm btn-primary">{{ t("Найти") }}</button>
       <div class="contacted-account-group">
-        <label for="accf">Аккаунт</label>
+        <label for="accf">{{ t("Аккаунт") }}</label>
         <select id="accf" name="account_id" class="form-input" onchange="this.form.submit()" title="Фильтр по FB-аккаунту">
-          <option value="">Все</option>
+          <option value="">{{ t("Все") }}</option>
           {% for a in fb_accounts %}
           <option value="{{ a.id }}" {% if account_filter == (a.id ~ '') %}selected{% endif %}>{{ a.label }}</option>
           {% endfor %}
@@ -44,11 +41,11 @@
       <table>
         <thead>
           <tr>
-            <th>Кому</th>
-            <th>Профиль (на момент записи)</th>
-            <th>Аккаунт</th>
-            <th>Первый контакт</th>
-            <th>Последнее ЛС</th>
+            <th>{{ t("Кому") }}</th>
+            <th>{{ t("Профиль (на момент записи)") }}</th>
+            <th>{{ t("Аккаунт") }}</th>
+            <th>{{ t("Первый контакт") }}</th>
+            <th>{{ t("Последнее ЛС") }}</th>
             <th style="width:1%;white-space:nowrap"></th>
           </tr>
         </thead>
@@ -99,7 +96,7 @@
     {% endif %}
 
     {% else %}
-    <p style="margin-top:16px;color:var(--text-secondary)">Записей нет — либо ещё не было успешных ЛС из рассылки, либо не совпал фильтр.</p>
+    <p style="margin-top:16px;color:var(--text-secondary)">{{ t("Записей нет — либо ещё не было успешных ЛС из рассылки, либо не совпал фильтр.") }}</p>
     {% endif %}
   </div>
 </div>
@@ -120,7 +117,7 @@
       </div>
     </div>
     <div style="padding:14px 20px 18px;display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;background:var(--bg-surface-hover)">
-      <button type="button" class="btn btn-secondary" id="contacted-remove-cancel">Отмена</button>
+      <button type="button" class="btn btn-secondary" id="contacted-remove-cancel">{{ t("Отмена") }}</button>
       <button type="button" class="btn btn-primary" id="contacted-remove-confirm"><i class="ti ti-check"></i> Снять отметку</button>
     </div>
   </div>

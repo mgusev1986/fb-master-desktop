@@ -8,11 +8,11 @@
     <div class="reddit-page__title-wrap">
       <h1 class="reddit-page__title">{{ campaign.name }}</h1>
       <p class="reddit-page__subtitle">
-        Режим <strong>{{ campaign.mode|ru_status }}</strong> · подтверждение: <strong>{{ campaign.approval_mode|ru_status }}</strong> · статус <strong>{{ campaign.status|ru_status }}</strong>
+        {{ t("Режим") }} <strong>{{ campaign.mode|ru_status }}</strong> {{ t("· подтверждение:") }} <strong>{{ campaign.approval_mode|ru_status }}</strong> {{ t("· статус") }} <strong>{{ campaign.status|ru_status }}</strong>
         {% if template %} · шаблон <code>{{ template.name }}</code>{% endif %}
       </p>
     </div>
-    <a href="/reddit/campaigns" class="reddit-btn"><i class="ti ti-arrow-left"></i> К кампаниям</a>
+    <a href="/reddit/campaigns" class="reddit-btn"><i class="ti ti-arrow-left"></i> {{ t("К кампаниям") }}</a>
   </header>
 
   {% if notice %}
@@ -29,14 +29,14 @@
       {{ st }} · {{ counts[st] }}
     </a>
     {% endfor %}
-    <a href="/reddit/campaigns/{{ campaign.id }}?state=all" class="reddit-btn{% if state_filter == 'all' %} reddit-btn--primary{% endif %}" style="padding:6px 10px;">все</a>
+    <a href="/reddit/campaigns/{{ campaign.id }}?state=all" class="reddit-btn{% if state_filter == 'all' %} reddit-btn--primary{% endif %}" style="padding:6px 10px;">{{ t("все") }}</a>
     <span style="flex:1;"></span>
     <form method="post" action="/reddit/campaigns/{{ campaign.id }}/build-queue" style="display:flex;gap:8px;align-items:center;">
       <input type="number" name="max_items" value="100" min="1" max="500"
              style="width:80px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;"/>
       <button type="submit" class="reddit-btn reddit-btn--primary"
               onclick="return confirm('Построить очередь из лидов? (будут обработаны все лиды организации, без дубликатов)');">
-        <i class="ti ti-playlist-add"></i> Построить очередь
+        <i class="ti ti-playlist-add"></i> {{ t("Построить очередь") }}
       </button>
     </form>
   </div>
@@ -50,8 +50,8 @@
         <input type="checkbox" id="reddit-queue-select-all"/> выбрать всех на странице
       </label>
       <span style="flex:1;"></span>
-      <span id="reddit-queue-count" style="color:var(--text-muted);font-size:13px;">0 выбрано</span>
-      <button type="submit" class="reddit-btn reddit-btn--primary">Одобрить выбранные</button>
+      <span id="reddit-queue-count" style="color:var(--text-muted);font-size:13px;">{{ t("0 выбрано") }}</span>
+      <button type="submit" class="reddit-btn reddit-btn--primary">{{ t("Одобрить выбранные") }}</button>
     </div>
 
     <div class="reddit-grid reddit-grid--wide" style="margin-top:12px;">
@@ -78,7 +78,7 @@
             <textarea name="body" rows="5" {% if q.review_state != 'pending_review' %}readonly{% endif %}
                       style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font:400 13px/1.5 ui-monospace,monospace;">{{ q.payload_body }}</textarea>
             {% if q.review_state == 'pending_review' %}
-            <button type="submit" class="reddit-btn" style="padding:4px 10px;margin-top:6px;font-size:12px;">Сохранить текст</button>
+            <button type="submit" class="reddit-btn" style="padding:4px 10px;margin-top:6px;font-size:12px;">{{ t("Сохранить текст") }}</button>
             {% endif %}
           </form>
         </details>
@@ -130,7 +130,7 @@
   {% else %}
   <div class="reddit-placeholder">
     <div class="reddit-placeholder__icon"><i class="ti ti-playlist"></i></div>
-    <p class="reddit-placeholder__text">Очередь пуста. Нажмите «Построить очередь» — система применит шаблон ко всем лидам и создаст pending_review-элементы.</p>
+    <p class="reddit-placeholder__text">{{ t("Очередь пуста. Нажмите «Построить очередь» — система применит шаблон ко всем лидам и создаст pending_review-элементы.") }}</p>
   </div>
   {% endif %}
 </div>

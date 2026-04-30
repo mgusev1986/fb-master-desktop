@@ -6,13 +6,12 @@
 <div class="reddit-page">
   <header class="reddit-page__header">
     <div class="reddit-page__title-wrap">
-      <h1 class="reddit-page__title">Готовность аккаунтов</h1>
+      <h1 class="reddit-page__title">{{ t("Готовность аккаунтов") }}</h1>
       <p class="reddit-page__subtitle">
-        Зрелость каждого подключённого аккаунта: возраст, карма, подтверждение email, возможность чата и ЛС.
-        Никаких обещаний обхода лимитов — только честный чеклист и рекомендации.
+        {{ t("Зрелость каждого подключённого аккаунта: возраст, карма, подтверждение email, возможность чата и ЛС. Никаких обещаний обхода лимитов — только честный чеклист и рекомендации.") }}
       </p>
     </div>
-    <a href="/reddit/accounts" class="reddit-btn"><i class="ti ti-brand-reddit"></i> К аккаунтам</a>
+    <a href="/reddit/accounts" class="reddit-btn"><i class="ti ti-brand-reddit"></i> {{ t("К аккаунтам") }}</a>
   </header>
 
   {% if reports %}
@@ -59,7 +58,7 @@
 
       <footer style="display:flex;gap:6px;">
         <form method="post" action="/reddit/readiness/{{ r.account.id }}/probe" style="display:inline">
-          <button type="submit" class="reddit-btn reddit-btn--primary"><i class="ti ti-refresh"></i> Проверить снова</button>
+          <button type="submit" class="reddit-btn reddit-btn--primary"><i class="ti ti-refresh"></i> {{ t("Проверить снова") }}</button>
         </form>
       </footer>
     </article>
@@ -68,8 +67,8 @@
   {% else %}
   <div class="reddit-placeholder">
     <div class="reddit-placeholder__icon"><i class="ti ti-checks"></i></div>
-    <p class="reddit-placeholder__text">Нет подключённых аккаунтов — добавьте первый, чтобы запустить проверку готовности.</p>
-    <a href="/reddit/accounts" class="reddit-btn reddit-btn--primary"><i class="ti ti-plug"></i> К аккаунтам</a>
+    <p class="reddit-placeholder__text">{{ t("Нет подключённых аккаунтов — добавьте первый, чтобы запустить проверку готовности.") }}</p>
+    <a href="/reddit/accounts" class="reddit-btn reddit-btn--primary"><i class="ti ti-plug"></i> {{ t("К аккаунтам") }}</a>
   </div>
   {% endif %}
 </div>

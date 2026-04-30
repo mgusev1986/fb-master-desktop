@@ -4,42 +4,42 @@
 <div class="ig-page">
   <header class="ig-page__header">
     <div class="ig-page__title-wrap">
-      <h1 class="ig-page__title">Поиск аудитории <span class="ig-page__beta-pill">Beta</span></h1>
-      <p class="ig-page__subtitle">Browser-парсер по hashtag (топ-посты + recent) или users keyword search. Сохраняет handles в leads с дедупом.</p>
+      <h1 class="ig-page__title">{{ t("Поиск аудитории") }} <span class="ig-page__beta-pill">Beta</span></h1>
+      <p class="ig-page__subtitle">{{ t("Browser-парсер по hashtag (топ-посты + recent) или users keyword search. Сохраняет handles в leads с дедупом.") }}</p>
     </div>
   </header>
 
   {% if accounts %}
   <section class="ig-card ig-card--accent">
-    <h2 class="ig-card__title"><i class="ti ti-search"></i> Запустить поиск</h2>
+    <h2 class="ig-card__title"><i class="ti ti-search"></i> {{ t("Запустить поиск") }}</h2>
     <form method="post" action="/instagram/audience/search" style="display:flex;flex-direction:column;gap:8px;" onsubmit="this.querySelector('button.search-go').disabled=true; this.querySelector('button.search-go').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Ищу…';">
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <select name="account_id" required style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
-          <option value="">— аккаунт —</option>
+          <option value="">{{ t("— аккаунт —") }}</option>
           {% for a in accounts %}<option value="{{ a.id }}">{{ a.label }} [{{ a.status }}]</option>{% endfor %}
         </select>
         <select name="search_kind" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
-          <option value="hashtag">hashtag (без #)</option>
-          <option value="users">users (по keyword)</option>
+          <option value="hashtag">{{ t("hashtag (без #)") }}</option>
+          <option value="users">{{ t("users (по keyword)") }}</option>
         </select>
-        <input type="text" name="keywords" required placeholder="startup или photography (для hashtag) / Иван (для users)" style="flex:2;min-width:240px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+        <input type="text" name="keywords" required placeholder="{{ t("startup или photography (для hashtag) / Иван (для users)") }}" style="flex:2;min-width:240px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
         <input type="number" name="max_results" min="5" max="60" value="20" style="width:80px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
-        <button type="submit" class="ig-btn ig-btn--primary search-go"><i class="ti ti-search"></i> Найти</button>
+        <button type="submit" class="ig-btn ig-btn--primary search-go"><i class="ti ti-search"></i> {{ t("Найти") }}</button>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <select name="segment_id" style="flex:1;min-width:200px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font-size:12px;">
-          <option value="">— или сохранённый сегмент —</option>
+          <option value="">{{ t("— или сохранённый сегмент —") }}</option>
           {% for s in (segments or []) %}<option value="{{ s.id }}">{{ s.name }} ({{ s.search_kind }} · {{ s.last_run_count or 0 }} рез.)</option>{% endfor %}
         </select>
         <label style="font:400 12px/1 Inter;color:var(--text-secondary);display:inline-flex;align-items:center;gap:4px;">
-          <input type="checkbox" name="save_as_segment" value="on"/> сохранить как сегмент:
-          <input type="text" name="save_segment_name" placeholder="название" style="padding:4px;border-radius:6px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font-size:12px;width:160px;"/>
+          <input type="checkbox" name="save_as_segment" value="on"/> {{ t("сохранить как сегмент:") }}
+          <input type="text" name="save_segment_name" placeholder="{{ t("название") }}" style="padding:4px;border-radius:6px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font-size:12px;width:160px;"/>
         </label>
       </div>
     </form>
   </section>
   {% else %}
-  <section class="ig-banner"><div class="ig-banner__icon"><i class="ti ti-info-circle"></i></div><div class="ig-banner__body"><h2 class="ig-banner__title">Нужен аккаунт</h2><p class="ig-banner__text">Подключите минимум один <a href="/instagram/accounts">аккаунт</a>.</p></div></section>
+  <section class="ig-banner"><div class="ig-banner__icon"><i class="ti ti-info-circle"></i></div><div class="ig-banner__body"><h2 class="ig-banner__title">{{ t("Нужен аккаунт") }}</h2><p class="ig-banner__text">{{ t("Подключите минимум один") }} <a href="/instagram/accounts">{{ t("аккаунт") }}</a>.</p></div></section>
   {% endif %}
 
   {% if segments %}

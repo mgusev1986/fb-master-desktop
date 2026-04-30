@@ -5,12 +5,12 @@
 <div class="page-header">
   <div class="page-header-actions">
     <div>
-      <h1>Автопоиск аудитории</h1>
-      <p class="subtitle">Поиск групп, страниц и профилей на Facebook по ключевым словам. Найденные результаты можно добавить в <strong>доноры</strong> и сразу запустить парсинг аудитории.</p>
+      <h1>{{ t("Автопоиск аудитории") }}</h1>
+      <p class="subtitle">{{ t("Поиск групп, страниц и профилей на Facebook по ключевым словам. Найденные результаты можно добавить в") }} <strong>доноры</strong> и сразу запустить парсинг аудитории.</p>
     </div>
     <div style="display:flex;gap:8px">
-      <a href="/donors" class="btn btn-secondary"><i class="ti ti-users-group"></i> Доноры</a>
-      <a href="/parser" class="btn btn-secondary"><i class="ti ti-search"></i> Парсер</a>
+      <a href="/donors" class="btn btn-secondary"><i class="ti ti-users-group"></i> {{ t("Доноры") }}</a>
+      <a href="/parser" class="btn btn-secondary"><i class="ti ti-search"></i> {{ t("Парсер") }}</a>
     </div>
   </div>
 </div>
@@ -19,32 +19,32 @@
 {% if qp.get('err') == 'busy' %}
 <div class="card" style="margin-bottom:16px;border-color:var(--error)">
   <div class="card-body" style="font-size:var(--font-size-sm)">
-    <i class="ti ti-alert-circle"></i> Автопоиск уже выполняется. Дождитесь окончания.
+    <i class="ti ti-alert-circle"></i> {{ t("Автопоиск уже выполняется. Дождитесь окончания.") }}
   </div>
 </div>
 {% elif qp.get('err') == 'no_keywords' %}
 <div class="card" style="margin-bottom:16px;border-color:var(--error)">
   <div class="card-body" style="font-size:var(--font-size-sm)">
-    <i class="ti ti-alert-circle"></i> Введите хотя бы одно ключевое слово.
+    <i class="ti ti-alert-circle"></i> {{ t("Введите хотя бы одно ключевое слово.") }}
   </div>
 </div>
 {% elif qp.get('err') == 'form' %}
 <div class="card" style="margin-bottom:16px;border-color:var(--error)">
   <div class="card-body" style="font-size:var(--font-size-sm)">
-    <i class="ti ti-alert-circle"></i> Проверьте форму: нужны ключевые слова и аккаунт Facebook.
+    <i class="ti ti-alert-circle"></i> {{ t("Проверьте форму: нужны ключевые слова и аккаунт Facebook.") }}
   </div>
 </div>
 {% elif qp.get('err') == 'no_selection' %}
 <div class="card" style="margin-bottom:16px;border-color:var(--error)">
   <div class="card-body" style="font-size:var(--font-size-sm)">
-    <i class="ti ti-alert-circle"></i> Выберите хотя бы один результат.
+    <i class="ti ti-alert-circle"></i> {{ t("Выберите хотя бы один результат.") }}
   </div>
 </div>
 {% endif %}
 {% if qp.get('started') == '1' %}
 <div class="card" style="margin-bottom:16px;border-color:var(--success)">
   <div class="card-body" style="font-size:var(--font-size-sm)">
-    <i class="ti ti-check"></i> Автопоиск запущен. Прогресс обновляется автоматически.
+    <i class="ti ti-check"></i> {{ t("Автопоиск запущен. Прогресс обновляется автоматически.") }}
   </div>
 </div>
 {% endif %}
@@ -64,12 +64,12 @@
       <div style="display:flex;align-items:center;gap:8px;min-width:0">
         <i class="ti ti-loader-2 disc-live-spin" style="font-size:1.25rem;color:var(--accent)"></i>
         <div style="min-width:0">
-          <div id="disc-live-title" style="font-weight:600">Автопоиск выполняется…</div>
+          <div id="disc-live-title" style="font-weight:600">{{ t("Автопоиск выполняется…") }}</div>
           <div id="disc-live-detail" style="color:var(--text-secondary);margin-top:4px;font-size:var(--font-size-sm)"></div>
         </div>
       </div>
       <button type="button" id="disc-cancel-btn" class="btn btn-secondary" style="flex-shrink:0">
-        <i class="ti ti-player-stop"></i> Остановить
+        <i class="ti ti-player-stop"></i> {{ t("Остановить") }}
       </button>
     </div>
     <div style="height:10px;background:var(--border);border-radius:999px;overflow:hidden">
@@ -90,11 +90,11 @@
   <div class="card-body" style="font-size:var(--font-size-sm);color:var(--text-secondary)">
     Последний автопоиск: #{{ last_job.id }} —
     {% if last_job.status == 'success' %}
-    <span class="badge badge-success">успех</span>
+    <span class="badge badge-success">{{ t("успех") }}</span>
     {% elif last_job.status == 'failed' %}
-    <span class="badge badge-error">ошибка</span>
+    <span class="badge badge-error">{{ t("ошибка") }}</span>
     {% elif last_job.status == 'cancelled' %}
-    <span class="badge badge-warning">отмена</span>
+    <span class="badge badge-warning">{{ t("отмена") }}</span>
     {% else %}
     <span class="badge badge-default">{{ last_job.status }}</span>
     {% endif %}
@@ -106,42 +106,41 @@
 {# ── Форма запуска ── #}
 <div class="card" style="margin-bottom:24px">
   <div class="card-body">
-    <h3 style="margin:0 0 12px;font-size:var(--font-size-md)">Запуск автопоиска</h3>
+    <h3 style="margin:0 0 12px;font-size:var(--font-size-md)">{{ t("Запуск автопоиска") }}</h3>
     <p style="color:var(--text-secondary);font-size:var(--font-size-sm);margin:0 0 16px">
-      Введите ключевые слова, описывающие вашу целевую аудиторию (по одному на строку или через запятую).
-      Система найдёт группы и страницы Facebook по этим запросам.
+      {{ t("Введите ключевые слова, описывающие вашу целевую аудиторию (по одному на строку или через запятую). Система найдёт группы и страницы Facebook по этим запросам.") }}
     </p>
 
     {% if not accounts %}
-    <p style="color:var(--text-secondary)">Нужен хотя бы один аккаунт Facebook с рабочей сессией.</p>
-    <a href="/fb-accounts" class="btn btn-primary">Аккаунты</a>
+    <p style="color:var(--text-secondary)">{{ t("Нужен хотя бы один аккаунт Facebook с рабочей сессией.") }}</p>
+    <a href="/fb-accounts" class="btn btn-primary">{{ t("Аккаунты") }}</a>
     {% else %}
     <form method="post" action="/discovery/run" class="stack" style="gap:20px">
       <div class="form-group" style="margin-bottom:0">
-        <label class="form-label" for="disc-keywords">Ключевые слова</label>
+        <label class="form-label" for="disc-keywords">{{ t("Ключевые слова") }}</label>
         <textarea id="disc-keywords" name="keywords" class="form-input" rows="4" style="max-width:600px" placeholder="бизнес, предпринимательство&#10;сетевой маркетинг&#10;путешествия&#10;ремонт квартир" required></textarea>
-        <p class="form-hint">По одному запросу на строку или через запятую. Каждое слово / фраза — отдельный поиск на Facebook.</p>
+        <p class="form-hint">{{ t("По одному запросу на строку или через запятую. Каждое слово / фраза — отдельный поиск на Facebook.") }}</p>
       </div>
 
       <div class="form-group" style="margin-bottom:0">
-        <div class="form-label" style="margin-bottom:8px">Где искать</div>
+        <div class="form-label" style="margin-bottom:8px">{{ t("Где искать") }}</div>
         <div style="display:flex;flex-wrap:wrap;gap:16px">
           <label style="cursor:pointer;display:flex;align-items:center;gap:6px">
-            <input type="checkbox" name="search_type" value="groups" checked/> Группы
+            <input type="checkbox" name="search_type" value="groups" checked/> {{ t("Группы") }}
           </label>
           <label style="cursor:pointer;display:flex;align-items:center;gap:6px">
             <input type="checkbox" name="search_type" value="pages"/> Страницы
           </label>
           <label style="cursor:pointer;display:flex;align-items:center;gap:6px">
-            <input type="checkbox" name="search_type" value="people"/> Люди (профили)
+            <input type="checkbox" name="search_type" value="people"/> {{ t("Люди (профили)") }}
           </label>
         </div>
       </div>
 
       <div class="form-group" style="margin-bottom:0">
-        <label class="form-label" for="disc-fb-account">Аккаунт Facebook</label>
+        <label class="form-label" for="disc-fb-account">{{ t("Аккаунт Facebook") }}</label>
         <select id="disc-fb-account" name="fb_account_id" class="form-input form-select" style="max-width:360px" required>
-          <option value="" disabled>— выберите —</option>
+          <option value="" disabled>{{ t("— выберите —") }}</option>
           {% for a in accounts %}
           <option value="{{ a.id }}" {% if loop.first %}selected{% endif %}>{{ a.label }}</option>
           {% endfor %}
@@ -149,7 +148,7 @@
       </div>
 
       <div class="form-group" style="margin-bottom:0">
-        <label class="form-label" for="disc-max-results">Максимум результатов на запрос</label>
+        <label class="form-label" for="disc-max-results">{{ t("Максимум результатов на запрос") }}</label>
         <select id="disc-max-results" name="max_results" class="form-input form-select" style="max-width:180px">
           <option value="25">25</option>
           <option value="50" selected>50</option>
@@ -160,7 +159,7 @@
 
       <div>
         <button type="submit" class="btn btn-primary" {% if discovery_busy %}disabled{% endif %}>
-          <i class="ti ti-radar-2"></i> Найти аудиторию
+          <i class="ti ti-radar-2"></i> {{ t("Найти аудиторию") }}
         </button>
       </div>
     </form>
@@ -179,13 +178,13 @@
       </h3>
       {% if latest_task %}
       <form method="post" action="/discovery/{{ latest_task.id }}/delete" onsubmit="return confirm('Удалить задачу и все её результаты?')">
-        <button type="submit" class="btn btn-secondary btn-sm"><i class="ti ti-trash"></i> Удалить</button>
+        <button type="submit" class="btn btn-secondary btn-sm"><i class="ti ti-trash"></i> {{ t("Удалить") }}</button>
       </form>
       {% endif %}
     </div>
 
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">
-      <button type="button" class="btn btn-secondary btn-sm" onclick="discSelectAll(true)">Выбрать все</button>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="discSelectAll(true)">{{ t("Выбрать все") }}</button>
       <button type="button" class="btn btn-secondary btn-sm" onclick="discSelectAll(false)">Снять все</button>
       <span style="color:var(--text-secondary);font-size:var(--font-size-sm);align-self:center" id="disc-sel-count"></span>
     </div>
@@ -196,12 +195,12 @@
           <thead>
             <tr>
               <th style="width:40px"></th>
-              <th>Тип</th>
-              <th>Название</th>
-              <th>Описание / категория</th>
-              <th style="text-align:right">Аудитория</th>
+              <th>{{ t("Тип") }}</th>
+              <th>{{ t("Название") }}</th>
+              <th>{{ t("Описание / категория") }}</th>
+              <th style="text-align:right">{{ t("Аудитория") }}</th>
               <th>Ссылка</th>
-              <th>Статус</th>
+              <th>{{ t("Статус") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -216,11 +215,11 @@
               </td>
               <td>
                 {% if r.result_type == 'group' %}
-                <span class="badge badge-default">Группа</span>
+                <span class="badge badge-default">{{ t("Группа") }}</span>
                 {% elif r.result_type == 'page' %}
                 <span class="badge badge-default">Страница</span>
                 {% else %}
-                <span class="badge badge-default">Профиль</span>
+                <span class="badge badge-default">{{ t("Профиль") }}</span>
                 {% endif %}
               </td>
               <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ r.name or '' }}">{{ r.name or '—' }}</td>
@@ -235,16 +234,16 @@
                 {% set _href = r.url or '#' %}
                 {% set _is_fb = 'facebook.com' in _href.lower() %}
                 {% if is_fb_master_desktop and discovery_playwright_profile_path and _is_fb %}
-                <a href="{{ _href }}" class="fb-discovery-fb-link" rel="noopener noreferrer" style="font-size:var(--font-size-sm)" title="Открыть в Chrome с сессией аккаунта, которым выполнялся поиск">{{ _href|replace('https://www.facebook.com/', '') }}</a>
+                <a href="{{ _href }}" class="fb-discovery-fb-link" rel="noopener noreferrer" style="font-size:var(--font-size-sm)" title="{{ t("Открыть в Chrome с сессией аккаунта, которым выполнялся поиск") }}">{{ _href|replace('https://www.facebook.com/', '') }}</a>
                 {% else %}
                 <a href="{{ _href }}" target="_blank" rel="noopener noreferrer" style="font-size:var(--font-size-sm)">{{ _href|replace('https://www.facebook.com/', '') }}</a>
                 {% endif %}
               </td>
               <td>
                 {% if r.is_approved %}
-                <span class="badge badge-success">Добавлен</span>
+                <span class="badge badge-success">{{ t("Добавлен") }}</span>
                 {% else %}
-                <span class="badge badge-warning">Новый</span>
+                <span class="badge badge-warning">{{ t("Новый") }}</span>
                 {% endif %}
               </td>
             </tr>
@@ -255,11 +254,11 @@
 
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px">
         <button type="submit" class="btn btn-primary">
-          <i class="ti ti-plus"></i> Добавить выбранные в доноры
+          <i class="ti ti-plus"></i> {{ t("Добавить выбранные в доноры") }}
         </button>
         <button type="submit" formaction="/discovery/results/approve-and-parse" class="btn btn-accent"
           onclick="this.form.action='/discovery/results/approve-and-parse'; var s=document.getElementById('disc-fb-account'); if(s){var inp=document.createElement('input');inp.type='hidden';inp.name='fb_account_id';inp.value=s.value;this.form.appendChild(inp);} return true;">
-          <i class="ti ti-player-play"></i> Добавить и запустить парсинг
+          <i class="ti ti-player-play"></i> {{ t("Добавить и запустить парсинг") }}
         </button>
       </div>
     </form>
@@ -268,7 +267,7 @@
 {% elif latest_task and latest_task.status == 'done' %}
 <div class="card">
   <div class="card-body" style="color:var(--text-secondary);font-size:var(--font-size-sm)">
-    По последнему запросу ничего не найдено. Попробуйте другие ключевые слова.
+    {{ t("По последнему запросу ничего не найдено. Попробуйте другие ключевые слова.") }}
   </div>
 </div>
 {% endif %}
@@ -277,10 +276,10 @@
 {% if tasks and tasks|length > 1 %}
 <div class="card" style="margin-top:24px">
   <div class="card-body">
-    <h3 style="margin:0 0 12px;font-size:var(--font-size-md)">История автопоиска</h3>
+    <h3 style="margin:0 0 12px;font-size:var(--font-size-md)">{{ t("История автопоиска") }}</h3>
     <table class="data-table" style="width:100%">
       <thead>
-        <tr><th>#</th><th>Запросы</th><th>Найдено</th><th>Статус</th><th>Дата</th><th></th></tr>
+        <tr><th>#</th><th>{{ t("Запросы") }}</th><th>{{ t("Найдено") }}</th><th>{{ t("Статус") }}</th><th>{{ t("Дата") }}</th><th></th></tr>
       </thead>
       <tbody>
         {% for t in tasks %}
@@ -289,9 +288,9 @@
           <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ t.keywords }}">{{ t.keywords[:60] }}</td>
           <td>{{ t.results_count }}</td>
           <td>
-            {% if t.status == 'done' %}<span class="badge badge-success">готово</span>
+            {% if t.status == 'done' %}<span class="badge badge-success">{{ t("готово") }}</span>
             {% elif t.status == 'running' %}<span class="badge badge-warning">в работе</span>
-            {% elif t.status == 'failed' %}<span class="badge badge-error">ошибка</span>
+            {% elif t.status == 'failed' %}<span class="badge badge-error">{{ t("ошибка") }}</span>
             {% else %}<span class="badge badge-default">{{ t.status }}</span>{% endif %}
           </td>
           <td style="font-size:var(--font-size-sm);white-space:nowrap">{{ t.created_at.strftime('%d.%m.%Y %H:%M') if t.created_at else '—' }}</td>

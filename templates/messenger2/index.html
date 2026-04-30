@@ -365,21 +365,21 @@
         <div class="m2-stage-actions">
           <span class="m2-stage-badge m2-stage-badge--info" id="m2-connection-status" data-m2-session-ok="{% if selected_account_storage_state_usable %}1{% else %}0{% endif %}" title="Сводный статус входа в Facebook и режима синхронизации на сервере (обновляется автоматически).">
             <i class="ti ti-shield-check" id="m2-connection-status-icon"></i>
-            <span id="m2-connection-status-text">Проверяем…</span>
+            <span id="m2-connection-status-text">{{ t("Проверяем…") }}</span>
           </span>
           {% if not cabinet_client_mode(request) %}
           {# Предупреждение о лимитах FB на историю чата — техническая информация,
              клиенту она не полезна и сбивает с толку рядом с зелёным «OK». #}
           <span class="m2-stage-badge m2-stage-badge--danger" id="m2-fb-sync-warning" hidden>
             <i class="ti ti-alert-triangle"></i>
-            <span id="m2-fb-sync-warning-text">Facebook ограничил историю этого чата</span>
+            <span id="m2-fb-sync-warning-text">{{ t("Facebook ограничил историю этого чата") }}</span>
           </span>
           {% endif %}
-          <button type="button" class="btn btn-secondary btn-sm" id="m2-repair-session" style="display:none" title="Если Messenger живой, а автоматизация не видит вход, попробуем вернуть рабочую сессию из этого окна обратно в backend.">
-            <i class="ti ti-lifebuoy"></i> Восстановить вход
+          <button type="button" class="btn btn-secondary btn-sm" id="m2-repair-session" style="display:none" title="{{ t("Если Messenger живой, а автоматизация не видит вход, попробуем вернуть рабочую сессию из этого окна обратно в backend.") }}">
+            <i class="ti ti-lifebuoy"></i> {{ t("Восстановить вход") }}
           </button>
           <button type="button" class="btn btn-secondary btn-sm" id="m2-webview-reload">
-            <i class="ti ti-refresh"></i> Обновить
+            <i class="ti ti-refresh"></i> {{ t("Обновить") }}
           </button>
           {% if not cabinet_client_mode(request) %}
           {# «Пауза автообновления» — advanced-контрол для админа/разработчика.
@@ -387,11 +387,11 @@
              в клиентском режиме блок скрыт, чтобы не засорять UI. #}
           <span
             class="m2-manual-login-cluster"
-            title="Пока пауза включена, не выполняется авто-перезагрузка окна Facebook и не подставляется URL чата из рассылок — форма входа не сбрасывается. Кнопку «Обновить» можно нажать вручную."
+            title="{{ t("Пока пауза включена, не выполняется авто-перезагрузка окна Facebook и не подставляется URL чата из рассылок — форма входа не сбрасывается. Кнопку «Обновить» можно нажать вручную.") }}"
           >
             <label class="m2-manual-login-label">
               <input type="checkbox" id="m2-pause-auto-webview" autocomplete="off" />
-              <span>Пауза автообновления</span>
+              <span>{{ t("Пауза автообновления") }}</span>
             </label>
             <label class="m2-manual-login-min">
               <span class="m2-manual-login-min-hint">снять через</span>
@@ -402,10 +402,10 @@
                 max="180"
                 value="20"
                 step="1"
-                title="Минут до автоматического снятия паузы. 0 — снимать только вручную (галочкой)."
+                title="{{ t("Минут до автоматического снятия паузы. 0 — снимать только вручную (галочкой).") }}"
                 autocomplete="off"
               />
-              <span class="m2-manual-login-min-hint">мин</span>
+              <span class="m2-manual-login-min-hint">{{ t("мин") }}</span>
             </label>
           </span>
           {% endif %}
@@ -420,25 +420,23 @@
 <div class="m2-desktop-root">
 
   <div class="page-header" id="m2-header">
-    <h1>Мессенджер</h1>
+    <h1>{{ t("Мессенджер") }}</h1>
     <p class="subtitle" style="margin:0">
       {% if cabinet_client_mode(request) %}
-      Чаты Facebook открываются ниже под <strong>текущим профилем</strong> (сейчас: <strong>{{ active_fb_account_label or '—' }}</strong>).
-      Сменить профиль: в <a href="/fb-accounts">«Аккаунтах»</a>{% if accounts|length > 1 %} или списком <strong>«Аккаунт»</strong> в панели над чатом — только аккаунты в слотах 1–3{% endif %}; одновременно активен один.
+      Чаты Facebook открываются ниже под <strong>текущим профилем</strong> {{ t("(сейчас:") }} <strong>{{ active_fb_account_label or '—' }}</strong>{{ t("). Сменить профиль: в") }} <a href="/fb-accounts">{{ t("«Аккаунтах»") }}</a>{% if accounts|length > 1 %} или списком <strong>{{ t("«Аккаунт»") }}</strong> в панели над чатом — только аккаунты в слотах 1–3{% endif %}; одновременно активен один.
       {% if m2_messenger_use_disk_profile %}
       Если открыто отдельное окно входа в Facebook для этого же профиля, сначала закройте его, чтобы не было конфликта.
       {% else %}
       Если чат не подхватил вход, нажмите «Обновить» на странице мессенджера или снова выполните вход в разделе аккаунтов.
-      Для ручного ввода логина включите <strong>«Пауза автообновления»</strong> рядом с «Обновить», иначе окно Facebook может само обновляться.
+      Для ручного ввода логина включите <strong>{{ t("«Пауза автообновления»") }}</strong> рядом с «Обновить», иначе окно Facebook может само обновляться.
       {% endif %}
       {% else %}
-      Режим <strong>SOCMASTER Desktop</strong>: Messenger ниже для аккаунта <strong>{{ active_fb_account_label or '—' }}</strong>.
-      Переключить: <a href="/fb-accounts">«Аккаунты»</a>{% if accounts|length > 1 %} или выпадающий список <strong>«Аккаунт»</strong> в панели над чатом (только профили в слотах 1–3){% endif %}; одновременно активен один.
+      Режим <strong>SOCMASTER Desktop</strong>{{ t(": Messenger ниже для аккаунта") }} <strong>{{ active_fb_account_label or '—' }}</strong>{{ t(". Переключить:") }} <a href="/fb-accounts">{{ t("«Аккаунты»") }}</a>{% if accounts|length > 1 %} или выпадающий список <strong>{{ t("«Аккаунт»") }}</strong> в панели над чатом (только профили в слотах 1–3){% endif %}; одновременно активен один.
       {% if m2_messenger_use_disk_profile %}
-      Встроенный Messenger использует <strong>тот же каталог профиля Chromium на диске</strong>, что и кнопка «Войти в Facebook», и <strong>подмешивает cookies из базы</strong> (Electron и Playwright по-разному читают один файл — без копии из БД вход мог не подтягиваться). Закройте окно Chromium перед открытием Messenger, если профиль занят (файл блокировки).
+      Встроенный Messenger использует <strong>тот же каталог профиля Chromium на диске</strong>{{ t(", что и кнопка «Войти в Facebook», и") }} <strong>подмешивает cookies из базы</strong> (Electron и Playwright по-разному читают один файл — без копии из БД вход мог не подтягиваться). Закройте окно Chromium перед открытием Messenger, если профиль занят (файл блокировки).
       {% else %}
-      После входа в Chromium подтяните сессию кнопкой <strong>«Обновить»</strong> — из базы подставятся cookies. Задайте <strong>UA в карточке</strong> или выполните первый вход, чтобы появилась папка профиля — тогда включится режим общего диска с Chromium.
-      Для ручного ввода логина включите <strong>«Пауза автообновления»</strong> рядом с «Обновить», иначе окно Facebook может само обновляться.
+      После входа в Chromium подтяните сессию кнопкой <strong>{{ t("«Обновить»") }}</strong> — из базы подставятся cookies. Задайте <strong>{{ t("UA в карточке") }}</strong> или выполните первый вход, чтобы появилась папка профиля — тогда включится режим общего диска с Chromium.
+      Для ручного ввода логина включите <strong>{{ t("«Пауза автообновления»") }}</strong> рядом с «Обновить», иначе окно Facebook может само обновляться.
       {% endif %}
       {% endif %}
     </p>
@@ -455,8 +453,8 @@
   {% if not accounts %}
   <div class="card">
     <div class="card-body" style="padding:20px">
-      <p style="margin:0 0 12px">Нет Facebook-аккаунтов. Добавьте аккаунт в «Аккаунты».</p>
-      <a href="/fb-accounts" class="btn btn-primary"><i class="ti ti-brand-facebook"></i> Перейти к аккаунтам</a>
+      <p style="margin:0 0 12px">{{ t("Нет Facebook-аккаунтов. Добавьте аккаунт в «Аккаунты».") }}</p>
+      <a href="/fb-accounts" class="btn btn-primary"><i class="ti ti-brand-facebook"></i> {{ t("Перейти к аккаунтам") }}</a>
     </div>
   </div>
   {% else %}
@@ -465,11 +463,10 @@
   <div class="card" style="margin-bottom:14px;border-color:var(--warning, #b45309);background:rgba(251,191,36,0.08)">
     <div class="card-body" style="padding:14px 18px;font-size:var(--font-size-sm);line-height:1.55;color:var(--text-primary)">
       {% if cabinet_client_mode(request) %}
-      <strong>Такой прокси</strong> (с логином в специальном формате) во встроенном окне чата <strong>может не работать</strong>.
+      <strong>Такой прокси</strong> {{ t("(с логином в специальном формате) во встроенном окне чата") }} <strong>может не работать</strong>.
       Попросите администратора переключить прокси на обычный HTTP-вариант, войти через кнопку «Войти в Facebook» в отдельном окне или временно отключить прокси для проверки.
       {% else %}
-      <strong>SOCKS5 с логином и паролем</strong> во встроенном окне Electron/Chromium <strong>не поддерживается</strong> (ошибка <code>ERR_NO_SUPPORTED_PROXIES</code>).
-      Варианты: задайте <strong>HTTP(S)</strong>-прокси в карточке аккаунта, откройте Messenger через <strong>«Войти в Facebook»</strong> / внешний Chromium с тем же прокси или временно отключите прокси только для проверки встроенного Messenger.
+      <strong>{{ t("SOCKS5 с логином и паролем") }}</strong> во встроенном окне Electron/Chromium <strong>не поддерживается</strong> {{ t("(ошибка") }} <code>ERR_NO_SUPPORTED_PROXIES</code>{{ t("). Варианты: задайте") }} <strong>HTTP(S)</strong>{{ t("-прокси в карточке аккаунта, откройте Messenger через") }} <strong>{{ t("«Войти в Facebook»") }}</strong> / внешний Chromium с тем же прокси или временно отключите прокси только для проверки встроенного Messenger.
       {% endif %}
     </div>
   </div>
@@ -477,13 +474,13 @@
   {% if m2_messenger_outreach_blocked|default(false) %}
   <div class="card" style="margin-bottom:14px;border-color:rgba(59,130,246,0.35);background:rgba(59,130,246,0.06)">
     <div class="card-body" style="padding:16px 18px;font-size:var(--font-size-sm);line-height:1.55;color:var(--text-primary)">
-      <strong>Рассылка активна</strong>
-      <p style="margin:10px 0 0">С этим аккаунтом сейчас выполняется рассылка. Встроенный Messenger временно недоступен: используется тот же каталог профиля Chromium, что и у автоматики — параллельное открытие могло бы повредить сессию.</p>
-      <p style="margin:10px 0 0;color:var(--text-secondary)">Дождитесь окончания задачи рассылки или переключитесь на другой аккаунт в слоте 1–3:</p>
+      <strong>{{ t("Рассылка активна") }}</strong>
+      <p style="margin:10px 0 0">{{ t("С этим аккаунтом сейчас выполняется рассылка. Встроенный Messenger временно недоступен: используется тот же каталог профиля Chromium, что и у автоматики — параллельное открытие могло бы повредить сессию.") }}</p>
+      <p style="margin:10px 0 0;color:var(--text-secondary)">{{ t("Дождитесь окончания задачи рассылки или переключитесь на другой аккаунт в слоте 1–3:") }}</p>
       {% if accounts|length > 1 %}
       <form method="post" action="/messenger2/set-active-account" style="margin-top:12px;max-width:420px" class="m2-account-switch-form">
-        <label for="m2-outreach-block-account-switch" class="form-label" style="font-size:0.78rem;margin-bottom:4px">Аккаунт</label>
-        <select name="account_id" id="m2-outreach-block-account-switch" class="form-select" aria-label="Переключить аккаунт Messenger" onchange="if (this.value) this.form.submit();">
+        <label for="m2-outreach-block-account-switch" class="form-label" style="font-size:0.78rem;margin-bottom:4px">{{ t("Аккаунт") }}</label>
+        <select name="account_id" id="m2-outreach-block-account-switch" class="form-select" aria-label="{{ t("Переключить аккаунт Messenger") }}" onchange="if (this.value) this.form.submit();">
           {% for a in accounts %}
           <option value="{{ a.id }}" {% if selected_account_id == a.id %}selected{% endif %}>
             Слот {{ a.active_slot }} — {{ a.label or a.fb_login_username or ('#' ~ a.id) }}
@@ -505,16 +502,16 @@
             <span></span>
           </div>
           <div class="m2-stage-copy">
-            <strong>Встроенный Messenger</strong>
+            <strong>{{ t("Встроенный Messenger") }}</strong>
             <span>{{ active_fb_account_label or 'Аккаунт не выбран' }}</span>
           </div>
         </div>
         {% if accounts|length > 1 %}
         <div class="m2-account-switch-col">
           <form method="post" action="/messenger2/set-active-account" id="m2-account-switch-form" class="m2-account-switch-form">
-            <span class="m2-account-switch-label">Аккаунт</span>
+            <span class="m2-account-switch-label">{{ t("Аккаунт") }}</span>
             <select name="account_id" id="m2-account-switch-select" class="m2-account-switch-select"
-                    aria-label="Переключить аккаунт Messenger"
+                    aria-label="{{ t("Переключить аккаунт Messenger") }}"
                     title="Только аккаунты в активных слотах 1–3"
                     onchange="if (this.value) this.form.submit();">
               {% for a in accounts %}
@@ -534,7 +531,7 @@
       <div class="m2-stage-crm-wrap">
         <div class="m2-stage-crm-main">
           <span class="m2-crm-status" id="m2-crm-status" role="status" aria-live="polite">
-            Откройте чат — URL подставится сам; слева нажмите стадию CRM, контакт попадёт в «Базу контактов» и воронку.
+            {{ t("Откройте чат — URL подставится сам; слева нажмите стадию CRM, контакт попадёт в «Базу контактов» и воронку.") }}
           </span>
           <div class="m2-stage-crm" role="group" aria-label="Стадия воронки CRM">
             {% for st in crm_stages_messenger %}
@@ -552,48 +549,48 @@
       {% endif %}
       <details class="m2-ai-shell" id="m2-ai-shell">
         <summary class="m2-ai-shell-summary" title="Свернуть или развернуть панель IA-асистента">
-          <span class="m2-ai-shell-summary-label">IA-асистент</span>
-          <span class="m2-ai-shell-preview" id="m2-ai-shell-preview">Откройте чат</span>
+          <span class="m2-ai-shell-summary-label">{{ t("IA-асистент") }}</span>
+          <span class="m2-ai-shell-preview" id="m2-ai-shell-preview">{{ t("Откройте чат") }}</span>
           <span class="m2-ai-shell-hint">нажмите, чтобы развернуть</span>
         </summary>
         <div class="m2-ai-shell-body">
-          <div class="m2-stage-ai" id="m2-stage-ai" role="group" aria-label="IA - асистент переписки">
+          <div class="m2-stage-ai" id="m2-stage-ai" role="group" aria-label="{{ t("IA - асистент переписки") }}">
             <div class="m2-ai-toolbar-main">
-              <label class="m2-ai-switch-wrap" title="После синхронизации: если последнее сообщение от собеседника — ИИ сгенерирует ответ в очередь (стадию CRM можно обновить по смыслу).">
-                <input type="checkbox" id="m2-ai-toggle" disabled aria-label="IA - асистент для этого чата"/>
-                <span>IA-асистент</span>
+              <label class="m2-ai-switch-wrap" title="{{ t("После синхронизации: если последнее сообщение от собеседника — ИИ сгенерирует ответ в очередь (стадию CRM можно обновить по смыслу).") }}">
+                <input type="checkbox" id="m2-ai-toggle" disabled aria-label="{{ t("IA - асистент для этого чата") }}"/>
+                <span>{{ t("IA-асистент") }}</span>
               </label>
-              <span class="m2-ai-steps" id="m2-ai-steps" aria-live="polite">Откройте чат</span>
+              <span class="m2-ai-steps" id="m2-ai-steps" aria-live="polite">{{ t("Откройте чат") }}</span>
             </div>
             <p class="m2-ai-first-reply-hint" style="margin:6px 0 0;font-size:0.78rem;line-height:1.45;color:var(--text-secondary, #64748b);max-width:42rem">
-              <strong>Не пишет первым</strong> — только ответ на <strong>входящее</strong> после синхронизации с Facebook. Полная синхронизация списка чатов может за раз подхватить до ~20 непрочитанных диалогов с включённым ИИ.
+              <strong>{{ t("Не пишет первым") }}</strong> — только ответ на <strong>входящее</strong> после синхронизации с Facebook. Полная синхронизация списка чатов может за раз подхватить до ~20 непрочитанных диалогов с включённым ИИ.
             </p>
-            <div class="m2-ai-pill-row" role="group" aria-label="Действия IA-асистента">
-              <button type="button" class="m2-ai-pill-btn" id="m2-ai-reset-fp" disabled title="Сбросить отметку «уже отвечали на этот транскрипт» — можно снова сгенерировать ответ на то же входящее">Сбросить отметку</button>
-              <button type="button" class="m2-ai-pill-btn" id="m2-ai-reset-steps" disabled title="Обнулить счётчик ответов AI в этом чате">Обнулить счётчик AI</button>
-              <button type="button" class="m2-ai-pill-btn" id="m2-ai-settings-open" title="Промпт, материалы и лимиты IA-асистента">Промпт и лимиты</button>
+            <div class="m2-ai-pill-row" role="group" aria-label="{{ t("Действия IA-асистента") }}">
+              <button type="button" class="m2-ai-pill-btn" id="m2-ai-reset-fp" disabled title="Сбросить отметку «уже отвечали на этот транскрипт» — можно снова сгенерировать ответ на то же входящее">{{ t("Сбросить отметку") }}</button>
+              <button type="button" class="m2-ai-pill-btn" id="m2-ai-reset-steps" disabled title="{{ t("Обнулить счётчик ответов AI в этом чате") }}">{{ t("Обнулить счётчик AI") }}</button>
+              <button type="button" class="m2-ai-pill-btn" id="m2-ai-settings-open" title="{{ t("Промпт, материалы и лимиты IA-асистента") }}">{{ t("Промпт и лимиты") }}</button>
             </div>
             <details class="m2-ai-learning-details">
-              <summary title="Индекс переписки, самоанализ и черновики правок промпта">Самоанализ и память</summary>
+              <summary title="{{ t("Индекс переписки, самоанализ и черновики правок промпта") }}">{{ t("Самоанализ и память") }}</summary>
               <div class="m2-ai-learning-body">
                 <div class="m2-ai-learning-row">
-                  <button type="button" class="m2-ai-pill-btn" id="m2-ai-reindex" disabled title="Обновить локальный индекс фрагментов переписки для подмешивания в контекст">Переиндексировать</button>
-                  <button type="button" class="m2-ai-pill-btn" id="m2-ai-analyze" disabled title="Отправить текущий диалог на анализ; черновики правок промпта появятся ниже">Самоанализ</button>
-                  <button type="button" class="m2-ai-pill-btn" id="m2-ai-drafts-refresh" title="Обновить список черновиков">Черновики</button>
+                  <button type="button" class="m2-ai-pill-btn" id="m2-ai-reindex" disabled title="{{ t("Обновить локальный индекс фрагментов переписки для подмешивания в контекст") }}">{{ t("Переиндексировать") }}</button>
+                  <button type="button" class="m2-ai-pill-btn" id="m2-ai-analyze" disabled title="{{ t("Отправить текущий диалог на анализ; черновики правок промпта появятся ниже") }}">{{ t("Самоанализ") }}</button>
+                  <button type="button" class="m2-ai-pill-btn" id="m2-ai-drafts-refresh" title="{{ t("Обновить список черновиков") }}">Черновики</button>
                 </div>
                 <p id="m2-ai-learning-status"></p>
                 <div id="m2-ai-drafts-list"></div>
               </div>
             </details>
             {% if not messenger_ai_llm_ready %}
-            <span class="m2-ai-warn-inline" id="m2-ai-warn-keys">Ключ OpenAI или Google (Gemini) в настройках кабинета — иначе AI молчит.</span>
+            <span class="m2-ai-warn-inline" id="m2-ai-warn-keys">{{ t("Ключ OpenAI или Google (Gemini) в настройках кабинета — иначе AI молчит.") }}</span>
             {% endif %}
           </div>
           <details class="m2-ai-extra-details">
             <summary>Уточнения для этого чата (тон, оффер…)</summary>
             <div class="m2-ai-extra-body">
               <textarea id="m2-ai-chat-extra" maxlength="8000" rows="2" placeholder="Тон, оффер, чего не говорить…" disabled></textarea>
-              <button type="button" class="btn btn-secondary btn-sm" id="m2-ai-chat-extra-save" style="align-self:flex-start" disabled>Сохранить для чата</button>
+              <button type="button" class="btn btn-secondary btn-sm" id="m2-ai-chat-extra-save" style="align-self:flex-start" disabled>{{ t("Сохранить для чата") }}</button>
             </div>
           </details>
         </div>
@@ -604,8 +601,8 @@
         <div class="m2-webview-loading-box">
           <i class="ti ti-loader-2"></i>
           <div class="m2-webview-loading-copy">
-            <strong>Подключаем Messenger</strong>
-            <span>Загружаем встроенное окно Facebook для текущего аккаунта</span>
+            <strong>{{ t("Подключаем Messenger") }}</strong>
+            <span>{{ t("Загружаем встроенное окно Facebook для текущего аккаунта") }}</span>
           </div>
         </div>
       </div>
@@ -624,34 +621,34 @@
   <dialog id="m2-ai-dialog" style="max-width:min(640px,96vw);border:1px solid rgba(148,163,184,0.35);border-radius:14px;padding:0;background:#fff">
     <form method="dialog" style="margin:0">
       <div style="padding:16px 18px;border-bottom:1px solid rgba(148,163,184,0.2)">
-        <strong style="font-size:1rem;color:#0f172a">Настройки AI мессенджера</strong>
-        <p style="margin:6px 0 0;font-size:0.8rem;color:#64748b">Общие для всех чатов. Ответы идут в JSON: текст + опционально стадия CRM.</p>
+        <strong style="font-size:1rem;color:#0f172a">{{ t("Настройки AI мессенджера") }}</strong>
+        <p style="margin:6px 0 0;font-size:0.8rem;color:#64748b">{{ t("Общие для всех чатов. Ответы идут в JSON: текст + опционально стадия CRM.") }}</p>
       </div>
       <div style="padding:14px 18px;display:flex;flex-direction:column;gap:12px;max-height:70vh;overflow:auto">
-        <label style="font-size:0.8rem;color:#334155">Доп. контекст и указания<br/>
+        <label style="font-size:0.8rem;color:#334155">{{ t("Доп. контекст и указания") }}<br/>
           <textarea id="m2-ai-f-prompt" rows="4" style="width:100%;box-sizing:border-box;margin-top:4px;padding:8px;border-radius:8px;border:1px solid #cbd5e1;font-family:inherit;font-size:0.85rem"></textarea>
         </label>
         <label style="font-size:0.8rem;color:#334155">Ссылки и материалы (по строке)<br/>
           <textarea id="m2-ai-f-materials" rows="3" placeholder="https://…" style="width:100%;box-sizing:border-box;margin-top:4px;padding:8px;border-radius:8px;border:1px solid #cbd5e1;font-family:inherit;font-size:0.85rem"></textarea>
         </label>
         <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:0.8rem">
-          <label>Пауза мин, с <input type="number" id="m2-ai-f-dmin" step="1" min="0" style="width:64px;margin-left:4px"/></label>
-          <label>макс, с <input type="number" id="m2-ai-f-dmax" step="1" min="0" style="width:64px;margin-left:4px"/></label>
+          <label>{{ t("Пауза мин, с") }} <input type="number" id="m2-ai-f-dmin" step="1" min="0" style="width:64px;margin-left:4px"/></label>
+          <label>{{ t("макс, с") }} <input type="number" id="m2-ai-f-dmax" step="1" min="0" style="width:64px;margin-left:4px"/></label>
           <label>Temp <input type="number" id="m2-ai-f-temp" step="0.05" min="0" max="2" style="width:56px;margin-left:4px"/></label>
           <label>Max tokens <input type="number" id="m2-ai-f-mt" step="10" min="80" max="4096" style="width:72px;margin-left:4px"/></label>
         </div>
-        <label style="font-size:0.8rem;color:#334155">Макс. ответов AI на один чат (0 = без лимита)<br/>
+        <label style="font-size:0.8rem;color:#334155">{{ t("Макс. ответов AI на один чат (0 = без лимита)") }}<br/>
           <input type="number" id="m2-ai-f-mrs" step="1" min="0" max="500" style="width:88px;margin-top:4px;padding:6px;border-radius:8px;border:1px solid #cbd5e1"/>
         </label>
         <label style="display:flex;align-items:flex-start;gap:10px;font-size:0.8rem;color:#334155;cursor:pointer;max-width:100%">
           <input type="checkbox" id="m2-ai-f-rag" style="margin-top:3px"/>
-          <span>Долгая память: подмешивать в контекст модели короткие фрагменты из прошлых диалогов этой организации (по словам из текущего чата). Не факты о собеседнике — только стиль и типовые ходы.</span>
+          <span>{{ t("Долгая память: подмешивать в контекст модели короткие фрагменты из прошлых диалогов этой организации (по словам из текущего чата). Не факты о собеседнике — только стиль и типовые ходы.") }}</span>
         </label>
         <p id="m2-ai-dlg-status" style="margin:0;font-size:0.78rem;min-height:1.2em;color:#b91c1c"></p>
       </div>
       <div style="padding:12px 18px;border-top:1px solid rgba(148,163,184,0.2);display:flex;gap:10px;justify-content:flex-end">
-        <button type="button" class="btn btn-secondary btn-sm" id="m2-ai-dlg-cancel">Отмена</button>
-        <button type="button" class="btn btn-primary btn-sm" id="m2-ai-dlg-save">Сохранить</button>
+        <button type="button" class="btn btn-secondary btn-sm" id="m2-ai-dlg-cancel">{{ t("Отмена") }}</button>
+        <button type="button" class="btn btn-primary btn-sm" id="m2-ai-dlg-save">{{ t("Сохранить") }}</button>
       </div>
     </form>
   </dialog>
@@ -2238,7 +2235,7 @@
 <div class="page-header">
   <div class="page-header-actions">
     <div>
-      <h1>Мессенджер</h1>
+      <h1>{{ t("Мессенджер") }}</h1>
       <p class="subtitle">
         {% if cabinet_client_mode(request) %}
         В обычном браузере чат Facebook <strong>сюда встроить нельзя</strong> — такие правила у самой сети. Установите <strong>программу SOCMASTER на компьютер</strong>: там будет то же меню слева и переписка на этой странице.
@@ -2263,15 +2260,15 @@
 <div id="m2-sidecar-card" class="card" style="margin-bottom:16px;border:1px solid var(--border)">
   <div class="card-header" style="display:flex;align-items:center;gap:8px">
     <i class="ti ti-heart-rate-monitor" style="font-size:1.2rem"></i>
-    Настольное приложение SOCMASTER Desktop
+    {{ t("Настольное приложение SOCMASTER Desktop") }}
   </div>
   <div class="card-body" style="font-size:var(--font-size-sm);line-height:1.55;color:var(--text-secondary)">
-    <p id="m2-sidecar-status" style="margin:0 0 8px">Проверка…</p>
+    <p id="m2-sidecar-status" style="margin:0 0 8px">{{ t("Проверка…") }}</p>
     <p class="form-hint" style="margin:0">
       {% if messenger2_autostart %}
-      Автозапуск при старте сервера: <strong>включён</strong> (macOS или <code>FB_MASTER_AUTOSTART_DESKTOP=1</code> / <code>FB_MASTER_AUTOSTART_MESSENGER2_FRAME=1</code>).
+      Автозапуск при старте сервера: <strong>{{ t("включён") }}</strong> {{ t("(macOS или") }} <code>FB_MASTER_AUTOSTART_DESKTOP=1</code> / <code>FB_MASTER_AUTOSTART_MESSENGER2_FRAME=1</code>).
       {% else %}
-      Автозапуск: <strong>выключен</strong>. Включите переменную окружения или запустите <code>desktop/fb-master-desktop/Запуск.command</code>.
+      Автозапуск: <strong>выключен</strong>{{ t(". Включите переменную окружения или запустите") }} <code>{{ t("desktop/fb-master-desktop/Запуск.command") }}</code>.
       {% endif %}
       Порт health: <code>{{ messenger2_frame_health_port }}</code> (<code>MESSENGER2_FRAME_HEALTH_PORT</code>).
     </p>
@@ -2281,10 +2278,10 @@
 <div id="m2-sidecar-card" class="card" style="margin-bottom:16px;border:1px solid var(--border)">
   <div class="card-header" style="display:flex;align-items:center;gap:8px">
     <i class="ti ti-heart-rate-monitor" style="font-size:1.2rem"></i>
-    Программа для компьютера
+    {{ t("Программа для компьютера") }}
   </div>
   <div class="card-body" style="font-size:var(--font-size-sm);line-height:1.55;color:var(--text-secondary)">
-    <p id="m2-sidecar-status" style="margin:0 0 8px">Проверка…</p>
+    <p id="m2-sidecar-status" style="margin:0 0 8px">{{ t("Проверка…") }}</p>
     <p class="form-hint" style="margin:0">
       {% if messenger2_autostart %}
       Программа на компьютере может запускаться автоматически вместе с сервером.
@@ -2316,27 +2313,27 @@
 <div class="card" style="margin-bottom:16px">
   <div class="card-header" style="display:flex;align-items:center;gap:8px">
     <i class="ti ti-device-desktop" style="font-size:1.2rem"></i>
-    Как пользоваться чатами
+    {{ t("Как пользоваться чатами") }}
   </div>
   <div class="card-body" style="font-size:var(--font-size-sm);line-height:1.6;color:var(--text-secondary)">
     <p style="margin:0 0 12px">
-      Установите <strong>программу SOCMASTER на компьютер</strong> (файл или инструкцию выдаёт администратор). Откройте программу и войдите в тот же кабинет — переписка откроется внутри окна.
+      Установите <strong>программу SOCMASTER на компьютер</strong> {{ t("(файл или инструкцию выдаёт администратор). Откройте программу и войдите в тот же кабинет — переписка откроется внутри окна.") }}
     </p>
-    <p style="margin:0">Пока программа не установлена, можно открыть чат в <strong>отдельном окне браузера</strong> кнопкой ниже.</p>
+    <p style="margin:0">{{ t("Пока программа не установлена, можно открыть чат в") }} <strong>отдельном окне браузера</strong> кнопкой ниже.</p>
   </div>
 </div>
 {% else %}
 <div class="card" style="margin-bottom:16px">
   <div class="card-header" style="display:flex;align-items:center;gap:8px">
     <i class="ti ti-device-desktop" style="font-size:1.2rem"></i>
-    Настольное приложение (рекомендуется)
+    {{ t("Настольное приложение (рекомендуется)") }}
   </div>
   <div class="card-body" style="font-size:var(--font-size-sm);line-height:1.6;color:var(--text-secondary)">
     <ol style="margin:0;padding-left:1.25rem">
       <li>Установите <a href="https://nodejs.org" target="_blank" rel="noopener noreferrer">Node.js</a> (LTS).</li>
-      <li>Откройте папку <code>desktop/fb-master-desktop</code> в проекте SOCMASTER.</li>
-      <li>Дважды нажмите <strong>Запуск.command</strong> (первый раз выполнится <code>npm install</code>).</li>
-      <li>Войдите в back-office в открывшемся окне — раздел «Мессенджер» покажет встроенный Messenger.</li>
+      <li>{{ t("Откройте папку") }} <code>desktop/fb-master-desktop</code> в проекте SOCMASTER.</li>
+      <li>{{ t("Дважды нажмите") }} <strong>{{ t("Запуск.command") }}</strong> {{ t("(первый раз выполнится") }} <code>npm install</code>).</li>
+      <li>{{ t("Войдите в back-office в открывшемся окне — раздел «Мессенджер» покажет встроенный Messenger.") }}</li>
     </ol>
     <p style="margin:12px 0 0">
       Устаревший вариант только с Messenger (без полного меню): <code>desktop/messenger2-frame</code>.
@@ -2353,9 +2350,9 @@
   <div class="card-body" style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">
     <p class="form-hint" style="margin:0;max-width:520px">
       {% if cabinet_client_mode(request) %}
-      Сейчас для чата используется профиль: <strong>{{ active_fb_account_label or '—' }}</strong>. Сменить можно в разделе <a href="/fb-accounts">«Аккаунты»</a> — кнопка «Использовать в Мессенджере».
+      Сейчас для чата используется профиль: <strong>{{ active_fb_account_label or '—' }}</strong>{{ t(". Сменить можно в разделе") }} <a href="/fb-accounts">{{ t("«Аккаунты»") }}</a> — кнопка «Использовать в Мессенджере».
       {% else %}
-      Используется <strong>текущий аккаунт</strong> из <a href="/fb-accounts">«Аккаунты»</a>:
+      Используется <strong>текущий аккаунт</strong> из <a href="/fb-accounts">{{ t("«Аккаунты»") }}</a>:
       <strong>{{ active_fb_account_label or '—' }}</strong>. Сменить — только там («Использовать в Мессенджере»).
       {% endif %}
     </p>
@@ -2363,10 +2360,10 @@
       <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
         <button type="submit" id="m2-open-btn" class="btn btn-primary btn-lg" style="min-height:48px"
                 {% if not selected_account_id %}disabled{% endif %}
-                {% if selected_account_id and selected_account_id in login_busy_ids %}disabled title="Окно для этого аккаунта уже открыто"{% endif %}>
+                {% if selected_account_id and selected_account_id in login_busy_ids %}disabled title="{{ t("Окно для этого аккаунта уже открыто") }}"{% endif %}>
           <i class="ti ti-browser"></i> {% if cabinet_client_mode(request) %}Открыть чат в отдельном окне{% else %}Открыть Messenger в Chromium{% endif %}
         </button>
-        <a href="/fb-accounts" class="btn btn-secondary" style="text-decoration:none"><i class="ti ti-settings"></i> Аккаунты</a>
+        <a href="/fb-accounts" class="btn btn-secondary" style="text-decoration:none"><i class="ti ti-settings"></i> {{ t("Аккаунты") }}</a>
       </div>
       <label class="m2-auto-open-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:var(--font-size-sm);color:var(--text-secondary);user-select:none;margin:0">
         <input type="checkbox" id="m2-auto-open" autocomplete="off"/>
@@ -2376,12 +2373,11 @@
   </div>
   {% if cabinet_client_mode(request) %}
   <p class="form-hint" style="margin:12px 0 0;padding:0 4px">
-    Не запускайте одновременно несколько окон чата для <strong>одного и того же</strong> профиля Facebook.
+    {{ t("Не запускайте одновременно несколько окон чата для") }} <strong>одного и того же</strong> профиля Facebook.
   </p>
   {% else %}
   <p class="form-hint" style="margin:12px 0 0;padding:0 4px">
-    Целевой адрес: <a href="{{ fb_messenger_e2ee_url }}" target="_blank" rel="noopener noreferrer">{{ fb_messenger_e2ee_url }}</a>.
-    Не запускайте синхронизацию основного «Мессенджера» параллельно с тем же профилем.
+    Целевой адрес: <a href="{{ fb_messenger_e2ee_url }}" target="_blank" rel="noopener noreferrer">{{ fb_messenger_e2ee_url }}</a>{{ t(". Не запускайте синхронизацию основного «Мессенджера» параллельно с тем же профилем.") }}
   </p>
   {% endif %}
 </div>
