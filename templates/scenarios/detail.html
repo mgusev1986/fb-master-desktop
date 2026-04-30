@@ -546,7 +546,7 @@
               <div class="form-group" style="margin:0">
                 <label class="form-label" for="scenario_ai_dm_example">{{ t("Опорный текст / пример сообщения") }}</label>
                 <textarea id="scenario_ai_dm_example" name="ai_dm_example" class="form-input" rows="4" placeholder="{{ t("Например: Привет,") }} {{ '{{first_name}}' }}{{ t("! Увидел твой пост про … Хотел написать и поздороваться.") }}" style="min-height:100px;resize:vertical"></textarea>
-                <p class="form-hint" style="margin-top:6px">{{ t("Нейросеть использует это как основу: новые формулировки для каждого человека, тот же смысл. Доступны {{ '") }}{{first_name}}' }}, {{ '{{full_name}}' }}.</p>
+                <p class="form-hint" style="margin-top:6px">{{ t("Нейросеть использует это как основу: новые формулировки для каждого человека, тот же смысл. Доступны") }} {{ '{{first_name}}' }}, {{ '{{full_name}}' }}.</p>
                 {{ mailing_warmup_placeholders('form-hint') }}
               </div>
               <div class="form-group" style="margin:0">
