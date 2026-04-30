@@ -82,7 +82,7 @@
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <a href="/people?q={{ search|urlencode }}&amp;lang={{ lang|urlencode }}" class="btn btn-sm {{ 'btn-primary' if not stage else 'btn-secondary' }}">{{ t("Все") }}</a>
         {% for s in crm_stages %}
-        <a href="/people?stage={{ s.slug }}&amp;q={{ search|urlencode }}&amp;lang={{ lang|urlencode }}" class="btn btn-sm {{ 'btn-primary' if stage == s.slug else 'btn-secondary' }}">{{ s.label }}</a>
+        <a href="/people?stage={{ s.slug }}&amp;q={{ search|urlencode }}&amp;lang={{ lang|urlencode }}" class="btn btn-sm {{ 'btn-primary' if stage == s.slug else 'btn-secondary' }}">{{ t(s.label) }}</a>
         {% endfor %}
       </div>
     </div>
@@ -93,7 +93,7 @@
           <label class="form-label" for="people-lang-select">{{ t("Язык базы") }}</label>
           <select id="people-lang-select" class="form-select" style="min-width:220px">
             {% for key, label in language_filter_labels.items() %}
-            <option value="{{ key }}" {% if lang == key %}selected{% endif %}>{{ label }}</option>
+            <option value="{{ key }}" {% if lang == key %}selected{% endif %}>{{ t(label) }}</option>
             {% endfor %}
           </select>
           <p class="form-hint" style="margin-bottom:0">{{ t("Фильтр применяется к текущему списку, а также к рассылке и режиму агента, если выбран там.") }}</p>
@@ -107,7 +107,7 @@
               type="button"
               class="btn btn-sm {{ 'btn-primary' if lang == key else 'btn-secondary' }} people-lang-chip"
               data-lang="{{ key }}"
-            >{{ label }}</button>
+            >{{ t(label) }}</button>
             {% endfor %}
           </div>
           <p class="form-hint" style="margin-bottom:0">{{ t("Один клик — и база переключается на RU, EN, иностранные или неразмеченные контакты.") }}</p>

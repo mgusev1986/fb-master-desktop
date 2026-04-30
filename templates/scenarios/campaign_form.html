@@ -177,7 +177,7 @@
             <select id="language_filter" name="language_filter" class="form-select">
               {% for key, label in language_filter_labels.items() %}
               {% if key != 'unknown' %}
-              <option value="{{ key }}" {% if pf.get('language_filter', 'all') == key %}selected{% endif %}>{{ label }}</option>
+              <option value="{{ key }}" {% if pf.get('language_filter', 'all') == key %}selected{% endif %}>{{ t(label) }}</option>
               {% endif %}
               {% endfor %}
             </select>

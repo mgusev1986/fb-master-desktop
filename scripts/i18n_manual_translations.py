@@ -1806,6 +1806,46 @@ TRANSLATIONS: dict[str, str] = {
     "Очередь пока пуста — при «Запустить» она сначала соберётся (как «Собрать очередь из базы»). Если не хватает контактов, аккаунтов или": "The queue is empty — on “Start” it will be built first (like “Build queue from database”). If there are not enough contacts, accounts or",
     "SOCMASTER помогает находить аудиторию, запускать касания, работать с&nbsp;лидами в&nbsp;CRM и&nbsp;автоматизировать рутинные действия.": "SOCMASTER helps find audiences, launch touches, work with&nbsp;leads in&nbsp;CRM and&nbsp;automate routine actions.",
     "По этому аккаунту уже идёт или запланировано оформление. Дождитесь публикаций, нажмите «Пауза» или «Сбросить очередь», затем запустите снова.": "Branding is already running or scheduled for this account. Wait for the publications, click “Pause” or “Reset queue”, then restart.",
+
+    # ─── Wave 9: CRM stages, language labels, error messages ──────────
+    # Language filter labels (from person_language.py)
+    "Все языки": "All languages",
+    "Русскоговорящие": "Russian-speaking",
+    "Англоговорящие": "English-speaking",
+    "Иностранные (не RU)": "Foreign (non-RU)",
+    "Не определено": "Undefined",
+    "Русскоговорящий": "Russian-speaking",
+    "Англоговорящий": "English-speaking",
+    "Иностранный": "Foreign",
+    # CRM stage labels (from crm_stages_registry.py)
+    "Заинтересован": "Interested",
+    "Написать позже": "Write later",
+    "Конверсия": "Conversion",
+    "Отказ": "Refused",
+    "Новый": "New",
+    # Macros/hints.html texts (placeholders for templates)
+    "имя и фамилия": "first and last name",
+    "целиком (как в карточке контакта);": "in full (as in the contact card);",
+    "только имя": "first name only",
+    "(без фамилии).": "(no last name).",
+    "Подставляются из «Базы контактов» или со страницы контакта при отправке.": "Substituted from “Contacts database” or from the contact page on send.",
+    "В тексте письма можно вставить подстановки: напишите": "You can insert substitutions in the letter text: write",
+    "имя человека": "person's name",
+    # Parser error_summary texts (from parser_worker.py and discovery_worker.py)
+    "Задача сброшена: активный процесс парсера не найден (перезапуск сервера или зависание). Выполните вход в Facebook в разделе «Аккаунты» и запустите снова.": "Task reset: no active parser process found (server restart or hang). Log in to Facebook in the “Accounts” section and try again.",
+    "Задача сброшена: активный процесс парсера не найден (перезапуск сервера или зависание).": "Task reset: no active parser process found (server restart or hang).",
+    "Задача сброшена: процесс не найден (перезапуск?).": "Task reset: process not found (restart?).",
+    # Common short labels also seen on screenshots
+    "Уже контактировали": "Already contacted",
+    # Quick segments header
+    "Быстрые сегменты": "Quick segments",
+    "Один клик — и база переключается на RU, EN, иностранные или неразмеченные контакты.": "One click — and the database switches to RU, EN, foreign, or unassigned contacts.",
+    # Stages on the funnel board header phrases (in case rendered)
+    "Стадии на доске": "Stages on the board",
+    "Основная стадия:": "Main stage:",
+    # Outreach intro (was concatenated with English)
+    "Тексты для рассылки и прогрева. Маркеры:": "Texts for outreach and warmup. Markers:",
+    "Таблицу можно скачать из программы. Повторный запуск продолжит сбор с того же места.": "The table can be downloaded from the program. A subsequent run will resume collection from the same spot.",
 }
 # fmt: on
 

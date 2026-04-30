@@ -327,7 +327,7 @@
         <label class="form-label" for="language_filter">{{ t("Язык контактов для этой кампании") }}</label>
         <select id="language_filter" name="language_filter" class="form-select" style="max-width:340px">
           {% for key, label in language_filter_labels.items() %}
-          <option value="{{ key }}" {% if cfg.get('language_filter', 'all') == key %}selected{% endif %}>{{ label }}</option>
+          <option value="{{ key }}" {% if cfg.get('language_filter', 'all') == key %}selected{% endif %}>{{ t(label) }}</option>
           {% endfor %}
         </select>
         <p class="form-hint" style="margin-bottom:0">

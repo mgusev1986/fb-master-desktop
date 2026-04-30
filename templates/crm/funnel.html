@@ -745,7 +745,7 @@
       <span class="funnel-stage-rail__subtitle">{{ t("Нажмите название — колонка подсветится; если она ниже по странице, экран аккуратно прокрутится к нужному ряду.") }}</span>
       {% for s in stage_rows %}
       <button type="button" class="funnel-stage-rail__chip{% if not s.is_builtin %} funnel-stage-rail__chip--custom{% endif %}" data-funnel-scroll-stage="{{ s.slug }}" title="{{ t("Показать колонку") }} «{{ stage_labels.get(s.slug, s.label) }}»">
-        <span>{{ stage_labels.get(s.slug, s.label) }}</span>
+        <span>{{ t(stage_labels.get(s.slug, s.label)) }}</span>
         <span class="funnel-stage-rail__count">{{ counts.get(s.slug, 0) }}</span>
       </button>
       {% endfor %}
@@ -765,7 +765,7 @@
         <div class="funnel-col-header">
           <span class="funnel-col-header-inner">
             <i class="ti {{ stage_icon_map.get(primary_stage_key, 'ti-tag') }} funnel-col-header-icon" aria-hidden="true"></i>
-            <span>{{ stage_labels[primary_stage_key] }}</span>
+            <span>{{ t(stage_labels[primary_stage_key]) }}</span>
           </span>
           <span class="funnel-col-count">{{ cnt }}</span>
         </div>
@@ -801,7 +801,7 @@
         <div class="funnel-col-header">
           <span class="funnel-col-header-inner">
             <i class="ti {{ stage_icon_map.get(key, 'ti-tag') }} funnel-col-header-icon" aria-hidden="true"></i>
-            <span>{{ stage_labels[key] }}</span>
+            <span>{{ t(stage_labels[key]) }}</span>
           </span>
           <span class="funnel-col-count">{{ cnt }}</span>
         </div>
@@ -867,14 +867,14 @@
     <div class="funnel-tabs-bar">
       {% for key in stage_keys %}
       <a href="/crm/funnel?view=tabs&amp;tab={{ key }}&amp;q={{ search_q|urlencode }}{% if donor_id %}&amp;donor_id={{ donor_id }}{% endif %}"
-         class="btn btn-sm {{ 'btn-primary' if active_tab == key else 'btn-secondary' }}"><i class="ti {{ stage_icon_map.get(key, 'ti-tag') }}" style="margin-right:4px;vertical-align:-2px" aria-hidden="true"></i>{{ stage_labels[key] }} ({{ counts.get(key, 0) }})</a>
+         class="btn btn-sm {{ 'btn-primary' if active_tab == key else 'btn-secondary' }}"><i class="ti {{ stage_icon_map.get(key, 'ti-tag') }}" style="margin-right:4px;vertical-align:-2px" aria-hidden="true"></i>{{ t(stage_labels[key]) }} ({{ counts.get(key, 0) }})</a>
       {% endfor %}
     </div>
     <div class="funnel-tabs-panel">
       <div class="funnel-col-header" style="border:none;padding:0 0 10px">
         <span class="funnel-col-header-inner">
           <i class="ti {{ stage_icon_map.get(active_tab, 'ti-tag') }} funnel-col-header-icon" aria-hidden="true"></i>
-          <span>{{ stage_labels[active_tab] }}</span>
+          <span>{{ t(stage_labels[active_tab]) }}</span>
         </span>
         <span class="funnel-col-count">{{ counts.get(active_tab, 0) }}</span>
       </div>
@@ -895,7 +895,7 @@
           <label class="form-label" style="margin-top:10px;font-size:var(--font-size-xs)">{{ t("Стадия") }}</label>
           <select class="form-input funnel-tab-stage-select" style="margin-top:4px;font-size:var(--font-size-sm)" data-person-id="{{ p.id }}" data-current="{{ active_tab }}">
             {% for sk in stage_keys %}
-            <option value="{{ sk }}" {% if sk == active_tab %}selected{% endif %}>{{ stage_labels[sk] }}</option>
+            <option value="{{ sk }}" {% if sk == active_tab %}selected{% endif %}>{{ t(stage_labels[sk]) }}</option>
             {% endfor %}
           </select>
         </div>

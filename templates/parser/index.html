@@ -187,7 +187,7 @@
     <span class="badge badge-default">{{ last_parser_job.status }}</span>
     {% endif %}
     {% if last_parser_job.error_summary %}
-    — {{ last_parser_job.error_summary[:240] }}
+    — {{ t(last_parser_job.error_summary[:240]) }}
     {% endif %}
   </div>
 </div>
