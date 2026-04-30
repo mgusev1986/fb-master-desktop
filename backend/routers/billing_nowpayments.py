@@ -13,6 +13,7 @@ from backend import config as app_config
 from backend.database import get_db
 from backend.models import BillingRenewalOrder
 from backend.services.desktop_device import effective_device_fingerprint
+from backend.services.i18n import get_lang, select_template
 from backend.services.nowpayments_billing import (
     apply_ipn_to_order,
     create_invoice,
@@ -52,9 +53,10 @@ async def buy_page(request: Request):
     err = (request.query_params.get("error") or "").strip()
     buy_error = unquote(err) if err else ""
     return templates.TemplateResponse(
-        "buy.html",
+        select_template(request, "buy.html"),
         {
             "request": request,
+            "lang": get_lang(request),
             "buy_error": buy_error,
             "nowpayments_enabled": app_config.nowpayments_enabled(),
             "download_urls": app_config.desktop_buy_page_download_urls(for_paid_flow=False),
@@ -104,9 +106,10 @@ async def purchase_page(request: Request):
     err = (request.query_params.get("error") or "").strip()
     purchase_error = unquote(err) if err else ""
     return templates.TemplateResponse(
-        "billing/purchase.html",
+        select_template(request, "billing/purchase.html"),
         {
             "request": request,
+            "lang": get_lang(request),
             "purchase_error": purchase_error,
             "nowpayments_enabled": app_config.nowpayments_enabled(),
             "remote_checkout_url": app_config.remote_https_checkout_url_for_local_app(),

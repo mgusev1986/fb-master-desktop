@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru" data-theme="dark">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>SOCMASTER — оплата</title>
+  <title>SOCMASTER — Checkout</title>
   <meta name="theme-color" content="#0a0a0a">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -352,16 +352,16 @@
 <div class="buy-page">
   <main class="buy-card">
     <div class="buy-header-row">
-      <p class="buy-eyebrow" style="margin:0">SOCMASTER · ОПЛАТА</p>
-      <div class="buy-lang-switch" role="group" aria-label="Выбор языка">
-        <a href="/buy" class="lang-btn active">RU</a>
-        <a href="/buy?lang=en" class="lang-btn">EN</a>
+      <p class="buy-eyebrow" style="margin:0">SOCMASTER · CHECKOUT</p>
+      <div class="buy-lang-switch" role="group" aria-label="Language switcher">
+        <a href="/buy" class="lang-btn">RU</a>
+        <a href="/buy?lang=en" class="lang-btn active">EN</a>
       </div>
     </div>
-    <h1 class="buy-title">Лиды из Facebook<br><span class="gold">на автомате</span></h1>
+    <h1 class="buy-title">Facebook Leads<br><span class="gold">on Autopilot</span></h1>
     <p class="buy-subtitle">
-      Программа сама находит целевую аудиторию в Facebook, отправляет ваше сообщение
-      в личку и ведёт каждого получателя по стадиям CRM-воронки — от первого касания до сделки.
+      The software finds your target audience on Facebook, sends your message to their inbox,
+      and guides every recipient through CRM funnel stages — from first touch to closed deal.
     </p>
 
     {% if buy_error %}
@@ -370,31 +370,31 @@
 
     {% if lavatop_enabled or nowpayments_enabled %}
 
-    {# Главный тариф (LavaTop приоритет, иначе NP) #}
+    {# Main tariff (LavaTop has priority, otherwise NP) #}
     <div class="buy-tariff">
-      <span class="buy-tariff-label">Подписка</span>
+      <span class="buy-tariff-label">Subscription</span>
       <span class="buy-tariff-price">${{ lavatop_price_usd_30 if lavatop_enabled else np_price_365 }}</span>
-      <span class="buy-tariff-period">{% if lavatop_enabled %}за 30 дней · автопродление{% else %}за 35 дней{% endif %}</span>
+      <span class="buy-tariff-period">{% if lavatop_enabled %}for 30 days · auto-renewal{% else %}for 35 days{% endif %}</span>
     </div>
 
     {% if lavatop_enabled %}
-    <input type="email" id="buy_email" required maxlength="255" placeholder="ваш-email@example.com" class="buy-email" autocomplete="email" aria-label="Email для получения ключа"/>
+    <input type="email" id="buy_email" required maxlength="255" placeholder="your-email@example.com" class="buy-email" autocomplete="email" aria-label="Email for key delivery"/>
     {% endif %}
 
-    <div class="buy-payment-row" role="group" aria-label="Способ оплаты">
+    <div class="buy-payment-row" role="group" aria-label="Payment method">
       {% if lavatop_enabled %}
       <form method="post" action="/billing/lavatop/create" id="form-card" style="margin:0">
         <input type="hidden" name="billing_source" value="buy"/>
         <input type="hidden" name="duration_days" value="30"/>
         <input type="hidden" name="customer_email" id="form-card-email" value=""/>
         <input type="hidden" name="device_id" id="buy_lava_device_id" value=""/>
-        <button type="submit" class="buy-payment-card" data-method="card" id="buy-lava-submit" aria-label="Оплатить картой" disabled>
+        <button type="submit" class="buy-payment-card" data-method="card" id="buy-lava-submit" aria-label="Pay by card" disabled>
           <div class="buy-payment-arrow" aria-hidden="true">
             <svg viewBox="0 0 12 12"><path d="M3 3h6v6M3 9l6-6"/></svg>
           </div>
           <div class="buy-payment-icon" aria-hidden="true">💳</div>
-          <h3 class="buy-payment-title">Картой</h3>
-          <p class="buy-payment-meta">RU · Visa · Mastercard · СБП<br>Ключ придёт на email</p>
+          <h3 class="buy-payment-title">Card</h3>
+          <p class="buy-payment-meta">Visa · Mastercard · SBP · RU<br>Key delivered by email</p>
         </button>
       </form>
       {% endif %}
@@ -404,13 +404,13 @@
         <input type="hidden" name="billing_source" value="buy"/>
         <input type="hidden" name="duration" value="365"/>
         <input type="hidden" name="device_id" id="buy_device_id" value=""/>
-        <button type="submit" class="buy-payment-card" data-method="crypto" id="buy-np-submit" aria-label="Оплатить криптовалютой" disabled>
+        <button type="submit" class="buy-payment-card" data-method="crypto" id="buy-np-submit" aria-label="Pay with cryptocurrency" disabled>
           <div class="buy-payment-arrow" aria-hidden="true">
             <svg viewBox="0 0 12 12"><path d="M3 3h6v6M3 9l6-6"/></svg>
           </div>
           <div class="buy-payment-icon" aria-hidden="true">₿</div>
-          <h3 class="buy-payment-title">Криптой</h3>
-          <p class="buy-payment-meta">USDT · BTC · ETH · мгновенно<br>Ключ выдаётся сразу после оплаты</p>
+          <h3 class="buy-payment-title">Crypto</h3>
+          <p class="buy-payment-meta">USDT · BTC · ETH · instant<br>Key issued immediately after payment</p>
         </button>
       </form>
       {% endif %}
@@ -421,27 +421,27 @@
         <path d="M8 1L2 4v4c0 4 2.5 6.5 6 7 3.5-0.5 6-3 6-7V4L8 1z"/>
         <path d="M5.5 8l2 2 3-4"/>
       </svg>
-      <span>HTTPS · 3-D Secure · ключ привязан к вашему устройству</span>
+      <span>HTTPS · 3-D Secure · key bound to your device</span>
     </div>
 
     {% else %}
     <p class="buy-payment-meta" style="color:rgba(251,191,36,0.9);margin-bottom:2rem">
-      Оплата на сайте скоро будет доступна.
+      Online payment is coming soon.
     </p>
     {% endif %}
 
     <hr class="buy-divider"/>
 
-    <p class="buy-features-label">Что внутри</p>
+    <p class="buy-features-label">What's inside</p>
     <ul class="buy-features">
-      <li><span class="buy-features-check">✓</span><span><strong>Парсер аудитории</strong> — собирает целевых людей из групп, подписок и друзей конкурентов; до 1000+ контактов в день с одного аккаунта.</span></li>
-      <li><span class="buy-features-check">✓</span><span><strong>Рассылка в личку</strong> — естественные паузы и темп, обход E2EE-блокировок, фильтр «уже писали» по всему пулу аккаунтов.</span></li>
-      <li><span class="buy-features-check">✓</span><span><strong>Прогрев аккаунтов</strong> — имитация живого пользователя (лента, профили, лайки), чтобы FB не банил рассылочные аккаунты.</span></li>
-      <li><span class="buy-features-check">✓</span><span><strong>CRM-система с воронкой</strong> — стадии «контактировали / заинтересован / конверсия / отказ», экспорт между устройствами.</span></li>
+      <li><span class="buy-features-check">✓</span><span><strong>Audience scraper</strong> — collects your target audience from groups, subscriptions and competitors' friends; up to 1000+ contacts per day from a single account.</span></li>
+      <li><span class="buy-features-check">✓</span><span><strong>Direct-message outreach</strong> — natural pacing and pauses, E2EE-block bypass, "already messaged" filter across the whole account pool.</span></li>
+      <li><span class="buy-features-check">✓</span><span><strong>Account warm-up</strong> — live-user simulation (feed, profiles, likes) so Facebook doesn't ban your outreach accounts.</span></li>
+      <li><span class="buy-features-check">✓</span><span><strong>CRM with funnel</strong> — stages "contacted / interested / converted / declined", export between devices.</span></li>
     </ul>
 
     {% if access_key_required %}
-    <a class="buy-bottom-link" href="/auth/unlock">Уже есть ключ — активировать</a>
+    <a class="buy-bottom-link" href="/auth/unlock?lang=en">Already have a key — activate</a>
     {% endif %}
   </main>
 </div>
