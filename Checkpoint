@@ -2,7 +2,7 @@
 
 Документ для передачи контекста нейросети или разработчику: продукт, **архитектура клиент–сервер**, лицензирование, **обновления десктопа (macOS + Windows)**, защита, деплой, маршруты, механики, дерево файлов. Язык: русский.
 
-**Последнее обновление документа:** 30 апреля 2026 (релиз 3.0.7 + полный RU↔EN i18n кабинета: 3242 EN-ключа, ~3937 обёрток `{{ t() }}` в 122 шаблонах, 5 двуязычных `_en.html` страниц — раздел §25.14; ранее в этот же день: премиум-редизайн `/buy`+`/purchase`, LavaTop graceful errors, `/auth/unlock` UX × 5, Apple Pay cleanup, mobile-responsive admin, testimonials в `/promo3` — §25.12 и §25.13). **Текущая версия десктопа (semver):** **3.0.5** (`desktop/fb-master-desktop/package.json`, не менялся). **Текущая публичная версия серверного релиза:** **3.0.7** (LavaTop+Brevo+blog+i18n в `/opt/fb-master/`). **Desktop-релиз 3.0.7 пока не собирался** — текущий публичный desktop-update остаётся **3.0.5**.
+**Последнее обновление документа:** 30 апреля 2026 (i18n waves 7-15 поверх §25.14: dict пробил **4430 EN-ключей**, +1188 за день; критический macro-context fix для `mailing_warmup_placeholders` в 9 шаблонах; кастомный file picker для `/fb-accounts` (нативный «Выберите файл» неподконтролен браузеру); локализованные PRESET_LABELS на `/system/speed`; Lava.top расширен до USD/EUR/RUB+PayPal в карточке оплаты; Telegram-поддержка `https://t.me/socmaster_support` в AI-промпте — раздел §25.15. Ранее в тот же день: §25.14 базовая i18n инфраструктура (3242 ключа, 3937 обёрток в 122 шаблонах, 5 двуязычных `_en.html` страниц); §25.12/§25.13 премиум-редизайн `/buy`+`/purchase`, LavaTop graceful errors, `/auth/unlock` UX × 5, Apple Pay cleanup, mobile-responsive admin, testimonials в `/promo3`). **Текущая версия десктопа (semver):** **3.0.5** (`desktop/fb-master-desktop/package.json`, не менялся). **Текущая публичная версия серверного релиза:** **3.0.7** (LavaTop+Brevo+blog+полный i18n в `/opt/fb-master/`). **Desktop-релиз 3.0.7 пока не собирался** — текущий публичный desktop-update остаётся **3.0.5**.
 
 **Важно про имя продукта:** с версии 2.5 продукт переименован с *FbMaster* в **SOCMASTER**. Все новые артефакты публикуются с префиксом **`SOCMASTER-`** (а не `FbMaster-`). Legacy-имена `FbMaster-*.dmg` остаются в историческом списке и обрабатываются скриптами как fallback, но **новые релизы пишутся только как `SOCMASTER-*`**. В коде продуктовое имя — `productName: "SOCMASTER"` в `package.json`, а класс Electron-app и bundle id остались `pro.socmaster.fbmaster` (обратная совместимость на уровне auto-update).
 
@@ -2759,4 +2759,95 @@ ce0537d feat(admin/keys): mobile-responsive + дефолт «30 дней»
 
 ---
 
-*Конец документа Checkpoint. Последнее обновление: 30 апреля 2026 — релиз 3.0.7 + follow-up: премиум-редизайн `/buy`+`/purchase`, LavaTop graceful errors, `/auth/unlock` UX (5 итераций), Apple Pay cleanup, testimonials в `/promo3`, фикс checkpoint-hooks для worktrees + полный RU↔EN i18n кабинета (3242 ключа, 3937 обёрток в 122 шаблонах) — разделы §25.12, §25.13, §25.14.*
+### 25.15. i18n waves 7-15 + критичные fixes (день 30 апр, follow-up §25.14)
+
+После §25.14 — **продолжение** покрытия i18n: 9 «волн» (w7→w15) за тот же день. Добор ~1188 EN-ключей через Gemini-paid + ручные переводы, smart-wrap для inline-tagged-абзацев, переводы DB-stored labels (CRM stages, языки, статусы), 4 критичных рендер-фикса (cookie persistence, Markup-escape, RU/EN switcher, **macro-context** — w14).
+
+#### Критичные фиксы рендера
+
+```
+1456790 fix(i18n): persistence через cookie + ~250 новых обёрток в 50+ шаблонах
+888b3d8 fix(i18n): t() возвращает Markup — HTML-сущности не эскейпятся
+5ef47ab fix(i18n): глобальный fix непереведённых if-else + RU/EN switcher persistence
+70377ce fix(i18n): wave 14 — country/timezone EN labels + custom file picker + macro context fix
+```
+
+- **`888b3d8`**: `t()` возвращал обычную `str` — Jinja эскейпил `<strong>`, `&` в HTML-сущности при выводе. Фикс: `t()` теперь возвращает `Markup(raw)`. HTML-куски в переводах рендерятся как разметка.
+- **`1456790`**: cookie persistence для `?lang=` — middleware пишет cookie на 365 дней при явном query-параметре (после §25.14 cookie persistence был выключен; здесь восстановлен с учётом прошлой регрессии). `get_lang()` читает query → cookie → default.
+- **`5ef47ab`**: глобальный fix паттерна `{% if cond %}RU1{% else %}RU2{% endif %}` — wrap-скрипт пропускал такие конструкции; вручную обёрнуты основные.
+- **`70377ce`** (wave 14, **критический**): макрос `mailing_warmup_placeholders` (`templates/macros/hints.html`) импортировался из 9 шаблонов **без** `with context`. Внутри макроса `request` был `Undefined` → `cabinet_client_mode(request)` всегда возвращал `False` (выпадало в else-ветку с RU-маркерами), а `t()` через `pass_context` не мог достать `request` → определял `lang="ru"` → возвращал RU. Фикс: ко всем 9 импортам добавлено `with context`. Файлы: `outreach/{list,detail,campaign_form}.html`, `message_templates/{list,form}.html`, `scenarios/detail.html`, `warmup/{list,detail,campaign_form}.html`.
+
+#### Добор переводов через волны
+
+```
+ad4f84d fix(i18n): wave 7  — +432 переводов (98 Gemini + 334 manual) → 4000 EN-keys
+7e18cf8 fix(i18n): wave 8  — smart-wrap всех paragraphs с inline tags +643 wraps
+e1a2a05 fix(i18n): wave 9  — переводы DB-stored labels (CRM stages, языки) + flash messages
+e1003cf fix(i18n): wave 10 — финальный fix малформированной строки + paid Gemini в ротации
+8d2c57f fix(i18n): wave 12 — speed action labels, parser dropdown, system/logs labels
+1d86fa4 fix(i18n): wave 13 — /system/logs dropdowns (Period/Status/Events)
+2b79af9 fix(i18n): wave 15 — /system/speed PRESET_LABELS + 'сек' JS unit
+```
+
+- **w7 (`ad4f84d`)**: добавлено 432 перевода (Gemini paid-key для оставшихся «hard» строк после quota fall-back). Dict пробил 4000 EN-ключей.
+- **w8 (`7e18cf8`)**: smart-wrap для абзацев с inline-tags (`<strong>`, `<br>`, `<code>` внутри `<p>`). +643 обёртки в шаблонах с большими описательными блоками.
+- **w9 (`e1a2a05`)**: переводы DB-stored labels — CRM `Funnel.stages` (RU-лейблы из БД), language tags, flash-сообщения через `request.session["_messages"]` теперь переводятся при выводе.
+- **w10 (`e1003cf`)**: финальный clean-up — fix малформированной строки в auto-generated section + paid Gemini ключ добавлен в ротацию для будущих batch-переводов.
+- **w12 (`8d2c57f`)**: специфичные dropdown-лейблы — speed action_type_labels, parser type dropdown, system/logs filter labels.
+- **w13 (`1d86fa4`)**: `/system/logs` дропдауны — Period (24h/7d/30d), Status (running/error/ok), Events (multi-select).
+- **w15 (`2b79af9`)**: `/system/speed` PRESET_LABELS — `"Улитка (~20 сообщ./час)"` и т.д. локализуются в `backend/routers/system.py` перед передачей в шаблон (один источник истины — и для Jinja, и для JSON-дампа в JS). JS-обновление таблицы использует `var SEC_LABEL = {{ t("сек")|tojson }}` вместо хардкод `" сек"`.
+
+#### Wave 14 — детально (4 категории остаточных проблем)
+
+`70377ce` (193+/14− строк, 15 файлов):
+
+1. **Country dropdowns** (`/fb-accounts`, `/twitter/accounts`, `/instagram/accounts`): `stealth_region_choices()` (`backend/services/fb_stealth_profile.py`) возвращал список `(key, RU-label)`. Шаблоны рендерили `{{ label }}` напрямую. Фикс: `{{ t(label) }}` + 64 страны добавлены в i18n_dict (`Австралия → Australia`, …, `Япония → Japan`).
+2. **Timezone dropdown** (`/system/speed`): `COMMON_TIMEZONES` (`backend/services/sequence_timezone.py`) с 17 RU-городами. Фикс: `t(label)` в шаблоне + 17 ключей в dict (`Москва, Санкт-Петербург → Moscow, Saint Petersburg`).
+3. **Native file picker** (`/fb-accounts`): кнопка «Выберите файл / Файл не выбран» — нативный браузерный текст `<input type=file>`, не контролируется ни CSS, ни `t()`. Фикс: кастомный wrapper `templates/fb_accounts/list.html` (скрытый `<input>` + `<label>` как кнопка + `<span>` с именем файла) + JS-listener для обновления + ~74 строки CSS `.custom-file-input*` в `static/css/main.css`.
+4. **Macro context** (см. выше): `with context` к 9 импортам `mailing_warmup_placeholders`.
+
+#### Платёжная карточка: USD/EUR/RUB + PayPal
+
+```
+8fab928 ux(buy/purchase): расширен меta-список карты — USD/EUR/RUB + PayPal
+```
+
+В блоке «Картой» на `/buy` и `/purchase` (RU и EN версии) ранее отображалось «RU · Visa · Mastercard · СБП» / «Visa · Mastercard · SBP · RU». Lava.top принимает международные валюты + PayPal (см. §25.14 commit `869619a`) — клиенты должны это видеть. Изменено на:
+- RU: `USD · EUR · RUB · Visa · Mastercard · СБП · PayPal`
+- EN: `USD · EUR · RUB · Visa · Mastercard · SBP · PayPal`
+
+4 файла: `templates/buy.html`, `templates/buy_en.html`, `templates/billing/purchase.html`, `templates/billing/purchase_en.html` + 1 ключ в `i18n_dict.py`.
+
+#### Telegram-поддержка в AI-промпте
+
+```
+c5ff6c7 feat(promo-chat): Telegram-поддержка + info-канал в промпте AI-ассистента
+```
+
+`backend/routers/promo_chat.py`: системный промпт AI-ассистента на лендинге упоминает `https://t.me/socmaster_support` (живая поддержка) и info-канал. Когда AI не знает ответа — направляет в Telegram-поддержку.
+
+#### Финальное состояние i18n на 18:30 30 апр
+
+- **`i18n_dict.py`**: **4430 EN-ключей** (было 3242 после §25.14, +1188 за w7-w15).
+- **9 шаблонов** с `mailing_warmup_placeholders` теперь импортируют макрос `with context` — переводы и условный рендеринг работают корректно внутри макроса.
+- **Cookie persistence для `lang`**: при `?lang=ru/en` middleware пишет cookie на 1 год; `get_lang()` читает query → cookie → default. Пользователь кликнул EN однажды → дальше остаётся на EN.
+- **Production**: все правки задеплоены на `46.62.230.106:/opt/fb-master/` через rsync + chown + restart `fb-master`. Push в `mgusev1986/socmaster-core` ветка `claude/charming-chandrasekhar-6a7330`.
+- **Что ещё НЕ покрыто** (intentionally): **Electron desktop UI** — bundle `desktop/fb-master-desktop/resources-fb-master-backend/` пуст после §25.14, legacy `desktop/fb-master-desktop/{templates,backend,static}/` не используется electron-builder. Для попадания EN-переводов к существующим клиентам нужен новый desktop-релиз `3.0.7` (на момент checkpoint — отложено по решению user'а). Источники готовы — при следующем `scripts/prepare-desktop-backend-bundle.sh` bundle скопирует root `backend/templates/static/` со всеми i18n-правками автоматически.
+
+#### Production deploys 30 апр (15:18 → 18:30, поверх §25.14)
+
+| Время | Файлы | Заметка |
+|---|---|---|
+| `15:18–15:35` | `i18n.py`, `i18n_dict.py`, `app_factory.py` | cookie persistence + Markup escape fixes |
+| `15:49–16:09` | `i18n_dict.py`, шаблоны | wave 7 (+432 переводов до 4000) |
+| `16:17–16:31` | `i18n_dict.py`, `scripts/i18n_manual_translations.py`, шаблоны | wave 8 (smart-wrap +643 обёрток) |
+| `16:43–17:04` | `i18n_dict.py`, шаблоны | waves 9-13 (DB labels, /system dropdowns) |
+| `17:30–18:00` | `templates/system/speed.html`, `fb_accounts/list.html`, +9 шаблонов с macro fix, `i18n_dict.py`, `static/css/main.css` | wave 14 (country/tz + custom file picker + macro context) |
+| `18:00–18:15` | `templates/system/speed.html`, `backend/routers/system.py`, `i18n_dict.py` | wave 15 (PRESET_LABELS + JS SEC_LABEL) |
+| `18:20–18:30` | `templates/buy*.html`, `purchase*.html`, `i18n_dict.py` | payment card meta (USD/EUR/RUB+PayPal) |
+
+Все деплои: rsync + chown + `systemctl restart fb-master`.
+
+---
+
+*Конец документа Checkpoint. Последнее обновление: 30 апреля 2026 — релиз 3.0.7 + follow-up: премиум-редизайн `/buy`+`/purchase`, LavaTop graceful errors, `/auth/unlock` UX (5 итераций), Apple Pay cleanup, testimonials в `/promo3`, фикс checkpoint-hooks для worktrees, полный RU↔EN i18n кабинета (3242 ключа, 3937 обёрток в 122 шаблонах) **+ i18n waves 7-15: dict вырос до 4430 ключей, fix macro-context (9 шаблонов), custom file picker, Lava.top USD/EUR/RUB+PayPal, Telegram-поддержка в AI** — разделы §25.12, §25.13, §25.14, §25.15.*
