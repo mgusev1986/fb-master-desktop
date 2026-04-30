@@ -66,3 +66,35 @@ def _en_variant(base_name: str) -> str:
     if base_name.endswith(".html"):
         return base_name[: -len(".html")] + "_en.html"
     return base_name + "_en"
+
+
+def translate(key: str, lang: str = DEFAULT_LANG, **kwargs: object) -> str:
+    """Перевести строку. Если перевода нет — вернуть оригинал (RU).
+
+    Использование в Python::
+
+        translate("Готов", "en")              # "Ready"
+        translate("Привет, {name}", "en", name="Ivan")  # "Hello, Ivan"
+
+    Использование в Jinja2 (через `t` global, см. app_factory.py)::
+
+        {{ t("Готов") }}                      # автоматически берёт lang
+        {{ t("Привет, {name}", name=user.name) }}
+
+    Если key не найден в `_TRANSLATIONS["en"]` — fallback на `key` как есть
+    (это RU-источник). Это позволяет постепенно покрывать переводы и не
+    бояться промежуточных коммитов: непереведённые строки просто остаются
+    на русском.
+    """
+    # Импорт лениво, чтобы избежать circular imports при первом старте
+    from backend.services.i18n_dict import TRANSLATIONS
+
+    raw = key
+    if lang == "en":
+        raw = TRANSLATIONS.get("en", {}).get(key, key)
+    if kwargs:
+        try:
+            return raw.format(**kwargs)
+        except (KeyError, IndexError):
+            return raw
+    return raw

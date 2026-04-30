@@ -376,6 +376,24 @@ def create_app() -> FastAPI:
 
     templates.env.globals["fbm_workspace_nav"] = fbm_workspace_nav
 
+    # ─── i18n: Jinja2 global `t()` для перевода UI-строк ──────────────────
+    # Использование в шаблонах::
+    #     {{ t("Главная") }}
+    #     {{ t("Привет, {name}", name=user.name) }}
+    # Язык берётся из `request` (query ?lang=en или cookie `lang`).
+    # Словарь переводов: `backend/services/i18n_dict.py::TRANSLATIONS["en"]`.
+    # Если перевода нет — возвращается оригинал (RU) — graceful fallback.
+    from jinja2 import pass_context as _jinja_pass_context
+    from backend.services.i18n import get_lang as _get_lang, translate as _translate
+
+    @_jinja_pass_context
+    def _jinja_t(ctx, key: str, **kwargs):
+        request = ctx.get("request")
+        lang = _get_lang(request) if request is not None else "ru"
+        return _translate(key, lang, **kwargs)
+
+    templates.env.globals["t"] = _jinja_t
+
     # Reddit Master — локализация технических статусов/enum'ов для Jinja.
     _REDDIT_RU_LABELS = {
         "connected": "Подключён", "disconnected": "Отключён",
