@@ -2,6 +2,90 @@
 {% block title %}Админ-панель — SOCMASTER{% endblock %}
 
 {% block content %}
+<style>
+  /* ─── Mobile-friendly /admin/platform (главная админки) ──────────────
+     Цель: с телефона быстро попасть в нужный раздел (Ключи / Журнал /
+     Настройки) и видеть основные таблицы без боли. Локальные стили
+     внутри template, без правок глобального main.css. */
+  @media (max-width: 640px) {
+    .page-header h1 { font-size: 1.5rem; line-height: 1.2; margin-bottom: 6px; }
+    .page-header .subtitle { font-size: 0.85rem; line-height: 1.45; }
+
+    /* Hero (счётчики пользователей) — в столбик */
+    .admin-hero__body {
+      flex-direction: column !important;
+      align-items: stretch !important;
+      gap: 14px;
+    }
+    .admin-hero__main { text-align: center; }
+    .admin-hero__value { font-size: 2.5rem !important; }
+    .admin-hero__side {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .admin-hero-stat { padding: 10px 8px !important; }
+    .admin-hero-stat__value { font-size: 1.3rem !important; }
+    .admin-hero-stat__label { font-size: 0.72rem !important; }
+    .admin-hero-stat__hint { display: none !important; }
+
+    /* Quick-links: каждая кнопка на 100% ширины (большой тап-таргет) */
+    .admin-quick-links {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 8px !important;
+    }
+    .admin-quick-links .btn {
+      width: 100%;
+      min-height: 44px;
+      justify-content: center;
+      font-size: 0.95rem;
+    }
+
+    /* Карточки — меньше внутренних отступов */
+    .card-body { padding: 14px 12px; }
+    .card-header { padding: 12px 14px; font-size: 0.95rem; }
+
+    /* Все таблицы скроллятся горизонтально + крупный тап-таргет ссылок */
+    .data-table { font-size: 0.82rem; }
+    .data-table th,
+    .data-table td { padding: 8px 6px; white-space: nowrap; }
+    .data-table .btn-sm,
+    .data-table a { min-height: 32px; }
+
+    /* Форма «Просмотр как у клиента» в столбик */
+    form[action="/admin/platform/preview-as-user"] {
+      flex-direction: column !important;
+      align-items: stretch !important;
+    }
+    form[action="/admin/platform/preview-as-user"] input,
+    form[action="/admin/platform/preview-as-user"] select,
+    form[action="/admin/platform/preview-as-user"] button {
+      width: 100% !important;
+      min-height: 44px;
+    }
+
+    /* Form-input — fix Safari auto-zoom */
+    .form-input,
+    input.form-input,
+    select.form-input,
+    textarea.form-input { font-size: 16px; min-height: 44px; padding: 10px 12px; }
+
+    /* Description-list (dt/dd) — стек, без двух колонок */
+    dl { display: block !important; }
+    dl dt { font-weight: 600; margin-top: 10px; font-size: 0.85rem; }
+    dl dd { margin: 4px 0 0; padding-left: 0 !important; font-size: 0.88rem; }
+  }
+
+  @media (max-width: 380px) {
+    .page-header h1 { font-size: 1.3rem; }
+    .admin-hero__value { font-size: 2rem !important; }
+    .admin-hero__side { grid-template-columns: 1fr !important; }
+    .data-table { font-size: 0.76rem; }
+    .data-table th,
+    .data-table td { padding: 6px 4px; }
+  }
+</style>
 <div class="page-header">
   <h1>Админ-панель</h1>
   <p class="subtitle">Глобальная сводка по сервису и техническому окружению. Доступна только email из <code>FB_MASTER_OWNER_EMAILS</code> в <code>.env</code>.</p>
