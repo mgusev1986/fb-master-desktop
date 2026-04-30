@@ -8,7 +8,7 @@
     <div class="reddit-page__title-wrap">
       <h1 class="reddit-page__title">{{ t("Аналитика") }}</h1>
       <p class="reddit-page__subtitle">
-        Сводка по аккаунтам, сабреддитам, лидам, очередям, отправкам и причинам отказов за последние 7 дней.
+        {{ t("Сводка по аккаунтам, сабреддитам, лидам, очередям, отправкам и причинам отказов за последние 7 дней.") }}
       </p>
     </div>
   </header>
@@ -27,7 +27,7 @@
     </article>
 
     <article class="reddit-card">
-      <div style="font:500 12px/1 Inter;color:var(--text-muted);text-transform:uppercase;">Сохранённые сабреддиты</div>
+      <div style="font:500 12px/1 Inter;color:var(--text-muted);text-transform:uppercase;">{{ t("Сохранённые сабреддиты") }}</div>
       <div style="font:700 32px/1 Inter;color:var(--text-primary);">{{ data.subreddits_total }}</div>
     </article>
 
@@ -67,14 +67,14 @@
     </article>
 
     <article class="reddit-card">
-      <div style="font:500 12px/1 Inter;color:var(--text-muted);text-transform:uppercase;">Черновики ЛС</div>
+      <div style="font:500 12px/1 Inter;color:var(--text-muted);text-transform:uppercase;">{{ t("Черновики ЛС") }}</div>
       <div class="reddit-card__desc">
         {% for k, v in data.messages.drafts_by_state.items() %}<div>{{ k }}: {{ v }}</div>{% else %}<div>—</div>{% endfor %}
       </div>
     </article>
 
     <article class="reddit-card">
-      <div style="font:500 12px/1 Inter;color:var(--text-muted);text-transform:uppercase;">Черновики комментариев</div>
+      <div style="font:500 12px/1 Inter;color:var(--text-muted);text-transform:uppercase;">{{ t("Черновики комментариев") }}</div>
       <div class="reddit-card__desc">
         {% for k, v in data.comments.drafts_by_state.items() %}<div>{{ k }}: {{ v }}</div>{% else %}<div>—</div>{% endfor %}
       </div>
@@ -97,7 +97,7 @@
         <div style="font:700 24px/1 Inter;color:#c33;">{{ data.attempts.failed_last_7d }}</div>
       </article>
       <article class="reddit-card">
-        <div style="font:500 12px/1 Inter;color:var(--text-muted);text-transform:uppercase;">События безопасности за 7 дней</div>
+        <div style="font:500 12px/1 Inter;color:var(--text-muted);text-transform:uppercase;">{{ t("События безопасности за 7 дней") }}</div>
         <div style="font:700 24px/1 Inter;">{{ data.compliance_events_last_7d }}</div>
       </article>
     </div>
@@ -121,7 +121,7 @@
           {% for r in data.recent_failure_reasons %}
           <div><code>{{ r.code }}</code>: {{ r.count }}</div>
           {% else %}
-          <div>нет отказов</div>
+          <div>{{ t("нет отказов") }}</div>
           {% endfor %}
         </div>
       </article>

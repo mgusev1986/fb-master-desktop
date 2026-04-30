@@ -8,8 +8,7 @@
     <div class="reddit-page__title-wrap">
       <h1 class="reddit-page__title">{{ t("Поиск аудитории") }}</h1>
       <p class="reddit-page__subtitle">
-        Соберите пользователей из постов сабреддита, комментаторов конкретного поста или любого релевантного треда.
-        Найденных можно массово добавить в «Лиды».
+        {{ t("Соберите пользователей из постов сабреддита, комментаторов конкретного поста или любого релевантного треда. Найденных можно массово добавить в «Лиды».") }}
       </p>
     </div>
   </header>
@@ -29,7 +28,7 @@
     <form method="post" action="/reddit/audience/scan-subreddit-browser" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px;"
           onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Сканирую…';">
       <select name="account_id" required style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);">
-        <option value="">— browser-mode аккаунт —</option>
+        <option value="">{{ t("— browser-mode аккаунт —") }}</option>
         {% for a in browser_accounts %}<option value="{{ a.id }}">{{ a.label }} [{{ a.status }}]</option>{% endfor %}
       </select>
       <input type="text" name="subreddit" required placeholder="askreddit" style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);"/>
@@ -37,13 +36,13 @@
         <option value="new">new</option><option value="hot">hot</option><option value="top">top</option><option value="rising">rising</option>
       </select>
       <input type="number" name="limit" min="5" max="100" value="25" style="width:80px;padding:8px;border-radius:8px;border:1px solid var(--border);"/>
-      <button type="submit" class="reddit-btn reddit-btn--primary"><i class="ti ti-radar-2"></i> Сканировать сабреддит</button>
+      <button type="submit" class="reddit-btn reddit-btn--primary"><i class="ti ti-radar-2"></i> {{ t("Сканировать сабреддит") }}</button>
     </form>
 
     <form method="post" action="/reddit/audience/search-users-browser" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"
           onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Ищу…';">
       <select name="account_id" required style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);">
-        <option value="">— browser-mode аккаунт —</option>
+        <option value="">{{ t("— browser-mode аккаунт —") }}</option>
         {% for a in browser_accounts %}<option value="{{ a.id }}">{{ a.label }} [{{ a.status }}]</option>{% endfor %}
       </select>
       <input type="text" name="keywords" required placeholder="{{ t("kw для поиска users") }}" style="flex:2;min-width:240px;padding:8px;border-radius:8px;border:1px solid var(--border);"/>
@@ -115,7 +114,7 @@
       </div>
       <div style="display:flex;gap:8px;">
         <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-muted);">
-          <input type="checkbox" id="reddit-audience-select-all" checked/> выбрать всех
+          <input type="checkbox" id="reddit-audience-select-all" checked/> {{ t("выбрать всех") }}
         </label>
         <button type="submit" class="reddit-btn reddit-btn--primary"><i class="ti ti-plus"></i> {{ t("Добавить в лиды") }}</button>
       </div>
@@ -143,7 +142,7 @@
           <td style="padding:10px;"><input type="checkbox" class="reddit-audience-checkbox" data-username="{{ c.username }}" checked/></td>
           <td style="padding:10px;">
             <a href="https://www.reddit.com/user/{{ c.username }}" target="_blank" rel="noreferrer noopener" style="color:var(--ws-accent);">u/{{ c.username }}</a>
-            {% if c.already_lead %}<span style="font-size:11px;padding:1px 6px;border-radius:999px;background:color-mix(in srgb,#1b873f 14%,transparent);color:#1b873f;">в лидах</span>{% endif %}
+            {% if c.already_lead %}<span style="font-size:11px;padding:1px 6px;border-radius:999px;background:color-mix(in srgb,#1b873f 14%,transparent);color:#1b873f;">{{ t("в лидах") }}</span>{% endif %}
           </td>
           <td style="padding:10px;">{{ c.subreddit or '—' }}</td>
           <td style="padding:10px;max-width:380px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ c.title_excerpt or '—' }}</td>

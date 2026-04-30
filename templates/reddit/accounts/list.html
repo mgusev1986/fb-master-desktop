@@ -142,7 +142,7 @@
   {% if notice == 'imported' %}
   <div class="reddit-card" style="border-color:color-mix(in srgb,#1b873f 30%,var(--border));background:color-mix(in srgb,#1b873f 6%,var(--bg-surface));">
     <strong>{{ t("Импорт завершён.") }}</strong> {{ t("Добавлено:") }} <strong>{{ imported }}</strong>{{ t(". Ошибок:") }} <strong>{{ errors_count }}</strong>.
-    {% if (errors_count|int) > 0 %}<small>Часть строк не распарсилась — проверьте формат или наличие <code>reddit_session</code> / <code>token_v2</code>.</small>{% endif %}
+    {% if (errors_count|int) > 0 %}<small>{{ t("Часть строк не распарсилась — проверьте формат или наличие") }} <code>reddit_session</code> / <code>token_v2</code>.</small>{% endif %}
   </div>
   {% endif %}
 
@@ -226,7 +226,7 @@
           </form>
           <form method="post" action="/reddit/accounts/{{ a.id }}/inbox-sync-browser" style="margin:0;"
                 onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Sync…';">
-            <button class="reddit-btn" type="submit" style="font-size:12px;padding:6px 10px;" title="Синхронизировать /message/inbox через Playwright">
+            <button class="reddit-btn" type="submit" style="font-size:12px;padding:6px 10px;" title="{{ t("Синхронизировать /message/inbox через Playwright") }}">
               <i class="ti ti-mail-down"></i> Sync inbox
             </button>
           </form>
@@ -275,11 +275,11 @@
 
         <div class="reddit-card__desc" style="display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;">
           <div><span style="color:var(--text-muted, var(--text-secondary))">{{ t("карма") }}</span> {{ acc.karma_total }} <small style="color:var(--text-muted, var(--text-secondary))">({{ acc.karma_link or 0 }} / {{ acc.karma_comment or 0 }})</small></div>
-          <div><span style="color:var(--text-muted, var(--text-secondary))">возраст</span> {{ acc.account_age_days if acc.account_age_days is not none else '—' }} дн</div>
+          <div><span style="color:var(--text-muted, var(--text-secondary))">{{ t("возраст") }}</span> {{ acc.account_age_days if acc.account_age_days is not none else '—' }} дн</div>
           <div><span style="color:var(--text-muted, var(--text-secondary))">email</span> {{ 'да' if acc.email_verified else '—' }}</div>
-          <div><span style="color:var(--text-muted, var(--text-secondary))">чат</span> {{ 'да' if acc.can_chat else '—' }}</div>
+          <div><span style="color:var(--text-muted, var(--text-secondary))">{{ t("чат") }}</span> {{ 'да' if acc.can_chat else '—' }}</div>
           <div><span style="color:var(--text-muted, var(--text-secondary))">{{ t("ЛС") }}</span> {{ 'да' if acc.can_dm else '—' }}</div>
-          <div><span style="color:var(--text-muted, var(--text-secondary))">последняя проверка</span> {{ format_dt_madrid(acc.last_readiness_probe_at) }}</div>
+          <div><span style="color:var(--text-muted, var(--text-secondary))">{{ t("последняя проверка") }}</span> {{ format_dt_madrid(acc.last_readiness_probe_at) }}</div>
         </div>
 
         {% if acc.last_error %}
@@ -323,9 +323,9 @@
       </div>
       <h2 class="reddit-login-card__title">{{ t("Войти в Reddit") }}</h2>
       <p class="reddit-login-card__desc">
-        Продолжая, вы соглашаетесь с
+        {{ t("Продолжая, вы соглашаетесь с") }}
         <a href="https://www.redditinc.com/policies/user-agreement" target="_blank" rel="noreferrer noopener">{{ t("Пользовательским соглашением") }}</a>
-        и подтверждаете, что ознакомились с
+        {{ t("и подтверждаете, что ознакомились с") }}
         <a href="https://www.reddit.com/policies/privacy-policy" target="_blank" rel="noreferrer noopener">{{ t("Политикой конфиденциальности") }}</a>.
       </p>
 
@@ -353,19 +353,19 @@
         <i class="ti ti-brand-apple"></i> {{ t("Войти с Apple ID") }}
       </a>
       <a class="reddit-login-btn reddit-login-btn--disabled" aria-disabled="true">
-        <i class="ti ti-mail"></i> Ссылка на почту
+        <i class="ti ti-mail"></i> {{ t("Ссылка на почту") }}
       </a>
 
       {% if not oauth_configured %}
       <div class="reddit-login-hint">
         <strong>{{ t("OAuth ещё не настроен.") }}</strong> {{ t("Для подключения создайте Reddit App на") }}
         <a href="https://www.reddit.com/prefs/apps" target="_blank" rel="noreferrer noopener" style="color:#4299ff;">reddit.com/prefs/apps</a>
-        и введите <code>client_id</code> / <code>client_secret</code> {{ t("на") }}
-        <a href="/reddit/settings" style="color:#4299ff;">странице настроек</a>{{ t(". После этого активной станет только кнопка «Войти через Reddit» — остальные способы сделаны специально для визуальной консистентности с сайтом Reddit.") }}
+        {{ t("и введите") }} <code>client_id</code> / <code>client_secret</code> {{ t("на") }}
+        <a href="/reddit/settings" style="color:#4299ff;">{{ t("странице настроек") }}</a>{{ t(". После этого активной станет только кнопка «Войти через Reddit» — остальные способы сделаны специально для визуальной консистентности с сайтом Reddit.") }}
       </div>
       {% else %}
       <div class="reddit-login-hint">
-        {{ t("После нажатия «Войти через Reddit» откроется страница reddit.com с запросом разрешений. После") }} <strong>одобрения</strong> вы автоматически вернётесь сюда, и аккаунт появится в списке.
+        {{ t("После нажатия «Войти через Reddit» откроется страница reddit.com с запросом разрешений. После") }} <strong>{{ t("одобрения") }}</strong> {{ t("вы автоматически вернётесь сюда, и аккаунт появится в списке.") }}
       </div>
       {% endif %}
 

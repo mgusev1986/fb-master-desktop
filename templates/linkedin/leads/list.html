@@ -7,12 +7,11 @@
   <header class="li-page__header">
     <div class="li-page__title-wrap">
       <h1 class="li-page__title">
-        Списки лидов
+        {{ t("Списки лидов") }}
         <span class="li-page__beta-pill">Beta</span>
       </h1>
       <p class="li-page__subtitle">
-        Хранилище профилей для outreach. Импортируйте URL'ы профилей или добавляйте вручную.
-        Реальный парсер LinkedIn Search через Playwright — следующий milestone.
+        {{ t("Хранилище профилей для outreach. Импортируйте URL'ы профилей или добавляйте вручную. Реальный парсер LinkedIn Search через Playwright — следующий milestone.") }}
       </p>
     </div>
   </header>
@@ -20,16 +19,16 @@
   <section class="li-card li-card--accent">
     <h2 class="li-card__title"><i class="ti ti-search"></i> {{ t("Поиск через LinkedIn (Playwright)") }}</h2>
     <p class="li-card__desc" style="font-size:13px;">
-      {{ t("Открывает") }} <code>/search/results/people/</code> под выбранным аккаунтом, парсит первые N результатов и сохраняет их как лидов с дедупликацией по URL. Можно сохранить параметры как сегмент для повторного запуска.
+      {{ t("Открывает") }} <code>/search/results/people/</code> {{ t("под выбранным аккаунтом, парсит первые N результатов и сохраняет их как лидов с дедупликацией по URL. Можно сохранить параметры как сегмент для повторного запуска.") }}
     </p>
     <form method="post" action="/linkedin/leads/audience-search" style="display:flex;flex-direction:column;gap:8px;"
           onsubmit="this.querySelector('button[type=submit].search-go').disabled=true; this.querySelector('button[type=submit].search-go').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Ищу…';">
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
         <select name="account_id" required style="flex:1;min-width:200px;padding:8px;border-radius:8px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);">
-          <option value="">— аккаунт для поиска —</option>
+          <option value="">{{ t("— аккаунт для поиска —") }}</option>
           {% for a in (account_options or []) %}<option value="{{ a.id }}">{{ a.label }} [{{ a.status }}]</option>{% endfor %}
         </select>
-        <input type="text" name="keywords" required placeholder="например: head of marketing fintech berlin" style="flex:2;min-width:240px;padding:8px;border-radius:8px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);"/>
+        <input type="text" name="keywords" required placeholder="{{ t("например: head of marketing fintech berlin") }}" style="flex:2;min-width:240px;padding:8px;border-radius:8px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);"/>
         <input type="number" name="max_results" min="1" max="50" value="10" style="width:80px;padding:8px;border-radius:8px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);"/>
         <button type="submit" class="li-btn li-btn--primary search-go"><i class="ti ti-search"></i> {{ t("Найти") }}</button>
       </div>
@@ -41,12 +40,12 @@
         <label style="font:400 12px/1 Inter,sans-serif;color:var(--text-secondary,#606770);display:inline-flex;align-items:center;gap:4px;">
           <input type="checkbox" name="save_as_segment" value="on"/>
           {{ t("сохранить как сегмент:") }}
-          <input type="text" name="save_segment_name" placeholder="название сегмента" style="padding:4px;border-radius:6px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);font-size:12px;width:160px;"/>
+          <input type="text" name="save_segment_name" placeholder="{{ t("название сегмента") }}" style="padding:4px;border-radius:6px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);font-size:12px;width:160px;"/>
         </label>
       </div>
     </form>
     <small style="color:var(--text-muted,#888);">
-      {{ t("Если в селекторе пусто — сначала") }} <a href="/linkedin/accounts">подключите аккаунт</a>.
+      {{ t("Если в селекторе пусто — сначала") }} <a href="/linkedin/accounts">{{ t("подключите аккаунт") }}</a>.
     </small>
   </section>
 

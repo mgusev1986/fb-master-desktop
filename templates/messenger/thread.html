@@ -6,7 +6,7 @@
 {% if qp.get('err') == 'busy' %}
 <div class="card" style="margin-bottom:16px;border-color:var(--error)">
   <div class="card-body" style="font-size:var(--font-size-sm)">
-    <i class="ti ti-alert-circle"></i> Сейчас уже выполняется синхронизация мессенджера.
+    <i class="ti ti-alert-circle"></i> {{ t("Сейчас уже выполняется синхронизация мессенджера.") }}
   </div>
 </div>
 {% elif qp.get('err') == 'other' %}
@@ -48,14 +48,14 @@
 {% if sync_busy %}
 <div class="card" style="margin-bottom:16px;border-color:var(--warning)">
   <div class="card-body" style="font-size:var(--font-size-sm)">
-    <i class="ti ti-loader-2"></i> Сейчас подгружаются сообщения из Facebook — подождите немного. Окно браузера может не появляться.
+    <i class="ti ti-loader-2"></i> {{ t("Сейчас подгружаются сообщения из Facebook — подождите немного. Окно браузера может не появляться.") }}
   </div>
 </div>
 {% endif %}
 
 <div class="card" style="margin-bottom:16px">
   <div class="card-body">
-    <h3 style="margin:0 0 8px;font-size:var(--font-size-md)">Сообщения из Facebook</h3>
+    <h3 style="margin:0 0 8px;font-size:var(--font-size-md)">{{ t("Сообщения из Facebook") }}</h3>
     <p style="color:var(--text-secondary);font-size:var(--font-size-sm);margin:0 0 12px">
       {{ t("Подгружает видимые сообщения из открытого чата. Направление (входящее / исходящее) определяется эвристикой по позиции пузыря, стилям и подписям доступности — при смене вёрстки Facebook возможны ошибки.") }}
     </p>
@@ -90,7 +90,7 @@
     </div>
     {% else %}
     <div class="empty-state" style="padding:24px 0">
-      <p style="color:var(--text-secondary);margin:0">Сообщений в базе нет. Нажмите «Загрузить / обновить сообщения».</p>
+      <p style="color:var(--text-secondary);margin:0">{{ t("Сообщений в базе нет. Нажмите «Загрузить / обновить сообщения».") }}</p>
     </div>
     {% endif %}
   </div>

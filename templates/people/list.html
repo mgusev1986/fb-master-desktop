@@ -24,13 +24,13 @@
 {% if qp.get('segstarted') == '1' %}
 <div class="card" style="margin-bottom:16px;border-color:var(--success)">
   <div class="card-body" style="font-size:var(--font-size-sm)">
-    <i class="ti ti-check"></i> Сегментация языка запущена в фоне. Статус ниже обновляется автоматически.
+    <i class="ti ti-check"></i> {{ t("Сегментация языка запущена в фоне. Статус ниже обновляется автоматически.") }}
   </div>
 </div>
 {% elif qp.get('segerr') == 'busy' %}
 <div class="card" style="margin-bottom:16px;border-color:var(--error)">
   <div class="card-body" style="font-size:var(--font-size-sm)">
-    <i class="ti ti-alert-circle"></i> Сегментация уже выполняется. Дождитесь окончания текущей задачи.
+    <i class="ti ti-alert-circle"></i> {{ t("Сегментация уже выполняется. Дождитесь окончания текущей задачи.") }}
   </div>
 </div>
 {% elif qp.get('segerr') == 'account' %}
@@ -90,13 +90,13 @@
     <div class="toolbar" style="margin-top:12px;align-items:flex-end">
       <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
         <div class="form-group" style="margin:0">
-          <label class="form-label" for="people-lang-select">Язык базы</label>
+          <label class="form-label" for="people-lang-select">{{ t("Язык базы") }}</label>
           <select id="people-lang-select" class="form-select" style="min-width:220px">
             {% for key, label in language_filter_labels.items() %}
             <option value="{{ key }}" {% if lang == key %}selected{% endif %}>{{ label }}</option>
             {% endfor %}
           </select>
-          <p class="form-hint" style="margin-bottom:0">Фильтр применяется к текущему списку, а также к рассылке и режиму агента, если выбран там.</p>
+          <p class="form-hint" style="margin-bottom:0">{{ t("Фильтр применяется к текущему списку, а также к рассылке и режиму агента, если выбран там.") }}</p>
         </div>
 
         <div class="form-group" style="margin:0">
@@ -131,7 +131,7 @@
             <span>{{ t("Перепроверить уже размеченных") }}</span>
           </label>
           <button type="submit" class="btn btn-primary" {% if not segment_accounts or segment_busy %}disabled{% endif %}>
-            <i class="ti ti-language"></i> Сегментировать язык
+            <i class="ti ti-language"></i> {{ t("Сегментировать язык") }}
           </button>
         </form>
       </div>
@@ -159,7 +159,7 @@
           <tr>
             <th class="people-row-num-col">№</th>
             <th>{{ t("Имя") }}</th>
-            <th>Язык</th>
+            <th>{{ t("Язык") }}</th>
             <th>{{ t("Профиль") }}</th>
             <th>{% if cabinet_client_mode(request) %}Этап{% else %}Стадия CRM{% endif %}</th>
             <th>{{ t("Добавлен") }}</th>
@@ -202,7 +202,7 @@
             </td>
             <td>{{ p.created_at.strftime('%d.%m.%Y') if p.created_at else '—' }}</td>
             <td>
-              <button type="button" class="btn btn-sm btn-danger people-delete-open" title="Удалить из базы" aria-label="Удалить контакт"
+              <button type="button" class="btn btn-sm btn-danger people-delete-open" title="{{ t("Удалить из базы") }}" aria-label="{{ t("Удалить контакт") }}"
                       data-action="/people/{{ p.id }}/delete"
                       data-name="{{ (p.display_name or p.canonical_url or ('#' ~ p.id))|e }}">
                 <i class="ti ti-trash"></i>
@@ -249,7 +249,7 @@
     <div style="padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px">
       <span style="flex-shrink:0;width:40px;height:40px;border-radius:10px;background:rgba(239,68,68,.15);color:var(--error);display:flex;align-items:center;justify-content:center;font-size:1.25rem" aria-hidden="true"><i class="ti ti-trash"></i></span>
       <div style="min-width:0">
-        <h2 id="people-delete-title" style="margin:0;font-size:1.08rem;font-weight:600">Удалить из базы?</h2>
+        <h2 id="people-delete-title" style="margin:0;font-size:1.08rem;font-weight:600">{{ t("Удалить из базы?") }}</h2>
         <p id="people-delete-text" class="form-hint" style="margin:10px 0 0;font-size:var(--font-size-sm);line-height:1.55;color:var(--text-secondary)"></p>
       </div>
     </div>

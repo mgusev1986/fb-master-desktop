@@ -286,13 +286,13 @@
 
 <nav class="adm-mobile-bar" aria-label="{{ t("Навигация админки") }}">
   <a href="/home" title="{{ t("В кабинет") }}"><i class="ti ti-arrow-left"></i> {{ t("Кабинет") }}</a>
-  <a href="/admin/platform">Сводка</a>
+  <a href="/admin/platform">{{ t("Сводка") }}</a>
   <span class="adm-mobile-bar__title">{{ t("Ключи доступа") }}</span>
 </nav>
 
 <div class="page-header">
   <h1>{{ t("Ключи доступа") }}</h1>
-  <p class="subtitle">{{ t("Выдаются клиентам для запуска копии программы. Один ключ после первого ввода привязывается к") }} <strong>одному компьютеру</strong> {{ t("(в SOCMASTER — к железу; в браузере — к устойчивому отпечатку устройства). Срок отсчитывается от выдачи ключа. Отозванный или просроченный ключ перестаёт работать. В таблице ключ отображается скрытым; расшифровка возможна только здесь, на сервере с вашим") }} <code>SECRET_KEY</code>.</p>
+  <p class="subtitle">{{ t("Выдаются клиентам для запуска копии программы. Один ключ после первого ввода привязывается к") }} <strong>{{ t("одному компьютеру") }}</strong> {{ t("(в SOCMASTER — к железу; в браузере — к устойчивому отпечатку устройства). Срок отсчитывается от выдачи ключа. Отозванный или просроченный ключ перестаёт работать. В таблице ключ отображается скрытым; расшифровка возможна только здесь, на сервере с вашим") }} <code>SECRET_KEY</code>.</p>
 </div>
 
 <div class="admin-quick-links" style="margin-bottom:20px">
@@ -308,13 +308,13 @@
 {% set qerr = request.query_params.get('err') %}
 {% if qerr == 'delete_no_consent' %}
 <div class="settings-banner" role="alert" style="margin-bottom:16px;border-color:var(--danger);color:var(--error)">
-  Удаление не выполнено: отметьте галочку согласия в окне подтверждения и снова нажмите «Удалить навсегда».
+  {{ t("Удаление не выполнено: отметьте галочку согласия в окне подтверждения и снова нажмите «Удалить навсегда».") }}
 </div>
 {% endif %}
 
 {% if new_key_plaintext %}
 <div class="settings-banner" role="status" style="background:#ecfdf5;border-color:#6ee7b7;color:#065f46">
-  <strong>Сохраните ключ сейчас</strong> {{ t("(копия также хранится в базе зашифрованной — ниже можно снова «Показать»):") }}
+  <strong>{{ t("Сохраните ключ сейчас") }}</strong> {{ t("(копия также хранится в базе зашифрованной — ниже можно снова «Показать»):") }}
   <div style="display:flex;gap:10px;align-items:center;margin-top:8px;flex-wrap:wrap">
     <code id="new-access-key-value" style="margin:0;padding:10px;background:#fff;border-radius:6px;word-break:break-all">{{ new_key_plaintext }}</code>
     <button type="button" class="btn btn-secondary" id="copy-new-access-key" style="white-space:nowrap" title="{{ t("Копировать ключ в буфер обмена") }}">
@@ -373,20 +373,20 @@
 {% endif %}
 
 <div class="card" style="margin-bottom:24px">
-  <div class="card-header">Создать ключ</div>
+  <div class="card-header">{{ t("Создать ключ") }}</div>
   <div class="card-body">
     <form method="post" action="/admin/platform/access-keys/create" class="settings-form">
       <label class="form-label">{{ t("Подпись (необязательно)") }}</label>
       <input type="text" name="label" class="form-input" placeholder="{{ t("Например: клиент Иван, офис №2") }}"/>
-      <label class="form-label" style="margin-top:16px">Срок действия (с момента выдачи)</label>
+      <label class="form-label" style="margin-top:16px">{{ t("Срок действия (с момента выдачи)") }}</label>
       <select name="duration" id="ak-duration-select" class="form-input">
         <option value="30" selected>{{ t("30 дней") }}</option>
         <option value="90">{{ t("3 месяца (90 дней)") }}</option>
         <option value="180">{{ t("6 месяцев (180 дней)") }}</option>
         <option value="365">{{ t("1 год (365 дней)") }}</option>
         <option value="forever">{{ t("Бессрочно") }}</option>
-        <option value="m3">Тест — 3 минуты (проверка истечения)</option>
-        <option value="custom">Свой период…</option>
+        <option value="m3">{{ t("Тест — 3 минуты (проверка истечения)") }}</option>
+        <option value="custom">{{ t("Свой период…") }}</option>
       </select>
       <div id="ak-custom-row" style="display:none;margin-top:10px;padding:12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-surface)">
         <label class="form-label" style="margin-bottom:6px">{{ t("Кастомный период") }}</label>
@@ -398,9 +398,9 @@
             <option value="m">{{ t("минут") }}</option>
           </select>
         </div>
-        <p class="form-hint" style="margin:8px 0 0;color:var(--text-muted)">Целое положительное число. Например: <strong>{{ t("30 дней") }}</strong>, <strong>{{ t("12 часов") }}</strong>, <strong>{{ t("90 минут") }}</strong>{{ t(". Максимум 1 000 000 в выбранной единице.") }}</p>
+        <p class="form-hint" style="margin:8px 0 0;color:var(--text-muted)">{{ t("Целое положительное число. Например:") }} <strong>{{ t("30 дней") }}</strong>, <strong>{{ t("12 часов") }}</strong>, <strong>{{ t("90 минут") }}</strong>{{ t(". Максимум 1 000 000 в выбранной единице.") }}</p>
       </div>
-      <button type="submit" class="btn btn-primary" style="margin-top:12px">Сгенерировать ключ</button>
+      <button type="submit" class="btn btn-primary" style="margin-top:12px">{{ t("Сгенерировать ключ") }}</button>
     </form>
     <script>
     (function(){
@@ -425,7 +425,7 @@
 <div class="card">
   <div class="card-header ak-keys-header">
     <span class="ak-keys-header__title">{{ t("Выданные ключи") }}</span>
-    <nav class="ak-status-filters" aria-label="Фильтр по статусу">
+    <nav class="ak-status-filters" aria-label="{{ t("Фильтр по статусу") }}">
       {% set c = access_key_counts %}
       {% set fs = filter_status %}
       <a href="/admin/platform/access-keys?status=all" class="ak-filter-pill{% if fs == 'all' %} ak-filter-pill--active{% endif %}">{{ t("Все") }} <span class="ak-filter-count">{{ c.all }}</span></a>
@@ -441,7 +441,7 @@
     <p class="settings-note">{{ t("Пока нет ключей. Создайте первый выше или выполните на сервере:") }}
       <code>{{ t('python scripts/create_access_key.py --duration 30 "подпись"') }}</code> {{ t("(для быстрого теста истечения:") }} <code>--duration m3</code>)</p>
     {% else %}
-    <p class="settings-note">{{ t("В выбранном сегменте ключей нет.") }} <a href="/admin/platform/access-keys?status=all">{{ t("Показать все") }}</a> или переключите фильтр выше.</p>
+    <p class="settings-note">{{ t("В выбранном сегменте ключей нет.") }} <a href="/admin/platform/access-keys?status=all">{{ t("Показать все") }}</a> {{ t("или переключите фильтр выше.") }}</p>
     {% endif %}
     {% else %}
     <div class="table-wrap">
@@ -452,9 +452,9 @@
             <th>{{ t("Подпись") }}</th>
             <th>{{ t("Пометка") }}</th>
             <th>{{ t("Ключ") }}</th>
-            <th>Создан</th>
+            <th>{{ t("Создан") }}</th>
             <th>{{ t("Действует до") }}</th>
-            <th>Устройство</th>
+            <th>{{ t("Устройство") }}</th>
             <th>{{ t("Статус") }}</th>
             <th>{{ t("Оплата") }}</th>
             <th></th>
@@ -482,7 +482,7 @@
                 <button type="button" class="btn btn-sm btn-secondary ak-btn-hide" style="display:none">{{ t("Скрыть") }}</button>
               </div>
               {% else %}
-              <span class="settings-note" title="{{ t("Ключ создан до обновления или без сохранения копии") }}">нет копии в базе</span>
+              <span class="settings-note" title="{{ t("Ключ создан до обновления или без сохранения копии") }}">{{ t("нет копии в базе") }}</span>
               {% endif %}
             </td>
             <td>{{ format_dt_madrid(k.created_at) if k.created_at else '—' }}</td>
@@ -497,7 +497,7 @@
               {% if k.device_fingerprint %}
               <code title="{{ k.device_fingerprint }}">{{ k.device_fingerprint[:12] }}…</code>
               {% else %}
-              <span class="badge badge-warning">не активирован</span>
+              <span class="badge badge-warning">{{ t("не активирован") }}</span>
               {% endif %}
             </td>
             <td>
@@ -517,7 +517,7 @@
                 <i class="ti ti-chevron-down"></i> NP&nbsp;#{{ bo.id }}
               </button>
               {% else %}
-              <span class="settings-note" title="Этот ключ не связан с заказом NOWPayments">—</span>
+              <span class="settings-note" title="{{ t("Этот ключ не связан с заказом NOWPayments") }}">—</span>
               {% endif %}
             </td>
             <td>
@@ -567,11 +567,11 @@
                     <code class="ak-np-card__value">{{ bo.np_purchase_id or '—' }}</code>
                   </div>
                   <div class="ak-np-card__field">
-                    <span class="ak-np-card__label">Тариф</span>
+                    <span class="ak-np-card__label">{{ t("Тариф") }}</span>
                     <span class="ak-np-card__value">{{ bo.price_amount or '—' }} {{ (bo.price_currency or '') | upper }} · {{ bo.duration_days or '—' }} дн.</span>
                   </div>
                   <div class="ak-np-card__field">
-                    <span class="ak-np-card__label">Статус NP (последний)</span>
+                    <span class="ak-np-card__label">{{ t("Статус NP (последний)") }}</span>
                     <span class="ak-np-card__value">{{ bo.last_np_status or '—' }}</span>
                   </div>
                   <div class="ak-np-card__field">
@@ -611,7 +611,7 @@
                     <code class="ak-np-card__value ak-np-card__value--copy" data-copy="{{ bo.np_payout_hash or '' }}">{{ bo.np_payout_hash or '—' }}</code>
                   </div>
                   <div class="ak-np-card__field">
-                    <span class="ak-np-card__label">Создан</span>
+                    <span class="ak-np-card__label">{{ t("Создан") }}</span>
                     <span class="ak-np-card__value">{{ format_dt_madrid(bo.created_at) if bo.created_at else '—' }}</span>
                   </div>
                   <div class="ak-np-card__field">
@@ -639,15 +639,15 @@
   </div>
 </div>
 
-<p class="settings-note" style="margin-top:20px">В <code>.env</code> включите <code>FB_MASTER_ACCESS_KEY_REQUIRED=true</code>{{ t(". Пока ключей нет, сначала создайте один здесь (или скриптом), затем включайте режим.") }}</p>
+<p class="settings-note" style="margin-top:20px">В <code>.env</code> {{ t("включите") }} <code>FB_MASTER_ACCESS_KEY_REQUIRED=true</code>{{ t(". Пока ключей нет, сначала создайте один здесь (или скриптом), затем включайте режим.") }}</p>
 
 <dialog id="ak-delete-dialog" class="ak-delete-dialog">
   <form method="post" id="ak-delete-form" class="ak-delete-dialog__form" action="">
-    <h2 class="ak-delete-dialog__title">Удалить ключ навсегда?</h2>
-    <p class="ak-delete-dialog__text">{{ t("Запись будет") }} <strong>безвозвратно</strong> удалена из базы. Клиент потеряет доступ (как при отзыве), восстановить ключ нельзя. Связи «устройство / оплата» в админке будут отвязаны от этого ключа.</p>
+    <h2 class="ak-delete-dialog__title">{{ t("Удалить ключ навсегда?") }}</h2>
+    <p class="ak-delete-dialog__text">{{ t("Запись будет") }} <strong>{{ t("безвозвратно") }}</strong> {{ t("удалена из базы. Клиент потеряет доступ (как при отзыве), восстановить ключ нельзя. Связи «устройство / оплата» в админке будут отвязаны от этого ключа.") }}</p>
     <label class="fb-check ak-delete-dialog__consent">
       <input type="checkbox" name="confirm_delete" value="yes" id="ak-delete-consent" required/>
-      <span>Я понимаю последствия и согласен(на) удалить ключ без возможности отката</span>
+      <span>{{ t("Я понимаю последствия и согласен(на) удалить ключ без возможности отката") }}</span>
     </label>
     <input type="hidden" name="return_status" id="ak-delete-return-status" value="{{ filter_status }}"/>
     <div class="ak-delete-dialog__actions">

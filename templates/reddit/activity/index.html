@@ -22,7 +22,7 @@
 
   <form method="get" action="/reddit/activity" class="reddit-card" style="gap:12px;">
     <label style="display:flex;flex-direction:column;gap:4px;">
-      <span style="font:600 12px/1 Inter;color:var(--text-muted)">Список usernames (по одному на строке или через запятую)</span>
+      <span style="font:600 12px/1 Inter;color:var(--text-muted)">{{ t("Список usernames (по одному на строке или через запятую)") }}</span>
       <textarea name="usernames" rows="3"
                 placeholder="u/username1&#10;username2"
                 style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-family:ui-monospace,monospace;">{{ usernames_raw }}</textarea>
@@ -32,7 +32,7 @@
       <label style="display:flex;flex-direction:column;gap:4px;">
         <span style="font:600 12px/1 Inter;color:var(--text-muted)">{{ t("Окно времени") }}</span>
         <select name="window" style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;">
-          <option value="1h" {% if window == '1h' %}selected{% endif %}>последний час</option>
+          <option value="1h" {% if window == '1h' %}selected{% endif %}>{{ t("последний час") }}</option>
           <option value="24h" {% if window == '24h' %}selected{% endif %}>{{ t("24 часа") }}</option>
           <option value="3d" {% if window == '3d' %}selected{% endif %}>{{ t("3 дня") }}</option>
           <option value="7d" {% if window == '7d' %}selected{% endif %}>{{ t("7 дней") }}</option>
@@ -47,10 +47,10 @@
       </label>
       <label style="display:flex;align-items:center;gap:6px;padding:10px 12px;">
         <input type="checkbox" name="use_leads" value="1" {% if use_leads %}checked{% endif %}/>
-        сканировать все текущие лиды
+        {{ t("сканировать все текущие лиды") }}
       </label>
       <button type="submit" class="reddit-btn reddit-btn--primary" style="align-self:end;">
-        <i class="ti ti-activity"></i> Сканировать
+        <i class="ti ti-activity"></i> {{ t("Сканировать") }}
       </button>
     </div>
     <div style="font:400 12px/1.4 Inter;color:var(--text-muted);">

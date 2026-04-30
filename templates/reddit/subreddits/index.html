@@ -24,12 +24,12 @@
   <form method="get" action="/reddit/subreddits" class="reddit-card" style="gap:12px;">
     <div style="display:grid;grid-template-columns:3fr 1fr 1fr auto;gap:10px;">
       <label style="display:flex;flex-direction:column;gap:6px;">
-        <span style="font:600 12px/1 Inter;color:var(--text-muted)">ключевые слова</span>
+        <span style="font:600 12px/1 Inter;color:var(--text-muted)">{{ t("ключевые слова") }}</span>
         <input type="text" name="q" value="{{ query }}" placeholder="crypto traders, indie hackers, r/..."
                style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;"/>
       </label>
       <label style="display:flex;flex-direction:column;gap:6px;">
-        <span style="font:600 12px/1 Inter;color:var(--text-muted)">сортировка</span>
+        <span style="font:600 12px/1 Inter;color:var(--text-muted)">{{ t("сортировка") }}</span>
         <select name="sort" style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;">
           <option value="relevance" {% if sort == 'relevance' %}selected{% endif %}>relevance</option>
           <option value="activity" {% if sort == 'activity' %}selected{% endif %}>activity</option>
@@ -83,7 +83,7 @@
           </a>
           {% if c.saved %}
           <span class="reddit-btn" style="opacity:.7;pointer-events:none;">
-            <i class="ti ti-bookmark-filled"></i> Сохранено
+            <i class="ti ti-bookmark-filled"></i> {{ t("Сохранено") }}
           </span>
           {% else %}
           <span class="reddit-btn" style="opacity:.7;" title="{{ t("Сабреддит уже сохранён автоматически при поиске") }}">

@@ -25,7 +25,7 @@
       <div class="upload-zone" id="import-upload-zone">
         <input type="file" name="files" id="import-file-input" multiple accept=".csv,.xlsx,.xls" class="file-input-hidden"/>
         <i class="ti ti-cloud-upload"></i>
-        <p><strong>{{ t("Нажмите") }}</strong> или перетащите файлы сюда</p>
+        <p><strong>{{ t("Нажмите") }}</strong> {{ t("или перетащите файлы сюда") }}</p>
         <p class="upload-hint">{% if cabinet_client_mode(request) %}
         Подойдут таблицы <strong>Excel (.xlsx)</strong> или CSV. Нужны ссылка на профиль Facebook и имя — можно в двух колонках или в одной ячейке через запятую. Удобнее всего файл, выгруженный из программы после поиска людей.
         {% else %}
@@ -39,8 +39,8 @@
         </div>
         <ul id="import-file-list" class="import-file-list"></ul>
         <p class="import-file-hint">
-          Файлы только подготовлены к отправке. Чтобы записать их в базу, нажмите кнопку
-          <kbd>{{ t("Загрузить и импортировать") }}</kbd> ниже.
+          {{ t("Файлы только подготовлены к отправке. Чтобы записать их в базу, нажмите кнопку") }}
+          <kbd>{{ t("Загрузить и импортировать") }}</kbd> {{ t("ниже.") }}
         </p>
       </div>
       <button type="submit" id="import-submit" class="btn btn-primary" style="margin-top:16px;width:100%">
@@ -294,13 +294,13 @@
     <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px">
       <span id="import-bulk-count" class="form-hint" style="margin:0;display:none">{{ t("Выбрано:") }} <strong id="import-bulk-n">0</strong></span>
       <button type="button" id="import-bulk-download" class="btn btn-sm btn-secondary" disabled title="{{ t("Один ZIP-архив с отдельным Excel на каждую выбранную партию") }}">
-        <i class="ti ti-archive"></i> Скачать выбранные (ZIP)
+        <i class="ti ti-archive"></i> {{ t("Скачать выбранные (ZIP)") }}
       </button>
     </div>
   </div>
   <div class="card-body">
     <p class="subtitle" style="margin:0 0 16px;font-size:0.9rem;line-height:1.45">
-      Строки с <strong>parser:…</strong> — одна партия на каждого донора: повторный парсинг того же донора обновляет ту же строку
+      {{ t("Строки с") }} <strong>parser:…</strong> — одна партия на каждого донора: повторный парсинг того же донора обновляет ту же строку
       (новые / обновлено / пропущено — по сравнению с состоянием до запуска). Файлы CSV и XLSX остаются отдельными партиями.
     </p>
     <div class="table-wrap">
@@ -310,7 +310,7 @@
             <th style="width:44px;text-align:center;vertical-align:middle;padding-left:10px;padding-right:4px" scope="col">
               <input type="checkbox" id="import-batch-select-all" title="{{ t("Выбрать все") }}" aria-label="{{ t("Выбрать все партии в таблице") }}"/>
             </th>
-            <th>Файл</th>
+            <th>{{ t("Файл") }}</th>
             <th>{{ t("Всего строк") }}</th>
             <th>{{ t("Новых") }}</th>
             <th>{{ t("Обновлено") }}</th>
@@ -355,7 +355,7 @@
                 <button type="button" class="btn btn-sm btn-danger import-delete-open"
                         data-batch-id="{{ b.id }}"
                         data-kind="{% if b.filename.startswith('parser:') and b.donor_id %}parser{% else %}file{% endif %}">
-                  <i class="ti ti-trash"></i> Удалить базу
+                  <i class="ti ti-trash"></i> {{ t("Удалить базу") }}
                 </button>
               </div>
             </td>
@@ -375,7 +375,7 @@
     <div style="padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px">
       <span style="flex-shrink:0;width:40px;height:40px;border-radius:10px;background:rgba(239,68,68,.15);color:var(--error);display:flex;align-items:center;justify-content:center;font-size:1.25rem" aria-hidden="true"><i class="ti ti-alert-triangle"></i></span>
       <div style="min-width:0">
-        <h2 id="import-delete-title" style="margin:0;font-size:1.08rem;font-weight:600">Удалить базу?</h2>
+        <h2 id="import-delete-title" style="margin:0;font-size:1.08rem;font-weight:600">{{ t("Удалить базу?") }}</h2>
         <p id="import-delete-text" class="form-hint" style="margin:10px 0 0;font-size:var(--font-size-sm);line-height:1.5;color:var(--text-secondary)"></p>
       </div>
     </div>

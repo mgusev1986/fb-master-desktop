@@ -10,7 +10,7 @@
       <h1>{{ campaign.name }}</h1>
       <p class="subtitle">
         Статус:
-        {% if campaign.status == 'running' %}<strong>выполняется</strong>
+        {% if campaign.status == 'running' %}<strong>{{ t("выполняется") }}</strong>
         {% elif campaign.status == 'paused' %}пауза
         {% elif campaign.status == 'completed' %}завершена
         {% elif campaign.status == 'ready' %}очередь собрана, можно стартовать
@@ -31,7 +31,7 @@
 {% if request.query_params.get('built') is not none %}
 <div class="card" style="margin-bottom:16px">
   <div class="card-body" style="font-size:var(--font-size-sm)">
-    {{ t("Очередь пересобрана:") }} <strong>{{ request.query_params.get('built') }}</strong> строк.
+    {{ t("Очередь пересобрана:") }} <strong>{{ request.query_params.get('built') }}</strong> {{ t("строк.") }}
   </div>
 </div>
 {% endif %}
@@ -61,7 +61,7 @@
 
 {% if worker_busy %}
 <p style="font-size:var(--font-size-sm);color:var(--text-secondary);margin-bottom:16px">
-  <i class="ti ti-loader-2"></i> Фоновый воркер занят (возможен прогрев этой или другой кампании).
+  <i class="ti ti-loader-2"></i> {{ t("Фоновый воркер занят (возможен прогрев этой или другой кампании).") }}
 </p>
 {% endif %}
 
@@ -84,7 +84,7 @@
     </form>
     {% elif campaign.status in ('ready', 'draft') %}
     <form method="post" action="/warmup/{{ campaign.id }}/start">
-      <button type="submit" class="btn btn-primary" {% if not cnt_by.get('queued') %}disabled title="Сначала соберите очередь"{% endif %}>
+      <button type="submit" class="btn btn-primary" {% if not cnt_by.get('queued') %}disabled title="{{ t("Сначала соберите очередь") }}"{% endif %}>
         <i class="ti ti-flame"></i> {{ t("Запустить прогрев") }}
       </button>
     </form>
@@ -104,16 +104,16 @@
     </form>
     {% endif %}
 
-    <form method="post" action="/warmup/{{ campaign.id }}/delete" data-confirm="Удалить кампанию и всю её очередь?" data-confirm-title="Удаление кампании" data-confirm-variant="danger">
+    <form method="post" action="/warmup/{{ campaign.id }}/delete" data-confirm="Удалить кампанию и всю её очередь?" data-confirm-title="{{ t("Удаление кампании") }}" data-confirm-variant="danger">
       <button type="submit" class="btn btn-ghost" style="color:var(--error)" {% if campaign.status == 'running' %}disabled{% endif %}>
-        <i class="ti ti-trash"></i> Удалить кампанию
+        <i class="ti ti-trash"></i> {{ t("Удалить кампанию") }}
       </button>
     </form>
   </div>
 </div>
 
 <div class="card" style="margin-bottom:20px">
-  <div class="card-header">Сводка очереди</div>
+  <div class="card-header">{{ t("Сводка очереди") }}</div>
   <div class="card-body" style="display:flex;flex-wrap:wrap;gap:12px;font-size:var(--font-size-sm)">
     <span class="badge badge-default">В очереди: {{ cnt_by.get('queued', 0) }}</span>
     <span class="badge badge-default">В работе: {{ cnt_by.get('running', 0) }}</span>

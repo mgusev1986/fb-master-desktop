@@ -7,7 +7,7 @@
     <div>
       <h1>{% if cabinet_client_mode(request) %}Поиск людей{% else %}Парсер друзей{% endif %}</h1>
       <p class="subtitle">{% if cabinet_client_mode(request) %}
-      Соберите список людей из Facebook по заранее добавленным <strong>источникам</strong>{{ t(": друзья или подписчики страницы, участники группы (ссылку на список вам даст администратор или продавец источника). Найденные люди сразу попадают в") }} <strong>{{ t("«Мои контакты»") }}</strong>. Таблицу можно скачать из программы. Повторный запуск продолжит сбор с того же места.
+      Соберите список людей из Facebook по заранее добавленным <strong>{{ t("источникам") }}</strong>{{ t(": друзья или подписчики страницы, участники группы (ссылку на список вам даст администратор или продавец источника). Найденные люди сразу попадают в") }} <strong>{{ t("«Мои контакты»") }}</strong>. Таблицу можно скачать из программы. Повторный запуск продолжит сбор с того же места.
       {% else %}
       Сбор списка людей по донорам через Facebook: друзья/подписчики профиля или участники группы (ссылка вида <code>…/groups/…/members</code>). Контакты сразу попадают в «Базу контактов» и в журнал импорта. В папке Base FB — файл .xlsx с колонками «Ссылка», «Имя», «Фамилия», «ID». Повторная выгрузка — кнопка у донора в «Доноры».
       {% endif %}</p>
@@ -39,7 +39,7 @@
 <div class="card" style="margin-bottom:16px;border-color:var(--error)">
   <div class="card-body" style="font-size:var(--font-size-sm)">
     <i class="ti ti-alert-circle"></i>
-    {{ t("Режим «Без определения языка» совместим только с пунктом") }} <strong>{{ t("«Все языки»") }}</strong> в списке «Собирать по языку». Либо смените режим, либо выберите «Все языки».
+    {{ t("Режим «Без определения языка» совместим только с пунктом") }} <strong>{{ t("«Все языки»") }}</strong> {{ t("в списке «Собирать по языку». Либо смените режим, либо выберите «Все языки».") }}
   </div>
 </div>
 {% endif %}
@@ -53,7 +53,7 @@
 <div class="card" style="margin-bottom:16px">
   <div class="card-body" style="font-size:var(--font-size-sm)">
     <form method="post" action="/parser/api/scroll-speed" style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;">
-      <label for="parser-scroll-speed" style="font-weight:600;">Скорость сбора:</label>
+      <label for="parser-scroll-speed" style="font-weight:600;">{{ t("Скорость сбора:") }}</label>
       <select id="parser-scroll-speed" name="mode" class="form-input" style="max-width:320px;">
         <option value="turbo" {% if parser_scroll_speed == 'turbo' %}selected{% endif %}>🚀 TURBO (≈0.2–0.5 с/раунд, как в v1 — самый быстрый, выше риск капчи)</option>
         <option value="fast" {% if parser_scroll_speed == 'fast' %}selected{% endif %}>⚡ Быстрый (≈1–2 с/раунд)</option>
@@ -109,13 +109,13 @@
     {% if cabinet_client_mode(request) %}
     Сбор запущен. Работа идёт <strong>{{ t("в фоне") }}</strong> — отдельное окно браузера может не появиться, это нормально. Статус ниже обновляется сам.
     {% else %}
-    Задача парсера запущена. Сейчас используется <strong>фоновый режим</strong> {{ t("(скрытый Chromium):") }} <strong>отдельное окно браузера не откроется</strong> — это нормально. Ниже статус и прогресс обновляются <strong>автоматически</strong>.
+    Задача парсера запущена. Сейчас используется <strong>{{ t("фоновый режим") }}</strong> {{ t("(скрытый Chromium):") }} <strong>{{ t("отдельное окно браузера не откроется") }}</strong> — это нормально. Ниже статус и прогресс обновляются <strong>{{ t("автоматически") }}</strong>.
     {% endif %}
     {% else %}
     {% if cabinet_client_mode(request) %}
     Сбор запущен. Откроется окно браузера — не закрывайте его до конца. Статус ниже обновляется сам.
     {% else %}
-    Задача парсера запущена. Откроется <strong>видимое</strong> окно Chromium с профилем аккаунта — не закрывайте его до завершения. Статус ниже обновляется автоматически.
+    Задача парсера запущена. Откроется <strong>{{ t("видимое") }}</strong> окно Chromium с профилем аккаунта — не закрывайте его до завершения. Статус ниже обновляется автоматически.
     {% endif %}
     {% endif %}
   </div>
@@ -145,7 +145,7 @@
     </div>
     <div id="parser-progress-meta" style="margin-top:8px;color:var(--text-secondary);font-size:12px"></div>
     {% if parser_headless %}
-    <span style="display:block;margin-top:12px;color:var(--text-secondary);font-size:12px">{% if cabinet_client_mode(request) %}Работа идёт без видимого окна. Чтобы видеть браузер, попросите администратора включить показ окна в «Настройках» программы.{% else %}Режим без окна (headless). Чтобы видеть браузер: включите «Показывать окно Chromium» в <a href="/system/settings">{{ t("Настройках") }}</a> или задайте <code>WARMUP_HEADLESS=false</code> в <code>.env</code>.{% endif %}</span>
+    <span style="display:block;margin-top:12px;color:var(--text-secondary);font-size:12px">{% if cabinet_client_mode(request) %}Работа идёт без видимого окна. Чтобы видеть браузер, попросите администратора включить показ окна в «Настройках» программы.{% else %}Режим без окна (headless). Чтобы видеть браузер: включите «Показывать окно Chromium» в <a href="/system/settings">{{ t("Настройках") }}</a> {{ t("или задайте") }} <code>WARMUP_HEADLESS=false</code> в <code>.env</code>.{% endif %}</span>
     {% else %}
     <span style="display:block;margin-top:12px;color:var(--text-secondary);font-size:12px">{% if cabinet_client_mode(request) %}Не закрывайте окно браузера до окончания.{% else %}Не закрывайте окно Chromium до окончания задачи.{% endif %}</span>
     {% endif %}
@@ -198,17 +198,17 @@
     <h3 style="margin:0 0 12px;font-size:var(--font-size-md)">{% if cabinet_client_mode(request) %}Как запустить{% else %}Запуск{% endif %}</h3>
     <p style="color:var(--text-secondary);font-size:var(--font-size-sm);margin:0 0 16px">
       {% if cabinet_client_mode(request) %}
-      Отметьте <strong>источники</strong> и профиль Facebook для входа. Программа сама просматривает списки людей и добавляет их в <strong>{{ t("«Мои контакты»") }}</strong>. Если связь прервётся, уже найденные не теряются; следующий запуск продолжит с того же места.
-      {% if parser_headless %}Сейчас сбор идёт <strong>{{ t("в фоне") }}</strong>, отдельное окно может не появиться.{% else %}Сейчас откроется <strong>окно браузера</strong> — не закрывайте его до конца.{% endif %}
+      Отметьте <strong>{{ t("источники") }}</strong> {{ t("и профиль Facebook для входа. Программа сама просматривает списки людей и добавляет их в") }} <strong>{{ t("«Мои контакты»") }}</strong>. Если связь прервётся, уже найденные не теряются; следующий запуск продолжит с того же места.
+      {% if parser_headless %}Сейчас сбор идёт <strong>{{ t("в фоне") }}</strong>, отдельное окно может не появиться.{% else %}Сейчас откроется <strong>{{ t("окно браузера") }}</strong> — не закрывайте его до конца.{% endif %}
       Профиль по умолчанию — первый в списке; при необходимости выберите другой. Статус — в блоке выше на этой странице.
       {% else %}
-      Используется сессия выбранного аккаунта Facebook (как в прогреве). Для каждого донора открывается его страница списка людей (друзья, подписчики, <strong>{{ t("участники группы") }}</strong> и т.п.); найденные профили периодически сохраняются в «Базу контактов» по ходу прокрутки (при обрыве сессии уже собранные записи не теряются). Повторный запуск подхватывает контакты, привязанные к этому донору, и продолжает список. Файл <code>Friends_… .xlsx</code> в каталоге Base FB обновляется так же по ходу. Событие в журнале импорта — по завершении донора.
+      Используется сессия выбранного аккаунта Facebook (как в прогреве). Для каждого донора открывается его страница списка людей (друзья, подписчики, <strong>{{ t("участники группы") }}</strong> {{ t("и т.п.); найденные профили периодически сохраняются в «Базу контактов» по ходу прокрутки (при обрыве сессии уже собранные записи не теряются). Повторный запуск подхватывает контакты, привязанные к этому донору, и продолжает список. Файл") }} <code>Friends_… .xlsx</code> в каталоге Base FB обновляется так же по ходу. Событие в журнале импорта — по завершении донора.
       {% if parser_headless %}
-      Сейчас парсер работает <strong>{{ t("в фоне") }}</strong> без окна (по умолчанию <code>WARMUP_HEADLESS=true</code> в <code>.env</code>).
+      Сейчас парсер работает <strong>{{ t("в фоне") }}</strong> {{ t("без окна (по умолчанию") }} <code>WARMUP_HEADLESS=true</code> в <code>.env</code>).
       {% else %}
-      Сейчас включено <strong>видимое</strong> окно Chromium (переключатель в <a href="/system/settings">{{ t("Настройках") }}</a> {{ t("или") }} <code>WARMUP_HEADLESS=false</code> в <code>.env</code>).
+      Сейчас включено <strong>{{ t("видимое") }}</strong> {{ t("окно Chromium (переключатель в") }} <a href="/system/settings">{{ t("Настройках") }}</a> {{ t("или") }} <code>WARMUP_HEADLESS=false</code> в <code>.env</code>).
       {% endif %}
-      По умолчанию в списке выбран <strong>первый</strong> аккаунт Facebook — смените вручную, если нужен другой. После запуска форма сбрасывается — смотрите блок «Последняя задача парсера» выше.
+      По умолчанию в списке выбран <strong>{{ t("первый") }}</strong> аккаунт Facebook — смените вручную, если нужен другой. После запуска форма сбрасывается — смотрите блок «Последняя задача парсера» выше.
       {% endif %}
     </p>
 
@@ -247,25 +247,25 @@
       <div class="form-group" style="margin-bottom:0">
         <div class="form-label" style="margin-bottom:8px">{{ t("Определение языка при сборе") }}</div>
         <p class="form-hint" style="margin:0 0 10px;font-size:var(--font-size-sm)">
-          {{ t("Отдельно от фильтра «Собирать по языку» ниже: как сильно программа должна угадывать язык") }} <strong>во время</strong> парсинга.
+          {{ t("Отдельно от фильтра «Собирать по языку» ниже: как сильно программа должна угадывать язык") }} <strong>{{ t("во время") }}</strong> {{ t("парсинга.") }}
         </p>
         <div class="stack" style="gap:10px">
           <label class="nav-item" style="cursor:pointer;padding:10px 14px;border-radius:var(--radius);border:1px solid var(--border)">
             <input type="radio" name="parser_language_mode" value="thorough" id="parser-lang-mode-thorough" style="margin-right:8px" {% if parser_language_mode == 'thorough' %}checked{% endif %}/>
-            <strong>Точно</strong> — для каждого человека открывается профиль Facebook, читаются вводный блок и посты; язык и сегмент максимально близки к реальности. <strong>{{ t("Самый медленный") }}</strong> режим и выше нагрузка на аккаунт.
+            <strong>{{ t("Точно") }}</strong> — для каждого человека открывается профиль Facebook, читаются вводный блок и посты; язык и сегмент максимально близки к реальности. <strong>{{ t("Самый медленный") }}</strong> {{ t("режим и выше нагрузка на аккаунт.") }}
           </label>
           <label class="nav-item" style="cursor:pointer;padding:10px 14px;border-radius:var(--radius);border:1px solid var(--border)">
             <input type="radio" name="parser_language_mode" value="fast" id="parser-lang-mode-fast" style="margin-right:8px" {% if parser_language_mode == 'fast' %}checked{% endif %}/>
-            <strong>{{ t("Быстро") }}</strong> {{ t("(по умолчанию) — при «Все языки» язык считается только по") }} <strong>имени</strong> из списка; заход в профиль не делается. Если ниже выбрать только RU / EN / иностранные — тогда профили открываются для отсечения по языку.
+            <strong>{{ t("Быстро") }}</strong> {{ t("(по умолчанию) — при «Все языки» язык считается только по") }} <strong>{{ t("имени") }}</strong> {{ t("из списка; заход в профиль не делается. Если ниже выбрать только RU / EN / иностранные — тогда профили открываются для отсечения по языку.") }}
           </label>
           <label class="nav-item" style="cursor:pointer;padding:10px 14px;border-radius:var(--radius);border:1px solid var(--border)">
             <input type="radio" name="parser_language_mode" value="none" id="parser-lang-mode-none" style="margin-right:8px" {% if parser_language_mode == 'none' %}checked{% endif %}/>
-            <strong>{{ t("Без языка") }}</strong> — только сбор ссылок и имён в контакты, поля языка в CRM <strong>не обновляются</strong> {{ t("(как раньше, если языком не пользовались). Доступно только вместе с «Все языки».") }}
+            <strong>{{ t("Без языка") }}</strong> — только сбор ссылок и имён в контакты, поля языка в CRM <strong>{{ t("не обновляются") }}</strong> {{ t("(как раньше, если языком не пользовались). Доступно только вместе с «Все языки».") }}
           </label>
         </div>
       </div>
       <div class="form-group" style="margin-bottom:0">
-        <label class="form-label" for="parser-language-filter">Собирать по языку</label>
+        <label class="form-label" for="parser-language-filter">{{ t("Собирать по языку") }}</label>
         <select id="parser-language-filter" name="language_filter" class="form-input form-select" style="max-width:360px">
           {% for key, label in parser_language_filters.items() %}
           <option value="{{ key }}" {% if parser_language_filter == key %}selected{% endif %}>{{ label }}</option>

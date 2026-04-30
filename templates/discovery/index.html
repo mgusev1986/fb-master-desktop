@@ -6,7 +6,7 @@
   <div class="page-header-actions">
     <div>
       <h1>{{ t("Автопоиск аудитории") }}</h1>
-      <p class="subtitle">{{ t("Поиск групп, страниц и профилей на Facebook по ключевым словам. Найденные результаты можно добавить в") }} <strong>доноры</strong> и сразу запустить парсинг аудитории.</p>
+      <p class="subtitle">{{ t("Поиск групп, страниц и профилей на Facebook по ключевым словам. Найденные результаты можно добавить в") }} <strong>{{ t("доноры") }}</strong> {{ t("и сразу запустить парсинг аудитории.") }}</p>
     </div>
     <div style="display:flex;gap:8px">
       <a href="/donors" class="btn btn-secondary"><i class="ti ti-users-group"></i> {{ t("Доноры") }}</a>
@@ -118,7 +118,7 @@
     <form method="post" action="/discovery/run" class="stack" style="gap:20px">
       <div class="form-group" style="margin-bottom:0">
         <label class="form-label" for="disc-keywords">{{ t("Ключевые слова") }}</label>
-        <textarea id="disc-keywords" name="keywords" class="form-input" rows="4" style="max-width:600px" placeholder="бизнес, предпринимательство&#10;сетевой маркетинг&#10;путешествия&#10;ремонт квартир" required></textarea>
+        <textarea id="disc-keywords" name="keywords" class="form-input" rows="4" style="max-width:600px" placeholder="{{ t("бизнес, предпринимательство&#10;сетевой маркетинг&#10;путешествия&#10;ремонт квартир") }}" required></textarea>
         <p class="form-hint">{{ t("По одному запросу на строку или через запятую. Каждое слово / фраза — отдельный поиск на Facebook.") }}</p>
       </div>
 
@@ -129,7 +129,7 @@
             <input type="checkbox" name="search_type" value="groups" checked/> {{ t("Группы") }}
           </label>
           <label style="cursor:pointer;display:flex;align-items:center;gap:6px">
-            <input type="checkbox" name="search_type" value="pages"/> Страницы
+            <input type="checkbox" name="search_type" value="pages"/> {{ t("Страницы") }}
           </label>
           <label style="cursor:pointer;display:flex;align-items:center;gap:6px">
             <input type="checkbox" name="search_type" value="people"/> {{ t("Люди (профили)") }}
@@ -185,7 +185,7 @@
 
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">
       <button type="button" class="btn btn-secondary btn-sm" onclick="discSelectAll(true)">{{ t("Выбрать все") }}</button>
-      <button type="button" class="btn btn-secondary btn-sm" onclick="discSelectAll(false)">Снять все</button>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="discSelectAll(false)">{{ t("Снять все") }}</button>
       <span style="color:var(--text-secondary);font-size:var(--font-size-sm);align-self:center" id="disc-sel-count"></span>
     </div>
 
@@ -199,7 +199,7 @@
               <th>{{ t("Название") }}</th>
               <th>{{ t("Описание / категория") }}</th>
               <th style="text-align:right">{{ t("Аудитория") }}</th>
-              <th>Ссылка</th>
+              <th>{{ t("Ссылка") }}</th>
               <th>{{ t("Статус") }}</th>
             </tr>
           </thead>
@@ -217,7 +217,7 @@
                 {% if r.result_type == 'group' %}
                 <span class="badge badge-default">{{ t("Группа") }}</span>
                 {% elif r.result_type == 'page' %}
-                <span class="badge badge-default">Страница</span>
+                <span class="badge badge-default">{{ t("Страница") }}</span>
                 {% else %}
                 <span class="badge badge-default">{{ t("Профиль") }}</span>
                 {% endif %}
@@ -289,7 +289,7 @@
           <td>{{ t.results_count }}</td>
           <td>
             {% if t.status == 'done' %}<span class="badge badge-success">{{ t("готово") }}</span>
-            {% elif t.status == 'running' %}<span class="badge badge-warning">в работе</span>
+            {% elif t.status == 'running' %}<span class="badge badge-warning">{{ t("в работе") }}</span>
             {% elif t.status == 'failed' %}<span class="badge badge-error">{{ t("ошибка") }}</span>
             {% else %}<span class="badge badge-default">{{ t.status }}</span>{% endif %}
           </td>

@@ -143,7 +143,7 @@
 </div>
 
 {% if saved %}
-<div class="settings-banner" role="status">Сохранено.</div>
+<div class="settings-banner" role="status">{{ t("Сохранено.") }}</div>
 {% endif %}
 
 <div class="stats-grid">
@@ -152,7 +152,7 @@
     <div class="stat-value">{{ 'OK' if has_openai_effective else '—' }}</div>
     <div class="settings-status-row">
       {% if has_openai_effective %}<span class="badge badge-success">{{ t("готово") }}</span>
-      {% else %}<span class="badge badge-error">нужен ключ</span>{% endif %}
+      {% else %}<span class="badge badge-error">{{ t("нужен ключ") }}</span>{% endif %}
     </div>
   </div>
   <div class="stat-card">
@@ -172,11 +172,11 @@
         <span class="badge badge-error" title="{{ t("Ключ отклонён (403/401), неверный формат или нет сети") }}">битых: {{ google_llm_keys_bad }}</span>
         {% endif %}
         {% if google_llm_keys_ok > 0 %}<span class="badge badge-success">{{ t("готово") }}</span>
-        {% else %}<span class="badge badge-error">нет рабочих ключей</span>{% endif %}
+        {% else %}<span class="badge badge-error">{{ t("нет рабочих ключей") }}</span>{% endif %}
         {% else %}
-        <span class="badge badge-default" title="{{ t("Запросы к Google не выполняются при открытии страницы. Нажмите «Сохранить» у блока Google AI — один раз проверим каждый ключ и покажем счётчики.") }}">диагностика после «Сохранить»</span>
+        <span class="badge badge-default" title="{{ t("Запросы к Google не выполняются при открытии страницы. Нажмите «Сохранить» у блока Google AI — один раз проверим каждый ключ и покажем счётчики.") }}">{{ t("диагностика после «Сохранить»") }}</span>
         {% endif %}
-      {% else %}<span class="badge badge-error">нужен ключ</span>{% endif %}
+      {% else %}<span class="badge badge-error">{{ t("нужен ключ") }}</span>{% endif %}
     </div>
   </div>
   {% if not settings_hide_infra %}
@@ -184,16 +184,16 @@
     <div class="stat-label">Supabase Auth</div>
     <div class="stat-value">{{ 'OK' if supabase_auth_ready else '—' }}</div>
     <div class="settings-status-row">
-      {% if supabase_auth_ready %}<span class="badge badge-success">вход настроен</span>
-      {% else %}<span class="badge badge-error">нужны данные</span>{% endif %}
+      {% if supabase_auth_ready %}<span class="badge badge-success">{{ t("вход настроен") }}</span>
+      {% else %}<span class="badge badge-error">{{ t("нужны данные") }}</span>{% endif %}
     </div>
   </div>
   <div class="stat-card">
     <div class="stat-label">{{ t("Google OAuth (прямой)") }}</div>
     <div class="stat-value">{{ 'READY' if google_oauth_ready_effective else '—' }}</div>
     <div class="settings-status-row">
-      {% if google_oauth_ready_effective %}<span class="badge badge-success">вход готов</span>
-      {% else %}<span class="badge badge-error">не настроен</span>{% endif %}
+      {% if google_oauth_ready_effective %}<span class="badge badge-success">{{ t("вход готов") }}</span>
+      {% else %}<span class="badge badge-error">{{ t("не настроен") }}</span>{% endif %}
     </div>
   </div>
   {% endif %}
@@ -205,9 +205,9 @@
     <div class="card-body">
       <p class="settings-note" style="margin-bottom:16px">
         {% if settings_hide_infra %}
-        Вставьте ключ от сервиса и нажмите <strong>{{ t("Сохранить") }}</strong>{{ t(". Ключ хранится только на вашем компьютере. Если ключ уже введён, в поле видны точки вместо букв — это нормально. Чтобы заменить ключ, нажмите в поле, вставьте новый и снова") }} <strong>{{ t("Сохранить") }}</strong>{{ t(". Для") }} <strong>Gemini</strong> можно указать <strong>несколько ключей</strong> (по одному на строку): при лимите квоты одного ключа запросы автоматически перейдут на следующий.
+        Вставьте ключ от сервиса и нажмите <strong>{{ t("Сохранить") }}</strong>{{ t(". Ключ хранится только на вашем компьютере. Если ключ уже введён, в поле видны точки вместо букв — это нормально. Чтобы заменить ключ, нажмите в поле, вставьте новый и снова") }} <strong>{{ t("Сохранить") }}</strong>{{ t(". Для") }} <strong>Gemini</strong> {{ t("можно указать") }} <strong>{{ t("несколько ключей") }}</strong> (по одному на строку): при лимите квоты одного ключа запросы автоматически перейдут на следующий.
         {% else %}
-        Вставьте ключ и нажмите <strong>{{ t("Сохранить") }}</strong>{{ t(". Если ключ уже сохранён, в поле отображаются точки — сам секрет не передаётся в браузер. Чтобы сменить ключ, кликните в поле (оно очистится), вставьте новый и снова нажмите") }} <strong>{{ t("Сохранить") }}</strong>{{ t(". Для") }} <strong>Gemini</strong> допускается <strong>несколько API-ключей</strong> — каждый с новой строки; при исчерпании квоты одного ключа система переключится на следующий.
+        Вставьте ключ и нажмите <strong>{{ t("Сохранить") }}</strong>{{ t(". Если ключ уже сохранён, в поле отображаются точки — сам секрет не передаётся в браузер. Чтобы сменить ключ, кликните в поле (оно очистится), вставьте новый и снова нажмите") }} <strong>{{ t("Сохранить") }}</strong>{{ t(". Для") }} <strong>Gemini</strong> {{ t("допускается") }} <strong>{{ t("несколько API-ключей") }}</strong> — каждый с новой строки; при исчерпании квоты одного ключа система переключится на следующий.
         {% endif %}
       </p>
       <div class="settings-subgrid">
@@ -218,30 +218,30 @@
           <div class="settings-field-save">
             <button type="submit" name="save_partial" value="openai" class="btn btn-primary"><i class="ti ti-device-floppy"></i> {{ t("Сохранить") }}</button>
             {% if openai_cabinet %}
-            <button type="submit" name="save_partial" value="clear_openai" class="btn btn-secondary btn-sm" onclick="return confirm('Удалить ключ OpenAI из программы?');">Удалить ключ</button>
+            <button type="submit" name="save_partial" value="clear_openai" class="btn btn-secondary btn-sm" onclick="return confirm('Удалить ключ OpenAI из программы?');">{{ t("Удалить ключ") }}</button>
             {% endif %}
           </div>
           <div class="settings-status-row">
-            {% if has_openai_effective %}<span class="badge badge-success">ключ сохранён, можно пользоваться</span>
-            {% else %}<span class="badge badge-default">ключ ещё не введён</span>{% endif %}
+            {% if has_openai_effective %}<span class="badge badge-success">{{ t("ключ сохранён, можно пользоваться") }}</span>
+            {% else %}<span class="badge badge-default">{{ t("ключ ещё не введён") }}</span>{% endif %}
           </div>
         </section>
 
         <section class="settings-field">
           <h3>Google AI (Gemini)</h3>
-          <p class="settings-note" style="margin-bottom:10px">{% if settings_hide_infra %}Нужен для возможностей на базе Gemini.{% else %}Для функций на базе Gemini.{% endif %} Можно ввести <strong>несколько ключей</strong> — по одному на строку; при ошибке квоты или лимита используется следующий.</p>
+          <p class="settings-note" style="margin-bottom:10px">{% if settings_hide_infra %}Нужен для возможностей на базе Gemini.{% else %}Для функций на базе Gemini.{% endif %} Можно ввести <strong>{{ t("несколько ключей") }}</strong> — по одному на строку; при ошибке квоты или лимита используется следующий.</p>
           <textarea name="google_llm_api_key" class="form-textarea js-settings-masked-secret" rows="{% if has_google_llm_effective %}{{ [google_llm_key_count, 4]|max }}{% else %}4{% endif %}" autocomplete="off" spellcheck="false" placeholder="{% if has_google_llm_effective %}Кликните и вставьте ключи (каждый с новой строки){% else %}Первый ключ&#10;Второй ключ (необязательно){% endif %}"{% if has_google_llm_effective %} data-key-mask-present="1" data-mask-line-count="{{ google_llm_key_count }}"{% endif %} style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px"></textarea>
           <div class="settings-field-save">
             <button type="submit" name="save_partial" value="google_llm" class="btn btn-primary"><i class="ti ti-device-floppy"></i> {{ t("Сохранить") }}</button>
             {% if google_llm_cabinet %}
-            <button type="submit" name="save_partial" value="clear_google_llm" class="btn btn-secondary btn-sm" onclick="return confirm('Удалить все ключи Google AI из программы?');">Удалить ключи</button>
+            <button type="submit" name="save_partial" value="clear_google_llm" class="btn btn-secondary btn-sm" onclick="return confirm('Удалить все ключи Google AI из программы?');">{{ t("Удалить ключи") }}</button>
             {% endif %}
           </div>
           <div class="settings-status-row">
             {% if has_google_llm_effective %}
               {% if google_llm_key_count > 1 %}<span class="badge badge-success">сохранено ключей: {{ google_llm_key_count }}, ротация при квоте</span>
-              {% else %}<span class="badge badge-success">ключ сохранён, можно пользоваться</span>{% endif %}
-            {% else %}<span class="badge badge-default">ключ ещё не введён</span>{% endif %}
+              {% else %}<span class="badge badge-success">{{ t("ключ сохранён, можно пользоваться") }}</span>{% endif %}
+            {% else %}<span class="badge badge-default">{{ t("ключ ещё не введён") }}</span>{% endif %}
           </div>
         </section>
       </div>
@@ -259,10 +259,8 @@
     <div class="card-header">{{ t("Supabase Auth (рекомендуемый вход)") }}</div>
     <div class="card-body">
       <p class="settings-note" style="margin-bottom:16px">
-        <strong>{{ t("Основной способ входа") }}</strong> — Google через Supabase (на экране входа одна кнопка «Войти через Google»).
-        Project URL и <strong>anon public</strong> {{ t("key: Supabase → Settings → API. Включите провайдер Google в Authentication → Providers; в Google Cloud в Authorized redirect URIs вставьте Callback URL из этого провайдера (копирование из Supabase). Здесь же в Supabase → Authentication → URL Configuration добавьте Redirect URL с путём") }}
-        <span class="settings-mono">/auth/supabase/callback</span> для хоста, с которого открываете SOCMASTER (локально и прод).
-        Сервисный JWT в кабинет не вводится — проверка сессии через <span class="settings-mono">/auth/v1/user</span>.
+        <strong>{{ t("Основной способ входа") }}</strong> {{ t("— Google через Supabase (на экране входа одна кнопка «Войти через Google»). Project URL и") }} <strong>anon public</strong> {{ t("key: Supabase → Settings → API. Включите провайдер Google в Authentication → Providers; в Google Cloud в Authorized redirect URIs вставьте Callback URL из этого провайдера (копирование из Supabase). Здесь же в Supabase → Authentication → URL Configuration добавьте Redirect URL с путём") }}
+        <span class="settings-mono">/auth/supabase/callback</span> {{ t("для хоста, с которого открываете SOCMASTER (локально и прод). Сервисный JWT в кабинет не вводится — проверка сессии через") }} <span class="settings-mono">/auth/v1/user</span>.
       </p>
       <div class="settings-subgrid">
         <section class="settings-field">
@@ -271,12 +269,12 @@
           <input type="text" name="supabase_url" value="{{ supabase_url_input }}" class="form-input" placeholder="{{ t("Оставьте пустым, чтобы не менять источник") }}"/>
           <label class="settings-inline-check"><input type="checkbox" name="clear_supabase_url" value="1"/> {{ t("Очистить override URL") }}</label>
           <div class="settings-status-row">
-            {% if supabase_auth_ready %}<span class="badge badge-success">готово к входу</span>{% else %}<span class="badge badge-error">нужны URL и anon key</span>{% endif %}
+            {% if supabase_auth_ready %}<span class="badge badge-success">{{ t("готово к входу") }}</span>{% else %}<span class="badge badge-error">{{ t("нужны URL и anon key") }}</span>{% endif %}
             {% if supabase_url_cabinet %}<span class="badge badge-default">{{ t("URL из кабинета") }}</span>
             {% elif env_supabase_url %}<span class="badge badge-success">{{ t("URL из .env") }}</span>
             {% else %}<span class="badge badge-error">{{ t("URL не задан") }}</span>{% endif %}
           </div>
-          <p class="form-hint" style="margin-top:10px">Эффективный URL: <span class="settings-mono">{{ supabase_url_effective or '—' }}</span></p>
+          <p class="form-hint" style="margin-top:10px">{{ t("Эффективный URL:") }} <span class="settings-mono">{{ supabase_url_effective or '—' }}</span></p>
         </section>
         <section class="settings-field">
           <h3>Supabase anon key</h3>
@@ -284,9 +282,9 @@
           <input type="password" name="supabase_anon_key" class="form-input js-settings-masked-secret" autocomplete="new-password" placeholder="{% if supabase_auth_ready %}Кликните и введите новый ключ{% else %}Новый anon key, если меняете{% endif %}"{% if supabase_auth_ready %} data-key-mask-present="1"{% endif %}/>
           <label class="settings-inline-check"><input type="checkbox" name="clear_supabase_anon_key" value="1"/> {{ t("Очистить override anon key") }}</label>
           <div class="settings-status-row">
-            {% if supabase_anon_cabinet %}<span class="badge badge-default">ключ из кабинета</span>
-            {% elif env_supabase_anon %}<span class="badge badge-success">ключ из .env</span>
-            {% else %}<span class="badge badge-error">ключ не задан</span>{% endif %}
+            {% if supabase_anon_cabinet %}<span class="badge badge-default">{{ t("ключ из кабинета") }}</span>
+            {% elif env_supabase_anon %}<span class="badge badge-success">{{ t("ключ из .env") }}</span>
+            {% else %}<span class="badge badge-error">{{ t("ключ не задан") }}</span>{% endif %}
           </div>
         </section>
       </div>
@@ -297,7 +295,7 @@
     <div class="card-header">{{ t("Google OAuth и allowlist (опционально)") }}</div>
     <div class="card-body">
       <p class="settings-note" style="margin-bottom:16px">
-        {{ t("Нужно только если") }} <strong>не</strong> используете Supabase Auth. При заполненном Supabase URL и anon key прямой OAuth на экране входа скрыт.
+        {{ t("Нужно только если") }} <strong>{{ t("не") }}</strong> {{ t("используете Supabase Auth. При заполненном Supabase URL и anon key прямой OAuth на экране входа скрыт.") }}
       </p>
       <div class="settings-subgrid">
         <section class="settings-field">
@@ -311,9 +309,9 @@
           <label class="settings-inline-check"><input type="checkbox" name="clear_google_oauth_secret" value="1"/> {{ t("Очистить override Client Secret") }}</label>
           <div class="settings-status-row">
             {% if google_oauth_ready_effective %}<span class="badge badge-success">{{ t("Google login готов") }}</span>{% else %}<span class="badge badge-error">{{ t("Нужны и ID, и Secret") }}</span>{% endif %}
-            {% if google_oauth_id_cabinet or google_oauth_secret_cabinet %}<span class="badge badge-default">есть override</span>
-            {% elif env_google_oauth and env_google_oauth_secret %}<span class="badge badge-success">используется .env</span>
-            {% else %}<span class="badge badge-error">в .env тоже не хватает данных</span>{% endif %}
+            {% if google_oauth_id_cabinet or google_oauth_secret_cabinet %}<span class="badge badge-default">{{ t("есть override") }}</span>
+            {% elif env_google_oauth and env_google_oauth_secret %}<span class="badge badge-success">{{ t("используется .env") }}</span>
+            {% else %}<span class="badge badge-error">{{ t("в .env тоже не хватает данных") }}</span>{% endif %}
           </div>
         </section>
 
@@ -332,7 +330,7 @@
             {% elif env_oauth_redirect %}<span class="badge badge-success">{{ t("redirect из .env") }}</span>
             {% else %}<span class="badge badge-warning">{{ t("redirect берётся из Host запроса") }}</span>{% endif %}
           </div>
-          <p class="form-hint" style="margin-top:12px">Эффективный callback: <span class="settings-mono">{{ oauth_callback_preview }}</span></p>
+          <p class="form-hint" style="margin-top:12px">{{ t("Эффективный callback:") }} <span class="settings-mono">{{ oauth_callback_preview }}</span></p>
           <p class="form-hint">Эффективный allowlist: {{ effective_allowlist_preview or 'не задан, вход разрешён любой почте Google' }}</p>
         </section>
       </div>
@@ -349,11 +347,11 @@
           <input type="text" name="path_browser_profiles" value="{{ path_browser_profiles_input }}" class="form-input" placeholder="{{ t("Относительный или абсолютный путь") }}"/>
           <label class="settings-inline-check"><input type="checkbox" name="clear_path_browser_profiles" value="1"/> {{ t("Очистить override пути профилей") }}</label>
           <div class="settings-status-row">
-            {% if browser_profiles_exists %}<span class="badge badge-success">путь существует</span>{% else %}<span class="badge badge-warning">будет создан при сохранении</span>{% endif %}
+            {% if browser_profiles_exists %}<span class="badge badge-success">{{ t("путь существует") }}</span>{% else %}<span class="badge badge-warning">{{ t("будет создан при сохранении") }}</span>{% endif %}
             {% if path_browser_profiles_cabinet %}<span class="badge badge-default">{{ t("override из кабинета") }}</span>
-            {% else %}<span class="badge badge-success">по умолчанию из .env</span>{% endif %}
+            {% else %}<span class="badge badge-success">{{ t("по умолчанию из .env") }}</span>{% endif %}
           </div>
-          <p class="form-hint" style="margin-top:12px">Эффективный путь: <span class="settings-mono">{{ browser_profiles_resolved }}</span></p>
+          <p class="form-hint" style="margin-top:12px">{{ t("Эффективный путь:") }} <span class="settings-mono">{{ browser_profiles_resolved }}</span></p>
         </section>
 
         <section class="settings-field">
@@ -362,11 +360,11 @@
           <input type="text" name="path_base_fb" value="{{ path_base_fb_input }}" class="form-input" placeholder="{{ t("Относительный или абсолютный путь") }}"/>
           <label class="settings-inline-check"><input type="checkbox" name="clear_path_base_fb" value="1"/> {{ t("Очистить override пути Base FB") }}</label>
           <div class="settings-status-row">
-            {% if base_fb_exists %}<span class="badge badge-success">путь существует</span>{% else %}<span class="badge badge-warning">будет создан при сохранении</span>{% endif %}
+            {% if base_fb_exists %}<span class="badge badge-success">{{ t("путь существует") }}</span>{% else %}<span class="badge badge-warning">{{ t("будет создан при сохранении") }}</span>{% endif %}
             {% if path_base_fb_cabinet %}<span class="badge badge-default">{{ t("override из кабинета") }}</span>
-            {% else %}<span class="badge badge-success">по умолчанию из .env</span>{% endif %}
+            {% else %}<span class="badge badge-success">{{ t("по умолчанию из .env") }}</span>{% endif %}
           </div>
-          <p class="form-hint" style="margin-top:12px">Эффективный путь: <span class="settings-mono">{{ base_fb_resolved }}</span></p>
+          <p class="form-hint" style="margin-top:12px">{{ t("Эффективный путь:") }} <span class="settings-mono">{{ base_fb_resolved }}</span></p>
         </section>
       </div>
     </div>
@@ -382,8 +380,7 @@
           {% if settings_hide_infra %}
           <p>
             {{ t("Обычно парсер, прогрев, рассылка и похожие действия выполняются") }} <strong>{{ t("в фоне") }}</strong> — отдельное окно браузера не открывается. Так удобнее и меньше отвлекает.
-            Включите галочку ниже, если хотите <strong>видеть</strong> браузер во время этих задач — например, чтобы понять, что именно делает программа.
-            Обновление списка чатов в мессенджере по-прежнему идёт без показа окна.
+            Включите галочку ниже, если хотите <strong>{{ t("видеть") }}</strong> {{ t("браузер во время этих задач — например, чтобы понять, что именно делает программа. Обновление списка чатов в мессенджере по-прежнему идёт без показа окна.") }}
           </p>
           <label class="settings-inline-check" style="font-size:var(--font-size-sm);cursor:pointer">
             <input type="checkbox" name="playwright_show_browser" value="1" {% if cabinet_playwright_show_browser %}checked{% endif %}/>
@@ -391,16 +388,15 @@
           </label>
           <div class="settings-status-row" style="margin-top:12px">
             {% if cabinet_playwright_show_browser %}
-            <span class="badge badge-default">сейчас окно показывается</span>
+            <span class="badge badge-default">{{ t("сейчас окно показывается") }}</span>
             {% else %}
-            <span class="badge badge-success">сейчас окно скрыто (обычный режим)</span>
+            <span class="badge badge-success">{{ t("сейчас окно скрыто (обычный режим)") }}</span>
             {% endif %}
           </div>
           {% else %}
           <p>
             {{ t("По умолчанию парсер, прогрев, цепочки, рассылка и отправка в мессенджере запускают Chromium") }}
-            <strong>{{ t("в фоне") }}</strong> {{ t("(без окна), как задано в") }} <span class="settings-mono">WARMUP_HEADLESS</span> в <span class="settings-mono">.env</span>{{ t(". Включите переключатель ниже, чтобы") }} <strong>всегда видеть</strong> окно браузера при этих задачах (удобно для отладки).
-            Фоновый авто-синк списка чатов мессенджера по-прежнему остаётся без окна.
+            <strong>{{ t("в фоне") }}</strong> {{ t("(без окна), как задано в") }} <span class="settings-mono">WARMUP_HEADLESS</span> в <span class="settings-mono">.env</span>{{ t(". Включите переключатель ниже, чтобы") }} <strong>{{ t("всегда видеть") }}</strong> {{ t("окно браузера при этих задачах (удобно для отладки). Фоновый авто-синк списка чатов мессенджера по-прежнему остаётся без окна.") }}
           </p>
           <label class="settings-inline-check" style="font-size:var(--font-size-sm);cursor:pointer">
             <input type="checkbox" name="playwright_show_browser" value="1" {% if cabinet_playwright_show_browser %}checked{% endif %}/>
@@ -410,7 +406,7 @@
             {% if cabinet_playwright_show_browser %}
             <span class="badge badge-default">{{ t("override из кабинета: окно видно") }}</span>
             {% else %}
-            <span class="badge badge-success">как в .env (обычно headless)</span>
+            <span class="badge badge-success">{{ t("как в .env (обычно headless)") }}</span>
             {% endif %}
           </div>
           {% endif %}
@@ -419,7 +415,7 @@
 
           <h3 style="margin:0 0 6px;font-size:var(--font-size-md)">{{ t("Встроенный логин в Facebook") }} <span class="badge badge-warning" style="font-size:10px;padding:1px 5px">beta</span></h3>
           <p style="font-size:var(--font-size-sm);color:var(--text-secondary);margin:0 0 8px">
-            {{ t("Когда включено — кнопка «Войти в Facebook» открывает логин в webview внутри SOCMASTER (а не в отдельном окне Chromium). После такого логина встроенный Messenger") }} <strong>не спрашивает PIN сквозного шифрования второй раз</strong> — ключи E2EE живут в том же Chromium-контексте.
+            {{ t("Когда включено — кнопка «Войти в Facebook» открывает логин в webview внутри SOCMASTER (а не в отдельном окне Chromium). После такого логина встроенный Messenger") }} <strong>{{ t("не спрашивает PIN сквозного шифрования второй раз") }}</strong> — ключи E2EE живут в том же Chromium-контексте.
             Старый режим (отдельное окно через Playwright) остаётся доступен рядом кнопкой «В отдельном окне».
           </p>
           <label class="settings-inline-check" style="font-size:var(--font-size-sm);cursor:pointer">
@@ -428,9 +424,9 @@
           </label>
           <div class="settings-status-row" style="margin-top:12px">
             {% if cabinet_embedded_login_enabled %}
-            <span class="badge badge-default">включено — кнопка ведёт на встроенный webview</span>
+            <span class="badge badge-default">{{ t("включено — кнопка ведёт на встроенный webview") }}</span>
             {% else %}
-            <span class="badge badge-success">выключено — старое Playwright-окно входа</span>
+            <span class="badge badge-success">{{ t("выключено — старое Playwright-окно входа") }}</span>
             {% endif %}
           </div>
         </section>
@@ -446,13 +442,11 @@
           <h3>{% if settings_hide_infra %}Имя контакта в базе{% else %}Имя контакта из открытого чата{% endif %}</h3>
           {% if settings_hide_infra %}
           <p>
-            {{ t("Если включено, при открытии чата во встроенном мессенджере имя в разделе") }} <strong>{{ t("«База контактов»") }}</strong> подставляется таким, как в заголовке переписки в Facebook — чтобы совпадало с тем, что вы видите на экране.
-            Выключите, если сами правите имена в CRM и не хотите, чтобы их меняло имя из мессенджера.
+            {{ t("Если включено, при открытии чата во встроенном мессенджере имя в разделе") }} <strong>{{ t("«База контактов»") }}</strong> {{ t("подставляется таким, как в заголовке переписки в Facebook — чтобы совпадало с тем, что вы видите на экране. Выключите, если сами правите имена в CRM и не хотите, чтобы их меняло имя из мессенджера.") }}
           </p>
           {% else %}
           <p>
-            {{ t("Если включено, при открытии переписки во встроенном Messenger (Desktop) сервер периодически подставляет в") }} <strong>{{ t("«Базу контактов»") }}</strong> актуальное имя из заголовка чата
-            (<span class="settings-mono">Person.display_name</span>{{ t("), чтобы CRM совпадала с тем, что видно в интерфейсе Facebook. Выключите, если намеренно правите имя в CRM и не хотите, чтобы его перезаписывало имя из Messenger.") }}
+            {{ t("Если включено, при открытии переписки во встроенном Messenger (Desktop) сервер периодически подставляет в") }} <strong>{{ t("«Базу контактов»") }}</strong> {{ t("актуальное имя из заголовка чата (") }}<span class="settings-mono">Person.display_name</span>{{ t("), чтобы CRM совпадала с тем, что видно в интерфейсе Facebook. Выключите, если намеренно правите имя в CRM и не хотите, чтобы его перезаписывало имя из Messenger.") }}
           </p>
           {% endif %}
           <label class="settings-inline-check" style="font-size:var(--font-size-sm);cursor:pointer">
@@ -463,7 +457,7 @@
             {% if cabinet_messenger_sync_display_name %}
             <span class="badge badge-success">{{ t("включено") }}</span>
             {% else %}
-            <span class="badge badge-default">выключено</span>
+            <span class="badge badge-default">{{ t("выключено") }}</span>
             {% endif %}
           </div>
         </section>
@@ -479,7 +473,7 @@
           <h3>{{ t("Рассылка и прогрев") }}</h3>
           {% if settings_hide_infra %}
           <p>
-            {{ t("Очередь рассылки и прогрева сохраняется в программе. После закрытия и снова открытия SOCMASTER незавершённые задачи могут остановиться. Если галочка ниже") }} <strong>включена</strong>{{ t(", программа сама продолжит рассылку и прогрев с того же места, без кнопки «Продолжить». Сценарии по дням подключаются сами; список чатов в мессенджере при необходимости обновите вручную.") }}
+            {{ t("Очередь рассылки и прогрева сохраняется в программе. После закрытия и снова открытия SOCMASTER незавершённые задачи могут остановиться. Если галочка ниже") }} <strong>{{ t("включена") }}</strong>{{ t(", программа сама продолжит рассылку и прогрев с того же места, без кнопки «Продолжить». Сценарии по дням подключаются сами; список чатов в мессенджере при необходимости обновите вручную.") }}
           </p>
           <label class="settings-inline-check" style="font-size:var(--font-size-sm);cursor:pointer">
             <input type="checkbox" name="automation_auto_resume_after_restart" value="1" {% if cabinet_automation_auto_resume %}checked{% endif %}/>
@@ -487,16 +481,14 @@
           </label>
           <div class="settings-status-row" style="margin-top:12px">
             {% if cabinet_automation_auto_resume %}
-            <span class="badge badge-success">включено — продолжит сама</span>
+            <span class="badge badge-success">{{ t("включено — продолжит сама") }}</span>
             {% else %}
-            <span class="badge badge-default">выключено — продолжить нужно вручную</span>
+            <span class="badge badge-default">{{ t("выключено — продолжить нужно вручную") }}</span>
             {% endif %}
           </div>
           {% else %}
           <p>
-            {{ t("Очередь контактов и необработанные шаги хранятся в базе. После обновления или перезапуска сервера прерванные задачи помечаются как остановленные; при") }} <strong>включённой</strong> опции ниже сервер снова
-            запустит рассылку (комментинг / ЛС) и прогрев с того же места в очереди, без ручного «Продолжить».
-            Сценарии по дням подхватываются фоновым тиком; синхронизацию списка чатов мессенджера при необходимости запустите вручную.
+            {{ t("Очередь контактов и необработанные шаги хранятся в базе. После обновления или перезапуска сервера прерванные задачи помечаются как остановленные; при") }} <strong>{{ t("включённой") }}</strong> {{ t("опции ниже сервер снова запустит рассылку (комментинг / ЛС) и прогрев с того же места в очереди, без ручного «Продолжить». Сценарии по дням подхватываются фоновым тиком; синхронизацию списка чатов мессенджера при необходимости запустите вручную.") }}
           </p>
           <label class="settings-inline-check" style="font-size:var(--font-size-sm);cursor:pointer">
             <input type="checkbox" name="automation_auto_resume_after_restart" value="1" {% if cabinet_automation_auto_resume %}checked{% endif %}/>
@@ -506,7 +498,7 @@
             {% if cabinet_automation_auto_resume %}
             <span class="badge badge-success">{{ t("включено") }}</span>
             {% else %}
-            <span class="badge badge-default">выключено — только вручную «Продолжить»</span>
+            <span class="badge badge-default">{{ t("выключено — только вручную «Продолжить»") }}</span>
             {% endif %}
           </div>
           {% endif %}
@@ -546,7 +538,7 @@
         </div>
         <div class="settings-kv">
           <p class="settings-kv-label">LOCAL_SIMULATE_PRODUCTION</p>
-          <p class="settings-kv-value">{% if runtime_local_simulate_production %}<span class="badge badge-warning">как на сервере</span>{% else %}<span class="badge badge-default">обычная локалка</span>{% endif %}</p>
+          <p class="settings-kv-value">{% if runtime_local_simulate_production %}<span class="badge badge-warning">{{ t("как на сервере") }}</span>{% else %}<span class="badge badge-default">{{ t("обычная локалка") }}</span>{% endif %}</p>
         </div>
         <div class="settings-kv">
           <p class="settings-kv-label">SESSION_COOKIE_SECURE</p>
@@ -554,12 +546,12 @@
         </div>
         <div class="settings-kv">
           <p class="settings-kv-label">{{ t("Chrome cookies (эффективно)") }}</p>
-          <p class="settings-kv-value">{% if runtime_fb_local_chrome_cookies %}<span class="badge badge-success">вкл</span>{% else %}<span class="badge badge-default">выкл</span>{% endif %}
+          <p class="settings-kv-value">{% if runtime_fb_local_chrome_cookies %}<span class="badge badge-success">{{ t("вкл") }}</span>{% else %}<span class="badge badge-default">{{ t("выкл") }}</span>{% endif %}
             <span style="opacity:.75">(.env: {% if runtime_fb_local_chrome_cookies_env %}on{% else %}off{% endif %})</span></p>
         </div>
         <div class="settings-kv">
           <p class="settings-kv-label">{{ t("Headless (эффективно)") }}</p>
-          <p class="settings-kv-value">{% if runtime_warmup_headless %}<span class="badge badge-default">headless</span>{% else %}<span class="badge badge-success">окно</span>{% endif %}
+          <p class="settings-kv-value">{% if runtime_warmup_headless %}<span class="badge badge-default">headless</span>{% else %}<span class="badge badge-success">{{ t("окно") }}</span>{% endif %}
             <span style="opacity:.75">(.env: {% if runtime_warmup_headless_env %}on{% else %}off{% endif %}{% if cabinet_playwright_show_browser %}; кабинет: окно{% endif %})</span></p>
         </div>
         <div class="settings-kv">
@@ -583,7 +575,7 @@
         <div class="settings-kv">
           <p class="settings-kv-label">{{ t("OAuth из .env") }}</p>
           <p class="settings-kv-value">
-            {% if env_google_oauth and env_google_oauth_secret %}<span class="badge badge-success">{{ t("ID + Secret есть") }}</span>{% else %}<span class="badge badge-warning">неполный .env</span>{% endif %}<br/>
+            {% if env_google_oauth and env_google_oauth_secret %}<span class="badge badge-success">{{ t("ID + Secret есть") }}</span>{% else %}<span class="badge badge-warning">{{ t("неполный .env") }}</span>{% endif %}<br/>
             Redirect: <span class="settings-mono">{{ env_oauth_redirect or 'по Host запроса' }}</span>
           </p>
         </div>

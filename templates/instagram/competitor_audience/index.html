@@ -5,7 +5,7 @@
   <header class="ig-page__header">
     <div class="ig-page__title-wrap">
       <h1 class="ig-page__title">{{ t("Парсер аудитории конкурентов") }} <span class="ig-page__beta-pill">Beta</span></h1>
-      <p class="ig-page__subtitle">{{ t("Сбор аудитории, которая взаимодействует с конкурентами:") }} <strong>лайки/комменты/подписки</strong>{{ t(". Сохраняется как leads с тегом конкурента.") }}</p>
+      <p class="ig-page__subtitle">{{ t("Сбор аудитории, которая взаимодействует с конкурентами:") }} <strong>{{ t("лайки/комменты/подписки") }}</strong>{{ t(". Сохраняется как leads с тегом конкурента.") }}</p>
     </div>
   </header>
 
@@ -21,10 +21,10 @@
           <option value="competitor_followers">{{ t("Followers конкурента (нужен @handle)") }}</option>
         </select>
         <select name="account_id" required style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);">
-          <option value="">— аккаунт для парсинга —</option>
+          <option value="">{{ t("— аккаунт для парсинга —") }}</option>
           {% for a in accounts %}<option value="{{ a.id }}">{{ a.label }} [{{ a.status }}]</option>{% endfor %}
         </select>
-        <input type="number" name="max_results" min="10" max="500" value="50" placeholder="макс" style="width:90px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+        <input type="number" name="max_results" min="10" max="500" value="50" placeholder="{{ t("макс") }}" style="width:90px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
       </div>
       <input type="text" name="competitor_handle" placeholder="{{ t("@nike (для kind=competitor_followers)") }}" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
       <input type="url" name="target_post_url" placeholder="{{ t("https://www.instagram.com/p/AAA/ (для likers/commenters)") }}" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>

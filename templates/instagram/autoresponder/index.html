@@ -17,11 +17,11 @@
           <input type="text" name="company" placeholder="{{ t("Компания") }}" style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
           <input type="text" name="tone" placeholder="tone" style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
         </div>
-        <textarea name="offer_summary" rows="3" placeholder="Что предлагаешь" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"></textarea>
+        <textarea name="offer_summary" rows="3" placeholder="{{ t("Что предлагаешь") }}" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"></textarea>
         <textarea name="knowledge_base" rows="4" placeholder="{{ t("Знания (FAQ, цены, кейсы)") }}" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"></textarea>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <input type="url" name="cta_call_link" placeholder="ссылка на созвон" style="flex:1;min-width:240px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
-          <input type="url" name="cta_info_link" placeholder="ссылка на info-pack" style="flex:1;min-width:240px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+          <input type="url" name="cta_call_link" placeholder="{{ t("ссылка на созвон") }}" style="flex:1;min-width:240px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+          <input type="url" name="cta_info_link" placeholder="{{ t("ссылка на info-pack") }}" style="flex:1;min-width:240px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
         </div>
         <textarea name="forbidden_topics" rows="2" placeholder="{{ t("НЕ обсуждать") }}" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"></textarea>
         <button type="submit" class="ig-btn ig-btn--primary" style="align-self:flex-start;"><i class="ti ti-plus"></i> {{ t("Создать persona") }}</button>

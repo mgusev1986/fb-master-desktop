@@ -199,10 +199,10 @@
     <h1>{{ t("После оплаты") }}</h1>
     <p class="np-premium-wait" id="np-msg">{{ t("Проверяем платёж… Как только NOWPayments подтвердит оплату, здесь появится новый ключ доступа.") }}</p>
     <div id="np-key-wrap" hidden>
-      <p class="np-key-label"><strong>Сохраните ключ</strong> — он показан один раз:</p>
+      <p class="np-key-label"><strong>{{ t("Сохраните ключ") }}</strong> — он показан один раз:</p>
       <div class="np-key">
         <span class="np-key-text" id="np-key"></span>
-        <button type="button" class="np-key-copy" id="np-key-copy" aria-label="Скопировать ключ" title="Скопировать">
+        <button type="button" class="np-key-copy" id="np-key-copy" aria-label="{{ t("Скопировать ключ") }}" title="{{ t("Скопировать") }}">
           <svg class="np-key-copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
@@ -212,9 +212,9 @@
           </svg>
         </button>
       </div>
-      <p class="np-instruction">Скопируйте ключ и вставьте на экране «Ключ доступа», затем нажмите «Войти». <strong>{{ t("Один ключ — один компьютер") }}</strong> {{ t("(в программе SOCMASTER — привязка к железу).") }}</p>
+      <p class="np-instruction">{{ t("Скопируйте ключ и вставьте на экране «Ключ доступа», затем нажмите «Войти».") }} <strong>{{ t("Один ключ — один компьютер") }}</strong> {{ t("(в программе SOCMASTER — привязка к железу).") }}</p>
       <div id="np-dl-block" class="np-dl-stack" hidden>
-        <p class="np-dl-cap-line" style="margin:0 0 0.5rem;font-weight:600">Скачать установщик SOCMASTER:</p>
+        <p class="np-dl-cap-line" style="margin:0 0 0.5rem;font-weight:600">{{ t("Скачать установщик SOCMASTER:") }}</p>
         <a id="np-dl-win" class="np-premium-cta" href="#" rel="noopener" hidden>
           <span>Windows</span> <small style="opacity:.85;margin-left:.5rem">x64 · .exe</small>
         </a>

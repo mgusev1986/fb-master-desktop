@@ -118,7 +118,7 @@
             </form>
             <form method="post" action="/linkedin/accounts/{{ a.id }}/inbox-sync" style="margin:0;"
                   onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Sync…';">
-              <button type="submit" class="li-btn" style="font-size:12px;padding:6px 10px;" title="Синхронизировать /messaging/ — забрать новые входящие в Inbox">
+              <button type="submit" class="li-btn" style="font-size:12px;padding:6px 10px;" title="{{ t("Синхронизировать /messaging/ — забрать новые входящие в Inbox") }}">
                 <i class="ti ti-mail-down"></i> Sync inbox
               </button>
             </form>

@@ -25,7 +25,7 @@
     <div class="li-banner__body">
       <h2 class="li-banner__title">{{ t("Browser-profile режим (как Facebook Master)") }}</h2>
       <p class="li-banner__text">
-        {{ t("Подключение аккаунтов = импорт купленных аккаунтов с cookies (li_at, JSESSIONID) + персональный Chrome-профиль + свой прокси на каждый аккаунт. LinkedIn видит сессию как обычный браузерный логин. Главная функция —") }} <strong>рассылка DM по 1st-degree connections</strong>{{ t(". Builder, очередь, шаблоны и review-режим — уже готовы; реальная отправка через Playwright runtime подключается в следующем milestone. Подробности — в") }} <a href="/linkedin/compliance">{{ t("Правилах и лимитах") }}</a>.
+        {{ t("Подключение аккаунтов = импорт купленных аккаунтов с cookies (li_at, JSESSIONID) + персональный Chrome-профиль + свой прокси на каждый аккаунт. LinkedIn видит сессию как обычный браузерный логин. Главная функция —") }} <strong>{{ t("рассылка DM по 1st-degree connections") }}</strong>{{ t(". Builder, очередь, шаблоны и review-режим — уже готовы; реальная отправка через Playwright runtime подключается в следующем milestone. Подробности — в") }} <a href="/linkedin/compliance">{{ t("Правилах и лимитах") }}</a>.
       </p>
     </div>
   </section>
@@ -44,7 +44,7 @@
     </article>
 
     <article class="li-card">
-      <h2 class="li-card__title"><i class="ti ti-checks"></i> Шаг 2 — Готовность</h2>
+      <h2 class="li-card__title"><i class="ti ti-checks"></i> {{ t("Шаг 2 — Готовность") }}</h2>
       <p class="li-card__desc">
         {{ t("Заполненность профиля, баланс активности, headroom по invitations и messages, рекомендации. Прозрачный чеклист без обещаний обхода лимитов.") }}
       </p>
@@ -52,7 +52,7 @@
     </article>
 
     <article class="li-card">
-      <h2 class="li-card__title"><i class="ti ti-users-group"></i> Шаг 3 — Поиск аудитории</h2>
+      <h2 class="li-card__title"><i class="ti ti-users-group"></i> {{ t("Шаг 3 — Поиск аудитории") }}</h2>
       <p class="li-card__desc">
         {{ t("Job title, company, geography, industry, seniority, company size. Saved-сегменты и preview pane.") }}
       </p>
@@ -60,7 +60,7 @@
     </article>
 
     <article class="li-card">
-      <h2 class="li-card__title"><i class="ti ti-building"></i> Шаг 4 — Компании и ICP</h2>
+      <h2 class="li-card__title"><i class="ti ti-building"></i> {{ t("Шаг 4 — Компании и ICP") }}</h2>
       <p class="li-card__desc">
         {{ t("Target accounts, buyer personas, decision-maker map, скоринг приоритетов и notes по компаниям.") }}
       </p>
@@ -76,7 +76,7 @@
     </article>
 
     <article class="li-card">
-      <h2 class="li-card__title"><i class="ti ti-send"></i> Шаг 6 — Outreach Builder</h2>
+      <h2 class="li-card__title"><i class="ti ti-send"></i> {{ t("Шаг 6 — Outreach Builder") }}</h2>
       <p class="li-card__desc">
         {{ t("Invite-кампании, post-accept follow-up, semi-auto assist. Дневные/недельные капы, окна отправки, review-queue. Default — manual approval.") }}
       </p>
@@ -102,8 +102,7 @@
     <article class="li-card">
       <h2 class="li-card__title"><i class="ti ti-shield-check"></i> {{ t("Правила и лимиты") }}</h2>
       <p class="li-card__desc">
-        Честный список supported / partial / restricted / unsupported действий LinkedIn.
-        Текущие safety-капы и known limitations Beta.
+        {{ t("Честный список supported / partial / restricted / unsupported действий LinkedIn. Текущие safety-капы и known limitations Beta.") }}
       </p>
       <div><a href="/linkedin/compliance" class="li-btn">{{ t("Открыть Compliance") }}</a></div>
     </article>

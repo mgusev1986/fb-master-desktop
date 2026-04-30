@@ -11,9 +11,7 @@
         <span class="li-page__beta-pill">Beta</span>
       </h1>
       <p class="li-page__subtitle">
-        Честный список того, что LinkedIn API реально позволяет, что доступно частично, что только
-        в режиме manual review и что запрещено платформой. Параметры безопасности по умолчанию:
-        режим подтверждения — <strong>{{ approval_mode }}</strong>,
+        {{ t("Честный список того, что LinkedIn API реально позволяет, что доступно частично, что только в режиме manual review и что запрещено платформой. Параметры безопасности по умолчанию: режим подтверждения —") }} <strong>{{ approval_mode }}</strong>,
         invitations — <strong>{{ daily_invites_cap }}/сутки</strong> и
         <strong>{{ weekly_invites_cap }}/неделя</strong>,
         messages — <strong>{{ daily_messages_cap }}/сутки</strong>.
@@ -60,22 +58,20 @@
       <article class="li-card">
         <h3 class="li-card__title"><i class="ti ti-user-plus"></i> Invitations</h3>
         <p class="li-card__desc">
-          {{ t("Не более") }} <strong>{{ daily_invites_cap }}</strong> в сутки и
-          <strong>{{ weekly_invites_cap }}</strong> в неделю на аккаунт.
-          Лимиты выровнены с soft-limit'ами LinkedIn (~100/неделю).
+          {{ t("Не более") }} <strong>{{ daily_invites_cap }}</strong> {{ t("в сутки и") }}
+          <strong>{{ weekly_invites_cap }}</strong> {{ t("в неделю на аккаунт. Лимиты выровнены с soft-limit'ами LinkedIn (~100/неделю).") }}
         </p>
       </article>
       <article class="li-card">
         <h3 class="li-card__title"><i class="ti ti-message-2"></i> Messages</h3>
         <p class="li-card__desc">
-          {{ t("Не более") }} <strong>{{ daily_messages_cap }}</strong> сообщений в сутки на аккаунт.
-          Только тем, кто уже в connections (1st degree). InMail — отдельный manual flow.
+          {{ t("Не более") }} <strong>{{ daily_messages_cap }}</strong> {{ t("сообщений в сутки на аккаунт. Только тем, кто уже в connections (1st degree). InMail — отдельный manual flow.") }}
         </p>
       </article>
       <article class="li-card">
         <h3 class="li-card__title"><i class="ti ti-hand-stop"></i> Approval mode</h3>
         <p class="li-card__desc">
-          Текущий режим: <strong>{{ approval_mode }}</strong>{{ t(". По умолчанию —") }} <code>manual</code>{{ t(": каждое отправляемое invitation / message / comment требует явного подтверждения оператора.") }}
+          {{ t("Текущий режим:") }} <strong>{{ approval_mode }}</strong>{{ t(". По умолчанию —") }} <code>manual</code>{{ t(": каждое отправляемое invitation / message / comment требует явного подтверждения оператора.") }}
         </p>
       </article>
     </div>

@@ -22,7 +22,7 @@
   {% endif %}
 
   <section>
-    <h2 class="reddit-card__title" style="margin:0 0 12px;">Шаги</h2>
+    <h2 class="reddit-card__title" style="margin:0 0 12px;">{{ t("Шаги") }}</h2>
     <div class="reddit-grid">
       {% for n in (sequence.nodes_json or []) %}
       <article class="reddit-card">

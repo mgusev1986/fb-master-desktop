@@ -14,7 +14,7 @@
 
   <section class="x-card x-card--accent">
     <h2 class="x-card__title"><i class="ti ti-search"></i> {{ t("Поиск через X Search (Playwright)") }}</h2>
-    <p class="x-card__desc" style="font-size:13px;">{{ t("Открывает") }} <code>/search?q=&f=user</code> {{ t("или") }} <code>&f=live</code> под выбранным аккаунтом и сохраняет handles как leads.</p>
+    <p class="x-card__desc" style="font-size:13px;">{{ t("Открывает") }} <code>/search?q=&f=user</code> {{ t("или") }} <code>&f=live</code> {{ t("под выбранным аккаунтом и сохраняет handles как leads.") }}</p>
     <form method="post" action="/twitter/leads/audience-search" style="display:flex;flex-direction:column;gap:8px;"
           onsubmit="this.querySelector('button.search-go').disabled=true; this.querySelector('button.search-go').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Ищу…';">
       <input type="hidden" name="return_to" value="{{ '/twitter/audience' if is_audience_page else '/twitter/leads' }}"/>
@@ -50,7 +50,7 @@
         <input type="text" name="handle" required placeholder="{{ t("@username или username") }}" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
         <input type="text" name="full_name" placeholder="{{ t("Имя Фамилия") }}" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
         <textarea name="bio" rows="2" placeholder="bio" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"></textarea>
-        <input type="text" name="location" placeholder="локация" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+        <input type="text" name="location" placeholder="{{ t("локация") }}" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
         <button type="submit" class="x-btn x-btn--primary" style="align-self:flex-start;"><i class="ti ti-plus"></i> {{ t("Добавить") }}</button>
       </form>
     </section>

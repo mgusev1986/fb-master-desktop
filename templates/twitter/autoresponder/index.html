@@ -28,12 +28,12 @@
           <input type="text" name="tone" placeholder="tone (friendly/professional/casual/direct)" style="flex:1;min-width:160px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
         </div>
         <textarea name="offer_summary" rows="3" placeholder="{{ t("Краткий питч: что предлагаешь, кому подходит, главная ценность") }}" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"></textarea>
-        <textarea name="knowledge_base" rows="4" placeholder="Что persona знает: FAQ про продукт, цены, кейсы, типичные возражения и ответы" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"></textarea>
+        <textarea name="knowledge_base" rows="4" placeholder="{{ t("Что persona знает: FAQ про продукт, цены, кейсы, типичные возражения и ответы") }}" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"></textarea>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <input type="url" name="cta_call_link" placeholder="ссылка на созвон (Calendly / Cal.com)" style="flex:1;min-width:240px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
-          <input type="url" name="cta_info_link" placeholder="ссылка на info-pack / pdf" style="flex:1;min-width:240px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+          <input type="url" name="cta_call_link" placeholder="{{ t("ссылка на созвон (Calendly / Cal.com)") }}" style="flex:1;min-width:240px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
+          <input type="url" name="cta_info_link" placeholder="{{ t("ссылка на info-pack / pdf") }}" style="flex:1;min-width:240px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"/>
         </div>
-        <textarea name="forbidden_topics" rows="2" placeholder="Темы, которые НЕ обсуждать (политика, конкуренты по имени, скидки и т.п.)" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"></textarea>
+        <textarea name="forbidden_topics" rows="2" placeholder="{{ t("Темы, которые НЕ обсуждать (политика, конкуренты по имени, скидки и т.п.)") }}" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);"></textarea>
         <button type="submit" class="x-btn x-btn--primary" style="align-self:flex-start;"><i class="ti ti-plus"></i> {{ t("Создать persona") }}</button>
       </form>
     </details>
@@ -86,7 +86,7 @@
   {% else %}
   <section class="x-banner">
     <div class="x-banner__icon"><i class="ti ti-info-circle"></i></div>
-    <div class="x-banner__body"><h2 class="x-banner__title">{{ t("Прежде чем запускать") }}</h2><p class="x-banner__text">{{ t("Нужны: минимум 1") }} <a href="/twitter/accounts">{{ t("аккаунт") }}</a>, 1 <a href="/twitter/leads">lead</a> и 1 persona (создайте выше).</p></div>
+    <div class="x-banner__body"><h2 class="x-banner__title">{{ t("Прежде чем запускать") }}</h2><p class="x-banner__text">{{ t("Нужны: минимум 1") }} <a href="/twitter/accounts">{{ t("аккаунт") }}</a>, 1 <a href="/twitter/leads">lead</a> {{ t("и 1 persona (создайте выше).") }}</p></div>
   </section>
   {% endif %}
 
@@ -141,7 +141,7 @@
       {% for d in (s.__class__) %}{% endfor %}
     {% endfor %}
     </div>
-    <small style="color:var(--text-muted);">{{ t("Для просмотра pending-drafts откройте") }} <code>/twitter/conversations</code> — там показываются все out-сообщения с пометкой <code>ai_autoresponder</code> и история переписки.</small>
+    <small style="color:var(--text-muted);">{{ t("Для просмотра pending-drafts откройте") }} <code>/twitter/conversations</code> — там показываются все out-сообщения с пометкой <code>ai_autoresponder</code> {{ t("и история переписки.") }}</small>
   </section>
 </div>
 {% endblock %}

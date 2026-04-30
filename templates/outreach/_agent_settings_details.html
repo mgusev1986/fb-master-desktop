@@ -16,29 +16,29 @@
           <option value="openai" {% if _eff_def_provider == 'openai' %}selected{% endif %}>OpenAI</option>
           <option value="gemini" {% if _eff_def_provider == 'gemini' %}selected{% endif %}>Gemini</option>
         </select>
-        <p class="form-hint">{{ t("Используются API-ключи из") }} <a href="/system/settings">Система → Настройки</a> {{ t("(или переменные") }} <code>OPENAI_API_KEY</code> / <code>GOOGLE_API_KEY</code> в <code>.env</code>).</p>
+        <p class="form-hint">{{ t("Используются API-ключи из") }} <a href="/system/settings">{{ t("Система → Настройки") }}</a> {{ t("(или переменные") }} <code>OPENAI_API_KEY</code> / <code>GOOGLE_API_KEY</code> в <code>.env</code>).</p>
       </div>
       <input type="hidden" form="{{ _as_fid }}" name="model_openai" value="{{ settings.model_openai|e }}"/>
       <input type="hidden" form="{{ _as_fid }}" name="model_gemini" value="{{ settings.model_gemini|e }}"/>
       <div class="form-group">
-        <label class="form-label" for="prompt_dm">Системный промпт: переписка</label>
+        <label class="form-label" for="prompt_dm">{{ t("Системный промпт: переписка") }}</label>
         <textarea form="{{ _as_fid }}" id="prompt_dm" name="prompt_dm" class="form-textarea" rows="6">{{ settings.prompt_dm }}</textarea>
       </div>
       <div class="form-group">
-        <label class="form-label" for="prompt_comment">Системный промпт: комментарии</label>
+        <label class="form-label" for="prompt_comment">{{ t("Системный промпт: комментарии") }}</label>
         <textarea form="{{ _as_fid }}" id="prompt_comment" name="prompt_comment" class="form-textarea" rows="6">{{ settings.prompt_comment }}</textarea>
       </div>
       <div class="form-group">
         <label class="form-label" for="addressing_dm">{{ t("Обращение по имени — переписка") }}</label>
         <textarea form="{{ _as_fid }}" id="addressing_dm" name="addressing_dm" class="form-textarea" rows="5">{{ settings.addressing_dm }}</textarea>
         <p class="form-hint">
-          {{ t("Дополняет промпт для ЛС: скобки") }} <code>{{ t("(имя: …)") }}</code>{{ t(", блок") }} <code>{{ t("[Контакт в базе: …]") }}</code>{{ t(", подстановка") }} <code>{{ "{{full_name}}" }}</code> в шаблоне.
+          {{ t("Дополняет промпт для ЛС: скобки") }} <code>{{ t("(имя: …)") }}</code>{{ t(", блок") }} <code>{{ t("[Контакт в базе: …]") }}</code>{{ t(", подстановка") }} <code>{{ "{{full_name}}" }}</code> {{ t("в шаблоне.") }}
         </p>
       </div>
       <div class="form-group">
         <label class="form-label" for="addressing_comment">{{ t("Обращение по имени — комментарии") }}</label>
         <textarea form="{{ _as_fid }}" id="addressing_comment" name="addressing_comment" class="form-textarea" rows="5">{{ settings.addressing_comment }}</textarea>
-        <p class="form-hint">То же для режима комментария к посту.</p>
+        <p class="form-hint">{{ t("То же для режима комментария к посту.") }}</p>
       </div>
       <button type="submit" form="{{ _as_fid }}" class="btn btn-primary">
         <i class="ti ti-device-floppy"></i> {{ t("Сохранить настройки") }}

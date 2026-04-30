@@ -8,8 +8,7 @@
     <div class="reddit-page__title-wrap">
       <h1 class="reddit-page__title">{{ t("Правила и лимиты") }}</h1>
       <p class="reddit-page__subtitle">
-        Честный список поддерживаемых действий Reddit API, текущие ограничения по аккаунтам и недавние события безопасности.
-        Параметры безопасности по умолчанию: режим подтверждения — <strong>{{ approval_mode }}</strong>{{ t(", лимиты —") }} <strong>{{ per_day_cap }}/сутки</strong>, <strong>{{ per_hour_cap }}/час</strong>.
+        {{ t("Честный список поддерживаемых действий Reddit API, текущие ограничения по аккаунтам и недавние события безопасности. Параметры безопасности по умолчанию: режим подтверждения —") }} <strong>{{ approval_mode }}</strong>{{ t(", лимиты —") }} <strong>{{ per_day_cap }}/сутки</strong>, <strong>{{ per_hour_cap }}/час</strong>.
       </p>
     </div>
     <a href="/reddit/settings" class="reddit-btn"><i class="ti ti-settings"></i> {{ t("Настройки") }}</a>
@@ -36,7 +35,7 @@
   </section>
 
   <section>
-    <h2 class="reddit-card__title" style="margin:20px 0 12px;">Текущие лимиты по аккаунтам</h2>
+    <h2 class="reddit-card__title" style="margin:20px 0 12px;">{{ t("Текущие лимиты по аккаунтам") }}</h2>
     {% if accounts %}
     <table style="width:100%;border-collapse:collapse;">
       <thead>
@@ -109,7 +108,7 @@
     {% else %}
     <div class="reddit-placeholder">
       <div class="reddit-placeholder__icon"><i class="ti ti-shield-check"></i></div>
-      <p class="reddit-placeholder__text">Событий безопасности пока нет. Это хорошо.</p>
+      <p class="reddit-placeholder__text">{{ t("Событий безопасности пока нет. Это хорошо.") }}</p>
     </div>
     {% endif %}
   </section>

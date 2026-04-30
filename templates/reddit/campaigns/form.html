@@ -24,7 +24,7 @@
                style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;"/>
       </label>
       <label style="display:flex;flex-direction:column;gap:4px;">
-        <span style="font:600 12px/1 Inter;color:var(--text-muted)">режим</span>
+        <span style="font:600 12px/1 Inter;color:var(--text-muted)">{{ t("режим") }}</span>
         <select name="mode" style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;">
           {% for m in modes %}
           <option value="{{ m }}" {% if campaign and campaign.mode == m %}selected{% endif %}>{{ m }}</option>
@@ -44,7 +44,7 @@
     <label style="display:flex;flex-direction:column;gap:4px;">
       <span style="font:600 12px/1 Inter;color:var(--text-muted)">{{ t("шаблон") }}</span>
       <select name="template_id" style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;">
-        <option value="">— без шаблона —</option>
+        <option value="">{{ t("— без шаблона —") }}</option>
         {% for t in templates_list %}
         <option value="{{ t.id }}" {% if campaign and campaign.template_id == t.id %}selected{% endif %}>[{{ t.kind|ru_status }}] {{ t.name }}</option>
         {% endfor %}
@@ -65,7 +65,7 @@
                style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;"/>
       </label>
       <label style="display:flex;flex-direction:column;gap:4px;">
-        <span style="font:600 12px/1 Inter;color:var(--text-muted)">окно отправки (часы)</span>
+        <span style="font:600 12px/1 Inter;color:var(--text-muted)">{{ t("окно отправки (часы)") }}</span>
         <input type="text" name="send_window_hours"
                value="{% if campaign and campaign.send_window_config_json %}{{ campaign.send_window_config_json.get('hours', '9-21') }}{% else %}9-21{% endif %}"
                placeholder="9-21"

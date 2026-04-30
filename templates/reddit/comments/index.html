@@ -8,8 +8,7 @@
     <div class="reddit-page__title-wrap">
       <h1 class="reddit-page__title">{{ t("Комментарии") }}</h1>
       <p class="reddit-page__subtitle">
-        Черновики комментариев с подтверждением перед публикацией. Каждый комментарий получает
-        toxicity-risk score и требует ручного одобрения перед отправкой через Reddit API.
+        {{ t("Черновики комментариев с подтверждением перед публикацией. Каждый комментарий получает toxicity-risk score и требует ручного одобрения перед отправкой через Reddit API.") }}
       </p>
     </div>
   </header>
@@ -31,7 +30,7 @@
     <h2 class="reddit-card__title">{{ t("Новый комментарий-draft") }}</h2>
     <div style="display:grid;grid-template-columns:1fr 2fr;gap:12px;">
       <label style="display:flex;flex-direction:column;gap:4px;">
-        <span style="font:600 12px/1 Inter;color:var(--text-muted)">от аккаунта</span>
+        <span style="font:600 12px/1 Inter;color:var(--text-muted)">{{ t("от аккаунта") }}</span>
         <select name="account_id" required style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;">
           {% for a in accounts %}
           <option value="{{ a.id }}">u/{{ a.username_snapshot or a.label }}</option>
@@ -130,7 +129,7 @@
   {% else %}
   <div class="reddit-placeholder">
     <div class="reddit-placeholder__icon"><i class="ti ti-messages"></i></div>
-    <p class="reddit-placeholder__text">Черновиков комментариев нет. Создайте первый выше.</p>
+    <p class="reddit-placeholder__text">{{ t("Черновиков комментариев нет. Создайте первый выше.") }}</p>
   </div>
   {% endif %}
 </div>

@@ -24,15 +24,14 @@
   <div class="card-body">
     <form method="post" action="/donors/bulk-save">
       <div class="form-group">
-        <label class="form-label" for="bulk_text">Список доноров</label>
+        <label class="form-label" for="bulk_text">{{ t("Список доноров") }}</label>
         <textarea id="bulk_text" name="bulk_text" class="form-textarea" rows="14" required
                   placeholder="https://www.facebook.com/user1/friends
 https://www.facebook.com/groups/449966585121701/members"></textarea>
         <p class="form-hint">
-          <strong>Формат строки:</strong> только URL, или через табуляцию:
+          <strong>{{ t("Формат строки:") }}</strong> {{ t("только URL, или через табуляцию:") }}
           <code>URL</code> → <code>{{ t("Имя") }}</code> → <code>{{ t("Заметки") }}</code>{{ t(". Строки, начинающиеся с") }} <code>http</code>{{ t(", можно писать через «|»:") }}
-          <code>{{ t("https://… | Имя | заметка") }}</code>{{ t(". Пустые строки и строки с") }} <code>#</code> в начале игнорируются.
-          Дубликаты в базе и в этом списке пропускаются.
+          <code>{{ t("https://… | Имя | заметка") }}</code>{{ t(". Пустые строки и строки с") }} <code>#</code> {{ t("в начале игнорируются. Дубликаты в базе и в этом списке пропускаются.") }}
         </p>
       </div>
 
@@ -44,7 +43,7 @@ https://www.facebook.com/groups/449966585121701/members"></textarea>
 
       <div style="display:flex;gap:12px;margin-top:24px;flex-wrap:wrap">
         <button type="submit" class="btn btn-primary">
-          <i class="ti ti-device-floppy"></i> Сохранить список
+          <i class="ti ti-device-floppy"></i> {{ t("Сохранить список") }}
         </button>
         <a href="/donors/new" class="btn btn-secondary">{{ t("Один донор") }}</a>
         <a href="/donors" class="btn btn-secondary">{{ t("Отмена") }}</a>

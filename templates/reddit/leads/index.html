@@ -22,16 +22,16 @@
 
   <form method="get" action="/reddit/leads" class="reddit-card" style="gap:10px;">
     <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:10px;">
-      <input type="text" name="search" value="{{ filter.search }}" placeholder="поиск по username/notes"
+      <input type="text" name="search" value="{{ filter.search }}" placeholder="{{ t("поиск по username/notes") }}"
              style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;"/>
       <select name="status" style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;">
-        <option value="">любой статус</option>
+        <option value="">{{ t("любой статус") }}</option>
         {% for s in statuses %}
         <option value="{{ s }}" {% if filter.status == s %}selected{% endif %}>{{ s|ru_status }}</option>
         {% endfor %}
       </select>
       <select name="source_type" data-original style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;">
-        <option value="">любой источник</option>
+        <option value="">{{ t("любой источник") }}</option>
         <option value="manual" {% if filter.source_type == 'manual' %}selected{% endif %}>manual</option>
         <option value="subreddit_posts" {% if filter.source_type == 'subreddit_posts' %}selected{% endif %}>subreddit_posts</option>
         <option value="subreddit_comments" {% if filter.source_type == 'subreddit_comments' %}selected{% endif %}>subreddit_comments</option>
@@ -40,9 +40,9 @@
         <option value="recent_activity" {% if filter.source_type == 'recent_activity' %}selected{% endif %}>recent_activity</option>
       </select>
       <select name="has_campaign" style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;">
-        <option value="">в любой кампании</option>
-        <option value="yes" {% if filter.has_campaign == 'yes' %}selected{% endif %}>в кампании</option>
-        <option value="no"  {% if filter.has_campaign == 'no'  %}selected{% endif %}>без кампании</option>
+        <option value="">{{ t("в любой кампании") }}</option>
+        <option value="yes" {% if filter.has_campaign == 'yes' %}selected{% endif %}>{{ t("в кампании") }}</option>
+        <option value="no"  {% if filter.has_campaign == 'no'  %}selected{% endif %}>{{ t("без кампании") }}</option>
       </select>
       <button type="submit" class="reddit-btn reddit-btn--primary"><i class="ti ti-filter"></i> {{ t("Применить") }}</button>
     </div>
@@ -55,7 +55,7 @@
       <span id="reddit-leads-count" style="font:500 14px/1 Inter;color:var(--text-secondary);">{{ t("0 выбрано") }}</span>
       <span style="flex:1 1 auto;"></span>
       <select name="status" id="reddit-leads-status-select" style="padding:8px 10px;border:1px solid var(--border);border-radius:10px;">
-        <option value="">статус…</option>
+        <option value="">{{ t("статус…") }}</option>
         {% for s in statuses %}<option value="{{ s }}">{{ s|ru_status }}</option>{% endfor %}
       </select>
       <button type="submit" class="reddit-btn" name="action" value="set_status"
@@ -114,9 +114,9 @@
             <details>
               <summary style="cursor:pointer;color:var(--ws-accent);font-size:13px;">edit</summary>
               <form method="post" action="/reddit/leads/{{ r.id }}/update" style="display:flex;flex-direction:column;gap:6px;margin-top:6px;min-width:260px;">
-                <textarea name="notes" rows="3" placeholder="заметки"
+                <textarea name="notes" rows="3" placeholder="{{ t("заметки") }}"
                           style="padding:6px 8px;border:1px solid var(--border);border-radius:8px;">{{ r.notes }}</textarea>
-                <input type="text" name="persona_tags" value="{{ r.persona_tags }}" placeholder="теги (через запятую)"
+                <input type="text" name="persona_tags" value="{{ r.persona_tags }}" placeholder="{{ t("теги (через запятую)") }}"
                        style="padding:6px 8px;border:1px solid var(--border);border-radius:8px;"/>
                 <select name="status" style="padding:6px 8px;border:1px solid var(--border);border-radius:8px;">
                   {% for s in statuses %}<option value="{{ s }}" {% if r.status == s %}selected{% endif %}>{{ s|ru_status }}</option>{% endfor %}
@@ -138,7 +138,7 @@
       <a href="?{% for k, v in request.query_params.items() if k != 'page' %}{{ k }}={{ v }}&{% endfor %}page={{ page - 1 }}" class="reddit-btn">← назад</a>
       {% endif %}
       {% if rows|length == per_page and (page * per_page) < total %}
-      <a href="?{% for k, v in request.query_params.items() if k != 'page' %}{{ k }}={{ v }}&{% endfor %}page={{ page + 1 }}" class="reddit-btn">вперёд →</a>
+      <a href="?{% for k, v in request.query_params.items() if k != 'page' %}{{ k }}={{ v }}&{% endfor %}page={{ page + 1 }}" class="reddit-btn">{{ t("вперёд →") }}</a>
       {% endif %}
     </div>
   </form>

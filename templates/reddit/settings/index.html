@@ -28,7 +28,7 @@
     <div>
       <h2 class="reddit-card__title">{{ t("OAuth2 приложение") }}</h2>
       <p class="reddit-card__desc">
-        Создайте <strong>Reddit App</strong> {{ t("на") }} <a href="https://www.reddit.com/prefs/apps" target="_blank" rel="noreferrer noopener" style="color:var(--ws-accent)">reddit.com/prefs/apps</a>
+        {{ t("Создайте") }} <strong>Reddit App</strong> {{ t("на") }} <a href="https://www.reddit.com/prefs/apps" target="_blank" rel="noreferrer noopener" style="color:var(--ws-accent)">reddit.com/prefs/apps</a>
         {{ t("(тип") }} <em>"script"</em> {{ t("или") }} <em>"web app"</em>{{ t("). Укажите redirect URI") }} <code>{{ settings_view.redirect_uri }}</code>.
       </p>
     </div>
@@ -51,7 +51,7 @@
       <span style="font:600 13px/1 Inter;color:var(--text-primary)">redirect_uri</span>
       <input type="text" name="redirect_uri" value="{{ settings_view.redirect_uri }}" autocomplete="off"
              style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-family:ui-monospace,monospace;"/>
-      <small style="color:var(--text-muted);font-size:12px;">Этот URL должен быть прописан как redirect URI в Reddit App.</small>
+      <small style="color:var(--text-muted);font-size:12px;">{{ t("Этот URL должен быть прописан как redirect URI в Reddit App.") }}</small>
     </label>
 
     <label style="display:flex;flex-direction:column;gap:6px;">
@@ -66,7 +66,7 @@
     </div>
     <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:16px;">
       <label style="display:flex;flex-direction:column;gap:6px;">
-        <span style="font:600 13px/1 Inter;color:var(--text-primary)">режим аппрува</span>
+        <span style="font:600 13px/1 Inter;color:var(--text-primary)">{{ t("режим аппрува") }}</span>
         <select name="approval_mode" style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;">
           <option value="manual" {% if settings_view.approval_mode == 'manual' %}selected{% endif %}>{{ t("manual — ручное подтверждение каждой отправки") }}</option>
           <option value="semi" {% if settings_view.approval_mode == 'semi' %}selected{% endif %}>{{ t("semi — подтверждение пачкой") }}</option>

@@ -14,7 +14,7 @@
       <span>{{ t("Magic mode · нейросеть") }}</span>
     </p>
     <p class="subtitle" style="margin:0 0 12px;font-size:var(--font-size-sm);color:var(--text-secondary)">
-      {{ t("Генерация черновиков для контактов из «Базы контактов» (OpenAI или Gemini API, либо готовые тексты «первое касание»). Запуск") }} <strong>в этом же окне</strong> — дождитесь окончания, затем смотрите журнал ниже.
+      {{ t("Генерация черновиков для контактов из «Базы контактов» (OpenAI или Gemini API, либо готовые тексты «первое касание»). Запуск") }} <strong>{{ t("в этом же окне") }}</strong> — дождитесь окончания, затем смотрите журнал ниже.
       Паузы между запросами к ИИ — как «следующий контакт» в
       <a href="/system/speed">{{ t("Система → Скорость и паузы") }}</a>
       (<strong>{{ throttle_preset_label }}</strong>).
@@ -22,7 +22,7 @@
 
     {% if not has_openai and not has_gemini and not is_platform_owner(user) %}
     <div style="margin-bottom:12px;padding:12px;border:1px solid var(--error);border-radius:8px;font-size:var(--font-size-sm);color:var(--error)">
-      В <code>.env</code> не заданы <code>OPENAI_API_KEY</code> и <code>GOOGLE_API_KEY</code>{{ t(". Для режима «Свой шаблон + ИИ» добавьте хотя бы один ключ. Режим «Первое касание (EN)» работает без ключей.") }}
+      В <code>.env</code> {{ t("не заданы") }} <code>OPENAI_API_KEY</code> и <code>GOOGLE_API_KEY</code>{{ t(". Для режима «Свой шаблон + ИИ» добавьте хотя бы один ключ. Режим «Первое касание (EN)» работает без ключей.") }}
     </div>
     {% endif %}
 
@@ -81,7 +81,7 @@
         </div>
         {% if highlight_run.input_preview %}
         <details style="margin-bottom:12px">
-          <summary style="cursor:pointer;font-size:var(--font-size-sm);color:var(--text-secondary)">Фрагмент входа</summary>
+          <summary style="cursor:pointer;font-size:var(--font-size-sm);color:var(--text-secondary)">{{ t("Фрагмент входа") }}</summary>
           <pre style="white-space:pre-wrap;font-size:var(--font-size-sm);margin:8px 0 0;max-height:200px;overflow:auto">{{ highlight_run.input_preview }}</pre>
         </details>
         {% endif %}
@@ -89,7 +89,7 @@
         <pre style="white-space:pre-wrap;font-size:var(--font-size-sm);color:var(--error);margin:0 0 12px">{{ highlight_run.error }}</pre>
         {% endif %}
         {% if highlight_run.output_preview %}
-        <label class="form-label" style="margin-top:0">Черновик (проверьте и отредактируйте перед отправкой)</label>
+        <label class="form-label" style="margin-top:0">{{ t("Черновик (проверьте и отредактируйте перед отправкой)") }}</label>
         <textarea id="outreach-ai-draft-text" class="form-textarea" rows="8" readonly style="font-size:var(--font-size-sm)">{{ highlight_run.output_preview }}</textarea>
         {% endif %}
       </div>
@@ -98,8 +98,7 @@
 
     <h3 style="margin:0 0 12px;font-size:1.05rem">{{ t("Запуск агента") }}</h3>
     <p class="form-hint" style="margin-top:0">
-      Сколько человек обработать (до 200), донор или все последние контакты в базе.
-      В шаблоне используйте <code>{{ "{{full_name}}" }}</code> и <code>{{ "{{first_name}}" }}</code>.
+      {{ t("Сколько человек обработать (до 200), донор или все последние контакты в базе. В шаблоне используйте") }} <code>{{ "{{full_name}}" }}</code> и <code>{{ "{{first_name}}" }}</code>.
     </p>
     <form method="post" action="/outreach/agent/batch-generate">
       <div class="form-group">
@@ -118,7 +117,7 @@
         <div style="display:flex;flex-direction:column;gap:8px">
           <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer">
             <input type="radio" name="dm_mode" value="custom" id="dm_mode_custom" checked/>
-            <span><strong>Свой шаблон</strong> — один текст на всех с плейсхолдерами; черновик через ИИ (нужен API-ключ).</span>
+            <span><strong>{{ t("Свой шаблон") }}</strong> — один текст на всех с плейсхолдерами; черновик через ИИ (нужен API-ключ).</span>
           </label>
           <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer">
             <input type="radio" name="dm_mode" value="first_touch" id="dm_mode_ft"/>
@@ -127,9 +126,9 @@
         </div>
       </div>
       <div class="form-group" id="variants_block" style="display:none">
-        <label class="form-label" for="variants_per_person">Сколько разных вариантов на одного человека</label>
+        <label class="form-label" for="variants_per_person">{{ t("Сколько разных вариантов на одного человека") }}</label>
         <input id="variants_per_person" name="variants_per_person" type="number" class="form-input" min="1" max="10" value="3" style="max-width:120px"/>
-        <p class="form-hint">Случайный выбор из 10 базовых шаблонов.</p>
+        <p class="form-hint">{{ t("Случайный выбор из 10 базовых шаблонов.") }}</p>
       </div>
       <div class="form-group" id="provider_block">
         <label class="form-label" for="batch_provider">{{ t("Провайдер (только для своего шаблона + ИИ)") }}</label>
@@ -149,16 +148,16 @@
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label" for="batch_count">Сколько человек обработать</label>
+        <label class="form-label" for="batch_count">{{ t("Сколько человек обработать") }}</label>
         <input id="batch_count" name="batch_count" type="number" class="form-input" min="1" max="200" value="10" style="max-width:140px"/>
       </div>
       <div class="form-group" id="batch_context_block">
-        <label class="form-label" for="batch_context">Шаблон контекста (свой режим, с плейсхолдерами)</label>
+        <label class="form-label" for="batch_context">{{ t("Шаблон контекста (свой режим, с плейсхолдерами)") }}</label>
         <textarea id="batch_context" name="batch_context" class="form-textarea" rows="8"
                   placeholder="Напиши короткий ответ для {{ '{{full_name}}' }}. Контекст переписки: …"></textarea>
       </div>
       <button type="submit" class="btn btn-primary" id="batch_submit_btn" {% if worker_busy %}disabled{% endif %}>
-        <i class="ti ti-users-group"></i> Сгенерировать черновики
+        <i class="ti ti-users-group"></i> {{ t("Сгенерировать черновики") }}
       </button>
       {% if worker_busy %}
       <p class="form-hint" style="margin-top:8px">{{ t("Кнопка недоступна, пока идёт рассылка.") }}</p>
@@ -189,8 +188,8 @@
             <th>{{ t("Провайдер") }}</th>
             <th>{{ t("Модель") }}</th>
             <th>{{ t("Результат") }}</th>
-            <th>Токены</th>
-            <th>мс</th>
+            <th>{{ t("Токены") }}</th>
+            <th>{{ t("мс") }}</th>
           </tr>
         </thead>
         <tbody>
@@ -221,7 +220,7 @@
         </tbody>
       </table>
     </div>
-    <p class="form-hint" style="margin-top:12px">Фрагменты запроса и ответа сохраняются в БД (ограничение по длине).</p>
+    <p class="form-hint" style="margin-top:12px">{{ t("Фрагменты запроса и ответа сохраняются в БД (ограничение по длине).") }}</p>
     {% else %}
     <p style="color:var(--text-secondary);margin:0">{{ t("Запусков ещё не было.") }}</p>
     {% endif %}

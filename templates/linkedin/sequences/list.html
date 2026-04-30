@@ -14,11 +14,10 @@
   </header>
 
   <section class="li-card li-card--accent">
-    <h2 class="li-card__title"><i class="ti ti-plus"></i> Создать сценарий</h2>
+    <h2 class="li-card__title"><i class="ti ti-plus"></i> {{ t("Создать сценарий") }}</h2>
     <p class="li-card__desc" style="font-size:13px;">
       {{ t("Граф = JSON с полями") }} <code>nodes</code> и <code>edges</code>{{ t(". Узлы:") }}
-      <code>{{ node_types|join(', ') }}</code>. Edge labels: <code>{{ edge_labels|join(', ') }}</code>{{ t(". Для send_invitation/send_dm в") }} <code>params.template_id</code> — id шаблона.
-      Для wait_hours — <code>params.hours</code>{{ t(". Один узел должен иметь") }} <code>params.entry: true</code>.
+      <code>{{ node_types|join(', ') }}</code>. Edge labels: <code>{{ edge_labels|join(', ') }}</code>{{ t(". Для send_invitation/send_dm в") }} <code>params.template_id</code> {{ t("— id шаблона. Для wait_hours —") }} <code>params.hours</code>{{ t(". Один узел должен иметь") }} <code>params.entry: true</code>.
     </p>
     <form method="post" action="/linkedin/sequences/create" style="display:flex;flex-direction:column;gap:8px;">
       <input type="text" name="name" required placeholder="{{ t("Название (например, Cold outreach Q4)") }}"
@@ -26,19 +25,19 @@
       <textarea name="graph_json" rows="14" required
                 style="padding:10px;border-radius:8px;border:1px solid var(--border,#e4e6eb);background:var(--bg-surface,#fff);color:var(--text-primary);font:400 12px/1.4 ui-monospace,Menlo,monospace;">{{ default_graph_json }}</textarea>
       <button type="submit" class="li-btn li-btn--primary" style="align-self:flex-start;">
-        <i class="ti ti-brain"></i> Создать сценарий
+        <i class="ti ti-brain"></i> {{ t("Создать сценарий") }}
       </button>
     </form>
     <details>
       <summary style="cursor:pointer;color:var(--ws-accent);">📚 Доступные шаблоны и аккаунты для подстановки в params</summary>
       <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px;font:400 12px/1.5 Inter,sans-serif;">
-        <div><strong>Шаблоны (template_id):</strong>
+        <div><strong>{{ t("Шаблоны (template_id):") }}</strong>
           {% for t in templates %}<span style="display:inline-block;margin:2px 6px 2px 0;padding:2px 6px;border-radius:6px;background:color-mix(in srgb,var(--ws-accent) 10%,transparent);color:var(--ws-accent);">{{ t.id }}: {{ t.name }} ({{ t.kind }})</span>{% endfor %}
-          {% if not templates %}<span style="color:var(--text-muted,#888);">нет шаблонов — создайте на /linkedin/templates</span>{% endif %}
+          {% if not templates %}<span style="color:var(--text-muted,#888);">{{ t("нет шаблонов — создайте на /linkedin/templates") }}</span>{% endif %}
         </div>
         <div><strong>{{ t("Аккаунты (account_id):") }}</strong>
           {% for a in accounts %}<span style="display:inline-block;margin:2px 6px 2px 0;padding:2px 6px;border-radius:6px;background:color-mix(in srgb,var(--ws-accent) 10%,transparent);color:var(--ws-accent);">{{ a.id }}: {{ a.label }} [{{ a.status }}]</span>{% endfor %}
-          {% if not accounts %}<span style="color:var(--text-muted,#888);">нет аккаунтов — подключите на /linkedin/accounts</span>{% endif %}
+          {% if not accounts %}<span style="color:var(--text-muted,#888);">{{ t("нет аккаунтов — подключите на /linkedin/accounts") }}</span>{% endif %}
         </div>
       </div>
     </details>
@@ -74,7 +73,7 @@
     {% else %}
       <div class="li-placeholder">
         <div class="li-placeholder__icon"><i class="ti ti-brain"></i></div>
-        <p class="li-placeholder__text">Сценариев пока нет. Создайте первый — в textarea уже подставлен дефолтный граф invite→wait→accept→DM→reply.</p>
+        <p class="li-placeholder__text">{{ t("Сценариев пока нет. Создайте первый — в textarea уже подставлен дефолтный граф invite→wait→accept→DM→reply.") }}</p>
       </div>
     {% endif %}
   </section>

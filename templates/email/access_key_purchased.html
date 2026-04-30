@@ -13,7 +13,7 @@
         <tr>
           <td style="padding:40px 40px 24px 40px;">
             <h1 style="margin:0 0 8px 0;font-size:24px;font-weight:700;color:#1a1d23;">{{ t("Спасибо за покупку!") }}</h1>
-            <p style="margin:0;font-size:16px;line-height:1.5;color:#4a5160;">{{ t("Ваша подписка SOCMASTER на") }} <strong>{{ duration_days }} дн.</strong> активирована.</p>
+            <p style="margin:0;font-size:16px;line-height:1.5;color:#4a5160;">{{ t("Ваша подписка SOCMASTER на") }} <strong>{{ duration_days }} дн.</strong> {{ t("активирована.") }}</p>
           </td>
         </tr>
         <tr>
@@ -27,7 +27,7 @@
         <tr>
           <td style="padding:0 40px 32px 40px;">
             <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#4a5160;">{{ t("Действует до") }} <strong>{{ expires_at_label }}</strong>.</p>
-            <p style="margin:0 0 24px 0;font-size:15px;line-height:1.6;color:#4a5160;">Чтобы активировать ключ, нажмите кнопку ниже и введите его в форме разблокировки:</p>
+            <p style="margin:0 0 24px 0;font-size:15px;line-height:1.6;color:#4a5160;">{{ t("Чтобы активировать ключ, нажмите кнопку ниже и введите его в форме разблокировки:") }}</p>
             <div style="text-align:center;">
               <a href="{{ unlock_url }}" style="display:inline-block;background:#4f6df5;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:600;">{{ t("Активировать ключ") }}</a>
             </div>

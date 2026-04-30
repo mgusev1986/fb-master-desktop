@@ -22,7 +22,7 @@
 
         <div class="preset-card {{ 'selected' if current_preset == 'ulitka' }}" data-preset="ulitka" role="button" tabindex="0" aria-pressed="{{ 'true' if current_preset == 'ulitka' else 'false' }}">
           <div class="preset-icon">🐌</div>
-          <h3>Улитка</h3>
+          <h3>{{ t("Улитка") }}</h3>
           <p>{{ t("Очень медленно — ориентир") }} <strong>{{ t("~20 сообщений в час") }}</strong> {{ t("(пауза между контактами в рассылке). Максимальная осторожность.") }}</p>
         </div>
 
@@ -34,7 +34,7 @@
 
         <div class="preset-card {{ 'selected' if current_preset == 'medium' }}" data-preset="medium" role="button" tabindex="0" aria-pressed="{{ 'true' if current_preset == 'medium' else 'false' }}">
           <div class="preset-icon">🏎</div>
-          <h3>Средне</h3>
+          <h3>{{ t("Средне") }}</h3>
           <p>{{ t("Баланс:") }} <strong>{{ t("~45 сообщений в час") }}</strong>{{ t(". Умеренные задержки между действиями.") }}</p>
         </div>
 
@@ -53,7 +53,7 @@
       </div>
 
       <button type="submit" class="btn btn-primary">
-        <i class="ti ti-device-floppy"></i> Сохранить режим
+        <i class="ti ti-device-floppy"></i> {{ t("Сохранить режим") }}
       </button>
     </div>
   </div>
@@ -67,7 +67,7 @@
     </span>
   </div>
   <p class="card-subnote" style="margin:-8px 0 12px;font-size:var(--font-size-xs);color:var(--text-secondary);padding:0 1.25rem">
-    {{ t("При переключении карточек выше таблица") }} <strong>обновляется сразу</strong> {{ t("(до кнопки «Сохранить режим»). Все типы пауз (лайк, комментарий, заявка в друзья, ЛС и т.д.) привязаны к тому же ориентиру сообщений в час; колонка «Нижний пол» не меняется от режима — меняются только мин. и макс. паузы.") }}
+    {{ t("При переключении карточек выше таблица") }} <strong>{{ t("обновляется сразу") }}</strong> {{ t("(до кнопки «Сохранить режим»). Все типы пауз (лайк, комментарий, заявка в друзья, ЛС и т.д.) привязаны к тому же ориентиру сообщений в час; колонка «Нижний пол» не меняется от режима — меняются только мин. и макс. паузы.") }}
   </p>
   <div class="card-body">
     <div class="table-wrap">
@@ -100,16 +100,15 @@
   <div class="card-body">
     {% if cabinet_client_mode(request) %}
     <p style="color:var(--text-secondary);margin-bottom:12px;font-size:var(--font-size-sm)">
-      Сценарии, где есть «день 1», «день 2» и т.д., ориентируются на <strong>ваш календарный день</strong> в выбранном часовом поясе.
+      {{ t("Сценарии, где есть «день 1», «день 2» и т.д., ориентируются на") }} <strong>{{ t("ваш календарный день") }}</strong> {{ t("в выбранном часовом поясе.") }}
     </p>
     {% else %}
     <p style="color:var(--text-secondary);margin-bottom:12px;font-size:var(--font-size-sm)">
-      Смещение «день 0 / день 1» считается по <strong>локальной дате</strong> в выбранном поясе IANA, а не по UTC.
-      Время зачисления в базе хранится в UTC и переводится в этот пояс.
+      {{ t("Смещение «день 0 / день 1» считается по") }} <strong>{{ t("локальной дате") }}</strong> {{ t("в выбранном поясе IANA, а не по UTC. Время зачисления в базе хранится в UTC и переводится в этот пояс.") }}
     </p>
     {% endif %}
     {% if request.query_params.get('tz') == 'saved' %}
-    <p style="color:var(--success);font-size:var(--font-size-sm);margin-bottom:12px">Часовой пояс сохранён.</p>
+    <p style="color:var(--success);font-size:var(--font-size-sm);margin-bottom:12px">{{ t("Часовой пояс сохранён.") }}</p>
     {% elif request.query_params.get('tz') == 'bad' %}
     <p style="color:var(--error);font-size:var(--font-size-sm);margin-bottom:12px">{% if cabinet_client_mode(request) %}Не удалось распознать пояс. Пример: Europe/Moscow{% else %}Некорректное имя пояса. Пример: <code>Europe/Moscow</code>{% endif %}</p>
     {% elif request.query_params.get('tz') == 'reset' %}
@@ -125,10 +124,10 @@
     </p>
     <form method="post" action="/system/speed/sequence-timezone" style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end">
       <div class="form-group" style="margin:0">
-        <label class="form-label" for="sequence_timezone_preset">Частые пояса</label>
+        <label class="form-label" for="sequence_timezone_preset">{{ t("Частые пояса") }}</label>
         <select id="sequence_timezone_preset" class="form-select" style="min-width:220px"
                 onchange="document.getElementById('sequence_timezone').value = this.value">
-          <option value="">— выберите или введите ниже —</option>
+          <option value="">{{ t("— выберите или введите ниже —") }}</option>
           {% for zone, label in common_timezones %}
           <option value="{{ zone }}" {% if zone == sequence_timezone_effective %}selected{% endif %}>{{ zone }} — {{ label }}</option>
           {% endfor %}
@@ -140,7 +139,7 @@
                value="{{ sequence_timezone_saved }}"
                placeholder="{{ sequence_timezone_effective }}" autocomplete="off"/>
       </div>
-      <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy"></i> Сохранить пояс</button>
+      <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy"></i> {{ t("Сохранить пояс") }}</button>
     </form>
     <form method="post" action="/system/speed/sequence-timezone" style="margin-top:12px">
       <input type="hidden" name="sequence_timezone" value=""/>
@@ -161,13 +160,13 @@
   <div class="card-body">
     <p style="color:var(--text-secondary);margin-bottom:16px;font-size:var(--font-size-sm)">
       {% if cabinet_client_mode(request) %}
-      В настройках отдельных задач (поиск людей, прогрев, рассылка, сценарий) можно включить режим, при котором программа <strong>сама подбирает паузы</strong>, чтобы уложиться в выбранный срок. В рассылке лимит задаётся в минутах.
+      В настройках отдельных задач (поиск людей, прогрев, рассылка, сценарий) можно включить режим, при котором программа <strong>{{ t("сама подбирает паузы") }}</strong>, чтобы уложиться в выбранный срок. В рассылке лимит задаётся в минутах.
       {% else %}
-      Этот режим доступен <strong>в настройках каждой задачи</strong> {{ t("(парсинг, прогрев, рассылка, сценарий). Система сама распределит задержки с джиттером, чтобы уложиться в указанное время. В") }} <strong>рассылке</strong> бюджет задаётся в <strong>{{ t("минутах") }}</strong> (с теми же пресетами, что ниже).
+      Этот режим доступен <strong>{{ t("в настройках каждой задачи") }}</strong> {{ t("(парсинг, прогрев, рассылка, сценарий). Система сама распределит задержки с джиттером, чтобы уложиться в указанное время. В") }} <strong>{{ t("рассылке") }}</strong> {{ t("бюджет задаётся в") }} <strong>{{ t("минутах") }}</strong> (с теми же пресетами, что ниже).
       {% endif %}
     </p>
     <p style="color:var(--text-secondary);margin-bottom:12px;font-size:var(--font-size-sm)">
-      Типовые значения (для ориентира):
+      {{ t("Типовые значения (для ориентира):") }}
     </p>
     <div style="display:flex;flex-wrap:wrap;gap:8px">
       {% for key, label, _ in time_budget_presets %}
@@ -180,7 +179,7 @@
 
 <form method="post" action="/system/speed/reset" style="margin-top:24px" data-confirm="Сбросить все настройки темпа к заводским?" data-confirm-title="{{ t("Сброс настроек") }}" data-confirm-variant="danger">
   <button type="submit" class="btn btn-ghost">
-    <i class="ti ti-refresh"></i> Сбросить к заводским
+    <i class="ti ti-refresh"></i> {{ t("Сбросить к заводским") }}
   </button>
 </form>
 </div>{# /#fb-speed-settings #}

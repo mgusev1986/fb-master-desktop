@@ -81,7 +81,7 @@
               <a href="/templates/{{ t.id }}/edit" class="btn btn-sm btn-secondary"
                  title="{{ t("Редактировать шаблон: название, категория и текст сообщения") }}"><i class="ti ti-edit"></i></a>
               <form method="post" action="/templates/{{ t.id }}/delete" style="display:inline"
-                    data-confirm="Удалить этот шаблон?" data-confirm-title="Удаление шаблона" data-confirm-variant="danger">
+                    data-confirm="Удалить этот шаблон?" data-confirm-title="{{ t("Удаление шаблона") }}" data-confirm-variant="danger">
                 <input type="hidden" name="confirm" value="yes"/>
                 <button type="submit" class="btn btn-sm btn-ghost" style="color:var(--error)"><i class="ti ti-trash"></i></button>
               </form>
@@ -98,8 +98,8 @@
   <div class="card-body">
     <div class="empty-state">
       <div class="empty-state-icon"><i class="ti ti-template"></i></div>
-      <h3>Шаблонов пока нет</h3>
-      <p>Создайте первый текст для рассылки или комментариев: <code>{{ "{{full_name}}" }}</code> и <code>{{ "{{first_name}}" }}</code>.</p>
+      <h3>{{ t("Шаблонов пока нет") }}</h3>
+      <p>{{ t("Создайте первый текст для рассылки или комментариев:") }} <code>{{ "{{full_name}}" }}</code> и <code>{{ "{{first_name}}" }}</code>.</p>
       <a href="/templates/new" class="btn btn-primary"><i class="ti ti-plus"></i> {{ t("Создать шаблон") }}</a>
     </div>
   </div>

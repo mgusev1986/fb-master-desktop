@@ -14,11 +14,10 @@
   <h1>{% if cabinet_client_mode(request) %}{{ 'Настройки сценария' if campaign else 'Новый сценарий' }}{% else %}{{ 'Настройки режима агента' if campaign else 'Режим агента' }}{% endif %}</h1>
   <p class="subtitle">
     {% if cabinet_client_mode(request) %}
-    Укажите, <strong>откуда брать людей</strong> (источник, загруженный файл или весь список «Мои контакты»). Сами люди появляются там после загрузки или поиска.
+    Укажите, <strong>{{ t("откуда брать людей") }}</strong> (источник, загруженный файл или весь список «Мои контакты»). Сами люди появляются там после загрузки или поиска.
     После сохранения откройте карточку сценария — там настраиваются шаги и очередь.
     {% else %}
-    Здесь задаётся, <strong>{{ t("откуда") }}</strong> режим будет брать контакты (донор, файл импорта или вся «База контактов») — сами записи уже появляются там после импорта или парсинга.
-    Цепочку шагов и кнопки «добавить партию в очередь» настраиваете на <strong>карточке режима</strong> после сохранения.
+    Здесь задаётся, <strong>{{ t("откуда") }}</strong> {{ t("режим будет брать контакты (донор, файл импорта или вся «База контактов») — сами записи уже появляются там после импорта или парсинга. Цепочку шагов и кнопки «добавить партию в очередь» настраиваете на") }} <strong>{{ t("карточке режима") }}</strong> после сохранения.
     {% endif %}
   </p>
 </div>
@@ -48,7 +47,7 @@
           <option value="paused" {% if campaign.status == 'paused' %}selected{% endif %}>{{ t("Приостановлен") }}</option>
           {% endif %}
         </select>
-        <p class="form-hint">Черновик — без автозапуска. Активен — партии и шаги по кнопкам/автопилоту. Приостановлен — очередь сохраняется, новые партии и выполнение шагов не стартуют (удобно с карточки режима: «Пауза» / «Возобновить»).</p>
+        <p class="form-hint">{{ t("Черновик — без автозапуска. Активен — партии и шаги по кнопкам/автопилоту. Приостановлен — очередь сохраняется, новые партии и выполнение шагов не стартуют (удобно с карточки режима: «Пауза» / «Возобновить»).") }}</p>
       </div>
 
       <div class="card" style="margin:20px 0;background:var(--bg-surface-hover)">
@@ -78,10 +77,10 @@
             <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:12px;cursor:pointer">
               <input type="checkbox" name="auto_slot_rotation" value="1" style="margin-top:3px"
                      {% if scfg.get('auto_slot_rotation') %}checked{% endif %}/>
-              <span><strong>{{ t("Автосмена слотов") }}</strong> — при необходимости забрать слот у другого аккаунта из <em>этого пула</em> {{ t("(меняет слоты кабинета).") }}</span>
+              <span><strong>{{ t("Автосмена слотов") }}</strong> — при необходимости забрать слот у другого аккаунта из <em>{{ t("этого пула") }}</em> {{ t("(меняет слоты кабинета).") }}</span>
             </label>
             <div class="form-group" style="margin-bottom:0">
-              <label class="form-label" for="sequence_actions_per_account">Суточный лимит шагов на один аккаунт (при ротации)</label>
+              <label class="form-label" for="sequence_actions_per_account">{{ t("Суточный лимит шагов на один аккаунт (при ротации)") }}</label>
               <input id="sequence_actions_per_account" name="sequence_actions_per_account" type="number" class="form-input" min="1" max="500"
                      value="{{ scfg.get('sequence_actions_per_account', 50) }}"/>
             </div>
@@ -89,15 +88,15 @@
           <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border-subtle)">
             <div style="font-weight:600;margin-bottom:8px">{{ t("Время выполнения шагов") }}</div>
             <p class="form-hint" style="margin-top:0;margin-bottom:10px">
-              Тот же часовой пояс, что у сценариев по дням: <a href="/system/speed" target="_blank" rel="noopener">{{ t("Система → Скорость и паузы") }}</a>.
+              {{ t("Тот же часовой пояс, что у сценариев по дням:") }} <a href="/system/speed" target="_blank" rel="noopener">{{ t("Система → Скорость и паузы") }}</a>.
             </p>
             <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:12px;cursor:pointer">
               <input type="checkbox" name="send_window_24h" value="1" style="margin-top:3px"
                      {% if scfg.get('send_window_24h') %}checked{% endif %}/>
-              <span><strong>{{ t("Круглосуточно") }}</strong> — выполнять шаги и ночью.</span>
+              <span><strong>{{ t("Круглосуточно") }}</strong> {{ t("— выполнять шаги и ночью.") }}</span>
             </label>
             <p class="form-hint" style="margin-bottom:10px">
-              {{ t("Если не отмечено: по умолчанию только") }} <strong>8:00–22:00</strong> локально; ночью воркер ждёт, зачисления не теряются.
+              {{ t("Если не отмечено: по умолчанию только") }} <strong>8:00–22:00</strong> {{ t("локально; ночью воркер ждёт, зачисления не теряются.") }}
             </p>
             <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">
               <div class="form-group" style="margin-bottom:0">
@@ -131,7 +130,7 @@
               </label>
               <label class="form-check" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;margin:0">
                 <input type="radio" name="person_source" value="all" {% if pf.get('all_people') %}checked{% endif %}/>
-                <span><strong>{{ t("Вся база") }}</strong> — все записи в разделе «База контактов» (по возрастанию ID), с учётом фильтра по стадии CRM ниже.</span>
+                <span><strong>{{ t("Вся база") }}</strong> {{ t("— все записи в разделе «База контактов» (по возрастанию ID), с учётом фильтра по стадии CRM ниже.") }}</span>
               </label>
             </div>
           </div>
@@ -163,7 +162,7 @@
           </div>
 
           <div class="form-group" style="margin:0">
-            <label class="form-label" for="crm_stage">Фильтр по стадии CRM</label>
+            <label class="form-label" for="crm_stage">{{ t("Фильтр по стадии CRM") }}</label>
             <select id="crm_stage" name="crm_stage" class="form-select">
               <option value="">{{ t("Все стадии") }}</option>
               {% for slug, label in crm_stages %}
@@ -174,7 +173,7 @@
           </div>
 
           <div class="form-group" style="margin:0">
-            <label class="form-label" for="language_filter">Фильтр по языку</label>
+            <label class="form-label" for="language_filter">{{ t("Фильтр по языку") }}</label>
             <select id="language_filter" name="language_filter" class="form-select">
               {% for key, label in language_filter_labels.items() %}
               {% if key != 'unknown' %}
@@ -270,7 +269,7 @@
                 <option value="minutes" {% if bwu == 'minutes' %}selected{% endif %}>{{ t("Минуты") }}</option>
               </select>
             </div>
-            <p class="form-hint">Через сколько после завершения текущей партии можно брать следующую.</p>
+            <p class="form-hint">{{ t("Через сколько после завершения текущей партии можно брать следующую.") }}</p>
           </div>
         </div>
       </div>
@@ -303,10 +302,9 @@
       </div>
 
       <p class="form-hint" style="margin-top:20px;margin-bottom:12px;max-width:720px">
-        <strong>{{ t("Дальше:") }}</strong> нажмите «Сохранить» → откроется или обновится карточка режима. Там нажмите
+        <strong>{{ t("Дальше:") }}</strong> {{ t("нажмите «Сохранить» → откроется или обновится карточка режима. Там нажмите") }}
         <strong>{{ t("«Добавить первую партию в очередь»") }}</strong> {{ t("(заберёт до N человек из выбранного источника по размеру партии и подготовит очередь) или") }}
-        <strong>{{ t("«Загрузить всю выбранную базу сразу»") }}</strong> внизу страницы — только так люди попадут в <em>очередь</em> этого режима.
-        Черновик можно оставить: первую партию в очередь всё равно можно добавить вручную; статус «Активен» нужен для автотика и удобства.
+        <strong>{{ t("«Загрузить всю выбранную базу сразу»") }}</strong> {{ t("внизу страницы — только так люди попадут в") }} <em>{{ t("очередь") }}</em> {{ t("этого режима. Черновик можно оставить: первую партию в очередь всё равно можно добавить вручную; статус «Активен» нужен для автотика и удобства.") }}
       </p>
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px">
         <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy"></i> {{ t("Сохранить") }}</button>

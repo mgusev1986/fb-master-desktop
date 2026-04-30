@@ -38,7 +38,7 @@
   </section>
 
   <section class="ig-card ig-card--accent ig-tab-panel" data-panel="credentials" style="display:none;">
-    <h2 class="ig-card__title"><i class="ti ti-key"></i> Свой личный IG через логин и пароль</h2>
+    <h2 class="ig-card__title"><i class="ti ti-key"></i> {{ t("Свой личный IG через логин и пароль") }}</h2>
     <p class="ig-card__desc">{{ t("Для ваших") }} <strong>{{ t("собственных") }}</strong> {{ t("аккаунтов. После сохранения на карточке появится кнопка «Войти» — система откроет Chromium, автоматически введёт логин и пароль, пройдёт возможный 2FA-код (если задан секрет) и сохранит cookies сессии.") }}</p>
     <form method="post" action="/instagram/accounts/import-credentials" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
       <label style="display:flex;flex-direction:column;gap:4px;grid-column:span 2;">

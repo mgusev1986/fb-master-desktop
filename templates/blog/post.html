@@ -235,7 +235,7 @@
 
     <article class="pt-28 md:pt-36 pb-20">
         <header class="max-w-3xl mx-auto px-5 md:px-8 mb-10">
-            <nav aria-label="Хлебные крошки" class="text-xs text-white/45 mb-6">
+            <nav aria-label="{{ t("Хлебные крошки") }}" class="text-xs text-white/45 mb-6">
                 <a href="/" class="hover:text-[#f5d06e]">{% if is_en %}Home{% else %}Главная{% endif %}</a>
                 <span class="mx-2 text-white/25">/</span>
                 <a href="/blog" class="hover:text-[#f5d06e]">{% if is_en %}Knowledge Base{% else %}База знаний{% endif %}</a>
@@ -366,7 +366,7 @@
 
         <div class="max-w-3xl mx-auto px-5 md:px-8 mt-14">
             <div class="luxury-card p-8 md:p-10 text-center hero-bg">
-                <h3 class="heading text-2xl md:text-4xl font-semibold mb-4">{% if is_en %}Less manual routine — more&nbsp;<span class="gold-gradient">leads</span>{% else %}Меньше ручной рутины — больше&nbsp;<span class="gold-gradient">лидов</span>{% endif %}</h3>
+                <h3 class="heading text-2xl md:text-4xl font-semibold mb-4">{% if is_en %}Less manual routine — more&nbsp;<span class="gold-gradient">leads</span>{% else %}Меньше ручной рутины — больше&nbsp;<span class="gold-gradient">{{ t("лидов") }}</span>{% endif %}</h3>
                 <p class="text-white/70 mb-7 max-w-2xl mx-auto leading-relaxed">{% if is_en %}SOCMASTER unites parsing, AI assistant, outreach, CRM, and social media automation in one platform.{% else %}SOCMASTER объединяет парсинг, AI-помощника, рассылки, CRM и&nbsp;автоматизацию соцсетей в&nbsp;одной платформе.{% endif %}</p>
                 <div class="flex flex-col sm:flex-row gap-3 justify-center">
                     <a href="https://socmaster.pro/buy" class="cta-button px-8 py-4 rounded-2xl inline-flex items-center justify-center gap-2.5">

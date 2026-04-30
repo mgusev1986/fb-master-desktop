@@ -8,7 +8,7 @@
     <div class="li-page__title-wrap">
       <h1 class="li-page__title">{{ t("Шаблоны и AI") }} <span class="li-page__beta-pill">Beta</span></h1>
       <p class="li-page__subtitle">
-        Шаблоны invitation / DM / follow-up. Плейсхолдеры: <code>{first_name}</code>, <code>{full_name}</code>, <code>{company}</code>, <code>{job_title}</code>, <code>{headline}</code>, <code>{industry}</code>, <code>{location}</code>.
+        {{ t("Шаблоны invitation / DM / follow-up. Плейсхолдеры:") }} <code>{first_name}</code>, <code>{full_name}</code>, <code>{company}</code>, <code>{job_title}</code>, <code>{headline}</code>, <code>{industry}</code>, <code>{location}</code>.
       </p>
     </div>
   </header>
@@ -65,7 +65,7 @@
                 </form>
                 <form method="post" action="/linkedin/templates/{{ t.id }}/ai" style="margin:0;">
                   <input type="hidden" name="op" value="soften"/>
-                  <button class="li-btn" style="font-size:12px;padding:4px 8px;" type="submit"><i class="ti ti-leaf"></i> Убрать спам-тон</button>
+                  <button class="li-btn" style="font-size:12px;padding:4px 8px;" type="submit"><i class="ti ti-leaf"></i> {{ t("Убрать спам-тон") }}</button>
                 </form>
                 <form method="post" action="/linkedin/templates/{{ t.id }}/ai" style="margin:0;display:inline-flex;gap:4px;">
                   <input type="hidden" name="op" value="rewrite"/>
@@ -81,7 +81,7 @@
                   <pre style="margin:0;font:400 12px/1.4 Inter,sans-serif;color:var(--text-secondary,#606770);flex:1;white-space:pre-wrap;">{{ v }}</pre>
                   <form method="post" action="/linkedin/templates/{{ t.id }}/apply-variant" style="margin:0;">
                     <input type="hidden" name="variant_idx" value="{{ loop.index0 }}"/>
-                    <button class="li-btn li-btn--primary" type="submit" style="font-size:11px;padding:4px 8px;">применить</button>
+                    <button class="li-btn li-btn--primary" type="submit" style="font-size:11px;padding:4px 8px;">{{ t("применить") }}</button>
                   </form>
                 </div>
                 {% endfor %}
@@ -102,7 +102,7 @@
     {% else %}
       <div class="li-placeholder">
         <div class="li-placeholder__icon"><i class="ti ti-template"></i></div>
-        <p class="li-placeholder__text">Шаблонов пока нет. Создайте первый — например, "DM first touch".</p>
+        <p class="li-placeholder__text">{{ t('Шаблонов пока нет. Создайте первый — например, "DM first touch".') }}</p>
       </div>
     {% endif %}
   </section>

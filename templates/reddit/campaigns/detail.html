@@ -47,7 +47,7 @@
 
     <div class="reddit-card" style="flex-direction:row;gap:10px;align-items:center;">
       <label style="display:flex;align-items:center;gap:6px;font-size:13px;">
-        <input type="checkbox" id="reddit-queue-select-all"/> выбрать всех на странице
+        <input type="checkbox" id="reddit-queue-select-all"/> {{ t("выбрать всех на странице") }}
       </label>
       <span style="flex:1;"></span>
       <span id="reddit-queue-count" style="color:var(--text-muted);font-size:13px;">{{ t("0 выбрано") }}</span>
@@ -73,7 +73,7 @@
         </header>
 
         <details {% if q.review_state == 'pending_review' %}open{% endif %}>
-          <summary style="font:500 13px/1 Inter;color:var(--text-muted);cursor:pointer;">просмотр / редактирование</summary>
+          <summary style="font:500 13px/1 Inter;color:var(--text-muted);cursor:pointer;">{{ t("просмотр / редактирование") }}</summary>
           <form method="post" action="/reddit/campaigns/{{ campaign.id }}/item/{{ q.id }}/edit-body" style="margin-top:8px;">
             <textarea name="body" rows="5" {% if q.review_state != 'pending_review' %}readonly{% endif %}
                       style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font:400 13px/1.5 ui-monospace,monospace;">{{ q.payload_body }}</textarea>

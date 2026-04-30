@@ -6,7 +6,7 @@
 <div class="reddit-page">
   <header class="reddit-page__header">
     <div class="reddit-page__title-wrap">
-      <h1 class="reddit-page__title">Шаблоны и AI-варианты</h1>
+      <h1 class="reddit-page__title">{{ t("Шаблоны и AI-варианты") }}</h1>
       <p class="reddit-page__subtitle">
         DM, chat-opener, комментарии, follow-up. Плейсхолдеры: {{ '{username}' }}, {{ '{subreddit}' }},
         {{ '{last_post_title}' }}. AI-варианты генерируются через общий сервис SOCMASTER (если ключи настроены).
@@ -16,7 +16,7 @@
   </header>
 
   <div class="reddit-card" style="flex-direction:row;gap:10px;align-items:center;flex-wrap:wrap;">
-    <span style="font:500 13px/1 Inter;color:var(--text-muted);">Фильтр по типу:</span>
+    <span style="font:500 13px/1 Inter;color:var(--text-muted);">{{ t("Фильтр по типу:") }}</span>
     <a href="/reddit/templates" class="reddit-btn{% if not active_kind %} reddit-btn--primary{% endif %}" style="padding:6px 10px;">{{ t("Все") }}</a>
     {% for k in template_kinds %}
     <a href="/reddit/templates?kind={{ k }}" class="reddit-btn{% if active_kind == k %} reddit-btn--primary{% endif %}" style="padding:6px 10px;">{{ k|ru_status }}</a>
@@ -54,7 +54,7 @@
   {% else %}
   <div class="reddit-placeholder">
     <div class="reddit-placeholder__icon"><i class="ti ti-template"></i></div>
-    <p class="reddit-placeholder__text">Шаблонов пока нет — создайте первый.</p>
+    <p class="reddit-placeholder__text">{{ t("Шаблонов пока нет — создайте первый.") }}</p>
     <a href="/reddit/templates/new" class="reddit-btn reddit-btn--primary"><i class="ti ti-plus"></i> {{ t("Новый шаблон") }}</a>
   </div>
   {% endif %}

@@ -45,13 +45,13 @@
       <textarea name="nodes_json" rows="14"
                 style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-family:ui-monospace,monospace;font-size:13px;">{{ default_nodes_json }}</textarea>
       <small style="color:var(--text-muted);font-size:12px;">
-        Формат: <code>[{"id":"n1","kind":"draft_dm","params":{"template_id":1},"requires_approval":true,"description":"..."}]</code>{{ t(". У") }} <code>draft_dm</code>/<code>draft_comment</code> подтверждение включается автоматически.
+        {{ t("Формат:") }} <code>[{"id":"n1","kind":"draft_dm","params":{"template_id":1},"requires_approval":true,"description":"..."}]</code>{{ t(". У") }} <code>draft_dm</code>/<code>draft_comment</code> {{ t("подтверждение включается автоматически.") }}
       </small>
     </label>
 
     {% if templates_list %}
     <details>
-      <summary style="cursor:pointer;color:var(--ws-accent);font:500 13px/1 Inter;">доступные шаблоны (для template_id)</summary>
+      <summary style="cursor:pointer;color:var(--ws-accent);font:500 13px/1 Inter;">{{ t("доступные шаблоны (для template_id)") }}</summary>
       <ul style="margin:8px 0 0 16px;font-size:13px;color:var(--text-secondary);">
         {% for t in templates_list %}
         <li><strong>#{{ t.id }}</strong> [{{ t.kind|ru_status }}] {{ t.name }}</li>

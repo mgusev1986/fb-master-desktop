@@ -23,7 +23,7 @@
 <div class="login-page">
   <div class="login-card">
     <h1 class="login-title-row">SOCMASTER{% if fbm_client_version or fbm_desktop_app_version %} <span class="login-app-version" title="{{ t("Версия установленного приложения") }}">v{{ fbm_client_version or fbm_desktop_app_version }}</span>{% endif %}</h1>
-    <p class="login-subtitle">Управление парсингом и рассылкой</p>
+    <p class="login-subtitle">{{ t("Управление парсингом и рассылкой") }}</p>
 
     {% if request.query_params.get('error') %}
     <div class="login-error">
@@ -70,7 +70,7 @@
       <input type="password" name="password" class="form-input" required autocomplete="current-password" placeholder="{{ t("Пароль") }}"/>
       <button type="submit" class="btn btn-secondary" style="width:100%">{{ t("Войти по email и паролю") }}</button>
     </form>
-    <p style="font-size:11px;color:var(--text-secondary);margin:0 0 12px">Тот же allowlist email, что и для Google, если список задан в настройках.</p>
+    <p style="font-size:11px;color:var(--text-secondary);margin:0 0 12px">{{ t("Тот же allowlist email, что и для Google, если список задан в настройках.") }}</p>
     {% endif %}
 
     {% if oauth_configured and not supabase_auth_configured %}
@@ -85,8 +85,8 @@
     </a>
     {% elif not supabase_auth_configured and not oauth_configured %}
     <div class="login-error">
-      {{ t("Вход не настроен. Укажите в") }} <span class="settings-mono">.env</span> или в «Система → Настройки» параметры
-      <strong>Supabase</strong> (<span class="settings-mono">SUPABASE_URL</span> и <span class="settings-mono">SUPABASE_ANON_KEY</span>{{ t(") — рекомендуется; либо") }} <span class="settings-mono">GOOGLE_CLIENT_ID</span> / <span class="settings-mono">GOOGLE_CLIENT_SECRET</span> для прямого OAuth.
+      {{ t("Вход не настроен. Укажите в") }} <span class="settings-mono">.env</span> {{ t("или в «Система → Настройки» параметры") }}
+      <strong>Supabase</strong> (<span class="settings-mono">SUPABASE_URL</span> и <span class="settings-mono">SUPABASE_ANON_KEY</span>{{ t(") — рекомендуется; либо") }} <span class="settings-mono">GOOGLE_CLIENT_ID</span> / <span class="settings-mono">GOOGLE_CLIENT_SECRET</span> {{ t("для прямого OAuth.") }}
     </div>
     {% endif %}
 
@@ -103,10 +103,10 @@
     <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border)">
       <p style="font-size:var(--font-size-xs);color:var(--text-secondary);line-height:1.5;margin:0 0 8px">
         <strong>{{ t("Один раз в Google Cloud") }}</strong> {{ t("(тот же Web OAuth client, что в Supabase → Providers → Google):") }}<br/>
-        {{ t("Authorized redirect URIs — вставьте") }} <strong>точно</strong> {{ t("Callback URL из Supabase (Authentication → Providers → Google → кнопка копирования).") }}
+        {{ t("Authorized redirect URIs — вставьте") }} <strong>{{ t("точно") }}</strong> {{ t("Callback URL из Supabase (Authentication → Providers → Google → кнопка копирования).") }}
       </p>
       <p style="font-size:var(--font-size-xs);color:var(--text-secondary);line-height:1.5;margin:0 0 8px">
-        <strong>{{ t("В Supabase") }}</strong> → Authentication → URL Configuration → <strong>Redirect URLs</strong> добавьте адрес возврата в это приложение (скопируйте ниже) и при необходимости вариант с <code>localhost</code> вместо <code>127.0.0.1</code>:
+        <strong>{{ t("В Supabase") }}</strong> → Authentication → URL Configuration → <strong>Redirect URLs</strong> {{ t("добавьте адрес возврата в это приложение (скопируйте ниже) и при необходимости вариант с") }} <code>localhost</code> {{ t("вместо") }} <code>127.0.0.1</code>:
       </p>
       <p style="margin:8px 0 12px">
         <code style="display:block;padding:10px 12px;background:var(--bg-surface-hover);border-radius:6px;font-size:12px;word-break:break-all;border:1px solid var(--border)">{{ supabase_callback_full_url }}</code>
@@ -123,7 +123,7 @@
       <code style="display:block;padding:10px 12px;background:var(--bg-surface-hover);border-radius:6px;font-size:12px;word-break:break-all;border:1px solid var(--border)">{{ oauth_callback_url }}</code>
     </p>
     <p style="font-size:var(--font-size-xs);color:var(--text-secondary)">
-      {{ t("Если заходите и с") }} <code>localhost</code>{{ t(", и с") }} <code>127.0.0.1</code> — в Google добавьте <strong>оба</strong> варианта callback.
+      {{ t("Если заходите и с") }} <code>localhost</code>{{ t(", и с") }} <code>127.0.0.1</code> {{ t("— в Google добавьте") }} <strong>{{ t("оба") }}</strong> {{ t("варианта callback.") }}
     </p>
     {% endif %}
   </div>

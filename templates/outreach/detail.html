@@ -107,7 +107,7 @@
   <div class="card-header">{{ t("Очередь из выбранной базы") }}</div>
   <div class="card-body" style="font-size:var(--font-size-sm);color:var(--text-secondary)">
     <p style="margin:0 0 10px">
-      Уже <strong>успешно</strong> {{ 'обработано в этой кампании' if is_comment_campaign else 'отправлено в этой кампании' }}: <strong>{{ done_campaign|length }}</strong>
+      {{ t("Уже") }} <strong>{{ t("успешно") }}</strong> {{ 'обработано в этой кампании' if is_comment_campaign else 'отправлено в этой кампании' }}: <strong>{{ done_campaign|length }}</strong>
       {{ t("· Ещё можно взять в очередь:") }} <strong>{{ candidates_remaining }}</strong>
       {% if donor_total is not none %}
       {% if cfg.get('batch_all_donors') %}
@@ -123,7 +123,7 @@
       {% endif %}
     </p>
     {% if campaign.status != 'running' and candidates_remaining == 0 %}
-    <p style="margin:0">Сейчас некого добавить в очередь — список из источника закончился. При необходимости смените источник в «Редактировать».</p>
+    <p style="margin:0">{{ t("Сейчас некого добавить в очередь — список из источника закончился. При необходимости смените источник в «Редактировать».") }}</p>
     {% endif %}
     <p style="margin:12px 0 0;font-size:var(--font-size-xs)">{{ t("«Собрать очередь из базы» — следующая группа контактов; затем «Запустить».") }}</p>
   </div>
@@ -222,7 +222,7 @@
   <div class="card-body" style="display:flex;flex-wrap:wrap;gap:10px">
     <form method="post" action="/outreach/{{ campaign.id }}/build-queue">
       <button type="submit" class="btn btn-primary" {% if campaign.status == 'running' %}disabled{% endif %}>
-        <i class="ti ti-list-details"></i> Собрать очередь из базы
+        <i class="ti ti-list-details"></i> {{ t("Собрать очередь из базы") }}
       </button>
     </form>
     {% if campaign.status == 'running' %}
@@ -291,7 +291,7 @@
     шаблон рассылки
     {% endif %} ·
     {% endif %}
-    Глобально «уже писали»: <a href="/contacted" class="table-link">реестр и снятие отметки</a> ·
+    Глобально «уже писали»: <a href="/contacted" class="table-link">{{ t("реестр и снятие отметки") }}</a> ·
     Пропуск «уже писали»: {{ 'да' if cfg.get('skip_contacted', true) else 'нет' }}
     {% if cfg.get('skip_contacted', true) %}
     (вся установка — любой кабинет и аккаунт)
@@ -321,7 +321,7 @@
     </div>
     {% if not is_comment_campaign %}
     <p class="form-hint" style="margin:0 0 14px;line-height:1.55;color:var(--text-secondary);max-width:920px">
-      {{ t("Каждая строка очереди — это") }} <strong>отдельный контакт</strong>{{ t(". «Отправлено» значит: ЛС ушло в") }} <strong>переписку с человеком из этой строки</strong> {{ t("(его имя в колонке «Кому»). Чтобы увидеть сообщение, откройте в Messenger") }} <strong>диалог именно с этим контактом</strong>{{ t(", а не только с первым в списке отчёта. Если у Facebook включено ограничение истории чата, часть старых сообщений в интерфейсе может не показываться.") }}
+      {{ t("Каждая строка очереди — это") }} <strong>{{ t("отдельный контакт") }}</strong>{{ t(". «Отправлено» значит: ЛС ушло в") }} <strong>{{ t("переписку с человеком из этой строки") }}</strong> {{ t("(его имя в колонке «Кому»). Чтобы увидеть сообщение, откройте в Messenger") }} <strong>{{ t("диалог именно с этим контактом") }}</strong>{{ t(", а не только с первым в списке отчёта. Если у Facebook включено ограничение истории чата, часть старых сообщений в интерфейсе может не показываться.") }}
     </p>
     {% endif %}
     {% if queue_rows %}
@@ -384,7 +384,7 @@
     </div>
     <div style="padding:14px 20px 18px;display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;background:var(--bg-surface-hover)">
       <button type="button" class="btn btn-secondary" data-outreach-bulk-forget-cancel>{{ t("Отмена") }}</button>
-      <button type="button" class="btn btn-primary" data-outreach-bulk-forget-confirm><i class="ti ti-repeat"></i> Снять с учёта</button>
+      <button type="button" class="btn btn-primary" data-outreach-bulk-forget-confirm><i class="ti ti-repeat"></i> {{ t("Снять с учёта") }}</button>
     </div>
   </div>
 </div>
@@ -394,7 +394,7 @@
     <div style="padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px">
       <span style="flex-shrink:0;width:40px;height:40px;border-radius:10px;background:rgba(99,102,241,.2);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:1.25rem" aria-hidden="true"><i class="ti ti-repeat"></i></span>
       <div style="min-width:0">
-        <h2 id="outreach-forget-title" style="margin:0;font-size:1.08rem;font-weight:600">Снова поставить в очередь?</h2>
+        <h2 id="outreach-forget-title" style="margin:0;font-size:1.08rem;font-weight:600">{{ t("Снова поставить в очередь?") }}</h2>
         <p id="outreach-forget-text" class="form-hint" style="margin:10px 0 0;font-size:var(--font-size-sm);line-height:1.55;color:var(--text-secondary)"></p>
       </div>
     </div>
@@ -426,7 +426,7 @@
     <div style="padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px">
       <span style="flex-shrink:0;width:40px;height:40px;border-radius:10px;background:rgba(239,68,68,.15);color:var(--error);display:flex;align-items:center;justify-content:center;font-size:1.25rem" aria-hidden="true"><i class="ti ti-trash"></i></span>
       <div style="min-width:0">
-        <h2 id="outreach-delete-title" style="margin:0;font-size:1.08rem;font-weight:600">Удалить кампанию?</h2>
+        <h2 id="outreach-delete-title" style="margin:0;font-size:1.08rem;font-weight:600">{{ t("Удалить кампанию?") }}</h2>
         <p id="outreach-delete-text" class="form-hint" style="margin:10px 0 0;font-size:var(--font-size-sm);line-height:1.55;color:var(--text-secondary)">Кампания «{{ campaign.name|e }}» и вся её очередь будут удалены без восстановления.</p>
       </div>
     </div>

@@ -24,7 +24,7 @@
   {% endif %}
 
   <section>
-    <h2 class="reddit-card__title" style="margin:0 0 10px;">Черновики и отправленные</h2>
+    <h2 class="reddit-card__title" style="margin:0 0 10px;">{{ t("Черновики и отправленные") }}</h2>
     {% if drafts %}
     <div class="reddit-grid reddit-grid--wide">
       {% for d in drafts %}
@@ -78,7 +78,7 @@
     {% else %}
     <div class="reddit-placeholder">
       <div class="reddit-placeholder__icon"><i class="ti ti-message"></i></div>
-      <p class="reddit-placeholder__text">Сообщений пока нет.</p>
+      <p class="reddit-placeholder__text">{{ t("Сообщений пока нет.") }}</p>
     </div>
     {% endif %}
   </section>

@@ -7,10 +7,10 @@
     <div>
       <h1>{{ t("Уже контактировали") }}</h1>
       <p class="subtitle">
-        {{ t("Глобальный учёт: с какого FB-аккаунта кому уже уходило ЛС. Пока включён пропуск «уже писали» в кампании, эти пары не попадут в очередь. Удаление строки здесь снимает только") }} <strong>глобальную</strong> отметку.
+        {{ t("Глобальный учёт: с какого FB-аккаунта кому уже уходило ЛС. Пока включён пропуск «уже писали» в кампании, эти пары не попадут в очередь. Удаление строки здесь снимает только") }} <strong>{{ t("глобальную") }}</strong> {{ t("отметку.") }}
       </p>
       <p class="subtitle" style="margin-top:8px;font-size:var(--font-size-sm);color:var(--text-secondary)">
-        {{ t("Если человек уже был") }} <strong>успешно отправлен в конкретной кампании с партиями</strong>{{ t(", его id может дополнительно числиться в учёте этой кампании — тогда на странице рассылки у строки «Отправлено» есть «Снова в партию» (снимает и глобальную отметку для этой пары, и учёт кампании).") }}
+        {{ t("Если человек уже был") }} <strong>{{ t("успешно отправлен в конкретной кампании с партиями") }}</strong>{{ t(", его id может дополнительно числиться в учёте этой кампании — тогда на странице рассылки у строки «Отправлено» есть «Снова в партию» (снимает и глобальную отметку для этой пары, и учёт кампании).") }}
         <a href="/outreach" class="table-link">{{ t("К кампаниям рассылки") }}</a>
       </p>
     </div>
@@ -27,7 +27,7 @@
       <button type="submit" class="btn btn-sm btn-primary">{{ t("Найти") }}</button>
       <div class="contacted-account-group">
         <label for="accf">{{ t("Аккаунт") }}</label>
-        <select id="accf" name="account_id" class="form-input" onchange="this.form.submit()" title="Фильтр по FB-аккаунту">
+        <select id="accf" name="account_id" class="form-input" onchange="this.form.submit()" title="{{ t("Фильтр по FB-аккаунту") }}">
           <option value="">{{ t("Все") }}</option>
           {% for a in fb_accounts %}
           <option value="{{ a.id }}" {% if account_filter == (a.id ~ '') %}selected{% endif %}>{{ a.label }}</option>
@@ -62,11 +62,11 @@
             <td style="font-size:var(--font-size-xs);color:var(--text-secondary)">{{ format_dt_madrid(c.first_contacted_at) }}</td>
             <td style="font-size:var(--font-size-xs);color:var(--text-secondary)">{{ format_dt_madrid(c.last_message_at) }}</td>
             <td>
-              <button type="button" class="btn-contacted-unmark contacted-remove-open" title="Снять глобальную отметку"
+              <button type="button" class="btn-contacted-unmark contacted-remove-open" title="{{ t("Снять глобальную отметку") }}"
                       data-action="/contacted/{{ c.id }}/remove"
                       data-person="{{ (p.display_name or p.first_name or ('#' ~ p.id))|e }}"
                       data-account="{{ acc.label|e }}">
-                <i class="ti ti-user-minus"></i> Снять отметку
+                <i class="ti ti-user-minus"></i> {{ t("Снять отметку") }}
               </button>
             </td>
           </tr>
@@ -112,13 +112,13 @@
     <div style="padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px">
       <span style="flex-shrink:0;width:40px;height:40px;border-radius:10px;background:rgba(99,102,241,.2);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:1.25rem" aria-hidden="true"><i class="ti ti-user-minus"></i></span>
       <div style="min-width:0">
-        <h2 id="contacted-remove-title" style="margin:0;font-size:1.08rem;font-weight:600">Снять отметку «уже контактировали»?</h2>
+        <h2 id="contacted-remove-title" style="margin:0;font-size:1.08rem;font-weight:600">{{ t("Снять отметку «уже контактировали»?") }}</h2>
         <p id="contacted-remove-text" class="form-hint" style="margin:10px 0 0;font-size:var(--font-size-sm);line-height:1.55;color:var(--text-secondary)"></p>
       </div>
     </div>
     <div style="padding:14px 20px 18px;display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;background:var(--bg-surface-hover)">
       <button type="button" class="btn btn-secondary" id="contacted-remove-cancel">{{ t("Отмена") }}</button>
-      <button type="button" class="btn btn-primary" id="contacted-remove-confirm"><i class="ti ti-check"></i> Снять отметку</button>
+      <button type="button" class="btn btn-primary" id="contacted-remove-confirm"><i class="ti ti-check"></i> {{ t("Снять отметку") }}</button>
     </div>
   </div>
 </div>

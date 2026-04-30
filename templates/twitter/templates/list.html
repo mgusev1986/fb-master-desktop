@@ -47,7 +47,7 @@
                 <input type="number" name="n" min="2" max="6" value="3" style="width:48px;padding:4px;border-radius:6px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font-size:12px;"/>
                 <button class="x-btn" type="submit" style="font-size:12px;padding:4px 8px;"><i class="ti ti-arrows-shuffle"></i> {{ t("Варианты") }}</button>
               </form>
-              <form method="post" action="/twitter/templates/{{ t.id }}/ai" style="margin:0;"><input type="hidden" name="op" value="shorten"/><button class="x-btn" type="submit" style="font-size:12px;padding:4px 8px;"><i class="ti ti-text-decrease"></i> Сократить (280)</button></form>
+              <form method="post" action="/twitter/templates/{{ t.id }}/ai" style="margin:0;"><input type="hidden" name="op" value="shorten"/><button class="x-btn" type="submit" style="font-size:12px;padding:4px 8px;"><i class="ti ti-text-decrease"></i> {{ t("Сократить (280)") }}</button></form>
               <form method="post" action="/twitter/templates/{{ t.id }}/ai" style="margin:0;"><input type="hidden" name="op" value="soften"/><button class="x-btn" type="submit" style="font-size:12px;padding:4px 8px;"><i class="ti ti-leaf"></i> Soften</button></form>
               <form method="post" action="/twitter/templates/{{ t.id }}/ai" style="margin:0;display:inline-flex;gap:4px;">
                 <input type="hidden" name="op" value="rewrite"/>

@@ -8,22 +8,16 @@
       <h1>{% if cabinet_client_mode(request) %}{{ t("Аккаунты") }}{% else %}{{ t("Facebook-аккаунты") }}{% endif %}</h1>
       <p class="subtitle">
         {% if cabinet_client_mode(request) %}
-        После входа программа <strong>запоминает</strong> его — повторно вводить данные обычно не нужно.
-        Одновременно в работе может быть до <strong>{{ max_fb_active_slots }}</strong> профилей; если лимит исчерпан, у одной карточки выберите «Не в работе».
-        Для чатов нажмите <strong>{{ t("«Использовать в Мессенджере»") }}</strong> у нужного профиля. Данные из файла импорта хранятся <strong>в зашифрованном виде</strong>.
+        После входа программа <strong>{{ t("запоминает") }}</strong> {{ t("его — повторно вводить данные обычно не нужно. Одновременно в работе может быть до") }} <strong>{{ max_fb_active_slots }}</strong> {{ t("профилей; если лимит исчерпан, у одной карточки выберите «Не в работе». Для чатов нажмите") }} <strong>{{ t("«Использовать в Мессенджере»") }}</strong> {{ t("у нужного профиля. Данные из файла импорта хранятся") }} <strong>{{ t("в зашифрованном виде") }}</strong>.
         {% else %}
         Один раз вошли в Facebook — сессия хранится в папке профиля Chromium на диске и дублируется в базе (cookies).
-        <strong>{{ t("Одновременно в работе") }}</strong> может быть не больше <strong>{{ max_fb_active_slots }}</strong> аккаунтов (слоты 1–{{ max_fb_active_slots }}): ими можно пользоваться в Мессенджере, парсере, прогреве и рассылках <strong>параллельно</strong> {{ t("(например, один — чат, второй — парсинг, третий — прогрев). После успешного входа или проверки сессии свободный слот") }} <strong>назначается сам</strong> {{ t("(1, затем 2, затем 3); если все три заняты — аккаунт остаётся в ожидании, пока не освободите слот вручную. Остальные аккаунты в") }} <strong>ожидании</strong> — вход и проверка сессии доступны; в задачи без слота они не пойдут (предыдущий владелец слота при переназначении уйдёт в ожидание).
-        Для Мессенджера после слота нажмите «Использовать в Мессенджере» у нужной карточки.
-        При <strong>импорте из файла</strong> логин, пароль и секрет 2FA (TOTP) сохраняются в базе <strong>в зашифрованном виде</strong> {{ t("(ключ из") }} <code>SECRET_KEY</code> в <code>.env</code>{{ t("); для ручной проверки пары без сохранения по-прежнему есть блок ниже у каждой карточки.") }}
+        <strong>{{ t("Одновременно в работе") }}</strong> {{ t("может быть не больше") }} <strong>{{ max_fb_active_slots }}</strong> аккаунтов (слоты 1–{{ max_fb_active_slots }}): ими можно пользоваться в Мессенджере, парсере, прогреве и рассылках <strong>{{ t("параллельно") }}</strong> {{ t("(например, один — чат, второй — парсинг, третий — прогрев). После успешного входа или проверки сессии свободный слот") }} <strong>{{ t("назначается сам") }}</strong> {{ t("(1, затем 2, затем 3); если все три заняты — аккаунт остаётся в ожидании, пока не освободите слот вручную. Остальные аккаунты в") }} <strong>{{ t("ожидании") }}</strong> {{ t("— вход и проверка сессии доступны; в задачи без слота они не пойдут (предыдущий владелец слота при переназначении уйдёт в ожидание). Для Мессенджера после слота нажмите «Использовать в Мессенджере» у нужной карточки. При") }} <strong>{{ t("импорте из файла") }}</strong> {{ t("логин, пароль и секрет 2FA (TOTP) сохраняются в базе") }} <strong>{{ t("в зашифрованном виде") }}</strong> {{ t("(ключ из") }} <code>SECRET_KEY</code> в <code>.env</code>{{ t("); для ручной проверки пары без сохранения по-прежнему есть блок ниже у каждой карточки.") }}
         <span style="display:block;margin-top:8px;font-size:var(--font-size-sm);color:var(--text-secondary)">
           {{ t("Время «Проверка» и «В базе» в интерфейсе показывается в") }} <strong>Europe/Madrid</strong> {{ t("(как и даты в мессенджере и рассылках). В базе хранится UTC; это не баг и не «задержка», а единый часовой пояс отображения.") }}
         </span>
         {% if fb_local_chrome_cookies %}
         <span style="display:block;margin-top:8px;font-size:var(--font-size-sm);color:var(--text-secondary)">
-          <strong>{{ t("Локально:") }}</strong> {{ t("включён") }} <code>FB_LOCAL_CHROME_COOKIES</code> — cookies из <strong>Google Chrome</strong> подставляются только если у аккаунта ещё <strong>{{ t("нет") }}</strong> данных в папке профиля и <strong>{{ t("нет") }}</strong> снимка сессии в базе (пустой новый аккаунт).
-          Для купленных/импортированных профилей используется только их сессия, чтобы не подмешивался ваш личный Facebook.
-          Перед первым входом полностью закройте Chrome (<kbd>Cmd</kbd>+<kbd>Q</kbd> на Mac). Для нескольких аккаунтов без путаницы проще выключить: <code>FB_LOCAL_CHROME_COOKIES=false</code>.
+          <strong>{{ t("Локально:") }}</strong> {{ t("включён") }} <code>FB_LOCAL_CHROME_COOKIES</code> {{ t("— cookies из") }} <strong>Google Chrome</strong> {{ t("подставляются только если у аккаунта ещё") }} <strong>{{ t("нет") }}</strong> {{ t("данных в папке профиля и") }} <strong>{{ t("нет") }}</strong> {{ t("снимка сессии в базе (пустой новый аккаунт). Для купленных/импортированных профилей используется только их сессия, чтобы не подмешивался ваш личный Facebook. Перед первым входом полностью закройте Chrome (") }}<kbd>Cmd</kbd>+<kbd>Q</kbd> {{ t("на Mac). Для нескольких аккаунтов без путаницы проще выключить:") }} <code>FB_LOCAL_CHROME_COOKIES=false</code>.
         </span>
         {% endif %}
         {% endif %}
@@ -55,8 +49,7 @@
     {% endif %}
     {% endif %}
     <p style="margin:12px 0 0;font-size:var(--font-size-sm);color:var(--text-secondary);line-height:1.5">
-      <strong>{{ t("Защита прокси:") }}</strong> на сервере фоном проверяется туннель (раз в <strong>{{ proxy_health_interval_sec }}</strong> с, настройка <code>PROXY_HEALTH_CHECK_INTERVAL_SEC</code>{{ t("). Если прокси перестаёт отвечать,") }} <strong>рассылки, прогревы и режим агента</strong> по этому аккаунту ставятся на паузу, парсер — отменяется.
-      Дополнительно укажите <strong>дату и время окончания прокси</strong> у провайдера: автоматизация остановится на <strong>{{ t("1 час раньше") }}</strong> этого момента; счётчик — в «Центр здоровья».
+      <strong>{{ t("Защита прокси:") }}</strong> {{ t("на сервере фоном проверяется туннель (раз в") }} <strong>{{ proxy_health_interval_sec }}</strong> {{ t("с, настройка") }} <code>PROXY_HEALTH_CHECK_INTERVAL_SEC</code>{{ t("). Если прокси перестаёт отвечать,") }} <strong>{{ t("рассылки, прогревы и режим агента") }}</strong> {{ t("по этому аккаунту ставятся на паузу, парсер — отменяется. Дополнительно укажите") }} <strong>{{ t("дату и время окончания прокси") }}</strong> {{ t("у провайдера: автоматизация остановится на") }} <strong>{{ t("1 час раньше") }}</strong> {{ t("этого момента; счётчик — в «Центр здоровья».") }}
     </p>
   </div>
 </div>
@@ -83,7 +76,7 @@
       {{ t("(полный путь подсказан при наведении). На сервере укажите постоянный каталог в") }}
       <code>.env</code>: <code>BROWSER_PROFILES_DIR=/var/lib/fb-master/browser_profiles</code>
       — данные останутся на диске VPS/тома; путь не должен совпадать с вашим Mac.
-      <br/><strong>Язык и часовой пояс</strong> окна входа берутся из <strong>вашего компьютера</strong> (locale и системная зона), а не из блока «Импорт» ниже — пресет «Турция» там только для купленных аккаунтов.
+      <br/><strong>{{ t("Язык и часовой пояс") }}</strong> {{ t("окна входа берутся из") }} <strong>{{ t("вашего компьютера") }}</strong> (locale и системная зона), а не из блока «Импорт» ниже — пресет «Турция» там только для купленных аккаунтов.
       {% endif %}
     </p>
   </div>
@@ -101,13 +94,13 @@
   <div class="card-body" style="font-size:var(--font-size-sm);line-height:1.55">
     <p style="margin:0 0 12px;color:var(--text-secondary)">
       {% if cabinet_client_mode(request) %}
-      Загрузите <strong>.txt</strong> или вставьте <strong>одну строку</strong>{{ t(", как вам её дали. Если строка") }} <strong>очень длинная</strong> — это обычно уже «готовый» вход; прокси по желанию, но для стабильности лучше указать.
-      Если строка <strong>короткая, с двоеточиями</strong> {{ t("(логин, пароль и т.д.) — в поле прокси ниже укажите прокси") }} <strong>обязательно</strong>{{ t(". Выберите") }} <strong>страну</strong> в списке — подстроятся язык и время. Затем на карточке нажмите <strong>{{ t("«Войти в Facebook»") }}</strong> (открыть сайт в обычном браузере недостаточно).
+      Загрузите <strong>.txt</strong> {{ t("или вставьте") }} <strong>{{ t("одну строку") }}</strong>{{ t(", как вам её дали. Если строка") }} <strong>{{ t("очень длинная") }}</strong> — это обычно уже «готовый» вход; прокси по желанию, но для стабильности лучше указать.
+      Если строка <strong>{{ t("короткая, с двоеточиями") }}</strong> {{ t("(логин, пароль и т.д.) — в поле прокси ниже укажите прокси") }} <strong>{{ t("обязательно") }}</strong>{{ t(". Выберите") }} <strong>{{ t("страну") }}</strong> {{ t("в списке — подстроятся язык и время. Затем на карточке нажмите") }} <strong>{{ t("«Войти в Facebook»") }}</strong> (открыть сайт в обычном браузере недостаточно).
       {% else %}
-      Поддерживаются <strong>несколько форматов</strong> {{ t("(в файле или вставкой; лишние строки заголовка в .txt пропускаются, берётся первая подходящая строка, кроме") }} <strong>чистого JSON</strong> — тогда обрабатывается весь файл):
-      <br/>• <strong>Только JSON cookies</strong> в .txt: массив <code>[{&quot;name&quot;:&quot;…&quot;, &quot;domain&quot;:&quot;.facebook.com&quot;, …}, …]</code> или экспорт Playwright <code>{&quot;cookies&quot;:[…], &quot;origins&quot;:[]}</code> — без логина и пароля в строке, сессия сразу в базу (удобно для выгрузок Cookie-Editor и т.п.).
-      <br/>• <strong>{{ t("Авторизация по cookie") }}</strong> {{ t("(как на витрине):") }} <code>телефон:пароль:User-Agent|[…JSON cookies…]</code> — сессия сразу пишется в базу, в карточке сохраняется User-Agent из строки (пароль шифруется на случай ручного входа). Прокси можно не указывать, но для Facebook лучше сразу задать.
-      <br/>• <strong>{{ t("Классика") }}</strong>: <code>логин:пароль:TOTP_секрет:ДД.ММ.ГГГГ</code> — нужен <strong>прокси</strong> <code>{{ t("IP:порт:логин:пароль") }}</code> {{ t("(SOCKS5: префикс") }} <code>socks5://</code>{{ t("). Пресет региона задаёт locale/TZ; для cookie-импорта UA из файла подставляется после пресета.") }}
+      Поддерживаются <strong>{{ t("несколько форматов") }}</strong> {{ t("(в файле или вставкой; лишние строки заголовка в .txt пропускаются, берётся первая подходящая строка, кроме") }} <strong>{{ t("чистого JSON") }}</strong> — тогда обрабатывается весь файл):
+      <br/>• <strong>{{ t("Только JSON cookies") }}</strong> {{ t("в .txt: массив") }} <code>[{&quot;name&quot;:&quot;…&quot;, &quot;domain&quot;:&quot;.facebook.com&quot;, …}, …]</code> {{ t("или экспорт Playwright") }} <code>{&quot;cookies&quot;:[…], &quot;origins&quot;:[]}</code> {{ t("— без логина и пароля в строке, сессия сразу в базу (удобно для выгрузок Cookie-Editor и т.п.).") }}
+      <br/>• <strong>{{ t("Авторизация по cookie") }}</strong> {{ t("(как на витрине):") }} <code>{{ t("телефон:пароль:User-Agent|[…JSON cookies…]") }}</code> — сессия сразу пишется в базу, в карточке сохраняется User-Agent из строки (пароль шифруется на случай ручного входа). Прокси можно не указывать, но для Facebook лучше сразу задать.
+      <br/>• <strong>{{ t("Классика") }}</strong>: <code>{{ t("логин:пароль:TOTP_секрет:ДД.ММ.ГГГГ") }}</code> — нужен <strong>{{ t("прокси") }}</strong> <code>{{ t("IP:порт:логин:пароль") }}</code> {{ t("(SOCKS5: префикс") }} <code>socks5://</code>{{ t("). Пресет региона задаёт locale/TZ; для cookie-импорта UA из файла подставляется после пресета.") }}
       <br/><strong>{{ t("Важно:") }}</strong> ручной вход в обычном Chrome (в т.ч. инкогнито) не подставляет cookies из файла — сначала импортируйте строку сюда, затем в карточке нажмите «Войти в Facebook»: в окно Chromium подмешивается сессия из базы.
       {% endif %}
     </p>
@@ -129,7 +122,7 @@
           <button type="button" class="btn btn-secondary btn-sm" id="imp-geo-btn" data-client-mode="{% if cabinet_client_mode(request) %}1{% else %}0{% endif %}">
             <i class="ti ti-map-pin"></i> {% if cabinet_client_mode(request) %}Страна по прокси{% else %}Узнать страну по прокси и выставить пресет{% endif %}
           </button>
-          <span class="form-hint" style="margin:0">{% if cabinet_client_mode(request) %}Страна определяется <strong>{{ t("через ваш прокси") }}</strong>, как при работе с Facebook.{% else %}Запрос к гео-сервису идёт <strong>через этот прокси</strong> (как у Facebook).{% endif %}</span>
+          <span class="form-hint" style="margin:0">{% if cabinet_client_mode(request) %}Страна определяется <strong>{{ t("через ваш прокси") }}</strong>, как при работе с Facebook.{% else %}Запрос к гео-сервису идёт <strong>{{ t("через этот прокси") }}</strong> (как у Facebook).{% endif %}</span>
         </div>
         <div id="imp-geo-result" class="form-hint" style="margin-top:10px;display:none;max-width:48rem;line-height:1.45"></div>
       </div>
@@ -157,15 +150,15 @@
       </div>
       {% if not cabinet_client_mode(request) %}
       <p class="form-hint" style="margin:0;color:var(--text-secondary)">
-        {{ t("Поля «Свой locale / timezone» учитываются") }} <strong>только</strong> если в списке выбран пункт «Свой locale / timezone». Иначе берётся пресет из «Регион» (по умолчанию — Турция). На ручное «Добавить аккаунт» этот блок не влияет.
+        {{ t("Поля «Свой locale / timezone» учитываются") }} <strong>{{ t("только") }}</strong> {{ t("если в списке выбран пункт «Свой locale / timezone». Иначе берётся пресет из «Регион» (по умолчанию — Турция). На ручное «Добавить аккаунт» этот блок не влияет.") }}
       </p>
       <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div class="form-group" style="margin:0">
-          <label class="form-label" for="imp-locale">Свой locale (если «Свой»)</label>
+          <label class="form-label" for="imp-locale">{{ t("Свой locale (если «Свой»)") }}</label>
           <input id="imp-locale" name="custom_locale" type="text" class="form-input" placeholder="tr-TR" autocomplete="off"/>
         </div>
         <div class="form-group" style="margin:0">
-          <label class="form-label" for="imp-tz">Свой timezone IANA</label>
+          <label class="form-label" for="imp-tz">{{ t("Свой timezone IANA") }}</label>
           <input id="imp-tz" name="custom_timezone" type="text" class="form-input" placeholder="Europe/Istanbul" autocomplete="off"/>
         </div>
       </div>
@@ -173,9 +166,9 @@
       <label class="fb-check" style="margin:0">
         <input type="checkbox" name="run_auto_login" value="on"/>
         {% if cabinet_client_mode(request) %}
-        Только для <strong>короткой строки</strong> с логином и паролем (не для длинной «готовой»). Обычно галочку лучше <strong>снять</strong> и войти кнопкой на карточке.
+        Только для <strong>{{ t("короткой строки") }}</strong> {{ t("с логином и паролем (не для длинной «готовой»). Обычно галочку лучше") }} <strong>{{ t("снять") }}</strong> и войти кнопкой на карточке.
         {% else %}
-        Сразу открыть окно и выполнить <strong>автовход</strong> (только для формата с TOTP; для cookie-строки не используется). По умолчанию выключено — откройте окно сами кнопкой «Войти в Facebook» или «Автовход (TOTP)».
+        Сразу открыть окно и выполнить <strong>{{ t("автовход") }}</strong> (только для формата с TOTP; для cookie-строки не используется). По умолчанию выключено — откройте окно сами кнопкой «Войти в Facebook» или «Автовход (TOTP)».
         {% endif %}
       </label>
       <button type="submit" class="btn btn-primary" style="align-self:flex-start;min-height:44px">
@@ -352,9 +345,9 @@
       </div>
 
       {% if h %}
-      <div class="fb-account-health" role="region" aria-label="Центр здоровья аккаунта">
+      <div class="fb-account-health" role="region" aria-label="{{ t("Центр здоровья аккаунта") }}">
         <div class="fb-account-health-head">
-          <span class="fb-account-health-title"><i class="ti ti-heart-rate-monitor"></i> Центр здоровья</span>
+          <span class="fb-account-health-title"><i class="ti ti-heart-rate-monitor"></i> {{ t("Центр здоровья") }}</span>
           <span class="fb-account-health-score badge {% if h.risk_level == 'low' %}badge-success{% elif h.risk_level == 'medium' %}badge-warning{% else %}badge-error{% endif %}"
                 title="{{ t("Оценка надёжности по сессии, прокси, суточной нагрузке (UTC) и ошибкам задач за 24 ч") }}">
             Надёжность {{ h.trust_score }}/100
@@ -363,11 +356,11 @@
         <p class="fb-account-health-lead"><strong>{{ h.proxy_monitor_summary }}</strong>{% if h.proxy_detail %} — {{ h.proxy_detail }}{% endif %}</p>
         <ul class="fb-account-health-metrics">
           <li class="fb-health-proxy-row">
-            <span>Стабильность прокси</span>
+            <span>{{ t("Стабильность прокси") }}</span>
             <span class="fb-health-proxy-cell">
               {% if h.proxy_lease_expired %}
                 <span class="fb-proxy-lease fb-proxy-lease-expired" title="{{ t("Остановка с запасом 1 ч до конца у провайдера") }}">{{ h.proxy_lease_line }}</span>
-                {% if h.proxy_blocked %}<span class="form-hint" style="display:block;margin-top:4px">туннель: защита на паузе</span>{% endif %}
+                {% if h.proxy_blocked %}<span class="form-hint" style="display:block;margin-top:4px">{{ t("туннель: защита на паузе") }}</span>{% endif %}
               {% elif h.proxy_lease_configured %}
                 {% if h.proxy_lease_tier == 'ok_green' %}
                   <span class="fb-proxy-lease fb-proxy-lease-green" title="{{ t("Остаток до окончания у провайдера (зелёный порог: больше 7 суток). Автоостановка за 1 ч раньше.") }}">{{ h.proxy_lease_line }}</span>
@@ -381,9 +374,9 @@
                   <span class="fb-proxy-lease">{{ h.proxy_lease_line }}</span>
                 {% endif %}
                 {% if h.proxy_blocked %}
-                  <span class="form-hint" style="display:block;margin-top:4px;color:var(--text-secondary)">туннель: остановлен защитой</span>
+                  <span class="form-hint" style="display:block;margin-top:4px;color:var(--text-secondary)">{{ t("туннель: остановлен защитой") }}</span>
                 {% else %}
-                  <span class="form-hint" style="display:block;margin-top:4px;color:var(--text-secondary)">туннель: ок (мониторинг)</span>
+                  <span class="form-hint" style="display:block;margin-top:4px;color:var(--text-secondary)">{{ t("туннель: ок (мониторинг)") }}</span>
                 {% endif %}
               {% elif h.proxy_blocked %}
                 остановлена защитой
@@ -395,7 +388,7 @@
             </span>
           </li>
           <li><span>{{ t("Качество сессии") }}</span><span>{{ h.session_quality }}</span></li>
-          <li><span>Суточная нагрузка (UTC)</span><span>рассылка {{ h.daily_outreach }}, прогрев {{ h.daily_warmup }}, агент {{ h.daily_sequence }}</span></li>
+          <li><span>{{ t("Суточная нагрузка (UTC)") }}</span><span>рассылка {{ h.daily_outreach }}, прогрев {{ h.daily_warmup }}, агент {{ h.daily_sequence }}</span></li>
           {% if h.warming_label %}
           <li><span>{{ t("Прогрев") }}</span><span>{{ h.warming_label }}</span></li>
           {% endif %}
@@ -424,9 +417,9 @@
                   title="{% if cabinet_client_mode(request) %}Выбор применяется сразу{% else %}Слот сохраняется сразу после выбора{% endif %}"
                   onchange="this.form.submit()">
             <option value="" {% if not a.active_slot %}selected{% endif %}>{% if cabinet_client_mode(request) %}{{ t("Не в работе") }}{% else %}{{ t("Ожидание") }}{% endif %}</option>
-            <option value="1" {% if a.active_slot == 1 %}selected{% endif %}>Слот 1</option>
-            <option value="2" {% if a.active_slot == 2 %}selected{% endif %}>Слот 2</option>
-            <option value="3" {% if a.active_slot == 3 %}selected{% endif %}>Слот 3</option>
+            <option value="1" {% if a.active_slot == 1 %}selected{% endif %}>{{ t("Слот 1") }}</option>
+            <option value="2" {% if a.active_slot == 2 %}selected{% endif %}>{{ t("Слот 2") }}</option>
+            <option value="3" {% if a.active_slot == 3 %}selected{% endif %}>{{ t("Слот 3") }}</option>
           </select>
         </form>
         {% if embedded_login_enabled %}
@@ -464,12 +457,11 @@
       </div>
       <p class="form-hint" style="margin-top:8px">
         {% if cabinet_client_mode(request) %}
-        Кнопки входа открывают <strong>отдельное окно</strong> на компьютере — загляните в панель задач или Dock.
-        «Проверить вход» может занять <strong>до минуты</strong>. Не нажимайте вход много раз подряд; при предупреждении Facebook подождите или смените прокси.
+        Кнопки входа открывают <strong>{{ t("отдельное окно") }}</strong> {{ t("на компьютере — загляните в панель задач или Dock. «Проверить вход» может занять") }} <strong>{{ t("до минуты") }}</strong>. Не нажимайте вход много раз подряд; при предупреждении Facebook подождите или смените прокси.
         {% else %}
-        <strong>{{ t("«Войти в Facebook»") }}</strong> и <strong>{{ t("«Автовход (TOTP)»") }}</strong> открывают <strong>отдельное видимое окно Chromium</strong> {{ t("(не внутри этой вкладки) — смотрите Dock и панель задач.") }}
-        <strong>{{ t("Проверка сессии") }}</strong> запускает Chromium <strong>в фоне без окна</strong> и может занять <strong>до ~1 минуты</strong> — дождитесь ответа сверху.
-        Зелёный статус «сессия ок» ставится только если в снимке есть cookie <code>c_user</code> {{ t("(реальный вход); при числовом ID в карточке он должен совпадать с этим cookie. Это") }} <strong>не гарантия</strong>{{ t(", что Facebook сейчас пустит вас: Meta может показать «временно заблокированы» / rate limit по IP или частым входам — тогда подождите, смените прокси под ГЕО аккаунта и не жмите «Войти» десятки раз подряд. После закрытия окна входа снимок сессии пишется в") }} <code>data/app.db</code>{{ t(". Пока папка профиля на диске на месте, вход обычно не нужен повторять. Если сессия перестала работать — снова") }} <strong>{{ t("«Войти в Facebook»") }}</strong> {{ t("или") }} <strong>{{ t("«Автовход (TOTP)»") }}</strong>, затем при необходимости «Проверить сессию».
+        <strong>{{ t("«Войти в Facebook»") }}</strong> и <strong>{{ t("«Автовход (TOTP)»") }}</strong> {{ t("открывают") }} <strong>{{ t("отдельное видимое окно Chromium") }}</strong> {{ t("(не внутри этой вкладки) — смотрите Dock и панель задач.") }}
+        <strong>{{ t("Проверка сессии") }}</strong> {{ t("запускает Chromium") }} <strong>{{ t("в фоне без окна") }}</strong> {{ t("и может занять") }} <strong>{{ t("до ~1 минуты") }}</strong> — дождитесь ответа сверху.
+        Зелёный статус «сессия ок» ставится только если в снимке есть cookie <code>c_user</code> {{ t("(реальный вход); при числовом ID в карточке он должен совпадать с этим cookie. Это") }} <strong>{{ t("не гарантия") }}</strong>{{ t(", что Facebook сейчас пустит вас: Meta может показать «временно заблокированы» / rate limit по IP или частым входам — тогда подождите, смените прокси под ГЕО аккаунта и не жмите «Войти» десятки раз подряд. После закрытия окна входа снимок сессии пишется в") }} <code>data/app.db</code>{{ t(". Пока папка профиля на диске на месте, вход обычно не нужен повторять. Если сессия перестала работать — снова") }} <strong>{{ t("«Войти в Facebook»") }}</strong> {{ t("или") }} <strong>{{ t("«Автовход (TOTP)»") }}</strong>, затем при необходимости «Проверить сессию».
         {% endif %}
       </p>
 
@@ -480,7 +472,7 @@
           {% if cabinet_client_mode(request) %}
           Одноразовый код, как в приложении на телефоне для входа в сервисы. <strong>{{ t("Ключ для настройки не показывается") }}</strong> — только текущие цифры. Они обычно меняются каждые 30 секунд; успейте ввести в Facebook.
           {% else %}
-          Тот же алгоритм, что у Google Authenticator и сайтов вроде 2fa.live. <strong>Секрет не показывается</strong> — только текущий код.
+          Тот же алгоритм, что у Google Authenticator и сайтов вроде 2fa.live. <strong>{{ t("Секрет не показывается") }}</strong> — только текущий код.
           Обычно меняется каждые 30 секунд; успейте вставить в Facebook до смены.
           {% endif %}
         </p>
@@ -505,9 +497,9 @@
         <summary>{% if cabinet_client_mode(request) %}Проверить логин и пароль (один раз){% else %}Проверить логин и пароль{% endif %}</summary>
         <p class="form-hint" style="margin:10px 0">
           {% if cabinet_client_mode(request) %}
-          Только проверка: логин и пароль <strong>не сохраняются</strong>. Если включён прокси у этого профиля — он учитывается.
+          Только проверка: логин и пароль <strong>{{ t("не сохраняются") }}</strong>. Если включён прокси у этого профиля — он учитывается.
           {% else %}
-          Отправка во временный браузер Playwright: <strong>не сохраняется</strong> в SOCMASTER и не подставляется в профиль аккаунта.
+          Отправка во временный браузер Playwright: <strong>{{ t("не сохраняется") }}</strong> в SOCMASTER и не подставляется в профиль аккаунта.
           Учитывается прокси аккаунта (если включён). При 2FA или чекпоинте результат может быть «принято, нужно подтверждение».
           Автоматический вход может нарушать правила Meta — используйте на свой риск.
           {% endif %}
@@ -539,7 +531,7 @@
             <label class="form-label" for="label-{{ a.id }}">{{ t("Название в списке") }}</label>
             <input id="label-{{ a.id }}" name="label" type="text" class="form-input" value="{{ a.label }}" required maxlength="255"
                    placeholder="{{ t("Например: Elena Vasquez — Прокси Турция") }}"/>
-            <p class="form-hint" style="margin-top:4px">То же поле, что наверху карточки — здесь можно поправить вместе с прокси одной кнопкой «Сохранить».</p>
+            <p class="form-hint" style="margin-top:4px">{{ t("То же поле, что наверху карточки — здесь можно поправить вместе с прокси одной кнопкой «Сохранить».") }}</p>
           </div>
           <label class="fb-check">
             <input type="checkbox" name="proxy_enabled" value="true" {% if a.proxy_enabled %}checked{% endif %}/>
@@ -595,7 +587,7 @@
       </details>
 
       <details class="fb-danger-details">
-        <summary class="fb-danger-summary">Удалить аккаунт</summary>
+        <summary class="fb-danger-summary">{{ t("Удалить аккаунт") }}</summary>
         <form method="post" action="/fb-accounts/{{ a.id }}/delete" class="fb-delete-form"
               onsubmit="return document.getElementById('del-confirm-{{ a.id }}').checked;">
           <label class="fb-check">
@@ -620,7 +612,7 @@
     <div class="empty-state">
       <div class="empty-state-icon"><i class="ti ti-brand-facebook"></i></div>
       <h3>{{ t("Аккаунтов пока нет") }}</h3>
-      <p>{% if cabinet_client_mode(request) %}Нажмите <strong>{{ t("«Добавить аккаунт»") }}</strong> или загрузите данные в блоке <strong>{{ t("импорта") }}</strong> ниже.{% else %}Добавьте первый аккаунт — для каждого будет своя папка с cookies и данными Chromium.{% endif %}</p>
+      <p>{% if cabinet_client_mode(request) %}Нажмите <strong>{{ t("«Добавить аккаунт»") }}</strong> {{ t("или загрузите данные в блоке") }} <strong>{{ t("импорта") }}</strong> ниже.{% else %}Добавьте первый аккаунт — для каждого будет своя папка с cookies и данными Chromium.{% endif %}</p>
     </div>
   </div>
 </div>

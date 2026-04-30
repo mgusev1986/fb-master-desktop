@@ -51,7 +51,7 @@
 {% if request.query_params.get('enrolled') %}
 <div class="card" style="margin-bottom:16px">
   <div class="card-body" style="font-size:var(--font-size-sm)">
-    {{ t("Вручную зачислено:") }} <strong>{{ request.query_params.get('enrolled') }}</strong> человек.
+    {{ t("Вручную зачислено:") }} <strong>{{ request.query_params.get('enrolled') }}</strong> {{ t("человек.") }}
   </div>
 </div>
 {% endif %}
@@ -73,7 +73,7 @@
 {% if request.query_params.get('paused') %}
 <div class="card" style="margin-bottom:16px;border-color:var(--warning)">
   <div class="card-body" style="font-size:var(--font-size-sm)">
-    {{ t("Режим переведён в") }} <strong>паузу</strong>{{ t(": текущая задача в браузере завершится и дальше не пойдёт; новые партии и шаги не запускаются, пока не нажмёте «Возобновить» или не выберите «Активен» в настройках.") }}
+    {{ t("Режим переведён в") }} <strong>{{ t("паузу") }}</strong>{{ t(": текущая задача в браузере завершится и дальше не пойдёт; новые партии и шаги не запускаются, пока не нажмёте «Возобновить» или не выберите «Активен» в настройках.") }}
   </div>
 </div>
 {% endif %}
@@ -105,7 +105,7 @@
 {% if not (campaign.fb_account_ids or []) %}
 <div class="card" style="margin-bottom:16px;border-color:var(--warning)">
   <div class="card-body" style="font-size:var(--font-size-sm)">
-    У режима не выбрано ни одного Facebook-аккаунта. Сохраните хотя бы один аккаунт в настройках, иначе шаги не смогут выполняться. Счётчик «готово к шагу сейчас» останется 0, пока в очереди никого нет и не выбран аккаунт для работы.
+    {{ t("У режима не выбрано ни одного Facebook-аккаунта. Сохраните хотя бы один аккаунт в настройках, иначе шаги не смогут выполняться. Счётчик «готово к шагу сейчас» останется 0, пока в очереди никого нет и не выбран аккаунт для работы.") }}
   </div>
 </div>
 {% endif %}
@@ -113,7 +113,7 @@
 {% if source_total_count > 0 and not enroll_rows and (campaign.fb_account_ids or []) %}
 <div class="card" style="margin-bottom:16px;background:var(--bg-surface-hover)">
   <div class="card-body" style="font-size:var(--font-size-sm);color:var(--text-secondary)">
-    {{ t("В источнике есть") }} <strong>{{ source_total_count }}</strong> контакт(ов), но в очереди пока никого нет. Нажмите <strong>{{ t("«Полный автопилот»") }}</strong> {{ t("или") }} <strong>{{ t("«Только первая партия»") }}</strong> {{ t("(блок «Автоматизация») или") }} <strong>{{ t("«Загрузить всю выбранную базу сразу»") }}</strong> внизу страницы — тогда люди попадут в работу.
+    {{ t("В источнике есть") }} <strong>{{ source_total_count }}</strong> {{ t("контакт(ов), но в очереди пока никого нет. Нажмите") }} <strong>{{ t("«Полный автопилот»") }}</strong> {{ t("или") }} <strong>{{ t("«Только первая партия»") }}</strong> {{ t("(блок «Автоматизация») или") }} <strong>{{ t("«Загрузить всю выбранную базу сразу»") }}</strong> {{ t("внизу страницы — тогда люди попадут в работу.") }}
   </div>
 </div>
 {% endif %}
@@ -127,7 +127,7 @@
 {% endif %}
 
 <div class="card" style="margin-bottom:20px">
-  <div class="card-header">Сводка режима</div>
+  <div class="card-header">{{ t("Сводка режима") }}</div>
   <div class="card-body" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px">
     <span class="badge badge-default">Источник: {{ source_total_count }}</span>
     <span class="badge badge-default">Осталось в источнике: {{ remaining_source_count }}</span>
@@ -215,7 +215,7 @@
         class="btn btn-secondary"
         {% if campaign.status == 'paused' or not steps or not (campaign.fb_account_ids or []) or source_total_count == 0 or sequence_busy %}disabled{% endif %}
       >
-        <i class="ti ti-inbox"></i> Только первая партия
+        <i class="ti ti-inbox"></i> {{ t("Только первая партия") }}
       </button>
     </form>
 
@@ -235,13 +235,13 @@
         class="btn btn-secondary"
         {% if campaign.status != 'active' or remaining_source_count == 0 or unfinished_enrollment_count > 0 or not steps or not (campaign.fb_account_ids or []) or sequence_busy %}disabled{% endif %}
       >
-        <i class="ti ti-users-plus"></i> Следующая партия
+        <i class="ti ti-users-plus"></i> {{ t("Следующая партия") }}
       </button>
     </form>
 
     <form method="post" action="/scenarios/{{ campaign.id }}/automation/reset" data-confirm="Сбросить текущие партии и начать режим заново?" data-confirm-variant="danger">
       <button type="submit" class="btn btn-secondary" {% if sequence_busy %}disabled{% endif %}>
-        <i class="ti ti-refresh"></i> Сбросить партии
+        <i class="ti ti-refresh"></i> {{ t("Сбросить партии") }}
       </button>
     </form>
 
@@ -255,14 +255,13 @@
   </div>
   <div class="card-body" style="padding-top:0;font-size:var(--font-size-sm);color:var(--text-secondary)">
     {{ t("Режим работает последовательно: пока текущая партия не завершена, следующая не стартует. Интервалы между шагами считаются от прошлого успешно выполненного шага, а интервал между партиями — от момента последней загрузки партии.") }}
-    <strong>{{ t("Пауза") }}</strong> оставляет контакты в очереди, но останавливает выполнение и автоподгрузку партий, пока не нажмёте <strong>{{ t("Возобновить") }}</strong> {{ t("(или «Полный автопилот» / статус в настройках).") }}
-    <strong>{{ t("Полный автопилот") }}</strong> включает в настройках «автоматически брать новые партии», глобальный «Автозапуск ~15 мин», статус «Активен» и добавляет первую партию; после завершения партии по цепочке следующая подтягивается сразу (если прошёл интервал между партиями), без ожидания только срабатывания таймера 15 мин.
-    Кнопки «Только первая партия» и «Следующая партия» наполняют очередь вручную; шаги в браузере — «Выполнить готовые шаги» или автозапуск, если он включён.
+    <strong>{{ t("Пауза") }}</strong> {{ t("оставляет контакты в очереди, но останавливает выполнение и автоподгрузку партий, пока не нажмёте") }} <strong>{{ t("Возобновить") }}</strong> {{ t("(или «Полный автопилот» / статус в настройках).") }}
+    <strong>{{ t("Полный автопилот") }}</strong> {{ t("включает в настройках «автоматически брать новые партии», глобальный «Автозапуск ~15 мин», статус «Активен» и добавляет первую партию; после завершения партии по цепочке следующая подтягивается сразу (если прошёл интервал между партиями), без ожидания только срабатывания таймера 15 мин. Кнопки «Только первая партия» и «Следующая партия» наполняют очередь вручную; шаги в браузере — «Выполнить готовые шаги» или автозапуск, если он включён.") }}
   </div>
 </div>
 
 <div class="card" id="scenario-chain" tabindex="-1" style="margin-bottom:20px;scroll-margin-top:1rem">
-  <div class="card-header">Цепочка действий</div>
+  <div class="card-header">{{ t("Цепочка действий") }}</div>
   <div class="card-body">
     {% if steps %}
     <div class="table-wrap">
@@ -270,9 +269,9 @@
         <thead>
           <tr>
             <th>#</th>
-            <th>Через</th>
+            <th>{{ t("Через") }}</th>
             <th>{{ t("Действие") }}</th>
-            <th>Шаблон / текст</th>
+            <th>{{ t("Шаблон / текст") }}</th>
             <th></th>
           </tr>
         </thead>
@@ -312,7 +311,7 @@
                 <div style="margin-top:6px"><strong>{{ t("Комментарий:") }}</strong> {{ cfg.get('message') }}</div>
                 {% endif %}
                 {% if s.action_type in ('like_comment_friend_request', 'like_comment_friend_request_send_dm') %}
-                <div style="margin-top:6px"><strong>{{ t("Друзья:") }}</strong> отправить заявку в друзья</div>
+                <div style="margin-top:6px"><strong>{{ t("Друзья:") }}</strong> {{ t("отправить заявку в друзья") }}</div>
                 {% endif %}
                 {% if s.action_type == 'like_comment_friend_request_send_dm' %}
                   {% if cfg.get('ai_dm') %}
@@ -388,8 +387,8 @@
                 <button type="button" class="btn btn-sm btn-ghost scenario-step-edit-btn" data-step-id="{{ s.id }}" title="{{ t("Редактировать шаг") }}">
                   <i class="ti ti-pencil"></i>
                 </button>
-                <form method="post" action="/scenarios/{{ campaign.id }}/step/{{ s.id }}/delete" style="display:inline" data-confirm="Удалить этот шаг из цепочки?" data-confirm-title="Удаление шага" data-confirm-variant="danger">
-                  <button type="submit" class="btn btn-sm btn-ghost" style="color:var(--error)" title="Удалить шаг">
+                <form method="post" action="/scenarios/{{ campaign.id }}/step/{{ s.id }}/delete" style="display:inline" data-confirm="Удалить этот шаг из цепочки?" data-confirm-title="{{ t("Удаление шага") }}" data-confirm-variant="danger">
+                  <button type="submit" class="btn btn-sm btn-ghost" style="color:var(--error)" title="{{ t("Удалить шаг") }}">
                     <i class="ti ti-trash"></i>
                   </button>
                 </form>
@@ -457,21 +456,21 @@
                 {% endif %}
                 {% endfor %}
               </select>
-              <p class="form-hint" style="margin-top:6px">Серые строки в списке — это только названия разделов (группы шаблонов), их нельзя выбрать. Нужно выбрать конкретный шаблон под разделом.</p>
+              <p class="form-hint" style="margin-top:6px">{{ t("Серые строки в списке — это только названия разделов (группы шаблонов), их нельзя выбрать. Нужно выбрать конкретный шаблон под разделом.") }}</p>
             </div>
           </div>
 
 	          <div id="scenario-like-settings" class="scenario-like-settings" hidden>
             <div class="scenario-like-settings__head">
               <span class="scenario-like-settings__title"><i class="ti ti-thumb-up"></i> {{ t("Лайки по постам") }}</span>
-              <p class="form-hint" style="margin:6px 0 0">Только записи в ленте профиля (не комментарии). Кнопки «Нравится» считаются сверху вниз по странице.</p>
+              <p class="form-hint" style="margin:6px 0 0">{{ t("Только записи в ленте профиля (не комментарии). Кнопки «Нравится» считаются сверху вниз по странице.") }}</p>
             </div>
             <div class="scenario-like-settings__fields">
               <div class="form-group" style="margin:0">
                 <label class="form-label" for="post_like_mode">{{ t("Порядок лайков по постам") }}</label>
                 <select id="post_like_mode" name="post_like_mode" class="form-select">
-                  <option value="first">Сверху вниз по порядку</option>
-                  <option value="random">Случайно в пределах пула</option>
+                  <option value="first">{{ t("Сверху вниз по порядку") }}</option>
+                  <option value="random">{{ t("Случайно в пределах пула") }}</option>
                 </select>
               </div>
               <div class="form-group" style="margin:0">
@@ -480,7 +479,7 @@
                 <p class="form-hint">{{ t("Например, 5 = только среди лайков верхних пяти записей.") }}</p>
               </div>
               <div class="form-group" style="margin:0">
-                <label class="form-label" for="like_count_post">Сколько лайков выполнить</label>
+                <label class="form-label" for="like_count_post">{{ t("Сколько лайков выполнить") }}</label>
                 <input id="like_count_post" name="like_count_post" type="number" class="form-input" min="1" max="10" value="1"/>
               </div>
             </div>
@@ -496,7 +495,7 @@
 	                <label class="form-label" for="comment_post_mode">{{ t("Как выбрать пост для комментария") }}</label>
 	                <select id="comment_post_mode" name="comment_post_mode" class="form-select">
 	                  <option value="first">{{ t("Первый сверху") }}</option>
-	                  <option value="random">Случайно в пределах пула</option>
+	                  <option value="random">{{ t("Случайно в пределах пула") }}</option>
 	                </select>
 	              </div>
 	              <div id="scenario-comment-pool-field" class="form-group" style="margin:0">
@@ -530,7 +529,7 @@
           <div id="scenario-ai-dm-settings" class="scenario-like-settings" hidden>
             <div class="scenario-like-settings__head">
               <span class="scenario-like-settings__title"><i class="ti ti-sparkles"></i> {{ t("Личное сообщение через нейросеть") }}</span>
-              <p class="form-hint" style="margin:6px 0 0">Сначала задайте пример сообщения — модель будет каждый раз перефразировать его, сохраняя смысл. Тон и детали — полем «подсказка». Если пример пустой, можно взять шаблон из списка или текст внизу страницы. API-ключи — как у ИИ-агента.</p>
+              <p class="form-hint" style="margin:6px 0 0">{{ t("Сначала задайте пример сообщения — модель будет каждый раз перефразировать его, сохраняя смысл. Тон и детали — полем «подсказка». Если пример пустой, можно взять шаблон из списка или текст внизу страницы. API-ключи — как у ИИ-агента.") }}</p>
             </div>
             <div class="scenario-like-settings__fields" style="display:flex;flex-direction:column;gap:12px">
               <label class="form-check" style="margin:0">
@@ -561,7 +560,7 @@
           <p id="scenario-template-hint" class="form-hint scenario-step-add-form__hint-below">{{ t("Для комментариев и обычного ЛС — шаблон из списка. Для ИИ-ЛС главная опора — поле «Опорный текст» в блоке выше; список шаблонов и поле внизу — если пример не заполняли.") }}</p>
 
           <div id="scenario-template-block" class="form-group scenario-step-add-form__full">
-            <label id="scenario-step-message-label" class="form-label" for="scenario_step_message">Текст шага, если нужен вручную</label>
+            <label id="scenario-step-message-label" class="form-label" for="scenario_step_message">{{ t("Текст шага, если нужен вручную") }}</label>
             <input
               id="scenario_step_message"
               name="step_message"
@@ -574,7 +573,7 @@
           </div>
 
           <div id="scenario-dm-template-field" class="form-group scenario-step-add-form__field" hidden>
-            <label class="form-label" for="scenario_dm_template_id">Шаблон для личного сообщения</label>
+            <label class="form-label" for="scenario_dm_template_id">{{ t("Шаблон для личного сообщения") }}</label>
             <select id="scenario_dm_template_id" name="dm_template_id" class="form-select">
               <option value="">{{ t("Без шаблона") }}</option>
               {% for category in ['comment', 'outreach', 'warmup'] %}
@@ -591,7 +590,7 @@
           </div>
 
           <div id="scenario-dm-message-block" class="form-group scenario-step-add-form__full" hidden>
-            <label class="form-label" for="scenario_dm_message">Текст личного сообщения</label>
+            <label class="form-label" for="scenario_dm_message">{{ t("Текст личного сообщения") }}</label>
             <input
               id="scenario_dm_message"
               name="dm_message"
@@ -614,7 +613,7 @@
 </div>
 
 <div class="card" style="margin-bottom:20px">
-  <div class="card-header">Текущие контакты в работе</div>
+  <div class="card-header">{{ t("Текущие контакты в работе") }}</div>
   <div class="card-body">
     {% if enroll_rows %}
     <div class="table-wrap">
@@ -623,7 +622,7 @@
           <tr>
             <th>{{ t("Человек") }}</th>
             <th>{{ t("Аккаунт") }}</th>
-            <th>Текущий шаг</th>
+            <th>{{ t("Текущий шаг") }}</th>
             <th>{{ t("Статус") }}</th>
             <th>{{ t("Ошибка") }}</th>
             <th></th>
@@ -686,16 +685,16 @@
 </div>
 
 <div class="card" style="margin-bottom:20px">
-  <div class="card-header">Сервисные действия</div>
+  <div class="card-header">{{ t("Сервисные действия") }}</div>
   <div class="card-body" style="display:flex;flex-wrap:wrap;gap:10px">
     <form method="post" action="/scenarios/{{ campaign.id }}/enroll">
-      <button type="submit" class="btn btn-secondary" {% if sequence_busy or campaign.status == 'paused' %}disabled{% endif %}{% if campaign.status == 'paused' %} title="Сначала возобновите режим"{% endif %}>
+      <button type="submit" class="btn btn-secondary" {% if sequence_busy or campaign.status == 'paused' %}disabled{% endif %}{% if campaign.status == 'paused' %} title="{{ t("Сначала возобновите режим") }}"{% endif %}>
         <i class="ti ti-users"></i> {{ t("Загрузить всю выбранную базу сразу") }}
       </button>
     </form>
-    <form method="post" action="/scenarios/{{ campaign.id }}/delete" data-confirm="Удалить режим агента и всю его очередь?" data-confirm-title="Удаление режима" data-confirm-variant="danger">
+    <form method="post" action="/scenarios/{{ campaign.id }}/delete" data-confirm="Удалить режим агента и всю его очередь?" data-confirm-title="{{ t("Удаление режима") }}" data-confirm-variant="danger">
       <button type="submit" class="btn btn-ghost" style="color:var(--error)" {% if sequence_busy %}disabled{% endif %}>
-        <i class="ti ti-trash"></i> Удалить режим
+        <i class="ti ti-trash"></i> {{ t("Удалить режим") }}
       </button>
     </form>
   </div>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Спасибо за покупку — SOCMASTER</title>
+  <title>{{ t("Спасибо за покупку — SOCMASTER") }}</title>
   <link rel="stylesheet" href="{{ url_for('static', path='css/main.css') }}"/>
   <style>
     body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: clamp(1rem, 3vw, 2rem); background: radial-gradient(ellipse 120% 80% at 50% -20%, rgba(180, 151, 90, 0.12), transparent 50%), linear-gradient(165deg, #0c0d10 0%, #12141a 40%, #0a0b0e 100%); font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #e6e9ef; }
@@ -25,7 +25,7 @@
   <div class="lava-success-card">
     <div class="lava-success-icon">✓</div>
     <h1>{{ t("Спасибо за покупку!") }}</h1>
-    <p class="lava-success-lead">{{ t("Ваш ключ доступа SOCMASTER отправлен на email,") }}<br>который вы указали при оплате.</p>
+    <p class="lava-success-lead">{{ t("Ваш ключ доступа SOCMASTER отправлен на email,") }}<br>{{ t("который вы указали при оплате.") }}</p>
     <p class="lava-success-email">{{ t("Проверьте папку «Входящие». Если письма нет за 5 минут — загляните в «Спам».") }}</p>
     <div class="lava-success-actions">
       <a href="/auth/unlock" class="lava-btn lava-btn-primary">{{ t("Перейти к активации ключа") }}</a>

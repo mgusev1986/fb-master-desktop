@@ -21,7 +21,7 @@
 
       <div class="form-group">
         <label class="form-label">{{ t("Facebook-аккаунты") }}</label>
-        <p class="form-hint" style="margin-bottom:8px">Слот 1–3 — в работе; «ожидание» — доступны при <strong>ротации</strong> и автосмене слотов. Сессия — в разделе «Аккаунты».</p>
+        <p class="form-hint" style="margin-bottom:8px">{{ t("Слот 1–3 — в работе; «ожидание» — доступны при") }} <strong>{{ t("ротации") }}</strong> {{ t("и автосмене слотов. Сессия — в разделе «Аккаунты».") }}</p>
         <div style="display:flex;flex-direction:column;gap:8px">
           {% for a in accounts %}
           <label class="form-check" style="display:flex;align-items:center;gap:8px;cursor:pointer">
@@ -29,7 +29,7 @@
                    {% if campaign and a.id in (campaign.fb_account_ids or []) %}checked{% endif %}/>
             <span>{{ a.label }}{% if a.active_slot %} — слот {{ a.active_slot }}{% else %} — ожидание{% endif %}</span>
             {% if a.session_ok == false %}
-            <span class="badge badge-default" style="font-size:10px">сессия?</span>
+            <span class="badge badge-default" style="font-size:10px">{{ t("сессия?") }}</span>
             {% endif %}
           </label>
           {% else %}
@@ -42,7 +42,7 @@
         <label class="form-label" for="actions_per_account">{{ t("Макс. контактов на один аккаунт за прогон") }}</label>
         <input id="actions_per_account" name="actions_per_account" type="number" class="form-input" min="1" max="500"
                value="{{ campaign.actions_per_account if campaign else 10 }}"/>
-        <p class="form-hint">{{ t("Без ротации: лимит строк очереди на аккаунт за одну сборку. С ротацией:") }} <strong>суточный лимит действий (UTC)</strong> на аккаунт; дальше работа перейдёт на следующий из пула.</p>
+        <p class="form-hint">{{ t("Без ротации: лимит строк очереди на аккаунт за одну сборку. С ротацией:") }} <strong>{{ t("суточный лимит действий (UTC)") }}</strong> {{ t("на аккаунт; дальше работа перейдёт на следующий из пула.") }}</p>
       </div>
 
       <div class="card" style="background:var(--bg-surface-hover);margin-bottom:20px">
@@ -84,14 +84,14 @@
         <div class="card-body" style="padding-top:12px">
           <label class="form-check" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;cursor:pointer">
             <input type="checkbox" name="do_like" value="1" {% if cfg.get('do_like', true) %}checked{% endif %}/>
-            <span>Ставить лайк первому подходящему посту в ленте профиля</span>
+            <span>{{ t("Ставить лайк первому подходящему посту в ленте профиля") }}</span>
           </label>
           <label class="form-check" style="display:flex;align-items:center;gap:8px;margin-bottom:12px;cursor:pointer">
             <input type="checkbox" name="do_comment" value="1" {% if cfg.get('do_comment') %}checked{% endif %}/>
             <span>{{ t("Писать комментарий (ниже шаблон)") }}</span>
           </label>
           <div class="form-group" style="margin-bottom:0">
-            <label class="form-label" for="comment_template">Текст комментария</label>
+            <label class="form-label" for="comment_template">{{ t("Текст комментария") }}</label>
             <textarea id="comment_template" name="comment_template" class="form-textarea" rows="2"
                       placeholder="Отличный пост, {{ "{{first_name}}" }}!">{{ cfg.get('comment_template', '') }}</textarea>
             {{ mailing_warmup_placeholders('form-hint') }}
@@ -110,7 +110,7 @@
       </div>
 
       <div class="form-group">
-        <label class="form-label" for="time_budget_seconds">Уложиться во время (сек), опционально</label>
+        <label class="form-label" for="time_budget_seconds">{{ t("Уложиться во время (сек), опционально") }}</label>
         <input id="time_budget_seconds" name="time_budget_seconds" type="text" class="form-input"
                value="{{ cfg.get('time_budget_seconds', '') }}" placeholder="{{ t("Пусто — только пресет") }}"/>
         <p class="form-hint">{{ t("Если указано, пауза «следующий человек» масштабируется под число оставшихся действий в очереди.") }}</p>

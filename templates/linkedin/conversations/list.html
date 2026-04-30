@@ -8,7 +8,7 @@
     <div class="li-page__title-wrap">
       <h1 class="li-page__title">{{ t("Диалоги / Inbox") }} <span class="li-page__beta-pill">Beta</span></h1>
       <p class="li-page__subtitle">
-        Треды переписки с lead'ами. Кнопка «Sync inbox» на каждом аккаунте обновляет список и забирает preview новых входящих. Открытие треда — помечает входящие прочитанными.
+        {{ t("Треды переписки с lead'ами. Кнопка «Sync inbox» на каждом аккаунте обновляет список и забирает preview новых входящих. Открытие треда — помечает входящие прочитанными.") }}
       </p>
     </div>
   </header>
@@ -61,7 +61,7 @@
     <div class="li-placeholder__icon"><i class="ti ti-message-circle"></i></div>
     <h2 class="li-placeholder__title">{{ t("Inbox пуст") }}</h2>
     <p class="li-placeholder__text">
-      {{ t("Запустите") }} <strong>«Sync inbox»</strong> на странице <a href="/linkedin/accounts">{{ t("аккаунтов") }}</a> — он подтянет ваши последние треды из LinkedIn.
+      {{ t("Запустите") }} <strong>«Sync inbox»</strong> {{ t("на странице") }} <a href="/linkedin/accounts">{{ t("аккаунтов") }}</a> — он подтянет ваши последние треды из LinkedIn.
     </p>
   </div>
   {% endif %}

@@ -212,11 +212,11 @@
       {{ t("В сайдбаре у каждой копии программы —") }} <strong>{{ t("ID установки") }}</strong> {{ t("(файл") }} <code>client_installation_id</code> в каталоге данных).
       Пульс в эту таблицу: не чаще раз в {{ presence_interval_sec|int }} с (<code>FBM_CLIENT_PRESENCE_INTERVAL_SEC</code>); «онлайн» — активность за {{ online_threshold_sec }} с (<code>FBM_CLIENT_ONLINE_THRESHOLD_SEC</code>).
       {% if presence_db_is_postgresql %}
-      Кабинет на этом сервере (PostgreSQL) пишет строки напрямую. Копии <strong>десктопа</strong> с локальной SQLite отправляют пульс на тот же хост через
+      Кабинет на этом сервере (PostgreSQL) пишет строки напрямую. Копии <strong>{{ t("десктопа") }}</strong> {{ t("с локальной SQLite отправляют пульс на тот же хост через") }}
       <code>POST …/api/public/client-presence</code> {{ t("(см.") }} <code>FB_MASTER_LICENSE_API_BASE</code> / <code>FB_MASTER_PRESENCE_REPORT_URL</code>){% if presence_endpoint_hint %}: например <code>{{ presence_endpoint_hint }}</code>{% endif %}.
-      Привязка к клиенту — по <strong>ключу доступа</strong> {{ t("(тот же") }} <code>device_fingerprint</code>, что при активации).
+      Привязка к клиенту — по <strong>{{ t("ключу доступа") }}</strong> {{ t("(тот же") }} <code>device_fingerprint</code>, что при активации).
       {% else %}
-      На этой инсталляции база SQLite: в таблице будут только машины, которые ходят в <em>этот</em> локальный процесс. Для сводки по всем клиентам откройте админку на VPS с PostgreSQL.
+      На этой инсталляции база SQLite: в таблице будут только машины, которые ходят в <em>{{ t("этот") }}</em> локальный процесс. Для сводки по всем клиентам откройте админку на VPS с PostgreSQL.
       {% endif %}
     </p>
     {% if machine_presences %}
@@ -240,14 +240,14 @@
             <td><code style="word-break:break-all">{{ row.installation_id }}</code></td>
             <td>
               {% if row.online %}
-              <span class="badge badge-success">онлайн</span>
+              <span class="badge badge-success">{{ t("онлайн") }}</span>
               {% else %}
               <span class="badge badge-default">{{ t("нет") }}</span>
               {% endif %}
             </td>
             <td>
               {% if row.access_key_id %}
-              <div>{% if row.access_key_label %}{{ row.access_key_label }}{% else %}<span class="settings-note">без подписи</span>{% endif %}</div>
+              <div>{% if row.access_key_label %}{{ row.access_key_label }}{% else %}<span class="settings-note">{{ t("без подписи") }}</span>{% endif %}</div>
               <div class="settings-note">ключ #{{ row.access_key_id }}</div>
               {% else %}—{% endif %}
             </td>
@@ -282,7 +282,7 @@
   <div class="card-body">
     <p class="subtitle" style="margin:0 0 14px">
       {{ t("Включите режим, чтобы кабинет совпадал с тем, что видит клиент: в «Настройках» скрыты блоки Supabase, прямой Google OAuth, пути к данным, карточка «Runtime и системная диагностика» и кнопка «Проверить login»; в сайдбаре скрыты кнопка «Выйти» и пункт «Админ-панель». Выйти из предпросмотра — жёлтая полоска сверху или снова откройте") }}
-      <code>/admin/platform</code> вручную.
+      <code>/admin/platform</code> {{ t("вручную.") }}
     </p>
     <form method="post" action="/admin/platform/preview-as-user" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
       <input type="hidden" name="next" value="/admin/platform"/>
@@ -300,7 +300,7 @@
 
 <div class="stats-grid">
   <div class="stat-card">
-    <div class="stat-label">Связей пользователь ↔ организация</div>
+    <div class="stat-label">{{ t("Связей пользователь ↔ организация") }}</div>
     <div class="stat-value">{{ totals.memberships }}</div>
   </div>
   <div class="stat-card">
@@ -320,15 +320,15 @@
     <div class="stat-value">{{ totals.campaigns }}</div>
   </div>
   <div class="stat-card">
-    <div class="stat-label">Сценариев прогрева</div>
+    <div class="stat-label">{{ t("Сценариев прогрева") }}</div>
     <div class="stat-value">{{ totals.warmup_campaigns }}</div>
   </div>
   <div class="stat-card">
-    <div class="stat-label">Сценариев по дням (sequence)</div>
+    <div class="stat-label">{{ t("Сценариев по дням (sequence)") }}</div>
     <div class="stat-value">{{ totals.sequence_campaigns }}</div>
   </div>
   <div class="stat-card">
-    <div class="stat-label">Шаблонов сообщений</div>
+    <div class="stat-label">{{ t("Шаблонов сообщений") }}</div>
     <div class="stat-value">{{ totals.templates }}</div>
   </div>
   <div class="stat-card">
@@ -342,7 +342,7 @@
 </div>
 
 <div class="card">
-  <div class="card-header">Техническое окружение</div>
+  <div class="card-header">{{ t("Техническое окружение") }}</div>
   <div class="card-body">
     <p class="subtitle" style="margin-top:0">{{ t("Параметры процесса и каталоги (секреты и ключи не отображаются).") }}</p>
     <div class="admin-tech-grid">
@@ -351,7 +351,7 @@
         <dd><code>{{ tech.python_version }}</code></dd>
         <dt>{{ t("База данных") }}</dt>
         <dd>{{ tech.database_kind }}</dd>
-        <dt>Слушает</dt>
+        <dt>{{ t("Слушает") }}</dt>
         <dd><code>{{ tech.listen }}</code></dd>
         <dt>APP_BASE_URL</dt>
         <dd class="admin-tech-dd-break"><code>{{ tech.app_base_url }}</code></dd>
@@ -366,39 +366,39 @@
       </dl>
       <dl class="admin-tech-dl">
         <dt>{{ t("Ключ доступа (FB_MASTER_ACCESS_KEY_REQUIRED)") }}</dt>
-        <dd>{% if tech.access_key_required %}<span class="badge badge-warning">{{ t("включён") }}</span>{% else %}<span class="badge badge-default">выкл.</span>{% endif %}</dd>
+        <dd>{% if tech.access_key_required %}<span class="badge badge-warning">{{ t("включён") }}</span>{% else %}<span class="badge badge-default">{{ t("выкл.") }}</span>{% endif %}</dd>
         <dt>Supabase Auth</dt>
-        <dd>{% if tech.supabase_auth_configured %}<span class="badge badge-success">настроено</span>{% else %}<span class="badge badge-default">{{ t("нет") }}</span>{% endif %}</dd>
+        <dd>{% if tech.supabase_auth_configured %}<span class="badge badge-success">{{ t("настроено") }}</span>{% else %}<span class="badge badge-default">{{ t("нет") }}</span>{% endif %}</dd>
         <dt>Google OAuth</dt>
-        <dd>{% if tech.google_oauth_configured %}<span class="badge badge-success">настроено</span>{% else %}<span class="badge badge-default">{{ t("нет") }}</span>{% endif %}</dd>
+        <dd>{% if tech.google_oauth_configured %}<span class="badge badge-success">{{ t("настроено") }}</span>{% else %}<span class="badge badge-default">{{ t("нет") }}</span>{% endif %}</dd>
         <dt>Dev-login</dt>
-        <dd>{% if tech.dev_login_allowed %}<span class="badge badge-warning">разрешён</span>{% else %}<span class="badge badge-default">выкл.</span>{% endif %}</dd>
+        <dd>{% if tech.dev_login_allowed %}<span class="badge badge-warning">{{ t("разрешён") }}</span>{% else %}<span class="badge badge-default">{{ t("выкл.") }}</span>{% endif %}</dd>
         <dt>Cookie Secure</dt>
-        <dd>{% if tech.session_cookie_secure %}да{% else %}нет{% endif %}</dd>
+        <dd>{% if tech.session_cookie_secure %}{{ t("да") }}{% else %}{{ t("нет") }}{% endif %}</dd>
         <dt>{{ t("Имитация прода") }}</dt>
-        <dd>{% if tech.local_simulate_production %}<span class="badge badge-warning">да</span>{% else %}нет{% endif %}</dd>
+        <dd>{% if tech.local_simulate_production %}<span class="badge badge-warning">{{ t("да") }}</span>{% else %}нет{% endif %}</dd>
         <dt>{{ t("Playwright, параллельно") }}</dt>
         <dd>{{ tech.playwright_max_concurrent }}</dd>
         <dt>{{ t("Прогрев: headless") }}</dt>
-        <dd>{% if tech.warmup_headless %}да{% else %}нет{% endif %}</dd>
+        <dd>{% if tech.warmup_headless %}{{ t("да") }}{% else %}{{ t("нет") }}{% endif %}</dd>
         <dt>LOG_LEVEL</dt>
         <dd><code>{{ tech.log_level }}</code></dd>
         <dt>{{ t("Cookies из Chrome (локально)") }}</dt>
-        <dd>{% if tech.fb_local_chrome_cookies %}да{% else %}нет{% endif %}</dd>
+        <dd>{% if tech.fb_local_chrome_cookies %}{{ t("да") }}{% else %}{{ t("нет") }}{% endif %}</dd>
         <dt>SEQUENCE_TIMEZONE</dt>
         <dd><code>{{ tech.sequence_timezone }}</code></dd>
         <dt>Messenger E2EE wait, c</dt>
         <dd>{{ tech.messenger_e2ee_wait_seconds }}</dd>
         <dt>OpenAI API</dt>
-        <dd>{% if tech.openai_configured %}<span class="badge badge-success">ключ задан</span>{% else %}<span class="badge badge-default">{{ t("нет") }}</span>{% endif %}</dd>
+        <dd>{% if tech.openai_configured %}<span class="badge badge-success">{{ t("ключ задан") }}</span>{% else %}<span class="badge badge-default">{{ t("нет") }}</span>{% endif %}</dd>
         <dt>Google API (LLM)</dt>
-        <dd>{% if tech.google_api_key_configured %}<span class="badge badge-success">ключ задан</span>{% else %}<span class="badge badge-default">{{ t("нет") }}</span>{% endif %}</dd>
+        <dd>{% if tech.google_api_key_configured %}<span class="badge badge-success">{{ t("ключ задан") }}</span>{% else %}<span class="badge badge-default">{{ t("нет") }}</span>{% endif %}</dd>
         <dt>{{ t("Обновления десктопа (API)") }}</dt>
-        <dd>{% if tech.desktop_update_configured %}<span class="badge badge-success">настроено</span> <code>/api/public/desktop-update</code>{% else %}<span class="badge badge-default">{{ t("нет") }}</span> <span class="settings-note">задайте FB_DESKTOP_LATEST_VERSION и ссылки в .env</span>{% endif %}</dd>
+        <dd>{% if tech.desktop_update_configured %}<span class="badge badge-success">{{ t("настроено") }}</span> <code>/api/public/desktop-update</code>{% else %}<span class="badge badge-default">{{ t("нет") }}</span> <span class="settings-note">{{ t("задайте FB_DESKTOP_LATEST_VERSION и ссылки в .env") }}</span>{% endif %}</dd>
         <dt>{{ t("Канал разработчика (превью-сборка)") }}</dt>
-        <dd>{% if tech.desktop_dev_update_configured %}<span class="badge badge-success">настроено</span> <code>/download/dev</code> · <code>/api/public/desktop-update-dev</code>{% else %}<span class="badge badge-default">{{ t("нет") }}</span> <span class="settings-note">{{ t("FB_DESKTOP_DEV_LATEST_VERSION и файлы в static/releases/dev/") }}</span>{% endif %}</dd>
+        <dd>{% if tech.desktop_dev_update_configured %}<span class="badge badge-success">{{ t("настроено") }}</span> <code>/download/dev</code> · <code>/api/public/desktop-update-dev</code>{% else %}<span class="badge badge-default">{{ t("нет") }}</span> <span class="settings-note">{{ t("FB_DESKTOP_DEV_LATEST_VERSION и файлы в static/releases/dev/") }}</span>{% endif %}</dd>
         <dt>{{ t("NOWPayments (продление ключа)") }}</dt>
-        <dd>{% if tech.nowpayments_billing %}<span class="badge badge-success">{{ t("включено") }}</span> <code>/webhooks/nowpayments</code>{% else %}<span class="badge badge-default">выкл.</span>{% endif %}</dd>
+        <dd>{% if tech.nowpayments_billing %}<span class="badge badge-success">{{ t("включено") }}</span> <code>/webhooks/nowpayments</code>{% else %}<span class="badge badge-default">{{ t("выкл.") }}</span>{% endif %}</dd>
       </dl>
     </div>
   </div>
@@ -444,7 +444,7 @@
             <th>{{ t("Название") }}</th>
             <th>Slug</th>
             <th>{{ t("Активна") }}</th>
-            <th>Участников</th>
+            <th>{{ t("Участников") }}</th>
             <th>{{ t("Людей") }}</th>
             <th>{{ t("Доноров") }}</th>
             <th>FB</th>

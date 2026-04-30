@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>SOCMASTER — оплата</title>
+  <title>{{ t("SOCMASTER — оплата") }}</title>
   <meta name="theme-color" content="#0a0a0a">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -355,16 +355,15 @@
 <div class="buy-page">
   <main class="buy-card">
     <div class="buy-header-row">
-      <p class="buy-eyebrow" style="margin:0">SOCMASTER · ОПЛАТА</p>
-      <div class="buy-lang-switch" role="group" aria-label="Выбор языка">
+      <p class="buy-eyebrow" style="margin:0">{{ t("SOCMASTER · ОПЛАТА") }}</p>
+      <div class="buy-lang-switch" role="group" aria-label="{{ t("Выбор языка") }}">
         <a href="/buy" class="lang-btn active">RU</a>
         <a href="/buy?lang=en" class="lang-btn">EN</a>
       </div>
     </div>
-    <h1 class="buy-title">Лиды из Facebook <span class="gold">на автомате</span></h1>
+    <h1 class="buy-title">{{ t("Лиды из Facebook") }} <span class="gold">{{ t("на автомате") }}</span></h1>
     <p class="buy-subtitle">
-      Программа сама находит целевую аудиторию в Facebook, отправляет ваше сообщение
-      в личку и ведёт каждого получателя по стадиям CRM-воронки — от первого касания до сделки.
+      {{ t("Программа сама находит целевую аудиторию в Facebook, отправляет ваше сообщение в личку и ведёт каждого получателя по стадиям CRM-воронки — от первого касания до сделки.") }}
     </p>
 
     {% if buy_error %}
@@ -375,29 +374,29 @@
 
     {# Главный тариф (LavaTop приоритет, иначе NP) #}
     <div class="buy-tariff">
-      <span class="buy-tariff-label">Подписка</span>
+      <span class="buy-tariff-label">{{ t("Подписка") }}</span>
       <span class="buy-tariff-price">${{ lavatop_price_usd_30 if lavatop_enabled else np_price_365 }}</span>
       <span class="buy-tariff-period">{% if lavatop_enabled %}за 30 дней · автопродление{% else %}за 35 дней{% endif %}</span>
     </div>
 
     {% if lavatop_enabled %}
-    <input type="email" id="buy_email" required maxlength="255" placeholder="ваш-email@example.com" class="buy-email" autocomplete="email" aria-label="Email для получения ключа"/>
+    <input type="email" id="buy_email" required maxlength="255" placeholder="{{ t("ваш-email@example.com") }}" class="buy-email" autocomplete="email" aria-label="{{ t("Email для получения ключа") }}"/>
     {% endif %}
 
-    <div class="buy-payment-row" role="group" aria-label="Способ оплаты">
+    <div class="buy-payment-row" role="group" aria-label="{{ t("Способ оплаты") }}">
       {% if lavatop_enabled %}
       <form method="post" action="/billing/lavatop/create" id="form-card" style="margin:0">
         <input type="hidden" name="billing_source" value="buy"/>
         <input type="hidden" name="duration_days" value="30"/>
         <input type="hidden" name="customer_email" id="form-card-email" value=""/>
         <input type="hidden" name="device_id" id="buy_lava_device_id" value=""/>
-        <button type="submit" class="buy-payment-card" data-method="card" id="buy-lava-submit" aria-label="Оплатить картой" disabled>
+        <button type="submit" class="buy-payment-card" data-method="card" id="buy-lava-submit" aria-label="{{ t("Оплатить картой") }}" disabled>
           <div class="buy-payment-arrow" aria-hidden="true">
             <svg viewBox="0 0 12 12"><path d="M3 3h6v6M3 9l6-6"/></svg>
           </div>
           <div class="buy-payment-icon" aria-hidden="true">💳</div>
-          <h3 class="buy-payment-title">Картой</h3>
-          <p class="buy-payment-meta">RU · Visa · Mastercard · СБП<br>Ключ придёт на email</p>
+          <h3 class="buy-payment-title">{{ t("Картой") }}</h3>
+          <p class="buy-payment-meta">{{ t("RU · Visa · Mastercard · СБП") }}<br>{{ t("Ключ придёт на email") }}</p>
         </button>
       </form>
       {% endif %}
@@ -407,13 +406,13 @@
         <input type="hidden" name="billing_source" value="buy"/>
         <input type="hidden" name="duration" value="365"/>
         <input type="hidden" name="device_id" id="buy_device_id" value=""/>
-        <button type="submit" class="buy-payment-card" data-method="crypto" id="buy-np-submit" aria-label="Оплатить криптовалютой" disabled>
+        <button type="submit" class="buy-payment-card" data-method="crypto" id="buy-np-submit" aria-label="{{ t("Оплатить криптовалютой") }}" disabled>
           <div class="buy-payment-arrow" aria-hidden="true">
             <svg viewBox="0 0 12 12"><path d="M3 3h6v6M3 9l6-6"/></svg>
           </div>
           <div class="buy-payment-icon" aria-hidden="true">₿</div>
-          <h3 class="buy-payment-title">Криптой</h3>
-          <p class="buy-payment-meta">USDT · BTC · ETH · мгновенно<br>Ключ выдаётся сразу после оплаты</p>
+          <h3 class="buy-payment-title">{{ t("Криптой") }}</h3>
+          <p class="buy-payment-meta">{{ t("USDT · BTC · ETH · мгновенно") }}<br>{{ t("Ключ выдаётся сразу после оплаты") }}</p>
         </button>
       </form>
       {% endif %}
@@ -424,27 +423,27 @@
         <path d="M8 1L2 4v4c0 4 2.5 6.5 6 7 3.5-0.5 6-3 6-7V4L8 1z"/>
         <path d="M5.5 8l2 2 3-4"/>
       </svg>
-      <span>HTTPS · 3-D Secure · ключ привязан к вашему устройству</span>
+      <span>{{ t("HTTPS · 3-D Secure · ключ привязан к вашему устройству") }}</span>
     </div>
 
     {% else %}
     <p class="buy-payment-meta" style="color:rgba(251,191,36,0.9);margin-bottom:2rem">
-      Оплата на сайте скоро будет доступна.
+      {{ t("Оплата на сайте скоро будет доступна.") }}
     </p>
     {% endif %}
 
     <hr class="buy-divider"/>
 
-    <p class="buy-features-label">Что внутри</p>
+    <p class="buy-features-label">{{ t("Что внутри") }}</p>
     <ul class="buy-features">
-      <li><span class="buy-features-check">✓</span><span><strong>Парсер аудитории</strong> — собирает целевых людей из групп, подписок и друзей конкурентов; до 1000+ контактов в день с одного аккаунта.</span></li>
-      <li><span class="buy-features-check">✓</span><span><strong>Рассылка в личку</strong> — естественные паузы и темп, обход E2EE-блокировок, фильтр «уже писали» по всему пулу аккаунтов.</span></li>
-      <li><span class="buy-features-check">✓</span><span><strong>Прогрев аккаунтов</strong> — имитация живого пользователя (лента, профили, лайки), чтобы FB не банил рассылочные аккаунты.</span></li>
-      <li><span class="buy-features-check">✓</span><span><strong>CRM-система с воронкой</strong> — стадии «контактировали / заинтересован / конверсия / отказ», экспорт между устройствами.</span></li>
+      <li><span class="buy-features-check">✓</span><span><strong>{{ t("Парсер аудитории") }}</strong> {{ t("— собирает целевых людей из групп, подписок и друзей конкурентов; до 1000+ контактов в день с одного аккаунта.") }}</span></li>
+      <li><span class="buy-features-check">✓</span><span><strong>{{ t("Рассылка в личку") }}</strong> {{ t("— естественные паузы и темп, обход E2EE-блокировок, фильтр «уже писали» по всему пулу аккаунтов.") }}</span></li>
+      <li><span class="buy-features-check">✓</span><span><strong>{{ t("Прогрев аккаунтов") }}</strong> {{ t("— имитация живого пользователя (лента, профили, лайки), чтобы FB не банил рассылочные аккаунты.") }}</span></li>
+      <li><span class="buy-features-check">✓</span><span><strong>{{ t("CRM-система с воронкой") }}</strong> {{ t("— стадии «контактировали / заинтересован / конверсия / отказ», экспорт между устройствами.") }}</span></li>
     </ul>
 
     {% if access_key_required %}
-    <a class="buy-bottom-link" href="/auth/unlock">Уже есть ключ — активировать</a>
+    <a class="buy-bottom-link" href="/auth/unlock">{{ t("Уже есть ключ — активировать") }}</a>
     {% endif %}
   </main>
 </div>

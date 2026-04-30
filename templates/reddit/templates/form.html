@@ -24,7 +24,7 @@
                style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;"/>
       </label>
       <label style="display:flex;flex-direction:column;gap:4px;">
-        <span style="font:600 12px/1 Inter;color:var(--text-muted)">тип</span>
+        <span style="font:600 12px/1 Inter;color:var(--text-muted)">{{ t("тип") }}</span>
         <select name="kind" style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;">
           {% for k in template_kinds %}
           <option value="{{ k }}" {% if row and row.kind == k %}selected{% endif %}>{{ k|ru_status }}</option>
@@ -43,7 +43,7 @@
     </div>
 
     <label style="display:flex;flex-direction:column;gap:4px;">
-      <span style="font:600 12px/1 Inter;color:var(--text-muted)">тело шаблона</span>
+      <span style="font:600 12px/1 Inter;color:var(--text-muted)">{{ t("тело шаблона") }}</span>
       <textarea name="body" id="reddit-template-body" rows="8" required
                 placeholder="Hey {username}, I saw your post in r/{subreddit} about {topic}…"
                 style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-family:ui-monospace,monospace;">{{ row.body if row else '' }}</textarea>
@@ -52,7 +52,7 @@
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
       <label style="display:flex;flex-direction:column;gap:4px;">
-        <span style="font:600 12px/1 Inter;color:var(--text-muted)">варианты (по одному на строку)</span>
+        <span style="font:600 12px/1 Inter;color:var(--text-muted)">{{ t("варианты (по одному на строку)") }}</span>
         <textarea name="variants_text" id="reddit-template-variants" rows="5"
                   placeholder="alt1&#10;alt2"
                   style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-family:ui-monospace,monospace;">{% if row %}{% for v in row.variants %}{{ v }}
@@ -77,7 +77,7 @@
       </label>
       <span style="flex:1;"></span>
       <button type="button" class="reddit-btn" id="reddit-template-generate-btn"
-              {% if not row %}disabled title="Сначала сохраните шаблон, чтобы сгенерировать AI-варианты"{% endif %}>
+              {% if not row %}disabled title="{{ t("Сначала сохраните шаблон, чтобы сгенерировать AI-варианты") }}"{% endif %}>
         <i class="ti ti-sparkles"></i> {{ t("AI-варианты") }}
       </button>
       <button type="submit" class="reddit-btn reddit-btn--primary"><i class="ti ti-device-floppy"></i> {{ t("Сохранить") }}</button>

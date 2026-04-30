@@ -9,20 +9,19 @@
     <h1>{% if cabinet_client_mode(request) %}Прогрев профиля{% else %}Прогрев аккаунтов{% endif %}</h1>
     <p class="subtitle">
       {% if cabinet_client_mode(request) %}
-      Несколько дней подряд программа <strong>ведёт себя как обычный пользователь</strong>{{ t(": лента и группы, просмотр страниц, редкие лайки, иногда короткий комментарий к нейтральным постам и заявки в друзья из рекомендаций. Активность только") }} <strong>{{ t("днём") }}</strong> {{ t("(примерно с 8:00 до 22:00) по расписанию из раздела") }} <a href="/system/speed">{{ t("«Темп работы»") }}</a>; <strong>ночью пауза</strong>{{ t(". Острые темы программа") }} <strong>обходит</strong> — под них комментарии не пишутся.
-      Чтобы комментарии с ИИ вообще включались, в <strong>{{ t("«Настройках»") }}</strong> должен быть подключён ИИ — обычно это делает администратор.
-      Выберите <strong>срок 1–7 дней</strong> — ниже появится план. Итог смотрите в <a href="/system/logs">{{ t("«История и отчёты»") }}</a>{{ t(". Нужны") }} <strong>{{ t("вход в Facebook") }}</strong> и <strong>{{ t("место 1, 2 или 3") }}</strong> в разделе аккаунтов.
+      Несколько дней подряд программа <strong>{{ t("ведёт себя как обычный пользователь") }}</strong>{{ t(": лента и группы, просмотр страниц, редкие лайки, иногда короткий комментарий к нейтральным постам и заявки в друзья из рекомендаций. Активность только") }} <strong>{{ t("днём") }}</strong> {{ t("(примерно с 8:00 до 22:00) по расписанию из раздела") }} <a href="/system/speed">{{ t("«Темп работы»") }}</a>; <strong>{{ t("ночью пауза") }}</strong>{{ t(". Острые темы программа") }} <strong>{{ t("обходит") }}</strong> — под них комментарии не пишутся.
+      Чтобы комментарии с ИИ вообще включались, в <strong>{{ t("«Настройках»") }}</strong> {{ t("должен быть подключён ИИ — обычно это делает администратор. Выберите") }} <strong>{{ t("срок 1–7 дней") }}</strong> — ниже появится план. Итог смотрите в <a href="/system/logs">{{ t("«История и отчёты»") }}</a>{{ t(". Нужны") }} <strong>{{ t("вход в Facebook") }}</strong> и <strong>{{ t("место 1, 2 или 3") }}</strong> в разделе аккаунтов.
       {% else %}
-      Многодневный <strong>автоматический</strong> прогрев: <strong>группы</strong> → лента и <strong>профили</strong> → редкие <strong>лайки</strong>
+      Многодневный <strong>{{ t("автоматический") }}</strong> {{ t("прогрев:") }} <strong>{{ t("группы") }}</strong> → лента и <strong>{{ t("профили") }}</strong> → редкие <strong>{{ t("лайки") }}</strong>
       → нейрокомментарии только к «безопасным» постам → заявки в друзья из рекомендаций.
-      <strong>{{ t("С 08:00 до 22:00") }}</strong> по часовому поясу из раздела <a href="/system/speed">{{ t("«Скорость и паузы»") }}</a> {{ t("(календарный день сценариев);") }} <strong>ночью сессии не планируются</strong> {{ t("(аккаунт «отдыхает»). Посты про") }} <strong>насилие, смерть, войну, трагедию, агрессию</strong> и близкие темы <strong>сначала отсекаются стоп-словами</strong>{{ t(", затем короткой автоматической проверкой текста; под такие посты комментарий не пишется.") }}
-      <strong>{{ t("Нейрокомментарии") }}</strong> включаются только если в «Настройках» задан ключ <strong>{{ t("OpenAI или Google AI") }}</strong> {{ t("(без них фаза комментирования не ставится в очередь).") }}
+      <strong>{{ t("С 08:00 до 22:00") }}</strong> {{ t("по часовому поясу из раздела") }} <a href="/system/speed">{{ t("«Скорость и паузы»") }}</a> {{ t("(календарный день сценариев);") }} <strong>{{ t("ночью сессии не планируются") }}</strong> {{ t("(аккаунт «отдыхает»). Посты про") }} <strong>{{ t("насилие, смерть, войну, трагедию, агрессию") }}</strong> {{ t("и близкие темы") }} <strong>{{ t("сначала отсекаются стоп-словами") }}</strong>{{ t(", затем короткой автоматической проверкой текста; под такие посты комментарий не пишется.") }}
+      <strong>{{ t("Нейрокомментарии") }}</strong> {{ t("включаются только если в «Настройках» задан ключ") }} <strong>{{ t("OpenAI или Google AI") }}</strong> {{ t("(без них фаза комментирования не ставится в очередь).") }}
       <strong>{{ t("Режим 1–7 дней") }}</strong> — пресеты пауз и лимитов; план виден при выборе срока. Действия фиксируются в <strong>{{ t("«Журнал и отчёты»") }}</strong>{{ t(". Нужны") }} <strong>{{ t("слот 1–3") }}</strong> и рабочая сессия Facebook.
       {% endif %}
     </p>
     <p class="subtitle" style="font-size:var(--font-size-sm);opacity:0.9">
       {% if cabinet_client_mode(request) %}
-      Прогрев <strong>по списку людей</strong> — в разделе <strong>{{ t("«Сценарии по дням»") }}</strong>; здесь только мягкий сценарий для самого профиля Facebook.
+      Прогрев <strong>{{ t("по списку людей") }}</strong> {{ t("— в разделе") }} <strong>{{ t("«Сценарии по дням»") }}</strong>; здесь только мягкий сценарий для самого профиля Facebook.
       {% else %}
       Кампании «Прогрев по контактам» в агенте — отдельно; здесь только «естественное» поведение аккаунта.
       {% endif %}
@@ -49,8 +48,8 @@
   <div class="card-body" style="font-size:var(--font-size-sm);line-height:1.55">
     <ol style="margin:0;padding-left:1.25rem">
       <li>{% if cabinet_client_mode(request) %}В разделе «Аккаунты» выполните вход в Facebook и при необходимости нажмите «Проверить вход».{% else %}Выполните вход и проверку сессии в «Аккаунтах».{% endif %}</li>
-      <li>{% if cabinet_client_mode(request) %}Назначьте аккаунту <strong>место</strong> 1, 2 или 3.{% else %}Назначьте аккаунту слот 1, 2 или 3.{% endif %}</li>
-      <li>{% if cabinet_client_mode(request) %}Если нужны <strong>комментарии с ИИ</strong>{{ t(", попросите администратора включить ИИ в") }} <strong>{{ t("«Настройках»") }}</strong> программы.{% else %}В <a href="/system/settings">{{ t("«Настройках»") }}</a> укажите ключ нейросети (OpenAI или Google AI), если нужны нейрокомментарии; при необходимости локальный вариант задаётся там же по инструкции к развёртыванию.{% endif %}</li>
+      <li>{% if cabinet_client_mode(request) %}Назначьте аккаунту <strong>{{ t("место") }}</strong> 1, 2 или 3.{% else %}Назначьте аккаунту слот 1, 2 или 3.{% endif %}</li>
+      <li>{% if cabinet_client_mode(request) %}Если нужны <strong>{{ t("комментарии с ИИ") }}</strong>{{ t(", попросите администратора включить ИИ в") }} <strong>{{ t("«Настройках»") }}</strong> программы.{% else %}В <a href="/system/settings">{{ t("«Настройках»") }}</a> укажите ключ нейросети (OpenAI или Google AI), если нужны нейрокомментарии; при необходимости локальный вариант задаётся там же по инструкции к развёртыванию.{% endif %}</li>
       <li>{% if cabinet_client_mode(request) %}Выберите срок 1–7 дней и нажмите <strong>{{ t("«Запустить прогрев»") }}</strong>.{% else %}Выберите срок 1–7 дней и нажмите «Запустить прогрев».{% endif %}</li>
     </ol>
   </div>
@@ -79,7 +78,7 @@
           <header class="nw-account-card__header">
             <div class="nw-account-card__title">
               <strong class="nw-account-card__name">{{ a.label }}</strong>
-              <div class="nw-account-card__badges" aria-label="Слот, сессия, готовность">
+              <div class="nw-account-card__badges" aria-label="{{ t("Слот, сессия, готовность") }}">
                 {% if a.active_slot %}
                 <span class="badge badge-default">Слот {{ a.active_slot }}</span>
                 {% else %}
@@ -141,7 +140,7 @@
                 <form id="nw-start-{{ a.id }}" method="post" action="/account-warming/start" class="nw-start-form">
                   <div class="nw-actions-toolbar">
                     <input type="hidden" name="fb_account_id" value="{{ a.id }}"/>
-                    <select name="duration_days" class="form-select nw-duration-select" data-account-id="{{ a.id }}" aria-label="Срок прогрева в днях">
+                    <select name="duration_days" class="form-select nw-duration-select" data-account-id="{{ a.id }}" aria-label="{{ t("Срок прогрева в днях") }}">
                       {% for d in range(1, 8) %}
                       <option value="{{ d }}" {% if d == 3 %}selected{% endif %}>{{ d }} дн.</option>
                       {% endfor %}
@@ -164,7 +163,7 @@
                 <form method="post" action="/account-warming/hide-from-page" class="nw-inline-form" onsubmit="return confirm('Убрать эту карточку со страницы прогрева? Автопрогрев будет остановлен; аккаунт останется в «Аккаунтах».');">
                   <input type="hidden" name="fb_account_id" value="{{ a.id }}"/>
                   <button type="submit" class="btn btn-secondary btn-sm nw-btn-remove-warmup">
-                    <i class="ti ti-eye-off" aria-hidden="true"></i> Убрать со страницы
+                    <i class="ti ti-eye-off" aria-hidden="true"></i> {{ t("Убрать со страницы") }}
                   </button>
                 </form>
               </div>
@@ -185,7 +184,7 @@
 {% endif %}
 {% if hidden_warmup_accounts %}
 <div class="card nw-hidden-warmup-card" style="margin-top:20px">
-  <div class="card-header">Скрытые с этой страницы</div>
+  <div class="card-header">{{ t("Скрытые с этой страницы") }}</div>
   <div class="card-body" style="font-size:var(--font-size-sm)">
     <p class="form-hint" style="margin-top:0">{{ t("Аккаунты по-прежнему в") }} <a href="/fb-accounts">{{ t("«Аккаунтах»") }}</a>{{ t(". Здесь можно вернуть карточку для прогрева.") }}</p>
     <ul class="nw-hidden-warmup-list">

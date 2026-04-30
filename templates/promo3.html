@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>SOCMASTER — автоматизация соцсетей для лидов, трафика и продаж</title>
+    <title>{{ t("SOCMASTER — автоматизация соцсетей для лидов, трафика и продаж") }}</title>
     <meta name="description" content="SOCMASTER помогает бизнесу находить клиентов в соцсетях, автоматизировать первые касания, работать с лидами в CRM и использовать AI-помощника. Доступно для Windows, macOS Apple Silicon и macOS Intel.">
     <meta name="robots" content="index, follow, max-image-preview:large">
     <meta name="theme-color" content="#0a0a0a">
@@ -364,11 +364,11 @@
 
             <!-- Desktop menu (≥lg) -->
             <div class="hidden lg:flex items-center gap-1 text-[14px] text-white/70">
-                <a href="#ecosystem"    class="px-3.5 py-2 rounded-lg whitespace-nowrap hover:text-white hover:bg-white/[0.04]">Экосистема</a>
-                <a href="#audiences"    class="px-3.5 py-2 rounded-lg whitespace-nowrap hover:text-white hover:bg-white/[0.04]">Возможности</a>
-                <a href="#devices"      class="px-3.5 py-2 rounded-lg whitespace-nowrap hover:text-white hover:bg-white/[0.04]">Устройства</a>
-                <a href="#testimonials" class="px-3.5 py-2 rounded-lg whitespace-nowrap hover:text-white hover:bg-white/[0.04]">Отзывы</a>
-                <a href="/blog"         class="px-3.5 py-2 rounded-lg whitespace-nowrap hover:text-white hover:bg-white/[0.04]">База знаний</a>
+                <a href="#ecosystem"    class="px-3.5 py-2 rounded-lg whitespace-nowrap hover:text-white hover:bg-white/[0.04]">{{ t("Экосистема") }}</a>
+                <a href="#audiences"    class="px-3.5 py-2 rounded-lg whitespace-nowrap hover:text-white hover:bg-white/[0.04]">{{ t("Возможности") }}</a>
+                <a href="#devices"      class="px-3.5 py-2 rounded-lg whitespace-nowrap hover:text-white hover:bg-white/[0.04]">{{ t("Устройства") }}</a>
+                <a href="#testimonials" class="px-3.5 py-2 rounded-lg whitespace-nowrap hover:text-white hover:bg-white/[0.04]">{{ t("Отзывы") }}</a>
+                <a href="/blog"         class="px-3.5 py-2 rounded-lg whitespace-nowrap hover:text-white hover:bg-white/[0.04]">{{ t("База знаний") }}</a>
                 <a href="#faq"          class="px-3.5 py-2 rounded-lg whitespace-nowrap hover:text-white hover:bg-white/[0.04]">FAQ</a>
             </div>
 
@@ -382,14 +382,14 @@
                 <a href="https://socmaster.pro/buy"
                    class="cta-button hidden sm:inline-flex px-5 md:px-6 py-2.5 md:py-3 rounded-full text-sm md:text-[14px] items-center gap-2 whitespace-nowrap">
                     <i class="fa-solid fa-key text-[11px]"></i>
-                    <span>Получить доступ</span>
+                    <span>{{ t("Получить доступ") }}</span>
                 </a>
                 <a href="https://socmaster.pro/buy"
                    class="cta-button sm:hidden inline-flex w-10 h-10 rounded-full items-center justify-center"
-                   aria-label="Получить доступ">
+                   aria-label="{{ t("Получить доступ") }}">
                     <i class="fa-solid fa-key text-sm"></i>
                 </a>
-                <button id="mobile-menu-btn" class="lg:hidden w-10 h-10 rounded-lg flex items-center justify-center text-xl text-white/80 hover:bg-white/[0.05]" aria-label="Меню">
+                <button id="mobile-menu-btn" class="lg:hidden w-10 h-10 rounded-lg flex items-center justify-center text-xl text-white/80 hover:bg-white/[0.05]" aria-label="{{ t("Меню") }}">
                     <i class="fa-solid fa-bars"></i>
                 </button>
             </div>
@@ -398,11 +398,11 @@
         <!-- Mobile drawer -->
         <div id="mobile-menu" class="hidden lg:hidden border-t border-white/10 bg-black/95 backdrop-blur-xl">
             <div class="max-w-7xl mx-auto px-5 md:px-7 py-4 flex flex-col">
-                <a href="#ecosystem"    class="block py-3 px-3 rounded-lg text-base text-white/85 hover:bg-white/[0.05]">Экосистема</a>
-                <a href="#audiences"    class="block py-3 px-3 rounded-lg text-base text-white/85 hover:bg-white/[0.05]">Возможности</a>
-                <a href="#devices"      class="block py-3 px-3 rounded-lg text-base text-white/85 hover:bg-white/[0.05]">Устройства</a>
-                <a href="#testimonials" class="block py-3 px-3 rounded-lg text-base text-white/85 hover:bg-white/[0.05]">Отзывы</a>
-                <a href="/blog"         class="block py-3 px-3 rounded-lg text-base text-white/85 hover:bg-white/[0.05]">База знаний</a>
+                <a href="#ecosystem"    class="block py-3 px-3 rounded-lg text-base text-white/85 hover:bg-white/[0.05]">{{ t("Экосистема") }}</a>
+                <a href="#audiences"    class="block py-3 px-3 rounded-lg text-base text-white/85 hover:bg-white/[0.05]">{{ t("Возможности") }}</a>
+                <a href="#devices"      class="block py-3 px-3 rounded-lg text-base text-white/85 hover:bg-white/[0.05]">{{ t("Устройства") }}</a>
+                <a href="#testimonials" class="block py-3 px-3 rounded-lg text-base text-white/85 hover:bg-white/[0.05]">{{ t("Отзывы") }}</a>
+                <a href="/blog"         class="block py-3 px-3 rounded-lg text-base text-white/85 hover:bg-white/[0.05]">{{ t("База знаний") }}</a>
                 <a href="#faq"          class="block py-3 px-3 rounded-lg text-base text-white/85 hover:bg-white/[0.05]">FAQ</a>
                 <div class="mt-3 pt-3 border-t border-white/10 flex items-center justify-between gap-3">
                     <div class="inline-flex items-center rounded-full border border-white/10 bg-white/[0.03] p-0.5 text-xs">
@@ -411,7 +411,7 @@
                     </div>
                     <a href="https://socmaster.pro/buy" class="cta-button px-5 py-2.5 rounded-full text-sm inline-flex items-center gap-2 whitespace-nowrap">
                         <i class="fa-solid fa-key text-[11px]"></i>
-                        <span>Получить доступ</span>
+                        <span>{{ t("Получить доступ") }}</span>
                     </a>
                 </div>
             </div>
@@ -423,34 +423,33 @@
         <div class="max-w-6xl mx-auto px-5 md:px-8 text-center">
             <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full badge-gold text-xs md:text-sm font-medium mb-7">
                 <span class="w-1.5 h-1.5 rounded-full bg-[#f5d06e] animate-pulse"></span>
-                Лиды из соцсетей • AI-помощник • CRM • Автоматизация
+                {{ t("Лиды из соцсетей • AI-помощник • CRM • Автоматизация") }}
             </div>
 
             <h1 class="heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold leading-[1.05] mb-6">
-                Автоматический поток&nbsp;лидов<br>
-                из&nbsp;соцсетей <span class="gold-gradient">для&nbsp;вашего бизнеса</span>
+                {{ t("Автоматический поток&nbsp;лидов") }}<br>
+                {{ t("из&nbsp;соцсетей") }} <span class="gold-gradient">{{ t("для&nbsp;вашего бизнеса") }}</span>
             </h1>
 
             <p class="text-base md:text-xl text-white/72 max-w-3xl mx-auto leading-relaxed mb-9">
-                SOCMASTER находит аудиторию, запускает первые касания, помогает вести переписки,
-                собирает лиды в&nbsp;CRM и&nbsp;сокращает ручную работу в&nbsp;продажах.
+                {{ t("SOCMASTER находит аудиторию, запускает первые касания, помогает вести переписки, собирает лиды в&nbsp;CRM и&nbsp;сокращает ручную работу в&nbsp;продажах.") }}
             </p>
 
             <div class="flex flex-col sm:flex-row gap-4 justify-center mb-12">
                 <a href="https://socmaster.pro/buy"
                    class="cta-button px-9 py-4 rounded-2xl text-base md:text-lg inline-flex items-center justify-center gap-3">
                     <i class="fa-solid fa-key"></i>
-                    Получить доступ
+                    {{ t("Получить доступ") }}
                 </a>
                 <a href="#ecosystem"
                    class="cta-secondary px-9 py-4 rounded-2xl text-base md:text-lg inline-flex items-center justify-center gap-3">
-                    Посмотреть возможности
+                    {{ t("Посмотреть возможности") }}
                     <i class="fa-solid fa-arrow-down text-sm"></i>
                 </a>
             </div>
 
             <div class="mb-7">
-                <div class="text-xs uppercase tracking-[0.2em] text-white/40 mb-3">Работает на ваших устройствах</div>
+                <div class="text-xs uppercase tracking-[0.2em] text-white/40 mb-3">{{ t("Работает на ваших устройствах") }}</div>
                 <div class="flex flex-wrap justify-center gap-2.5 md:gap-3">
                     <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full luxury-card-strong text-sm">
                         <i class="fa-brands fa-windows text-[#f5d06e]"></i> Windows&nbsp;x64
@@ -466,7 +465,7 @@
             </div>
 
             <div>
-                <div class="text-xs uppercase tracking-[0.2em] text-white/40 mb-3">Соцсети в экосистеме</div>
+                <div class="text-xs uppercase tracking-[0.2em] text-white/40 mb-3">{{ t("Соцсети в экосистеме") }}</div>
                 <div class="flex flex-wrap justify-center gap-3 md:gap-4 text-white/65 text-xl md:text-2xl">
                     <i class="fa-brands fa-facebook" title="Facebook" aria-label="Facebook"></i>
                     <i class="fa-brands fa-instagram" title="Instagram" aria-label="Instagram"></i>
@@ -483,11 +482,10 @@
     <section id="ecosystem" class="section-bg py-20 md:py-28">
         <div class="max-w-7xl mx-auto px-5 md:px-8">
             <div class="text-center mb-14">
-                <div class="inline-block px-4 py-1.5 rounded-full badge-gold text-xs font-medium mb-4">Единая экосистема SOCMASTER</div>
-                <h2 class="heading text-3xl md:text-5xl font-semibold mb-4">Одна система для&nbsp;работы<br>с&nbsp;<span class="gold-gradient">разными соцсетями</span></h2>
+                <div class="inline-block px-4 py-1.5 rounded-full badge-gold text-xs font-medium mb-4">{{ t("Единая экосистема SOCMASTER") }}</div>
+                <h2 class="heading text-3xl md:text-5xl font-semibold mb-4">{{ t("Одна система для&nbsp;работы") }}<br>{{ t("с&nbsp;") }}<span class="gold-gradient">{{ t("разными соцсетями") }}</span></h2>
                 <p class="text-white/65 max-w-2xl mx-auto md:text-lg">
-                    SOCMASTER объединяет инструменты для поиска аудитории, коммуникаций,
-                    AI-помощника, CRM и&nbsp;автоматизации в&nbsp;популярных социальных сетях.
+                    {{ t("SOCMASTER объединяет инструменты для поиска аудитории, коммуникаций, AI-помощника, CRM и&nbsp;автоматизации в&nbsp;популярных социальных сетях.") }}
                 </p>
             </div>
 
@@ -495,61 +493,60 @@
                 <article class="luxury-card p-6 md:p-7">
                     <div class="flex items-start justify-between mb-5">
                         <span class="icon-tile"><i class="fa-brands fa-facebook"></i></span>
-                        <span class="px-3 py-1 rounded-full badge-status-ready text-xs font-semibold">Готово</span>
+                        <span class="px-3 py-1 rounded-full badge-status-ready text-xs font-semibold">{{ t("Готово") }}</span>
                     </div>
                     <h3 class="heading text-2xl font-semibold mb-2.5">Facebook Master</h3>
-                    <p class="text-white/65 leading-relaxed">Аккаунты, парсинг, рассылки, Messenger, CRM и&nbsp;сценарии для Facebook.</p>
+                    <p class="text-white/65 leading-relaxed">{{ t("Аккаунты, парсинг, рассылки, Messenger, CRM и&nbsp;сценарии для Facebook.") }}</p>
                 </article>
 
                 <article class="luxury-card p-6 md:p-7">
                     <div class="flex items-start justify-between mb-5">
                         <span class="icon-tile"><i class="fa-brands fa-instagram"></i></span>
-                        <span class="px-3 py-1 rounded-full badge-status-eco text-xs font-semibold">В экосистеме</span>
+                        <span class="px-3 py-1 rounded-full badge-status-eco text-xs font-semibold">{{ t("В экосистеме") }}</span>
                     </div>
                     <h3 class="heading text-2xl font-semibold mb-2.5">Instagram Master</h3>
-                    <p class="text-white/65 leading-relaxed">Поиск аудитории, работа с&nbsp;подписчиками, Direct, реакции и&nbsp;автоматизация касаний.</p>
+                    <p class="text-white/65 leading-relaxed">{{ t("Поиск аудитории, работа с&nbsp;подписчиками, Direct, реакции и&nbsp;автоматизация касаний.") }}</p>
                 </article>
 
                 <article class="luxury-card p-6 md:p-7">
                     <div class="flex items-start justify-between mb-5">
                         <span class="icon-tile"><i class="fa-brands fa-linkedin"></i></span>
-                        <span class="px-3 py-1 rounded-full badge-status-eco text-xs font-semibold">В экосистеме</span>
+                        <span class="px-3 py-1 rounded-full badge-status-eco text-xs font-semibold">{{ t("В экосистеме") }}</span>
                     </div>
                     <h3 class="heading text-2xl font-semibold mb-2.5">LinkedIn Master</h3>
-                    <p class="text-white/65 leading-relaxed">Поиск B2B-аудитории, партнёров, клиентов и&nbsp;автоматизация деловых коммуникаций.</p>
+                    <p class="text-white/65 leading-relaxed">{{ t("Поиск B2B-аудитории, партнёров, клиентов и&nbsp;автоматизация деловых коммуникаций.") }}</p>
                 </article>
 
                 <article class="luxury-card p-6 md:p-7">
                     <div class="flex items-start justify-between mb-5">
                         <span class="icon-tile"><i class="fa-brands fa-x-twitter"></i></span>
-                        <span class="px-3 py-1 rounded-full badge-status-eco text-xs font-semibold">В экосистеме</span>
+                        <span class="px-3 py-1 rounded-full badge-status-eco text-xs font-semibold">{{ t("В экосистеме") }}</span>
                     </div>
                     <h3 class="heading text-2xl font-semibold mb-2.5">Twitter / X Master</h3>
-                    <p class="text-white/65 leading-relaxed">Поиск аудитории, коммуникации, AI-ответы и&nbsp;работа с&nbsp;активностью.</p>
+                    <p class="text-white/65 leading-relaxed">{{ t("Поиск аудитории, коммуникации, AI-ответы и&nbsp;работа с&nbsp;активностью.") }}</p>
                 </article>
 
                 <article class="luxury-card p-6 md:p-7">
                     <div class="flex items-start justify-between mb-5">
                         <span class="icon-tile"><i class="fa-brands fa-reddit"></i></span>
-                        <span class="px-3 py-1 rounded-full badge-status-eco text-xs font-semibold">В экосистеме</span>
+                        <span class="px-3 py-1 rounded-full badge-status-eco text-xs font-semibold">{{ t("В экосистеме") }}</span>
                     </div>
                     <h3 class="heading text-2xl font-semibold mb-2.5">Reddit Master</h3>
-                    <p class="text-white/65 leading-relaxed">Сабреддиты, аудитории, обсуждения, сигналы интереса и&nbsp;поиск потенциальных клиентов.</p>
+                    <p class="text-white/65 leading-relaxed">{{ t("Сабреддиты, аудитории, обсуждения, сигналы интереса и&nbsp;поиск потенциальных клиентов.") }}</p>
                 </article>
 
                 <article class="luxury-card p-6 md:p-7">
                     <div class="flex items-start justify-between mb-5">
                         <span class="icon-tile"><i class="fa-brands fa-telegram"></i></span>
-                        <span class="px-3 py-1 rounded-full badge-status-plan text-xs font-semibold">В развитии</span>
+                        <span class="px-3 py-1 rounded-full badge-status-plan text-xs font-semibold">{{ t("В развитии") }}</span>
                     </div>
                     <h3 class="heading text-2xl font-semibold mb-2.5">Telegram Master</h3>
-                    <p class="text-white/65 leading-relaxed">Чаты, каналы, поддержка, коммуникации и&nbsp;сопровождение клиентов.</p>
+                    <p class="text-white/65 leading-relaxed">{{ t("Чаты, каналы, поддержка, коммуникации и&nbsp;сопровождение клиентов.") }}</p>
                 </article>
             </div>
 
             <p class="text-center text-xs text-white/35 mt-8 max-w-3xl mx-auto">
-                Доступность модулей зависит от&nbsp;версии и&nbsp;этапа развития платформы.
-                Facebook Master полностью готов и&nbsp;поставляется как основной модуль.
+                {{ t("Доступность модулей зависит от&nbsp;версии и&nbsp;этапа развития платформы. Facebook Master полностью готов и&nbsp;поставляется как основной модуль.") }}
             </p>
         </div>
     </section>
@@ -558,9 +555,9 @@
     <section id="audiences" class="py-20 md:py-28 bg-[#050505]">
         <div class="max-w-7xl mx-auto px-5 md:px-8">
             <div class="text-center mb-14">
-                <div class="inline-block px-4 py-1.5 rounded-full badge-gold text-xs font-medium mb-4">Для кого</div>
-                <h2 class="heading text-3xl md:text-5xl font-semibold mb-4">Кому SOCMASTER приносит&nbsp;<span class="gold-gradient">клиентов</span></h2>
-                <p class="text-white/65 max-w-2xl mx-auto md:text-lg">Платформа создана для&nbsp;тех, кто работает с&nbsp;коммуникациями и&nbsp;продажами в&nbsp;соцсетях.</p>
+                <div class="inline-block px-4 py-1.5 rounded-full badge-gold text-xs font-medium mb-4">{{ t("Для кого") }}</div>
+                <h2 class="heading text-3xl md:text-5xl font-semibold mb-4">{{ t("Кому SOCMASTER приносит&nbsp;") }}<span class="gold-gradient">{{ t("клиентов") }}</span></h2>
+                <p class="text-white/65 max-w-2xl mx-auto md:text-lg">{{ t("Платформа создана для&nbsp;тех, кто работает с&nbsp;коммуникациями и&nbsp;продажами в&nbsp;соцсетях.") }}</p>
             </div>
 
             <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
@@ -589,8 +586,8 @@
     <section id="how" class="section-bg py-20 md:py-28">
         <div class="max-w-6xl mx-auto px-5 md:px-8">
             <div class="text-center mb-14">
-                <div class="inline-block px-4 py-1.5 rounded-full badge-gold text-xs font-medium mb-4">Как это работает</div>
-                <h2 class="heading text-3xl md:text-5xl font-semibold mb-4">Простой процесс&nbsp;<span class="gold-gradient">от&nbsp;аудитории до&nbsp;продаж</span></h2>
+                <div class="inline-block px-4 py-1.5 rounded-full badge-gold text-xs font-medium mb-4">{{ t("Как это работает") }}</div>
+                <h2 class="heading text-3xl md:text-5xl font-semibold mb-4">{{ t("Простой процесс&nbsp;") }}<span class="gold-gradient">{{ t("от&nbsp;аудитории до&nbsp;продаж") }}</span></h2>
             </div>
 
             <div class="space-y-5 md:space-y-7">
@@ -619,14 +616,12 @@
             <div class="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
                 <div>
                     <div class="inline-block px-4 py-1.5 rounded-full badge-gold text-xs font-medium mb-4">AI</div>
-                    <h2 class="heading text-3xl md:text-5xl font-semibold mb-5 leading-[1.1]">AI-помощник, который&nbsp;<span class="gold-gradient">усиливает коммуникации</span></h2>
+                    <h2 class="heading text-3xl md:text-5xl font-semibold mb-5 leading-[1.1]">{{ t("AI-помощник, который&nbsp;") }}<span class="gold-gradient">{{ t("усиливает коммуникации") }}</span></h2>
                     <p class="text-white/68 md:text-lg leading-relaxed mb-6">
-                        SOCMASTER помогает быстрее обрабатывать ответы, подсказывает варианты сообщений,
-                        поддерживает сценарии общения и&nbsp;помогает не&nbsp;терять потенциальных клиентов
-                        в&nbsp;переписках.
+                        {{ t("SOCMASTER помогает быстрее обрабатывать ответы, подсказывает варианты сообщений, поддерживает сценарии общения и&nbsp;помогает не&nbsp;терять потенциальных клиентов в&nbsp;переписках.") }}
                     </p>
                     <p class="text-xs text-white/40 italic">
-                        AI помогает, ускоряет и усиливает работу менеджера. Не&nbsp;заменяет человека и&nbsp;не&nbsp;даёт гарантированных продаж.
+                        {{ t("AI помогает, ускоряет и усиливает работу менеджера. Не&nbsp;заменяет человека и&nbsp;не&nbsp;даёт гарантированных продаж.") }}
                     </p>
                 </div>
                 <div class="grid sm:grid-cols-2 gap-4">
@@ -671,16 +666,15 @@
                     {% endfor %}
                 </div>
                 <div class="order-1 lg:order-2">
-                    <div class="inline-block px-4 py-1.5 rounded-full badge-gold text-xs font-medium mb-4">CRM и лиды</div>
-                    <h2 class="heading text-3xl md:text-5xl font-semibold mb-5 leading-[1.1]">Все лиды и&nbsp;переписки —&nbsp;<span class="gold-gradient">в&nbsp;одной системе</span></h2>
+                    <div class="inline-block px-4 py-1.5 rounded-full badge-gold text-xs font-medium mb-4">{{ t("CRM и лиды") }}</div>
+                    <h2 class="heading text-3xl md:text-5xl font-semibold mb-5 leading-[1.1]">{{ t("Все лиды и&nbsp;переписки —&nbsp;") }}<span class="gold-gradient">{{ t("в&nbsp;одной системе") }}</span></h2>
                     <p class="text-white/68 md:text-lg leading-relaxed mb-5">
-                        SOCMASTER помогает не&nbsp;просто находить людей, а&nbsp;выстраивать понятную работу
-                        с&nbsp;контактами: статусы, этапы, ответы, история коммуникации и&nbsp;дальнейшие действия.
+                        {{ t("SOCMASTER помогает не&nbsp;просто находить людей, а&nbsp;выстраивать понятную работу с&nbsp;контактами: статусы, этапы, ответы, история коммуникации и&nbsp;дальнейшие действия.") }}
                     </p>
                     <a href="https://socmaster.pro/buy"
                        class="cta-button px-7 py-3.5 rounded-2xl inline-flex items-center gap-3">
                         <i class="fa-solid fa-key"></i>
-                        Получить доступ
+                        {{ t("Получить доступ") }}
                     </a>
                 </div>
             </div>
@@ -691,16 +685,16 @@
     <section id="compare" class="py-20 md:py-28 bg-[#050505]">
         <div class="max-w-6xl mx-auto px-5 md:px-8">
             <div class="text-center mb-14">
-                <div class="inline-block px-4 py-1.5 rounded-full badge-gold text-xs font-medium mb-4">Сравнение</div>
-                <h2 class="heading text-3xl md:text-5xl font-semibold mb-4">Вручную против&nbsp;<span class="gold-gradient">SOCMASTER</span></h2>
-                <p class="text-white/65 max-w-2xl mx-auto md:text-lg">Что меняется, когда работа с&nbsp;соцсетями становится системной.</p>
+                <div class="inline-block px-4 py-1.5 rounded-full badge-gold text-xs font-medium mb-4">{{ t("Сравнение") }}</div>
+                <h2 class="heading text-3xl md:text-5xl font-semibold mb-4">{{ t("Вручную против&nbsp;") }}<span class="gold-gradient">SOCMASTER</span></h2>
+                <p class="text-white/65 max-w-2xl mx-auto md:text-lg">{{ t("Что меняется, когда работа с&nbsp;соцсетями становится системной.") }}</p>
             </div>
 
             <div class="grid md:grid-cols-2 gap-5 md:gap-7">
                 <div class="luxury-card p-7 md:p-9">
                     <div class="flex items-center gap-3 mb-6">
                         <span class="w-11 h-11 rounded-xl bg-white/[.06] border border-white/15 flex items-center justify-center text-xl"><i class="fa-solid fa-hand"></i></span>
-                        <h3 class="heading text-xl md:text-2xl font-semibold">Вручную</h3>
+                        <h3 class="heading text-xl md:text-2xl font-semibold">{{ t("Вручную") }}</h3>
                     </div>
                     <ul class="space-y-3.5">
                         {% for item in [
@@ -721,7 +715,7 @@
                 <div class="luxury-card-strong p-7 md:p-9">
                     <div class="flex items-center gap-3 mb-6">
                         <span class="w-11 h-11 rounded-xl bg-gradient-to-br from-[#f5d06e] to-[#e8b93d] flex items-center justify-center text-xl text-black"><i class="fa-solid fa-bolt"></i></span>
-                        <h3 class="heading text-xl md:text-2xl font-semibold gold-gradient">С SOCMASTER</h3>
+                        <h3 class="heading text-xl md:text-2xl font-semibold gold-gradient">{{ t("С SOCMASTER") }}</h3>
                     </div>
                     <ul class="space-y-3.5">
                         {% for item in [
@@ -746,11 +740,10 @@
     <!-- 9. DESKTOP APP -->
     <section id="desktop" class="section-bg py-20 md:py-28">
         <div class="max-w-6xl mx-auto px-5 md:px-8 text-center">
-            <div class="inline-block px-4 py-1.5 rounded-full badge-gold text-xs font-medium mb-4">Десктоп</div>
-            <h2 class="heading text-3xl md:text-5xl font-semibold mb-5">Desktop-приложение для&nbsp;<span class="gold-gradient">серьёзной работы</span></h2>
+            <div class="inline-block px-4 py-1.5 rounded-full badge-gold text-xs font-medium mb-4">{{ t("Десктоп") }}</div>
+            <h2 class="heading text-3xl md:text-5xl font-semibold mb-5">{{ t("Desktop-приложение для&nbsp;") }}<span class="gold-gradient">{{ t("серьёзной работы") }}</span></h2>
             <p class="text-white/68 md:text-lg max-w-3xl mx-auto leading-relaxed mb-12">
-                SOCMASTER работает как отдельное приложение на&nbsp;компьютере, чтобы вы могли управлять
-                аккаунтами, сценариями, переписками и&nbsp;лидами в&nbsp;одном рабочем пространстве.
+                {{ t("SOCMASTER работает как отдельное приложение на&nbsp;компьютере, чтобы вы могли управлять аккаунтами, сценариями, переписками и&nbsp;лидами в&nbsp;одном рабочем пространстве.") }}
             </p>
 
             <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 text-left">
@@ -777,11 +770,10 @@
     <section id="devices" class="py-20 md:py-28 bg-[#050505]">
         <div class="max-w-7xl mx-auto px-5 md:px-8">
             <div class="text-center mb-14">
-                <div class="inline-block px-4 py-1.5 rounded-full badge-gold text-xs font-medium mb-4">Совместимость</div>
-                <h2 class="heading text-3xl md:text-5xl font-semibold mb-4">SOCMASTER доступен&nbsp;<span class="gold-gradient">для разных устройств</span></h2>
+                <div class="inline-block px-4 py-1.5 rounded-full badge-gold text-xs font-medium mb-4">{{ t("Совместимость") }}</div>
+                <h2 class="heading text-3xl md:text-5xl font-semibold mb-4">{{ t("SOCMASTER доступен&nbsp;") }}<span class="gold-gradient">{{ t("для разных устройств") }}</span></h2>
                 <p class="text-white/65 max-w-2xl mx-auto md:text-lg">
-                    Устанавливайте SOCMASTER на&nbsp;удобный компьютер и&nbsp;работайте
-                    с&nbsp;автоматизацией соцсетей в&nbsp;desktop-приложении.
+                    {{ t("Устанавливайте SOCMASTER на&nbsp;удобный компьютер и&nbsp;работайте с&nbsp;автоматизацией соцсетей в&nbsp;desktop-приложении.") }}
                 </p>
             </div>
 
@@ -789,18 +781,18 @@
                 <article class="luxury-card p-7 md:p-8 text-center flex flex-col">
                     <i class="fa-brands fa-windows text-5xl gold-gradient mb-5" aria-hidden="true"></i>
                     <h3 class="heading text-2xl font-semibold mb-2">Windows&nbsp;x64</h3>
-                    <p class="text-white/65 mb-6 grow">Для&nbsp;компьютеров и&nbsp;ноутбуков на&nbsp;Windows 10 / 11.</p>
+                    <p class="text-white/65 mb-6 grow">{{ t("Для&nbsp;компьютеров и&nbsp;ноутбуков на&nbsp;Windows 10 / 11.") }}</p>
                     <a href="https://socmaster.pro/buy" class="cta-secondary py-3 rounded-xl text-sm font-medium inline-flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-download"></i> Скачать для Windows
+                        <i class="fa-solid fa-download"></i> {{ t("Скачать для Windows") }}
                     </a>
                 </article>
 
                 <article class="luxury-card-strong p-7 md:p-8 text-center flex flex-col">
                     <i class="fa-brands fa-apple text-5xl gold-gradient mb-5" aria-hidden="true"></i>
                     <h3 class="heading text-2xl font-semibold mb-2">macOS Apple&nbsp;Silicon</h3>
-                    <p class="text-white/65 mb-6 grow">Для&nbsp;MacBook на&nbsp;M1 / M2 / M3 и&nbsp;выше.</p>
+                    <p class="text-white/65 mb-6 grow">{{ t("Для&nbsp;MacBook на&nbsp;M1 / M2 / M3 и&nbsp;выше.") }}</p>
                     <a href="https://socmaster.pro/buy" class="cta-button py-3 rounded-xl text-sm inline-flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-download"></i> Скачать для M1+
+                        <i class="fa-solid fa-download"></i> {{ t("Скачать для M1+") }}
                     </a>
                 </article>
 
@@ -808,9 +800,9 @@
                     <span class="absolute top-4 right-4 px-2.5 py-1 rounded-full badge-new text-[10px] tracking-wide">NEW</span>
                     <i class="fa-brands fa-apple text-5xl gold-gradient mb-5" aria-hidden="true"></i>
                     <h3 class="heading text-2xl font-semibold mb-2">macOS Intel</h3>
-                    <p class="text-white/65 mb-6 grow">Для&nbsp;более старых MacBook на&nbsp;Intel (2017–2020).</p>
+                    <p class="text-white/65 mb-6 grow">{{ t("Для&nbsp;более старых MacBook на&nbsp;Intel (2017–2020).") }}</p>
                     <a href="https://socmaster.pro/buy" class="cta-secondary py-3 rounded-xl text-sm font-medium inline-flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-download"></i> Скачать для Intel
+                        <i class="fa-solid fa-download"></i> {{ t("Скачать для Intel") }}
                     </a>
                 </article>
             </div>
@@ -818,7 +810,7 @@
             <div class="text-center mt-10">
                 <a href="https://socmaster.pro/buy"
                    class="cta-button px-9 py-4 rounded-2xl text-base md:text-lg inline-flex items-center justify-center gap-3">
-                    Выбрать версию и&nbsp;скачать
+                    {{ t("Выбрать версию и&nbsp;скачать") }}
                     <i class="fa-solid fa-arrow-right text-sm"></i>
                 </a>
             </div>
@@ -829,9 +821,9 @@
     <section id="results" class="section-bg py-20 md:py-28">
         <div class="max-w-7xl mx-auto px-5 md:px-8">
             <div class="text-center mb-14">
-                <div class="inline-block px-4 py-1.5 rounded-full badge-gold text-xs font-medium mb-4">Результаты</div>
-                <h2 class="heading text-3xl md:text-5xl font-semibold mb-4">Что получает бизнес&nbsp;<span class="gold-gradient">с&nbsp;SOCMASTER</span></h2>
-                <p class="text-white/55 max-w-2xl mx-auto text-sm md:text-base">Ориентиры, а&nbsp;не&nbsp;гарантии. Реальные показатели зависят от&nbsp;ниши, продукта и&nbsp;команды.</p>
+                <div class="inline-block px-4 py-1.5 rounded-full badge-gold text-xs font-medium mb-4">{{ t("Результаты") }}</div>
+                <h2 class="heading text-3xl md:text-5xl font-semibold mb-4">{{ t("Что получает бизнес&nbsp;") }}<span class="gold-gradient">{{ t("с&nbsp;SOCMASTER") }}</span></h2>
+                <p class="text-white/55 max-w-2xl mx-auto text-sm md:text-base">{{ t("Ориентиры, а&nbsp;не&nbsp;гарантии. Реальные показатели зависят от&nbsp;ниши, продукта и&nbsp;команды.") }}</p>
             </div>
 
             <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
@@ -858,8 +850,8 @@
     <section id="onboarding" class="py-20 md:py-28 bg-[#050505]">
         <div class="max-w-5xl mx-auto px-5 md:px-8">
             <div class="text-center mb-12">
-                <div class="inline-block px-4 py-1.5 rounded-full badge-gold text-xs font-medium mb-4">Подключение</div>
-                <h2 class="heading text-3xl md:text-5xl font-semibold mb-4">Простой старт&nbsp;<span class="gold-gradient">за&nbsp;несколько минут</span></h2>
+                <div class="inline-block px-4 py-1.5 rounded-full badge-gold text-xs font-medium mb-4">{{ t("Подключение") }}</div>
+                <h2 class="heading text-3xl md:text-5xl font-semibold mb-4">{{ t("Простой старт&nbsp;") }}<span class="gold-gradient">{{ t("за&nbsp;несколько минут") }}</span></h2>
             </div>
 
             <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
@@ -885,12 +877,12 @@
         <div class="max-w-7xl mx-auto px-5 md:px-8">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 md:mb-14 gap-5">
                 <div>
-                    <div class="inline-block px-4 py-1.5 rounded-full badge-gold text-xs font-medium mb-4">Отзывы</div>
-                    <h2 class="heading text-3xl md:text-5xl font-semibold leading-[1.1]">Результаты&nbsp;<span class="gold-gradient">предпринимателей</span></h2>
+                    <div class="inline-block px-4 py-1.5 rounded-full badge-gold text-xs font-medium mb-4">{{ t("Отзывы") }}</div>
+                    <h2 class="heading text-3xl md:text-5xl font-semibold leading-[1.1]">{{ t("Результаты&nbsp;") }}<span class="gold-gradient">{{ t("предпринимателей") }}</span></h2>
                 </div>
                 <div class="flex gap-3">
-                    <button type="button" onclick="window.__promo3CarouselPrev()" class="carousel-arrow" aria-label="Предыдущий"><i class="fa-solid fa-arrow-left"></i></button>
-                    <button type="button" onclick="window.__promo3CarouselNext()" class="carousel-arrow" aria-label="Следующий"><i class="fa-solid fa-arrow-right"></i></button>
+                    <button type="button" onclick="window.__promo3CarouselPrev()" class="carousel-arrow" aria-label="{{ t("Предыдущий") }}"><i class="fa-solid fa-arrow-left"></i></button>
+                    <button type="button" onclick="window.__promo3CarouselNext()" class="carousel-arrow" aria-label="{{ t("Следующий") }}"><i class="fa-solid fa-arrow-right"></i></button>
                 </div>
             </div>
 
@@ -907,7 +899,7 @@
         <div class="max-w-3xl mx-auto px-5 md:px-8">
             <div class="text-center mb-12">
                 <div class="inline-block px-4 py-1.5 rounded-full badge-gold text-xs font-medium mb-4">FAQ</div>
-                <h2 class="heading text-3xl md:text-5xl font-semibold mb-4">Частые&nbsp;<span class="gold-gradient">вопросы</span></h2>
+                <h2 class="heading text-3xl md:text-5xl font-semibold mb-4">{{ t("Частые&nbsp;") }}<span class="gold-gradient">{{ t("вопросы") }}</span></h2>
             </div>
 
             {% set faqs = [
@@ -936,22 +928,21 @@
     <section id="final-cta" class="py-24 md:py-32 hero-bg relative">
         <div class="max-w-4xl mx-auto px-5 md:px-8 text-center">
             <h2 class="heading text-3xl md:text-6xl font-semibold mb-6 leading-[1.05]">
-                Хотите превратить соцсети<br>
-                в&nbsp;<span class="gold-gradient">источник заявок?</span>
+                {{ t("Хотите превратить соцсети") }}<br>
+                {{ t("в&nbsp;") }}<span class="gold-gradient">{{ t("источник заявок?") }}</span>
             </h2>
             <p class="text-base md:text-xl text-white/70 max-w-2xl mx-auto mb-10 leading-relaxed">
-                SOCMASTER помогает системно находить аудиторию, запускать коммуникации
-                и&nbsp;работать с&nbsp;лидами без&nbsp;хаоса и&nbsp;ручной рутины.
+                {{ t("SOCMASTER помогает системно находить аудиторию, запускать коммуникации и&nbsp;работать с&nbsp;лидами без&nbsp;хаоса и&nbsp;ручной рутины.") }}
             </p>
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
                 <a href="https://socmaster.pro/buy"
                    class="cta-button px-10 py-5 rounded-2xl text-base md:text-lg inline-flex items-center justify-center gap-3">
                     <i class="fa-solid fa-key"></i>
-                    Получить доступ
+                    {{ t("Получить доступ") }}
                 </a>
                 <a href="#how"
                    class="cta-secondary px-10 py-5 rounded-2xl text-base md:text-lg inline-flex items-center justify-center gap-3">
-                    Посмотреть, как это работает
+                    {{ t("Посмотреть, как это работает") }}
                 </a>
             </div>
         </div>
@@ -967,32 +958,31 @@
                         <span class="heading text-xl font-semibold gold-gradient">SOCMASTER</span>
                     </div>
                     <p class="text-sm text-white/55 leading-relaxed max-w-md">
-                        Платформа для&nbsp;автоматизации привлечения клиентов из&nbsp;социальных сетей.
-                        Поиск аудитории, AI-помощник, CRM и&nbsp;автоматизация коммуникаций.
+                        {{ t("Платформа для&nbsp;автоматизации привлечения клиентов из&nbsp;социальных сетей. Поиск аудитории, AI-помощник, CRM и&nbsp;автоматизация коммуникаций.") }}
                     </p>
                 </div>
                 <div>
-                    <div class="text-xs uppercase tracking-[0.2em] text-white/35 mb-4">Продукт</div>
+                    <div class="text-xs uppercase tracking-[0.2em] text-white/35 mb-4">{{ t("Продукт") }}</div>
                     <ul class="space-y-2.5 text-sm text-white/65">
-                        <li><a href="#ecosystem" class="hover:text-[#f5d06e]">Экосистема соцсетей</a></li>
-                        <li><a href="#devices" class="hover:text-[#f5d06e]">Устройства</a></li>
-                        <li><a href="#ai" class="hover:text-[#f5d06e]">AI-помощник</a></li>
-                        <li><a href="#crm" class="hover:text-[#f5d06e]">CRM и лиды</a></li>
+                        <li><a href="#ecosystem" class="hover:text-[#f5d06e]">{{ t("Экосистема соцсетей") }}</a></li>
+                        <li><a href="#devices" class="hover:text-[#f5d06e]">{{ t("Устройства") }}</a></li>
+                        <li><a href="#ai" class="hover:text-[#f5d06e]">{{ t("AI-помощник") }}</a></li>
+                        <li><a href="#crm" class="hover:text-[#f5d06e]">{{ t("CRM и лиды") }}</a></li>
                     </ul>
                 </div>
                 <div>
-                    <div class="text-xs uppercase tracking-[0.2em] text-white/35 mb-4">Доступ</div>
+                    <div class="text-xs uppercase tracking-[0.2em] text-white/35 mb-4">{{ t("Доступ") }}</div>
                     <ul class="space-y-2.5 text-sm text-white/65">
-                        <li><a href="https://socmaster.pro/buy" class="hover:text-[#f5d06e]">Получить доступ</a></li>
-                        <li><a href="https://socmaster.pro/auth/unlock" class="hover:text-[#f5d06e]">Активировать ключ</a></li>
+                        <li><a href="https://socmaster.pro/buy" class="hover:text-[#f5d06e]">{{ t("Получить доступ") }}</a></li>
+                        <li><a href="https://socmaster.pro/auth/unlock" class="hover:text-[#f5d06e]">{{ t("Активировать ключ") }}</a></li>
                         <li><a href="#faq" class="hover:text-[#f5d06e]">FAQ</a></li>
                     </ul>
                 </div>
             </div>
             <div class="gold-divider mb-6"></div>
             <div class="flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-white/40">
-                <span>© SOCMASTER. Все права защищены.</span>
-                <span>Доступно для Windows&nbsp;x64, macOS Apple&nbsp;Silicon и&nbsp;macOS Intel.</span>
+                <span>{{ t("© SOCMASTER. Все права защищены.") }}</span>
+                <span>{{ t("Доступно для Windows&nbsp;x64, macOS Apple&nbsp;Silicon и&nbsp;macOS Intel.") }}</span>
             </div>
         </div>
     </footer>
@@ -1007,11 +997,11 @@
                             <i class="fa-solid fa-headset"></i>
                         </div>
                         <div class="min-w-0">
-                            <div class="font-semibold text-white text-sm truncate">SOCMASTER — поддержка</div>
-                            <div class="text-xs text-sky-300/90">Онлайн · ИИ-помощник</div>
+                            <div class="font-semibold text-white text-sm truncate">{{ t("SOCMASTER — поддержка") }}</div>
+                            <div class="text-xs text-sky-300/90">{{ t("Онлайн · ИИ-помощник") }}</div>
                         </div>
                     </div>
-                    <button type="button" id="promoChatClose" class="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white shrink-0" aria-label="Закрыть чат">
+                    <button type="button" id="promoChatClose" class="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white shrink-0" aria-label="{{ t("Закрыть чат") }}">
                         <i class="fa-solid fa-xmark text-lg"></i>
                     </button>
                 </div>
@@ -1019,9 +1009,9 @@
                 <div class="p-3 border-t border-white/10 bg-black/40 shrink-0">
                     <div class="flex items-center gap-2">
                         <input id="promoChatInput" type="text" maxlength="2000" autocomplete="off"
-                            placeholder="Напишите сообщение…"
+                            placeholder="{{ t("Напишите сообщение…") }}"
                             class="flex-1 min-w-0 rounded-full bg-white/5 border border-white/15 px-4 py-2.5 text-sm text-white placeholder:text-white/35 focus:outline-none focus:border-[#f5d06e]/60" />
-                        <button type="button" id="promoChatSend" class="shrink-0 w-11 h-11 rounded-full bg-gradient-to-br from-[#f5d06e] to-amber-500 text-black flex items-center justify-center disabled:opacity-40 shadow-lg" aria-label="Отправить">
+                        <button type="button" id="promoChatSend" class="shrink-0 w-11 h-11 rounded-full bg-gradient-to-br from-[#f5d06e] to-amber-500 text-black flex items-center justify-center disabled:opacity-40 shadow-lg" aria-label="{{ t("Отправить") }}">
                             <i class="fa-solid fa-paper-plane text-sm"></i>
                         </button>
                     </div>
@@ -1029,7 +1019,7 @@
             </div>
             <button type="button" id="promoChatFab" data-chat-open="0"
                 class="w-14 h-14 rounded-full bg-gradient-to-br from-[#f5d06e] to-amber-500 text-black shadow-xl shadow-amber-900/40 flex items-center justify-center hover:scale-105 active:scale-95 transition-transform focus:outline-none focus:ring-2 focus:ring-[#f5d06e]/40"
-                aria-label="Открыть чат поддержки">
+                aria-label="{{ t("Открыть чат поддержки") }}">
                 <span class="promo-chat-fab-bounce" aria-hidden="true"><i class="fa-solid fa-comments text-xl"></i></span>
             </button>
         </div>

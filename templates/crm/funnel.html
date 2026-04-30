@@ -502,10 +502,10 @@
   <div class="funnel-fu-row">
     <select class="form-input funnel-fu-preset" data-person-id="{{ p.id }}" aria-label="{{ t("Когда отправить") }}">
       <option value="" disabled selected hidden>{{ t("Выберите срок") }}</option>
-      <option value="24h">Через 24 ч</option>
-      <option value="7d">Через 7 дней</option>
-      <option value="30d">Через 30 дней</option>
-      <option value="none">Снять напоминание</option>
+      <option value="24h">{{ t("Через 24 ч") }}</option>
+      <option value="7d">{{ t("Через 7 дней") }}</option>
+      <option value="30d">{{ t("Через 30 дней") }}</option>
+      <option value="none">{{ t("Снять напоминание") }}</option>
     </select>
     <button type="button" class="btn btn-sm btn-primary funnel-fu-save" data-person-id="{{ p.id }}">{{ t("Сохранить") }}</button>
   </div>
@@ -519,7 +519,7 @@
   <button type="button" class="btn btn-sm btn-secondary funnel-card-cut"
           data-person-id="{{ p.id }}"
           data-person-name="{{ (p.display_name or 'Без имени')|e }}"
-          title="Убрать с доски воронки — очистить стадию CRM (контакт останется в «Базе контактов»; стадию можно снова задать в мессенджере)"
+          title="{{ t("Убрать с доски воронки — очистить стадию CRM (контакт останется в «Базе контактов»; стадию можно снова задать в мессенджере)") }}"
           onclick="event.stopPropagation()">
     <i class="ti ti-cut" aria-hidden="true"></i>
     {{ t("Вырезать") }}
@@ -539,7 +539,7 @@
     </div>
     <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
       <a class="btn btn-secondary btn-sm" href="/crm/funnel/export.csv?q={{ search_q|urlencode }}{% if donor_id %}&amp;donor_id={{ donor_id }}{% endif %}">
-        <i class="ti ti-file-download"></i> Экспорт CSV
+        <i class="ti ti-file-download"></i> {{ t("Экспорт CSV") }}
       </a>
       <button type="button" class="btn btn-secondary btn-sm" id="funnel-import-btn">
         <i class="ti ti-file-upload"></i> {{ t("Импорт CSV") }}
@@ -606,7 +606,7 @@
         <i class="ti ti-chevron-down funnel-stages-toggle__chev" aria-hidden="true"></i>
       </summary>
       <div class="funnel-stages-inner">
-        <p class="form-hint" style="margin:0 0 12px">{{ t("Меняйте порядок кнопками «Вверх/Вниз», подпись — полем и «Сохранить». Любую стадию (в том числе с меткой «встроенная») можно удалить кнопкой с корзиной: если в ней есть контакты, система автоматически перенесёт их в соседнюю стадию, а если соседней нет — очистит у них это поле. Новые шаги — блок ниже;") }} <strong>slug</strong> необязателен — сгенерируется из латиницы в названии. <strong>{{ t("Все строки этой таблицы") }}</strong> — это колонки на доске в том же порядке; доска теперь <strong>автоматически раскладывает их по ширине страницы без горизонтального скролла</strong>{{ t(". Свои стадии без метки «встроенная» там же; чтобы быстро найти колонку, нажмите её название в блоке «Стадии на доске» над доской.") }}</p>
+        <p class="form-hint" style="margin:0 0 12px">{{ t("Меняйте порядок кнопками «Вверх/Вниз», подпись — полем и «Сохранить». Любую стадию (в том числе с меткой «встроенная») можно удалить кнопкой с корзиной: если в ней есть контакты, система автоматически перенесёт их в соседнюю стадию, а если соседней нет — очистит у них это поле. Новые шаги — блок ниже;") }} <strong>slug</strong> {{ t("необязателен — сгенерируется из латиницы в названии.") }} <strong>{{ t("Все строки этой таблицы") }}</strong> — это колонки на доске в том же порядке; доска теперь <strong>{{ t("автоматически раскладывает их по ширине страницы без горизонтального скролла") }}</strong>{{ t(". Свои стадии без метки «встроенная» там же; чтобы быстро найти колонку, нажмите её название в блоке «Стадии на доске» над доской.") }}</p>
         <table class="funnel-stages-table">
           <thead>
             <tr>
@@ -655,13 +655,13 @@
               <td>
                 <code style="font-size:var(--font-size-xs)">{{ s.slug }}</code>
                 {% if s.slug == 'new' %}
-                <span class="badge badge-default" style="margin-left:6px">системная</span>
+                <span class="badge badge-default" style="margin-left:6px">{{ t("системная") }}</span>
                 {% elif s.is_builtin %}
-                <span class="badge badge-default" style="margin-left:6px">встроенная</span>
+                <span class="badge badge-default" style="margin-left:6px">{{ t("встроенная") }}</span>
                 {% endif %}
               </td>
               <td>
-                <button type="button" class="btn btn-sm btn-danger funnel-stage-delete-open" title="Удалить стадию"
+                <button type="button" class="btn btn-sm btn-danger funnel-stage-delete-open" title="{{ t("Удалить стадию") }}"
                         data-action="/crm/funnel/stages/{{ s.id }}/delete"
                         data-stage-label="{{ stage_labels.get(s.slug, s.label)|e }}"
                         data-stage-slug="{{ s.slug|e }}">
@@ -738,10 +738,10 @@
     {% if view == 'kanban' %}
     <p class="funnel-board-hint" role="note">
       <i class="ti ti-info-circle" aria-hidden="true"></i>
-      <span>{{ t("Все стадии автоматически") }} <strong>раскладываются по ширине страницы без прокрутки вправо</strong>{{ t(". Колонка") }} <strong>{{ t("«Уже контактировали»") }}</strong> закреплена как основная слева и остаётся выше остальных, чтобы вмещать больше карточек. Все следующие стадии строятся отдельной сеткой <strong>только справа от неё</strong>{{ t(", по порядку, без появления новых колонок под базовой колонкой. Кнопки стадий ниже") }} <strong>подсвечивают</strong> колонку и при необходимости прокручивают страницу к нужному ряду. С пунктиром и точкой — <strong>ваши</strong> стадии.</span>
+      <span>{{ t("Все стадии автоматически") }} <strong>{{ t("раскладываются по ширине страницы без прокрутки вправо") }}</strong>{{ t(". Колонка") }} <strong>{{ t("«Уже контактировали»") }}</strong> {{ t("закреплена как основная слева и остаётся выше остальных, чтобы вмещать больше карточек. Все следующие стадии строятся отдельной сеткой") }} <strong>{{ t("только справа от неё") }}</strong>{{ t(", по порядку, без появления новых колонок под базовой колонкой. Кнопки стадий ниже") }} <strong>{{ t("подсвечивают") }}</strong> {{ t("колонку и при необходимости прокручивают страницу к нужному ряду. С пунктиром и точкой —") }} <strong>{{ t("ваши") }}</strong> {{ t("стадии.") }}</span>
     </p>
-    <nav class="funnel-stage-rail" id="funnel-stage-rail" aria-label="Стадии воронки — переход к колонке">
-      <span class="funnel-stage-rail__title">Стадии на доске</span>
+    <nav class="funnel-stage-rail" id="funnel-stage-rail" aria-label="{{ t("Стадии воронки — переход к колонке") }}">
+      <span class="funnel-stage-rail__title">{{ t("Стадии на доске") }}</span>
       <span class="funnel-stage-rail__subtitle">{{ t("Нажмите название — колонка подсветится; если она ниже по странице, экран аккуратно прокрутится к нужному ряду.") }}</span>
       {% for s in stage_rows %}
       <button type="button" class="funnel-stage-rail__chip{% if not s.is_builtin %} funnel-stage-rail__chip--custom{% endif %}" data-funnel-scroll-stage="{{ s.slug }}" title="Показать колонку «{{ stage_labels.get(s.slug, s.label) }}»">
@@ -787,7 +787,7 @@
           {% endfor %}
         </div>
         {% if overflow.get(primary_stage_key) %}
-        <div class="funnel-overflow">Ещё {{ overflow[primary_stage_key] }} — <a href="/people?stage={{ primary_stage_key }}&amp;q={{ search_q|urlencode }}">открыть в «Базе контактов»</a></div>
+        <div class="funnel-overflow">Ещё {{ overflow[primary_stage_key] }} — <a href="/people?stage={{ primary_stage_key }}&amp;q={{ search_q|urlencode }}">{{ t("открыть в «Базе контактов»") }}</a></div>
         {% endif %}
       </div>
       {% endif %}
@@ -823,7 +823,7 @@
           {% endfor %}
         </div>
         {% if overflow.get(key) %}
-        <div class="funnel-overflow">Ещё {{ overflow[key] }} — <a href="/people?stage={{ key }}&amp;q={{ search_q|urlencode }}">открыть в «Базе контактов»</a></div>
+        <div class="funnel-overflow">Ещё {{ overflow[key] }} — <a href="/people?stage={{ key }}&amp;q={{ search_q|urlencode }}">{{ t("открыть в «Базе контактов»") }}</a></div>
         {% endif %}
       </div>
       {% endif %}
@@ -902,7 +902,7 @@
         {% endfor %}
       </div>
       {% if overflow.get(active_tab) %}
-      <div class="funnel-overflow">Ещё {{ overflow[active_tab] }} — <a href="/people?stage={{ active_tab }}&amp;q={{ search_q|urlencode }}">в «Базе контактов»</a></div>
+      <div class="funnel-overflow">Ещё {{ overflow[active_tab] }} — <a href="/people?stage={{ active_tab }}&amp;q={{ search_q|urlencode }}">{{ t("в «Базе контактов»") }}</a></div>
       {% endif %}
     </div>
     {% if other_total %}
@@ -928,17 +928,17 @@
     <div class="funnel-followup-dialog__body">
       <label class="form-label" for="funnel-followup-preset">{{ t("Когда отправить") }}</label>
       <select id="funnel-followup-preset" class="form-input" style="margin-bottom:10px">
-        <option value="24h">Через 24 часа</option>
-        <option value="7d">Через 7 дней</option>
-        <option value="30d">Через 30 дней</option>
+        <option value="24h">{{ t("Через 24 часа") }}</option>
+        <option value="7d">{{ t("Через 7 дней") }}</option>
+        <option value="30d">{{ t("Через 30 дней") }}</option>
       </select>
       <label class="form-label" for="funnel-followup-prompt">{{ t("Задание для нейросети") }}</label>
       <textarea id="funnel-followup-prompt" class="form-input" rows="3" maxlength="4000" placeholder="{{ t("Например: напомни, что мы договорились сегодня отписаться и предложи удобное время…") }}"></textarea>
     </div>
     <div class="funnel-followup-dialog__foot">
       <button type="button" class="btn btn-secondary" id="funnel-followup-cancel">{{ t("Отмена") }}</button>
-      <button type="button" class="btn btn-secondary" id="funnel-followup-stage-only">Только стадия</button>
-      <button type="button" class="btn btn-primary" id="funnel-followup-confirm">Сохранить с планом</button>
+      <button type="button" class="btn btn-secondary" id="funnel-followup-stage-only">{{ t("Только стадия") }}</button>
+      <button type="button" class="btn btn-primary" id="funnel-followup-confirm">{{ t("Сохранить с планом") }}</button>
     </div>
   </div>
 </div>
@@ -948,14 +948,14 @@
     <div class="funnel-stage-delete-dialog__head">
       <span class="funnel-stage-delete-dialog__icon" aria-hidden="true"><i class="ti ti-trash"></i></span>
       <div style="min-width:0">
-        <h2 id="funnel-stage-delete-title" class="funnel-stage-delete-dialog__title">Удалить стадию?</h2>
+        <h2 id="funnel-stage-delete-title" class="funnel-stage-delete-dialog__title">{{ t("Удалить стадию?") }}</h2>
         <p id="funnel-stage-delete-desc" class="funnel-stage-delete-dialog__text"></p>
         <div id="funnel-stage-delete-slug" class="funnel-stage-delete-dialog__slug" style="display:none"></div>
       </div>
     </div>
     <div class="funnel-stage-delete-dialog__foot">
       <button type="button" class="btn btn-secondary" id="funnel-stage-delete-cancel">{{ t("Отмена") }}</button>
-      <button type="button" class="btn btn-danger" id="funnel-stage-delete-confirm"><i class="ti ti-trash"></i> Удалить стадию</button>
+      <button type="button" class="btn btn-danger" id="funnel-stage-delete-confirm"><i class="ti ti-trash"></i> {{ t("Удалить стадию") }}</button>
     </div>
   </div>
 </div>

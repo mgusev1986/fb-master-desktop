@@ -400,22 +400,22 @@
     <div class="fbm-card-header">
       <p class="fbm-premium-eyebrow" style="margin:0">
         <span class="fbm-premium-eyebrow-name">SOCMASTER</span>
-        {% if fbm_desktop_app_version %}<span class="fbm-premium-eyebrow-version" title="Версия приложения">v{{ fbm_desktop_app_version }}</span>{% endif %}
+        {% if fbm_desktop_app_version %}<span class="fbm-premium-eyebrow-version" title="{{ t("Версия приложения") }}">v{{ fbm_desktop_app_version }}</span>{% endif %}
       </p>
       {% if not unlock_desktop_app %}
-      <div class="fbm-lang-pill" role="group" aria-label="Выбор языка">
+      <div class="fbm-lang-pill" role="group" aria-label="{{ t("Выбор языка") }}">
         <a href="/auth/unlock" class="fbm-lang-btn active">RU</a>
         <a href="/auth/unlock?lang=en" class="fbm-lang-btn">EN</a>
       </div>
       {% endif %}
     </div>
-    <h1>Скачать SOCMASTER</h1>
+    <h1>{{ t("Скачать SOCMASTER") }}</h1>
 
     <p class="fbm-premium-sub">
-      Выберите свою операционную систему и скачайте установщик.
+      {{ t("Выберите свою операционную систему и скачайте установщик.") }}
     </p>
     <div class="unlock-banner-info">
-      После установки откройте приложение SOCMASTER на компьютере — ключ доступа вставляется прямо в программе.
+      {{ t("После установки откройте приложение SOCMASTER на компьютере — ключ доступа вставляется прямо в программе.") }}
     </div>
     <div class="fbm-os-grid">
       {% set win_href = unlock_app_download_hrefs.get('win') %}
@@ -423,33 +423,33 @@
       {% set mac_x64_href = unlock_app_download_hrefs.get('mac_x64') %}
 
       {# Windows x64 #}
-      <a class="fbm-os-card" {% if win_href %}href="{{ win_href }}" {% if win_href.startswith('http') %}target="_blank" rel="noopener noreferrer"{% endif %}{% else %}href="{{ unlock_buy_fallback }}" aria-disabled="true" title="Сборка для Windows появится после выпуска релиза"{% endif %}>
+      <a class="fbm-os-card" {% if win_href %}href="{{ win_href }}" {% if win_href.startswith('http') %}target="_blank" rel="noopener noreferrer"{% endif %}{% else %}href="{{ unlock_buy_fallback }}" aria-disabled="true" title="{{ t("Сборка для Windows появится после выпуска релиза") }}"{% endif %}>
         <div class="fbm-os-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24"><path d="M3 5.5l8-1.1v8.1H3V5.5zm0 13l8 1.1v-8H3v6.9zM12 4.3L22 3v9.5H12V4.3zm0 15.4L22 21v-9.5H12v8.2z"/></svg>
         </div>
         <h3 class="fbm-os-title">Windows x64</h3>
-        <p class="fbm-os-desc">Для компьютеров и ноутбуков на Windows 10 / 11.</p>
-        <span class="fbm-os-cta">Скачать для Windows</span>
+        <p class="fbm-os-desc">{{ t("Для компьютеров и ноутбуков на Windows 10 / 11.") }}</p>
+        <span class="fbm-os-cta">{{ t("Скачать для Windows") }}</span>
       </a>
 
       {# macOS Intel #}
-      <a class="fbm-os-card" {% if mac_x64_href %}href="{{ mac_x64_href }}" {% if mac_x64_href.startswith('http') %}target="_blank" rel="noopener noreferrer"{% endif %}{% else %}href="{{ unlock_buy_fallback }}" aria-disabled="true" title="Сборка для macOS Intel появится после выпуска релиза"{% endif %}>
+      <a class="fbm-os-card" {% if mac_x64_href %}href="{{ mac_x64_href }}" {% if mac_x64_href.startswith('http') %}target="_blank" rel="noopener noreferrer"{% endif %}{% else %}href="{{ unlock_buy_fallback }}" aria-disabled="true" title="{{ t("Сборка для macOS Intel появится после выпуска релиза") }}"{% endif %}>
         <div class="fbm-os-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
         </div>
         <h3 class="fbm-os-title">macOS Intel</h3>
-        <p class="fbm-os-desc">Для более старых MacBook на Intel (2017–2020).</p>
-        <span class="fbm-os-cta">Скачать для Intel</span>
+        <p class="fbm-os-desc">{{ t("Для более старых MacBook на Intel (2017–2020).") }}</p>
+        <span class="fbm-os-cta">{{ t("Скачать для Intel") }}</span>
       </a>
 
       {# macOS Apple Silicon (M1+) — primary highlighted card #}
-      <a class="fbm-os-card fbm-os-card--primary" {% if mac_href %}href="{{ mac_href }}" {% if mac_href.startswith('http') %}target="_blank" rel="noopener noreferrer"{% endif %}{% else %}href="{{ unlock_buy_fallback }}" aria-disabled="true" title="Сборка для macOS Apple Silicon появится после выпуска релиза"{% endif %}>
+      <a class="fbm-os-card fbm-os-card--primary" {% if mac_href %}href="{{ mac_href }}" {% if mac_href.startswith('http') %}target="_blank" rel="noopener noreferrer"{% endif %}{% else %}href="{{ unlock_buy_fallback }}" aria-disabled="true" title="{{ t("Сборка для macOS Apple Silicon появится после выпуска релиза") }}"{% endif %}>
         <div class="fbm-os-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
         </div>
         <h3 class="fbm-os-title">macOS Apple Silicon</h3>
-        <p class="fbm-os-desc">Для MacBook на M1 / M2 / M3 и выше.</p>
-        <span class="fbm-os-cta">Скачать для M1+</span>
+        <p class="fbm-os-desc">{{ t("Для MacBook на M1 / M2 / M3 и выше.") }}</p>
+        <span class="fbm-os-cta">{{ t("Скачать для M1+") }}</span>
       </a>
     </div>
 
@@ -459,44 +459,43 @@
        (Screen 1 design). #}
     {% if show_unlock_key_form %}
     <hr class="fbm-premium-divider" style="margin:1.75rem 0 1.5rem"/>
-    <p class="fbm-premium-section-label">Активация ключа</p>
+    <p class="fbm-premium-section-label">{{ t("Активация ключа") }}</p>
 
     {% if unlock_reason == 'expired' %}
     <div class="unlock-banner-expired">
-      Срок действия ключа истёк. Оформите продление — новый ключ будет на странице после оплаты.
+      {{ t("Срок действия ключа истёк. Оформите продление — новый ключ будет на странице после оплаты.") }}
     </div>
-    <a href="{{ purchase_url }}" class="fbm-premium-submit" style="margin-bottom:1.25rem" {% if purchase_url.startswith('http') %}target="_blank" rel="noopener noreferrer"{% endif %}>Оплатить продление</a>
+    <a href="{{ purchase_url }}" class="fbm-premium-submit" style="margin-bottom:1.25rem" {% if purchase_url.startswith('http') %}target="_blank" rel="noopener noreferrer"{% endif %}>{{ t("Оплатить продление") }}</a>
     {% endif %}
 
-    <p class="fbm-premium-sub" style="margin-bottom:1rem">Введите ключ. <strong>Один ключ — одно устройство</strong> (в программе привязка к железу).</p>
+    <p class="fbm-premium-sub" style="margin-bottom:1rem">{{ t("Введите ключ.") }} <strong>{{ t("Один ключ — одно устройство") }}</strong> {{ t("(в программе привязка к железу).") }}</p>
     {% if unlock_error %}
     <div class="unlock-error">{{ unlock_error }}</div>
     {% endif %}
     <form method="post" action="/auth/access-key/activate" id="unlock-form" class="fbm-premium-form" style="margin:0">
-      <label class="form-label" for="key" style="text-transform:none;letter-spacing:0.02em;font-size:0.8125rem">ключ</label>
+      <label class="form-label" for="key" style="text-transform:none;letter-spacing:0.02em;font-size:0.8125rem">{{ t("ключ") }}</label>
       <input type="text" name="key" id="key" class="form-input" required autocomplete="off" placeholder="FBM-…" style="margin-bottom:12px"/>
       <input type="hidden" name="device_id" id="device_id" value=""/>
-      <button type="submit" class="fbm-premium-submit" id="unlock-submit" disabled>Войти</button>
+      <button type="submit" class="fbm-premium-submit" id="unlock-submit" disabled>{{ t("Войти") }}</button>
     </form>
 
     {% if nowpayments_enabled %}
     <hr class="fbm-premium-divider"/>
-    <p class="fbm-premium-section-label">Продление (NOWPayments)</p>
+    <p class="fbm-premium-section-label">{{ t("Продление (NOWPayments)") }}</p>
     <p class="fbm-premium-np-note">
-      Крипто-оплата через <a href="https://nowpayments.io" target="_blank" rel="noopener">NOWPayments</a>.
-      После оплаты на странице появится <strong>новый ключ</strong> — скопируйте и вставьте выше.
+      {{ t("Крипто-оплата через") }} <a href="https://nowpayments.io" target="_blank" rel="noopener">NOWPayments</a>{{ t(". После оплаты на странице появится") }} <strong>{{ t("новый ключ") }}</strong> — скопируйте и вставьте выше.
     </p>
     <form method="post" action="/billing/nowpayments/create" class="settings-form fbm-premium-form" style="margin:0">
       <input type="hidden" name="billing_source" value="unlock"/>
       <input type="hidden" name="duration" value="365"/>
-      <p class="fbm-premium-np-note" style="margin-bottom:12px">Продление на 1 год — <strong>{{ np_price_365 }} USD</strong></p>
+      <p class="fbm-premium-np-note" style="margin-bottom:12px">{{ t("Продление на 1 год —") }} <strong>{{ np_price_365 }} USD</strong></p>
       <input type="hidden" name="device_id" id="np_device_id" value=""/>
-      <button type="submit" class="fbm-premium-submit fbm-premium-submit--secondary" id="unlock-np-submit" style="margin-top:0.5rem" disabled>Перейти к оплате</button>
+      <button type="submit" class="fbm-premium-submit fbm-premium-submit--secondary" id="unlock-np-submit" style="margin-top:0.5rem" disabled>{{ t("Перейти к оплате") }}</button>
     </form>
     {% endif %}
     {% endif %}
 
-    <a class="fbm-premium-link-muted" href="/purchase" style="margin-top:1rem">Вернуться к оплате</a>
+    <a class="fbm-premium-link-muted" href="/purchase" style="margin-top:1rem">{{ t("Вернуться к оплате") }}</a>
   </div>
 </div>
 <script src="{{ url_for('static', path='js/fbm-device-fingerprint.js') }}"></script>

@@ -272,11 +272,11 @@
     {% if cabinet_client_mode(request) %}
     Показаны записи только для сценария <strong>«{{ scenario_filter_name }}»</strong>.
     {% else %}
-    Показаны записи только для <strong>режима агента</strong> «{{ scenario_filter_name }}»
+    Показаны записи только для <strong>{{ t("режима агента") }}</strong> «{{ scenario_filter_name }}»
     (задачи с <code>campaign_id</code> в конфиге).
     {% endif %}
     <span style="white-space:nowrap">· <a href="/scenarios/{{ scenario_id }}">{% if cabinet_client_mode(request) %}Открыть сценарий{% else %}Открыть режим{% endif %}</a>
-    · <a href="/system/logs?tab={{ active_tab }}">Снять фильтр</a></span>
+    · <a href="/system/logs?tab={{ active_tab }}">{{ t("Снять фильтр") }}</a></span>
   </div>
 </div>
 {% endif %}
@@ -287,11 +287,11 @@
     <div class="stat-value">{{ summary.total_jobs }}</div>
   </div>
   <div class="stat-card">
-    <div class="stat-label">Сейчас в работе</div>
+    <div class="stat-label">{{ t("Сейчас в работе") }}</div>
     <div class="stat-value">{{ summary.running_jobs }}</div>
   </div>
   <div class="stat-card">
-    <div class="stat-label">Упавшие задачи</div>
+    <div class="stat-label">{{ t("Упавшие задачи") }}</div>
     <div class="stat-value">{{ summary.failed_jobs }}</div>
   </div>
   <div class="stat-card">
@@ -326,7 +326,7 @@
         </select>
       </div>
       <div>
-        <label class="form-label" for="logs-job-type">Тип задачи</label>
+        <label class="form-label" for="logs-job-type">{{ t("Тип задачи") }}</label>
         <select id="logs-job-type" name="job_type" class="form-select">
           <option value="">{{ t("Все типы") }}</option>
           {% for value, label in job_type_options %}
@@ -335,7 +335,7 @@
         </select>
       </div>
       <div>
-        <label class="form-label" for="logs-status">Статус задачи</label>
+        <label class="form-label" for="logs-status">{{ t("Статус задачи") }}</label>
         <select id="logs-status" name="status" class="form-select">
           {% for value, label in status_options %}
           <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>
@@ -343,7 +343,7 @@
         </select>
       </div>
       <div>
-        <label class="form-label" for="logs-severity">События</label>
+        <label class="form-label" for="logs-severity">{{ t("События") }}</label>
         <select id="logs-severity" name="severity" class="form-select">
           {% for value, label in severity_options %}
           <option value="{{ value }}" {% if severity == value %}selected{% endif %}>{{ label }}</option>
@@ -373,7 +373,7 @@
             <th>{{ t("Тип") }}</th>
             <th>{{ t("Статус") }}</th>
             <th>{{ t("Время") }}</th>
-            <th>События</th>
+            <th>{{ t("События") }}</th>
             <th>{{ t("Контекст") }}</th>
           </tr>
         </thead>
@@ -403,8 +403,8 @@
                   {{ format_dt_madrid(job.created_at) }}
                 </div>
                 <div class="logs-time-grid">
-                  <div><strong>Старт</strong> {{ format_dt_madrid(job.started_at) }}</div>
-                  <div><strong>Финиш</strong> {{ format_dt_madrid(job.ended_at) }}</div>
+                  <div><strong>{{ t("Старт") }}</strong> {{ format_dt_madrid(job.started_at) }}</div>
+                  <div><strong>{{ t("Финиш") }}</strong> {{ format_dt_madrid(job.ended_at) }}</div>
                   <div><strong>{{ t("Длительность") }}</strong> {% set _d = job_durations.get(job.id) %}{% if _d is not none %}{{ _d }} с{% else %}—{% endif %}</div>
                 </div>
               </div>
@@ -418,10 +418,10 @@
               {% set err_hint = jc.get('error_hint_ru') %}
               {% set err_raw = jc.get('error_raw', '') or '' %}
               <div class="logs-context-card">
-                <div class="logs-context-label">Что делала задача</div>
+                <div class="logs-context-label">{{ t("Что делала задача") }}</div>
                 <div class="logs-context-intent">{{ intent or job_type_labels.get(job.job_type, job.job_type) }}</div>
                 {% if job.status == 'success' and not job.error_summary %}
-                <div class="logs-outcome-ok">Успешно завершено — ошибок в журнале не зафиксировано.</div>
+                <div class="logs-outcome-ok">{{ t("Успешно завершено — ошибок в журнале не зафиксировано.") }}</div>
                 {% elif job.status == 'running' %}
                 <div class="logs-outcome-wait">{{ t("Задача в работе или ожидает запуска.") }}</div>
                 {% elif job.status == 'queued' %}
@@ -431,23 +431,23 @@
                 {% endif %}
                 {% if job.error_summary or err_raw %}
                 {% if err_hint %}
-                <div class="logs-error-hint"><strong>Что случилось:</strong> {{ err_hint }}</div>
+                <div class="logs-error-hint"><strong>{{ t("Что случилось:") }}</strong> {{ err_hint }}</div>
                 {% endif %}
                 {% if err_raw %}
-                <div class="logs-error-raw" title="Текст ошибки из системы">{{ err_raw }}</div>
+                <div class="logs-error-raw" title="{{ t("Текст ошибки из системы") }}">{{ err_raw }}</div>
                 {% elif job.error_summary %}
-                <div class="logs-error-raw" title="Текст ошибки из системы">{{ job.error_summary }}</div>
+                <div class="logs-error-raw" title="{{ t("Текст ошибки из системы") }}">{{ job.error_summary }}</div>
                 {% endif %}
                 {% endif %}
                 {% if job.correlation_id %}
                 <details class="logs-tech-details">
-                  <summary>Служебный ID (для поиска в логах)</summary>
+                  <summary>{{ t("Служебный ID (для поиска в логах)") }}</summary>
                   <span class="logs-code" style="display:block;margin-top:8px">{{ job.correlation_id }}</span>
                 </details>
                 {% endif %}
                 {% if job.config_snapshot or job.progress_json %}
                 <details class="logs-tech-details">
-                  <summary>Технические данные (JSON)</summary>
+                  <summary>{{ t("Технические данные (JSON)") }}</summary>
                   {% if job.config_snapshot %}
                   <pre>{{ job.config_snapshot | tojson(indent=2) }}</pre>
                   {% endif %}
@@ -503,7 +503,7 @@
                     {{ format_dt_madrid(job.created_at) }}
                   </div>
                   <div class="logs-time-grid">
-                    <div><strong>Финиш</strong> {{ format_dt_madrid(job.ended_at) }}</div>
+                    <div><strong>{{ t("Финиш") }}</strong> {{ format_dt_madrid(job.ended_at) }}</div>
                     <div><strong>{{ t("Длительность") }}</strong> {% set _df = job_durations.get(job.id) %}{% if _df is not none %}{{ _df }} с{% else %}—{% endif %}</div>
                   </div>
                 </div>
@@ -514,10 +514,10 @@
                 {% set hint_f = jcf.get('error_hint_ru') %}
                 {% set raw_f = jcf.get('error_raw', '') or '' %}
                 <div class="logs-context-card">
-                  <div class="logs-context-label">Что делала задача</div>
+                  <div class="logs-context-label">{{ t("Что делала задача") }}</div>
                   <div class="logs-context-intent">{{ intent_f or job_type_labels.get(job.job_type, job.job_type) }}</div>
                   {% if hint_f %}
-                  <div class="logs-error-hint"><strong>Что случилось:</strong> {{ hint_f }}</div>
+                  <div class="logs-error-hint"><strong>{{ t("Что случилось:") }}</strong> {{ hint_f }}</div>
                   {% endif %}
                   {% if raw_f %}
                   <div class="logs-error-raw">{{ raw_f }}</div>
@@ -526,13 +526,13 @@
                   {% endif %}
                   {% if job.correlation_id %}
                   <details class="logs-tech-details">
-                    <summary>Служебный ID (для поиска в логах)</summary>
+                    <summary>{{ t("Служебный ID (для поиска в логах)") }}</summary>
                     <span class="logs-code" style="display:block;margin-top:8px">{{ job.correlation_id }}</span>
                   </details>
                   {% endif %}
                   {% if job.config_snapshot %}
                   <details class="logs-tech-details">
-                    <summary>Технические данные (JSON)</summary>
+                    <summary>{{ t("Технические данные (JSON)") }}</summary>
                     <pre>{{ job.config_snapshot | tojson(indent=2) }}</pre>
                   </details>
                   {% endif %}
@@ -562,7 +562,7 @@
           <thead>
             <tr>
               <th>{{ t("Время") }}</th>
-              <th>Событие</th>
+              <th>{{ t("Событие") }}</th>
               <th>{{ t("Задача") }}</th>
               <th>{{ t("Контекст") }}</th>
             </tr>
@@ -573,7 +573,7 @@
               <td>
                 <div class="logs-time-block">
                   <div class="logs-time-main">
-                    <span>Событие</span>
+                    <span>{{ t("Событие") }}</span>
                     {{ format_dt_madrid(event.ts) }}
                   </div>
                   <div class="logs-time-grid">
@@ -620,7 +620,7 @@
                 {% set hint_e = jce.get('error_hint_ru') %}
                 {% set raw_e = jce.get('error_raw', '') or '' %}
                 <div class="logs-context-card">
-                  <div class="logs-context-label">Связанная задача</div>
+                  <div class="logs-context-label">{{ t("Связанная задача") }}</div>
                   <div class="logs-context-intent">{{ intent_e or job_type_labels.get(job.job_type, job.job_type) }}</div>
                   {% if job.error_summary or raw_e %}
                   {% if hint_e %}
@@ -634,13 +634,13 @@
                   {% endif %}
                   {% if job.correlation_id %}
                   <details class="logs-tech-details">
-                    <summary>Служебный ID</summary>
+                    <summary>{{ t("Служебный ID") }}</summary>
                     <span class="logs-code" style="display:block;margin-top:8px">{{ job.correlation_id }}</span>
                   </details>
                   {% endif %}
                   {% if event.payload %}
                   <details class="logs-tech-details">
-                    <summary>Технические данные события (JSON)</summary>
+                    <summary>{{ t("Технические данные события (JSON)") }}</summary>
                     <pre>{{ event.payload | tojson(indent=2) }}</pre>
                   </details>
                   {% endif %}
@@ -665,7 +665,7 @@
 <div class="logs-report-grid" style="margin-bottom:24px">
   <div class="logs-report-card">
     <h3>{{ t("Журнальные выгрузки") }}</h3>
-    <p>Экспортируют текущий срез раздела по активным фильтрам: период, тип задачи, статус и строка поиска.</p>
+    <p>{{ t("Экспортируют текущий срез раздела по активным фильтрам: период, тип задачи, статус и строка поиска.") }}</p>
     <div class="logs-actions-row">
       <a href="{{ jobs_export_url }}" class="btn btn-secondary btn-sm"><i class="ti ti-file-download"></i> {{ t("CSV задач") }}</a>
       <a href="{{ errors_export_url }}" class="btn btn-secondary btn-sm"><i class="ti ti-alert-triangle"></i> {{ t("CSV ошибок") }}</a>
@@ -675,11 +675,11 @@
     <h3>CRM</h3>
     <p>{{ t("Быстрая выгрузка рабочей CRM-воронки для анализа, ручной обработки и обмена со сторонними таблицами.") }}</p>
     <div class="logs-actions-row">
-      <a href="/crm/funnel/export.csv" class="btn btn-primary btn-sm"><i class="ti ti-chart-funnel"></i> Скачать CRM CSV</a>
+      <a href="/crm/funnel/export.csv" class="btn btn-primary btn-sm"><i class="ti ti-chart-funnel"></i> {{ t("Скачать CRM CSV") }}</a>
     </div>
   </div>
   <div class="logs-report-card">
-    <h3>Что уже видно</h3>
+    <h3>{{ t("Что уже видно") }}</h3>
     <p>В базе сейчас {{ summary.total_jobs }} задач, {{ summary.problem_events }} проблемных событий и {{ recent_batches|length }} недавних импортов для быстрых выгрузок отсюда.</p>
     <div class="logs-actions-row">
       <a href="{{ tab_urls.jobs }}" class="btn btn-secondary btn-sm">{{ t("Открыть задачи") }}</a>
@@ -698,7 +698,7 @@
           <tr>
             <th>{{ t("Партия") }}</th>
             <th>{{ t("Источник") }}</th>
-            <th>Статистика</th>
+            <th>{{ t("Статистика") }}</th>
             <th>{{ t("Действия") }}</th>
           </tr>
         </thead>

@@ -22,7 +22,7 @@
     <link rel="canonical" href="https://socmaster.pro/blog">
     <meta name="robots" content="noindex, follow">
     {% else %}
-    <title>База знаний SOCMASTER — статьи о трафике, лидах и автоматизации соцсетей</title>
+    <title>{{ t("База знаний SOCMASTER — статьи о трафике, лидах и автоматизации соцсетей") }}</title>
     <meta name="description" content="Практические гайды о привлечении клиентов из Facebook, Instagram, LinkedIn, Telegram. Лидогенерация, AI-помощник, CRM и автоматизация соцсетей для бизнеса.">
     <link rel="canonical" href="https://socmaster.pro/blog">
     {% endif %}
@@ -272,7 +272,7 @@
             <div class="text-center py-16">
                 <i class="fa-regular fa-folder-open text-5xl text-white/20 mb-5"></i>
                 <h2 class="heading text-2xl mb-2">{% if is_en %}Nothing found{% else %}Ничего не нашлось{% endif %}</h2>
-                <p class="text-white/55">{% if is_en %}Try changing filters or return to the <a href="/blog?lang=en" class="text-[#f5d06e] underline">full list of articles</a>.{% else %}Попробуйте изменить фильтры или вернитесь к&nbsp;<a href="/blog" class="text-[#f5d06e] underline">полному списку статей</a>.{% endif %}</p>
+                <p class="text-white/55">{% if is_en %}Try changing filters or return to the <a href="/blog?lang=en" class="text-[#f5d06e] underline">full list of articles</a>.{% else %}Попробуйте изменить фильтры или вернитесь к&nbsp;<a href="/blog" class="text-[#f5d06e] underline">{{ t("полному списку статей") }}</a>.{% endif %}</p>
             </div>
             {% endif %}
         </div>
@@ -293,7 +293,7 @@
 
     <section class="py-20 md:py-28 hero-bg">
         <div class="max-w-4xl mx-auto px-5 md:px-8 text-center">
-            <h2 class="heading text-3xl md:text-5xl font-semibold mb-5 leading-[1.1]">{% if is_en %}Turn social media into a&nbsp;<span class="gold-gradient">lead source</span>{% else %}Превратите соцсети в&nbsp;<span class="gold-gradient">источник заявок</span>{% endif %}</h2>
+            <h2 class="heading text-3xl md:text-5xl font-semibold mb-5 leading-[1.1]">{% if is_en %}Turn social media into a&nbsp;<span class="gold-gradient">lead source</span>{% else %}Превратите соцсети в&nbsp;<span class="gold-gradient">{{ t("источник заявок") }}</span>{% endif %}</h2>
             <p class="text-base md:text-lg text-white/70 max-w-2xl mx-auto mb-8 leading-relaxed">
                 {% if is_en %}SOCMASTER helps you find audiences, launch outreach, work with leads in CRM, and automate routine actions.{% else %}SOCMASTER помогает находить аудиторию, запускать касания, работать с&nbsp;лидами в&nbsp;CRM и&nbsp;автоматизировать рутинные действия.{% endif %}
             </p>
@@ -306,8 +306,8 @@
 
     <footer class="bg-black border-t border-white/8 py-10">
         <div class="max-w-7xl mx-auto px-5 md:px-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-white/45">
-            <span>© SOCMASTER. <a href="/" class="hover:text-[#f5d06e]">На главную</a></span>
-            <a href="/blog" class="hover:text-[#f5d06e]">База знаний</a>
+            <span>© SOCMASTER. <a href="/" class="hover:text-[#f5d06e]">{{ t("На главную") }}</a></span>
+            <a href="/blog" class="hover:text-[#f5d06e]">{{ t("База знаний") }}</a>
         </div>
     </footer>
 </body>

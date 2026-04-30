@@ -26,7 +26,7 @@
   </section>
 
   <section class="li-card li-card--accent">
-    <h2 class="li-card__title"><i class="ti ti-bolt"></i> Управление рассылкой</h2>
+    <h2 class="li-card__title"><i class="ti ti-bolt"></i> {{ t("Управление рассылкой") }}</h2>
     <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
       <form method="post" action="/linkedin/outreach/{{ campaign.id }}/run-once" style="display:flex;gap:6px;align-items:center;"
             onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Отправляю…';">
@@ -56,7 +56,7 @@
   </section>
 
   <section class="li-card li-card--accent">
-    <h2 class="li-card__title"><i class="ti ti-list-check"></i> Собрать очередь по лидам</h2>
+    <h2 class="li-card__title"><i class="ti ti-list-check"></i> {{ t("Собрать очередь по лидам") }}</h2>
     {% if leads %}
     <form method="post" action="/linkedin/outreach/{{ campaign.id }}/build-queue">
       <div style="max-height:280px;overflow:auto;border:1px solid var(--border,#e4e6eb);border-radius:8px;padding:8px;">

@@ -11,14 +11,14 @@
     <div style="padding:18px 20px">
       <div id="tpl-neuro-form-block">
         <p class="form-hint" style="margin-top:0">
-          Сгенерировать похожие по смыслу, но разные формулировки. Маркеры <code>{{ "{{full_name}}" }}</code> и <code>{{ "{{first_name}}" }}</code> сохраняются.
+          {{ t("Сгенерировать похожие по смыслу, но разные формулировки. Маркеры") }} <code>{{ "{{full_name}}" }}</code> и <code>{{ "{{first_name}}" }}</code> {{ t("сохраняются.") }}
         </p>
         <div class="form-group">
-          <label class="form-label" for="tpl-neuro-count">Сколько вариантов</label>
+          <label class="form-label" for="tpl-neuro-count">{{ t("Сколько вариантов") }}</label>
           <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:8px">
             <input id="tpl-neuro-count" name="tpl_neuro_count" type="number" class="form-input" min="1" max="40" step="1" value="10"
                    style="max-width:100px" inputmode="numeric" aria-describedby="tpl-neuro-count-hint"/>
-            <span id="tpl-neuro-count-hint" class="form-hint" style="margin:0">от 1 до 40</span>
+            <span id="tpl-neuro-count-hint" class="form-hint" style="margin:0">{{ t("от 1 до 40") }}</span>
           </div>
           <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
             <span class="form-hint" style="margin:0">{{ t("Быстро:") }}</span>
@@ -49,7 +49,7 @@
         <input type="hidden" id="tpl-neuro-provider" value="gemini"/>
         {% endif %}
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
-          <button type="button" class="btn btn-primary" id="tpl-neuro-run"><i class="ti ti-sparkles"></i> Сгенерировать</button>
+          <button type="button" class="btn btn-primary" id="tpl-neuro-run"><i class="ti ti-sparkles"></i> {{ t("Сгенерировать") }}</button>
           <button type="button" class="btn btn-secondary" id="tpl-neuro-close-btn">{{ t("Закрыть") }}</button>
         </div>
       </div>

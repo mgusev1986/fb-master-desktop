@@ -29,7 +29,7 @@
         </option>
         {% endfor %}
       </select>
-      <button class="li-btn" type="submit"><i class="ti ti-check"></i> Сохранить связь</button>
+      <button class="li-btn" type="submit"><i class="ti ti-check"></i> {{ t("Сохранить связь") }}</button>
     </form>
     <small style="color:var(--text-muted,#888);">{{ t("Привязка нужна для отправки DM прямо из треда — sender откроет профиль lead'а в LinkedIn.") }}</small>
   </section>
@@ -57,7 +57,7 @@
     {% else %}
     <div class="li-placeholder">
       <div class="li-placeholder__icon"><i class="ti ti-message"></i></div>
-      <p class="li-placeholder__text">Сообщений нет. Тред может содержать только preview. Полная история через Playwright — следующая итерация.</p>
+      <p class="li-placeholder__text">{{ t("Сообщений нет. Тред может содержать только preview. Полная история через Playwright — следующая итерация.") }}</p>
     </div>
     {% endif %}
   </section>
@@ -81,7 +81,7 @@
     </form>
     {% else %}
     <p class="li-card__desc">
-      Сначала свяжите тред с lead'ом (выше) — тогда станет доступна кнопка отправки. Без lead'а sender не знает, какой профиль открывать в LinkedIn.
+      {{ t("Сначала свяжите тред с lead'ом (выше) — тогда станет доступна кнопка отправки. Без lead'а sender не знает, какой профиль открывать в LinkedIn.") }}
     </p>
     {% endif %}
   </section>
