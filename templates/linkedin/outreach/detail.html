@@ -20,7 +20,7 @@
     <div class="li-banner__body">
       <h2 class="li-banner__title">{{ t("Реальная отправка через Playwright runtime") }}</h2>
       <p class="li-banner__text">
-        {{ t("Approved-items обрабатываются runtime'ом: открывает LinkedIn под профилем аккаунта, ищет кнопку Message / Connect, вводит текст по символам, отправляет. Можно запустить вручную (кнопка ниже) или включить кампанию в") }} <strong>active</strong> — и фоновой worker обработает её сам каждые ~3 минуты.
+        {{ t("Approved-items обрабатываются runtime'ом: открывает LinkedIn под профилем аккаунта, ищет кнопку Message / Connect, вводит текст по символам, отправляет. Можно запустить вручную (кнопка ниже) или включить кампанию в") }} <strong>active</strong> {{ t("— и фоновой worker обработает её сам каждые ~3 минуты.") }}
       </p>
     </div>
   </section>
@@ -51,7 +51,7 @@
       </form>
     </div>
     <small style="color:var(--text-muted,#888);">
-      Reason codes: <code>daily_cap_reached</code> / <code>not_first_degree</code> → skipped, <code>login_required</code> / <code>account_restricted</code> → failed + остановка обработки этим аккаунтом.
+      Reason codes: <code>daily_cap_reached</code> / <code>not_first_degree</code> → skipped, <code>login_required</code> / <code>account_restricted</code> {{ t("→ failed + остановка обработки этим аккаунтом.") }}
     </small>
   </section>
 

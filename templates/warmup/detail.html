@@ -40,13 +40,13 @@
 <div class="card" style="margin-bottom:16px;border-color:var(--error)">
   <div class="card-body" style="font-size:var(--font-size-sm);color:var(--error)">
     {% set e = request.query_params.get('err') %}
-    {% if e == 'busy' %}Уже идёт другой прогрев. Дождитесь окончания.{% endif %}
+    {% if e == 'busy' %}{{ t("Уже идёт другой прогрев. Дождитесь окончания.") }}{% endif %}
     {% if e == 'account_busy' %}{{ request.query_params.get('why') or 'Один из выбранных аккаунтов уже занят другой автоматизацией.' }}{% endif %}
-    {% if e == 'no_queue' %}Нет строк в очереди — сначала «Собрать очередь».{% endif %}
-    {% if e == 'state' %}Некорректное состояние кампании для этого действия.{% endif %}
-    {% if e == 'job_running' %}Задача уже в работе.{% endif %}
-    {% if e == 'running' %}Остановите прогрев перед удалением.{% endif %}
-    {% if e == 'no_job' %}Ошибка создания задачи.{% endif %}
+    {% if e == 'no_queue' %}{{ t("Нет строк в очереди — сначала «Собрать очередь».") }}{% endif %}
+    {% if e == 'state' %}{{ t("Некорректное состояние кампании для этого действия.") }}{% endif %}
+    {% if e == 'job_running' %}{{ t("Задача уже в работе.") }}{% endif %}
+    {% if e == 'running' %}{{ t("Остановите прогрев перед удалением.") }}{% endif %}
+    {% if e == 'no_job' %}{{ t("Ошибка создания задачи.") }}{% endif %}
   </div>
 </div>
 {% endif %}

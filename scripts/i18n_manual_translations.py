@@ -1642,6 +1642,11 @@ TRANSLATIONS: dict[str, str] = {
     "за 30 дней · автопродление": "for 30 days · auto-renew",
     "за 35 дней": "for 35 days",
     "их": "them",
+
+    # ─── Wave 7: readiness labels (from Python dict) ──────────────────
+    "Не прогрет": "Not warmed up",
+    "Идёт прогрев": "Warming up",
+    "Готов к работе": "Ready to work",
 }
 # fmt: on
 

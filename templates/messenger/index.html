@@ -201,7 +201,7 @@
             <span class="vk-ms-crm-stage-btn__text">{{ st.label }}</span>
           </button>
           {% endfor %}
-          <span class="vk-ms-crm-funnel-status{% if not active_person %} vk-ms-crm-funnel-status--muted{% endif %}" id="vk-ms-crm-funnel-status" role="status" aria-live="polite">{% if not active_person %}Контакт ещё не связан с «Базой контактов»: нажмите нужную стадию, и система сама привяжет или создаст его.{% endif %}</span>
+          <span class="vk-ms-crm-funnel-status{% if not active_person %} vk-ms-crm-funnel-status--muted{% endif %}" id="vk-ms-crm-funnel-status" role="status" aria-live="polite">{% if not active_person %}{{ t("Контакт ещё не связан с «Базой контактов»: нажмите нужную стадию, и система сама привяжет или создаст его.") }}{% endif %}</span>
         </div>
         {% endif %}
         <div class="vk-ms-thread-ai-bar" id="vk-ms-ai-bar" role="group" aria-label="{{ t("AI-ассистент переписки") }}">

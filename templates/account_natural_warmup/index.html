@@ -92,11 +92,11 @@
                 <span class="badge badge-default">{% if cabinet_client_mode(request) %}{{ t("Вход: —") }}{% else %}{{ t("Сессия: —") }}{% endif %}</span>
                 {% endif %}
                 {% if rs == 'ready' %}
-                <span class="badge badge-success">{{ readiness_labels.get('ready', t('Готов')) }}</span>
+                <span class="badge badge-success">{{ t(readiness_labels.get('ready', 'Готов к работе')) }}</span>
                 {% elif rs == 'warming' %}
-                <span class="badge badge-default">{{ readiness_labels.get('warming', t('Прогрев')) }}</span>
+                <span class="badge badge-default">{{ t(readiness_labels.get('warming', 'Идёт прогрев')) }}</span>
                 {% else %}
-                <span class="badge badge-default">{{ readiness_labels.get('cold', t('Холодный')) }}</span>
+                <span class="badge badge-default">{{ t(readiness_labels.get('cold', 'Не прогрет')) }}</span>
                 {% endif %}
               </div>
             </div>

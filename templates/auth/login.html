@@ -53,7 +53,7 @@
 
     {% if supabase_auth_configured %}
     <p style="font-size:var(--font-size-xs);color:var(--text-secondary);margin:0 0 14px;line-height:1.5">
-      <strong>{{ t("Рекомендуемый вход") }}</strong> — через Google (Supabase). Один раз настройте проект в Supabase и Google Cloud; IP клиентов указывать не нужно.
+      <strong>{{ t("Рекомендуемый вход") }}</strong> {{ t("— через Google (Supabase). Один раз настройте проект в Supabase и Google Cloud; IP клиентов указывать не нужно.") }}
     </p>
     <a href="{% if fbm_client_version %}/auth/supabase/oauth-page/google?fbm_app={{ fbm_client_version|urlencode }}{% else %}/auth/supabase/oauth-page/google{% endif %}" class="btn-google" style="text-decoration:none;justify-content:center;width:100%;margin-bottom:16px">
       <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true">

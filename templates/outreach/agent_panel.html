@@ -28,14 +28,14 @@
 
     {% if err %}
     <div style="margin-bottom:12px;padding:12px;border:1px solid var(--error);border-radius:8px;font-size:var(--font-size-sm);color:var(--error)">
-      {% if err == 'bad_context' %}Некорректный тип задачи.{% endif %}
+      {% if err == 'bad_context' %}{{ t("Некорректный тип задачи.") }}{% endif %}
       {% if err == 'no_openai' %}Для OpenAI нужен <code>OPENAI_API_KEY</code> в .env{% endif %}
       {% if err == 'no_gemini' %}Для Gemini нужен <code>GOOGLE_API_KEY</code> в .env{% endif %}
-      {% if err == 'batch_empty' %}Заполните шаблон контекста.{% endif %}
-      {% if err == 'first_touch_dm_only' %}Первое касание доступно только в режиме «Переписка».{% endif %}
-      {% if err == 'no_people_batch' %}Нет контактов по выбранным условиям (донор или последние в базе).{% endif %}
-      {% if err == 'agent_outreach_busy' %}Сейчас выполняется рассылка. Дождитесь окончания или поставьте кампанию на паузу.{% endif %}
-      {% if err == 'agent_self_busy' %}Пакет агента уже выполняется (другое окно или вкладка).{% endif %}
+      {% if err == 'batch_empty' %}{{ t("Заполните шаблон контекста.") }}{% endif %}
+      {% if err == 'first_touch_dm_only' %}{{ t("Первое касание доступно только в режиме «Переписка».") }}{% endif %}
+      {% if err == 'no_people_batch' %}{{ t("Нет контактов по выбранным условиям (донор или последние в базе).") }}{% endif %}
+      {% if err == 'agent_outreach_busy' %}{{ t("Сейчас выполняется рассылка. Дождитесь окончания или поставьте кампанию на паузу.") }}{% endif %}
+      {% if err == 'agent_self_busy' %}{{ t("Пакет агента уже выполняется (другое окно или вкладка).") }}{% endif %}
     </div>
     {% endif %}
 

@@ -66,7 +66,7 @@
     <h2 class="li-card__title"><i class="ti ti-send"></i> {{ t("Ответить") }}</h2>
     {% if linked_lead %}
     <p class="li-card__desc" style="font-size:13px;">
-      {{ t("Будет отправлено через dm_sender: открытие") }} <a href="{{ linked_lead.profile_url }}" target="_blank">{{ linked_lead.full_name or linked_lead.profile_url }}</a> → Message → ввод текста → send.
+      {{ t("Будет отправлено через dm_sender: открытие") }} <a href="{{ linked_lead.profile_url }}" target="_blank">{{ linked_lead.full_name or linked_lead.profile_url }}</a> {{ t("→ Message → ввод текста → send.") }}
     </p>
     <form method="post" action="/linkedin/conversations/{{ conversation.id }}/send" style="display:flex;flex-direction:column;gap:8px;"
           onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=&quot;ti ti-loader&quot;></i> Отправляю…';">
