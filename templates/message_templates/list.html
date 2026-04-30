@@ -53,34 +53,34 @@
         </tr>
       </thead>
       <tbody>
-        {% for t in items %}
+        {% for tpl in items %}
         <tr>
           <td>
-            <strong>{{ t.name }}</strong>
-            {% set nv = count_template_variants(t.body) %}
+            <strong>{{ tpl.name }}</strong>
+            {% set nv = count_template_variants(tpl.body) %}
             {% if nv > 1 %}
             <span class="badge badge-default" style="margin-left:6px;font-weight:500" title="{{ t("В шаблоне несколько текстов; при рассылке выбирается один") }}">{{ nv }} {{ t("вариантов") }}</span>
             {% endif %}
           </td>
           <td>
-            <span class="badge badge-default">{{ category_labels.get(t.category, t.category) }}</span>
+            <span class="badge badge-default">{{ category_labels.get(tpl.category, tpl.category) }}</span>
           </td>
           <td style="max-width:360px;color:var(--text-secondary);font-size:var(--font-size-sm)">
-            <span title="{{ t.body }}">{{ preview_sample(t.body)[:120] }}{% if t.body|length > 120 %}…{% endif %}</span>
+            <span title="{{ tpl.body }}">{{ preview_sample(tpl.body)[:120] }}{% if tpl.body|length > 120 %}…{% endif %}</span>
           </td>
-          <td style="white-space:nowrap;font-size:var(--font-size-sm)">{{ t.updated_at.strftime('%d.%m.%Y %H:%M') if t.updated_at else '—' }}</td>
+          <td style="white-space:nowrap;font-size:var(--font-size-sm)">{{ tpl.updated_at.strftime('%d.%m.%Y %H:%M') if tpl.updated_at else '—' }}</td>
           <td>
             <div class="table-actions">
               {% if has_openai or has_gemini or is_platform_owner(user) %}
               <button type="button" class="btn btn-sm btn-secondary tpl-neuro-open"
                       title="{{ t("Сгенерировать через ИИ несколько вариантов текста") }}: {{ t("плейсхолдеры") }} ({{ '{{full_name}}' }}, {{ '{{first_name}}' }}) {{ t("сохраняются. В открывшемся окне выберите формулировки и сохраните их в этот шаблон.") }}"
-                      data-template-id="{{ t.id }}" data-template-name="{{ t.name|e }}">
+                      data-template-id="{{ tpl.id }}" data-template-name="{{ tpl.name|e }}">
                 <i class="ti ti-sparkles"></i>
               </button>
               {% endif %}
-              <a href="/templates/{{ t.id }}/edit" class="btn btn-sm btn-secondary"
+              <a href="/templates/{{ tpl.id }}/edit" class="btn btn-sm btn-secondary"
                  title="{{ t("Редактировать шаблон: название, категория и текст сообщения") }}"><i class="ti ti-edit"></i></a>
-              <form method="post" action="/templates/{{ t.id }}/delete" style="display:inline"
+              <form method="post" action="/templates/{{ tpl.id }}/delete" style="display:inline"
                     data-confirm="Удалить этот шаблон?" data-confirm-title="{{ t("Удаление шаблона") }}" data-confirm-variant="danger">
                 <input type="hidden" name="confirm" value="yes"/>
                 <button type="submit" class="btn btn-sm btn-ghost" style="color:var(--error)"><i class="ti ti-trash"></i></button>

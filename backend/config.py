@@ -755,10 +755,10 @@ def unlock_page_desktop_download_hrefs() -> dict[str, str]:
 NOWPAYMENTS_API_KEY: str = (os.getenv("NOWPAYMENTS_API_KEY") or "").strip()
 NOWPAYMENTS_IPN_SECRET: str = (os.getenv("NOWPAYMENTS_IPN_SECRET") or "").strip()
 NOWPAYMENTS_SANDBOX: bool = os.getenv("NOWPAYMENTS_SANDBOX", "").lower() in ("1", "true", "yes")
-NOWPAYMENTS_PRICE_USD_30: str = (os.getenv("NOWPAYMENTS_PRICE_USD_30") or "29").strip()
-NOWPAYMENTS_PRICE_USD_90: str = (os.getenv("NOWPAYMENTS_PRICE_USD_90") or "79").strip()
-NOWPAYMENTS_PRICE_USD_180: str = (os.getenv("NOWPAYMENTS_PRICE_USD_180") or "139").strip()
-NOWPAYMENTS_PRICE_USD_365: str = (os.getenv("NOWPAYMENTS_PRICE_USD_365") or "2000").strip()
+NOWPAYMENTS_PRICE_USD_30: str = (os.getenv("NOWPAYMENTS_PRICE_USD_30") or "100").strip()
+NOWPAYMENTS_PRICE_USD_90: str = (os.getenv("NOWPAYMENTS_PRICE_USD_90") or "270").strip()
+NOWPAYMENTS_PRICE_USD_180: str = (os.getenv("NOWPAYMENTS_PRICE_USD_180") or "499").strip()
+NOWPAYMENTS_PRICE_USD_365: str = (os.getenv("NOWPAYMENTS_PRICE_USD_365") or "865").strip()
 # Тестовый тариф ($10 и короткий срок) — показывается в формах только при NOWPAYMENTS_TEST_TARIFF_ENABLED=true
 NOWPAYMENTS_PRICE_USD_TEST: str = (os.getenv("NOWPAYMENTS_PRICE_USD_TEST") or "10").strip()
 # Допуск на недоплату (в %): если получатель прислал чуть меньше указанной суммы из-за

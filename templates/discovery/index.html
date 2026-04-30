@@ -282,20 +282,20 @@
         <tr><th>#</th><th>{{ t("Запросы") }}</th><th>{{ t("Найдено") }}</th><th>{{ t("Статус") }}</th><th>{{ t("Дата") }}</th><th></th></tr>
       </thead>
       <tbody>
-        {% for t in tasks %}
+        {% for task in tasks %}
         <tr>
-          <td>{{ t.id }}</td>
-          <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ t.keywords }}">{{ t.keywords[:60] }}</td>
-          <td>{{ t.results_count }}</td>
+          <td>{{ task.id }}</td>
+          <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ task.keywords }}">{{ task.keywords[:60] }}</td>
+          <td>{{ task.results_count }}</td>
           <td>
-            {% if t.status == 'done' %}<span class="badge badge-success">{{ t("готово") }}</span>
-            {% elif t.status == 'running' %}<span class="badge badge-warning">{{ t("в работе") }}</span>
-            {% elif t.status == 'failed' %}<span class="badge badge-error">{{ t("ошибка") }}</span>
-            {% else %}<span class="badge badge-default">{{ t.status }}</span>{% endif %}
+            {% if task.status == 'done' %}<span class="badge badge-success">{{ t("готово") }}</span>
+            {% elif task.status == 'running' %}<span class="badge badge-warning">{{ t("в работе") }}</span>
+            {% elif task.status == 'failed' %}<span class="badge badge-error">{{ t("ошибка") }}</span>
+            {% else %}<span class="badge badge-default">{{ task.status }}</span>{% endif %}
           </td>
-          <td style="font-size:var(--font-size-sm);white-space:nowrap">{{ t.created_at.strftime('%d.%m.%Y %H:%M') if t.created_at else '—' }}</td>
+          <td style="font-size:var(--font-size-sm);white-space:nowrap">{{ task.created_at.strftime('%d.%m.%Y %H:%M') if task.created_at else '—' }}</td>
           <td>
-            <form method="post" action="/discovery/{{ t.id }}/delete" style="display:inline" onsubmit="return confirm('Удалить?')">
+            <form method="post" action="/discovery/{{ task.id }}/delete" style="display:inline" onsubmit="return confirm('Удалить?')">
               <button class="btn btn-secondary btn-sm"><i class="ti ti-trash"></i></button>
             </form>
           </td>

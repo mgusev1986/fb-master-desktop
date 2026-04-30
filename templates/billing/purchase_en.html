@@ -252,6 +252,40 @@
       background: rgba(245, 208, 110, 0.03);
       box-shadow: 0 0 0 3px rgba(245, 208, 110, 0.1);
     }
+    .buy-email-wrap { position: relative; margin: 0 0 1.5rem; }
+    .buy-email-wrap .buy-email { margin: 0; }
+    .email-hint {
+      position: absolute;
+      left: 1.15rem;
+      top: calc(100% + 10px);
+      max-width: calc(100% - 2.3rem);
+      padding: 0.55rem 0.85rem;
+      background: #fbbf24;
+      color: #0c0a09;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      line-height: 1.35;
+      box-shadow: 0 10px 28px -10px rgba(251, 191, 36, 0.55), 0 0 0 1px rgba(251, 191, 36, 0.4);
+      opacity: 0;
+      transform: translateY(-4px);
+      pointer-events: none;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+      z-index: 5;
+    }
+    .email-hint::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 1.1rem;
+      border: 6px solid transparent;
+      border-bottom-color: #fbbf24;
+    }
+    .email-hint.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
     .buy-payment-row {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -532,7 +566,10 @@
         </div>
 
     {% if lavatop_enabled %}
-    <input type="email" id="purchase_email" required maxlength="255" placeholder="your-email@example.com" class="buy-email" autocomplete="email" aria-label="Email for key delivery"/>
+    <div class="buy-email-wrap">
+      <input type="email" id="purchase_email" required maxlength="255" placeholder="your-email@example.com" class="buy-email" autocomplete="email" aria-label="Email for key delivery"/>
+      <div class="email-hint" id="purchase_email_hint" role="alert" aria-live="polite">Please enter your email — the access key will be delivered to it</div>
+    </div>
     {% endif %}
 
     <div class="buy-payment-row" role="group" aria-label="Payment method">
@@ -611,10 +648,26 @@
     var emailInput = document.getElementById("purchase_email");
     var cardEmailHidden = document.getElementById("purchase-form-card-email");
     var formCard = document.getElementById("purchase-form-card");
+    var emailHint = document.getElementById("purchase_email_hint");
+    var emailHintTimer = null;
+    function showEmailHint() {
+      if (!emailHint) return;
+      emailHint.classList.add("is-visible");
+      if (emailHintTimer) clearTimeout(emailHintTimer);
+      emailHintTimer = setTimeout(function () {
+        emailHint.classList.remove("is-visible");
+      }, 4000);
+    }
+    function hideEmailHint() {
+      if (!emailHint) return;
+      emailHint.classList.remove("is-visible");
+      if (emailHintTimer) { clearTimeout(emailHintTimer); emailHintTimer = null; }
+    }
 
     if (emailInput && cardEmailHidden) {
       emailInput.addEventListener("input", function () {
         cardEmailHidden.value = emailInput.value.trim();
+        hideEmailHint();
       });
     }
 
@@ -628,6 +681,7 @@
             emailInput.style.borderColor = "rgba(248, 113, 113, 0.55)";
             setTimeout(function () { emailInput.style.borderColor = ""; }, 2400);
           }
+          showEmailHint();
         }
       });
     }

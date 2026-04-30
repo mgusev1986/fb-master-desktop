@@ -145,11 +145,17 @@ async def billing_nowpayments_create(
             status_code=303,
         )
     d = (duration or "").strip()
-    if d == "365":
-        # 2.69: тариф изменён на «35 дней — 100 USD». Значение поля формы остаётся "365"
-        # для обратной совместимости (в шаблоне purchase.html и старых ссылках).
-        # NOWPAYMENTS_PRICE_USD_365 теперь содержит цену 35-дневного тарифа (100 USD).
-        days, price = 35, app_config.NOWPAYMENTS_PRICE_USD_365
+    # 3.0.8: 4-tier picker (30/90/180/365 дней) выровнен с LavaTop. Цены в USD —
+    # из NOWPAYMENTS_PRICE_USD_<days>. Тестовый тариф ("test") по-прежнему обрабатывается
+    # отдельно через NOWPAYMENTS_TEST_ORDER_DURATION_SENTINEL.
+    NP_TIERS = {
+        "30": (30, app_config.NOWPAYMENTS_PRICE_USD_30),
+        "90": (90, app_config.NOWPAYMENTS_PRICE_USD_90),
+        "180": (180, app_config.NOWPAYMENTS_PRICE_USD_180),
+        "365": (365, app_config.NOWPAYMENTS_PRICE_USD_365),
+    }
+    if d in NP_TIERS:
+        days, price = NP_TIERS[d]
     elif d == "test":
         if not app_config.nowpayments_test_tariff_enabled():
             return RedirectResponse(
@@ -160,7 +166,7 @@ async def billing_nowpayments_create(
         price = app_config.NOWPAYMENTS_PRICE_USD_TEST
     else:
         return RedirectResponse(
-            err_path + "?error=" + quote("Доступен только тариф 35 дней."),
+            err_path + "?error=" + quote("Неизвестный тариф."),
             status_code=303,
         )
     base = app_config.public_app_base_url()
