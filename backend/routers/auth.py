@@ -21,6 +21,7 @@ from backend.database import get_db
 from backend.models import AdminUser
 from backend.services.desktop_client import user_agent_is_fb_master_desktop
 from backend.services.desktop_device import effective_device_fingerprint
+from backend.services.i18n import get_lang, select_template
 from backend.services.fbm_client_version import (
     append_fbm_app_to_url,
     cabinet_web_auth_redirect_path,
@@ -170,9 +171,10 @@ async def access_key_unlock_page(request: Request, db: Session = Depends(get_db)
     show_key = _unlock_show_key_form(request)
     # После успешного ключа редирект на /home (кабинет); корень / — публичный лендинг.
     return templates.TemplateResponse(
-        "auth/unlock.html",
+        select_template(request, "auth/unlock.html"),
         {
             "request": request,
+            "lang": get_lang(request),
             "access_key_required": ak_req,
             "show_unlock_key_form": show_key,
             "buy_url": app_config.marketing_buy_page_url(),
