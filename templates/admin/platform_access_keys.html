@@ -2,6 +2,115 @@
 {% block title %}Ключи доступа — SOCMASTER{% endblock %}
 
 {% block content %}
+<style>
+  /* ─── Mobile-friendly admin · /admin/platform/access-keys ────────────
+     Цель: быстро создать/отозвать ключ с телефона. Делаем форму create
+     в одну колонку, фильтры компактными, в таблице на узких экранах
+     прячем второстепенные колонки (ID / Создан / Устройство / Оплата),
+     чтобы видеть Подпись + Ключ + Срок + Статус + Действия на 360px. */
+  @media (max-width: 640px) {
+    /* Заголовок страницы — мельче, без огромного хедера */
+    .page-header h1 { font-size: 1.5rem; line-height: 1.2; }
+    .page-header .subtitle { font-size: 0.85rem; line-height: 1.45; }
+
+    /* Карточки — меньше внутренних отступов */
+    .card-body { padding: 14px 12px; }
+    .card-header { padding: 12px 14px; font-size: 0.95rem; }
+
+    /* Форма «Создать ключ» — все элементы на 100% ширины */
+    form.settings-form input[type="text"],
+    form.settings-form input[type="number"],
+    form.settings-form select,
+    form.settings-form textarea { width: 100% !important; max-width: 100% !important; }
+    /* В custom-row inputs становятся в столбик */
+    #ak-custom-row > div[style*="display:flex"] { flex-direction: column !important; gap: 8px !important; }
+    #ak-custom-row input,
+    #ak-custom-row select { max-width: 100% !important; width: 100% !important; }
+    /* Submit-кнопка — тап-таргет 48px */
+    form.settings-form .btn-primary {
+      width: 100%;
+      min-height: 48px;
+      font-size: 1rem;
+      margin-top: 14px !important;
+    }
+    .form-input { font-size: 16px; min-height: 44px; padding: 10px 12px; } /* 16px — отключает auto-zoom Safari */
+
+    /* Заголовок таблицы (Выданные ключи + фильтры) — в столбик */
+    .ak-keys-header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+    }
+    .ak-status-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 4px;
+    }
+    .ak-filter-pill {
+      padding: 6px 10px;
+      font-size: 0.78rem;
+      white-space: nowrap;
+    }
+    .ak-filter-count { font-size: 0.7rem; }
+
+    /* Таблица: на узких экранах прячем некритичные колонки.
+       Оставляем: Подпись (2), Ключ (4), Действует до (6), Статус (8), Действия (10).
+       Скрываем: ID (1), Пометка (3 — там textarea, на мобиле занимает много места),
+       Создан (5), Устройство (7), Оплата (9). */
+    .data-table thead th:nth-child(1),
+    .data-table tbody td:nth-child(1),
+    .data-table thead th:nth-child(3),
+    .data-table tbody td:nth-child(3),
+    .data-table thead th:nth-child(5),
+    .data-table tbody td:nth-child(5),
+    .data-table thead th:nth-child(7),
+    .data-table tbody td:nth-child(7),
+    .data-table thead th:nth-child(9),
+    .data-table tbody td:nth-child(9) { display: none; }
+
+    .data-table { font-size: 0.85rem; }
+    .data-table th,
+    .data-table td { padding: 8px 6px; }
+    .data-table td[style*="min-width"] { min-width: auto !important; max-width: none !important; }
+
+    /* Action-кнопки в таблице — крупнее тап-таргет, wrap */
+    .data-table .btn-sm {
+      padding: 7px 10px;
+      font-size: 0.78rem;
+      min-height: 36px;
+    }
+
+    /* NP-карточка (когда раскрыта) — paddings меньше */
+    .ak-np-card { padding: 12px 10px; }
+    .ak-np-card__header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    /* Quick-link «К сводке платформы» — на всю ширину для удобного тапа */
+    .admin-quick-links .btn { display: inline-flex; align-items: center; min-height: 40px; }
+
+    /* Баннер с новым ключом: code + кнопка copy в столбик */
+    .settings-banner > div[style*="display:flex"] {
+      flex-direction: column !important;
+      align-items: stretch !important;
+    }
+    .settings-banner code { font-size: 0.78rem; }
+  }
+
+  /* Очень узкие экраны (≤380px — старые iPhone SE) */
+  @media (max-width: 380px) {
+    .page-header h1 { font-size: 1.3rem; }
+    .ak-filter-pill { padding: 5px 8px; font-size: 0.72rem; }
+    .data-table { font-size: 0.78rem; }
+    .data-table th,
+    .data-table td { padding: 6px 4px; }
+  }
+</style>
 <div class="page-header">
   <h1>Ключи доступа</h1>
   <p class="subtitle">Выдаются клиентам для запуска копии программы. Один ключ после первого ввода привязывается к <strong>одному компьютеру</strong> (в SOCMASTER — к железу; в браузере — к устойчивому отпечатку устройства). Срок отсчитывается от выдачи ключа. Отозванный или просроченный ключ перестаёт работать. В таблице ключ отображается скрытым; расшифровка возможна только здесь, на сервере с вашим <code>SECRET_KEY</code>.</p>
@@ -92,25 +201,25 @@
       <input type="text" name="label" class="form-input" placeholder="Например: клиент Иван, офис №2"/>
       <label class="form-label" style="margin-top:16px">Срок действия (с момента выдачи)</label>
       <select name="duration" id="ak-duration-select" class="form-input">
-        <option value="forever">Бессрочно</option>
-        <option value="m3">Тест — 3 минуты (проверка истечения)</option>
-        <option value="30">30 дней</option>
+        <option value="30" selected>30 дней</option>
         <option value="90">3 месяца (90 дней)</option>
         <option value="180">6 месяцев (180 дней)</option>
         <option value="365">1 год (365 дней)</option>
+        <option value="forever">Бессрочно</option>
+        <option value="m3">Тест — 3 минуты (проверка истечения)</option>
         <option value="custom">Свой период…</option>
       </select>
       <div id="ak-custom-row" style="display:none;margin-top:10px;padding:12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-surface)">
         <label class="form-label" style="margin-bottom:6px">Кастомный период</label>
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-          <input type="number" name="custom_value" id="ak-custom-value" min="1" max="1000000" step="1" placeholder="40" class="form-input" style="max-width:140px"/>
+          <input type="number" name="custom_value" id="ak-custom-value" min="1" max="1000000" step="1" placeholder="30" class="form-input" style="max-width:140px"/>
           <select name="custom_unit" id="ak-custom-unit" class="form-input" style="max-width:160px">
             <option value="d" selected>дней</option>
             <option value="h">часов</option>
             <option value="m">минут</option>
           </select>
         </div>
-        <p class="form-hint" style="margin:8px 0 0;color:var(--text-muted)">Целое положительное число. Например: <strong>40 дней</strong>, <strong>12 часов</strong>, <strong>90 минут</strong>. Максимум 1 000 000 в выбранной единице.</p>
+        <p class="form-hint" style="margin:8px 0 0;color:var(--text-muted)">Целое положительное число. Например: <strong>30 дней</strong>, <strong>12 часов</strong>, <strong>90 минут</strong>. Максимум 1 000 000 в выбранной единице.</p>
       </div>
       <button type="submit" class="btn btn-primary" style="margin-top:12px">Сгенерировать ключ</button>
     </form>
@@ -125,7 +234,7 @@
         var on = sel.value === 'custom';
         row.style.display = on ? '' : 'none';
         val.required = on;
-        if (on && !val.value) val.value = '40';
+        if (on && !val.value) val.value = '30';
       }
       sel.addEventListener('change', sync);
       sync();
