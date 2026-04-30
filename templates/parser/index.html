@@ -268,7 +268,7 @@
         <label class="form-label" for="parser-language-filter">{{ t("Собирать по языку") }}</label>
         <select id="parser-language-filter" name="language_filter" class="form-input form-select" style="max-width:360px">
           {% for key, label in parser_language_filters.items() %}
-          <option value="{{ key }}" {% if parser_language_filter == key %}selected{% endif %}>{{ label }}</option>
+          <option value="{{ key }}" {% if parser_language_filter == key %}selected{% endif %}>{{ t(label) }}</option>
           {% endfor %}
         </select>
         <p class="form-hint" id="parser-language-filter-hint" style="margin-bottom:0">
@@ -298,12 +298,12 @@
       langFilter.value = 'all';
       langFilter.disabled = true;
       if (langHint) {
-        langHint.textContent = 'В режиме «Без языка» фильтр по языку отключён: в контакты попадают все найденные в списке.';
+        langHint.textContent = {{ t('В режиме «Без языка» фильтр по языку отключён: в контакты попадают все найденные в списке.') | tojson }};
       }
     } else {
       langFilter.disabled = false;
       if (langHint) {
-        langHint.textContent = 'Если выбрать не «Все языки», парсер открывает профили и отсекает людей, не подходящие под выбранный язык (точнее, но медленнее). Режим «Точно» выше добавляет такой же глубокий разбор и при «Все языки».';
+        langHint.textContent = {{ t('Если выбрать не «Все языки», парсер открывает профили и отсекает людей, не подходящие под выбранный язык (точнее, но медленнее). Режим «Точно» выше добавляет такой же глубокий разбор и при «Все языки».') | tojson }};
       }
     }
   }

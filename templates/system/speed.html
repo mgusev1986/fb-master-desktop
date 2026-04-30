@@ -83,7 +83,7 @@
         <tbody id="speed-delays-tbody" aria-live="polite" aria-atomic="true">
           {% for action, (lo, hi) in delays.items() %}
           <tr data-action="{{ action }}">
-            <td>{{ action_type_labels.get(action, action) }}</td>
+            <td>{{ t(action_type_labels.get(action, action)) }}</td>
             <td class="delay-range delay-lo">{{ lo }} {{ t("сек") }}</td>
             <td class="delay-range delay-hi">{{ hi }} {{ t("сек") }}</td>
             <td style="color:var(--text-secondary)">{{ min_floors.get(action, '—') }} {{ t("сек") }}</td>

@@ -1850,6 +1850,37 @@ TRANSLATIONS: dict[str, str] = {
     # ─── Wave 11: Telegram support footer in promo chat ───────────────
     "Если ИИ не помог:": "If AI did not help:",
     "Связаться с поддержкой": "Contact support",
+
+    # ─── Wave 12: ACTION_TYPE_LABELS (system/speed table) + parser JS ─
+    # Action labels from backend/routers/system.py:184-218
+    "Переход на профиль": "Profile visit",
+    "Прокрутка страницы": "Page scroll",
+    "Лайк поста": "Post like",
+    "Лайк видео": "Video like",
+    "Комментарий к посту": "Post comment",
+    "Комментарий к видео": "Video comment",
+    "Лайк + комментарий": "Like + comment",
+    "Лайк + комментарий + заявка в друзья": "Like + comment + friend request",
+    "Лайк + комментарий + заявка в друзья + личное сообщение": "Like + comment + friend request + DM",
+    "Заявка в друзья": "Friend request",
+    "Открытие диалога": "Open dialog",
+    "Отправка сообщения": "Send message",
+    "Переход к следующему": "Next",
+    "Действие в группе": "Group action",
+    "Прогрев: лайк": "Warmup: like",
+    "Прогрев: комментарий": "Warmup: comment",
+    "Сценарий: лайк": "Scenario: like",
+    "Сценарий: комментарий": "Scenario: comment",
+    "Сценарий: лайк и комментарий": "Scenario: like and comment",
+    "Сценарий: лайк + комментарий + заявка в друзья": "Scenario: like + comment + friend request",
+    "Сценарий: лайк + комментарий + заявка в друзья + личное сообщение": "Scenario: like + comment + friend request + DM",
+    "Сценарий: заявка в друзья": "Scenario: friend request",
+    "Сценарий: сообщение": "Scenario: message",
+    "Сценарий: диалог": "Scenario: dialog",
+    "Рассылка: сообщение": "Outreach: message",
+
+    # Parser JS hints (rendered into JS via | tojson)
+    "В режиме «Без языка» фильтр по языку отключён: в контакты попадают все найденные в списке.": "In “No Language” mode the language filter is disabled: all people found in the list go into contacts.",
 }
 # fmt: on
 

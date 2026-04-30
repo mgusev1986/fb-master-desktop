@@ -382,18 +382,18 @@
           <tr>
             <td>#{{ job.id }}</td>
             <td>
-              <div>{{ job_type_labels.get(job.job_type, job.job_type) }}</div>
+              <div>{{ t(job_type_labels.get(job.job_type, job.job_type)) }}</div>
               <div class="logs-muted">{{ job.job_type }}</div>
             </td>
             <td>
               {% if job.status == 'success' %}
-              <span class="badge badge-success">{{ job_status_labels.get(job.status, job.status) }}</span>
+              <span class="badge badge-success">{{ t(job_status_labels.get(job.status, job.status)) }}</span>
               {% elif job.status == 'failed' %}
-              <span class="badge badge-error">{{ job_status_labels.get(job.status, job.status) }}</span>
+              <span class="badge badge-error">{{ t(job_status_labels.get(job.status, job.status)) }}</span>
               {% elif job.status == 'running' %}
-              <span class="badge badge-warning">{{ job_status_labels.get(job.status, job.status) }}</span>
+              <span class="badge badge-warning">{{ t(job_status_labels.get(job.status, job.status)) }}</span>
               {% else %}
-              <span class="badge badge-default">{{ job_status_labels.get(job.status, job.status or '—') }}</span>
+              <span class="badge badge-default">{{ t(job_status_labels.get(job.status, job.status or '—')) }}</span>
               {% endif %}
             </td>
             <td>
@@ -419,7 +419,7 @@
               {% set err_raw = jc.get('error_raw', '') or '' %}
               <div class="logs-context-card">
                 <div class="logs-context-label">{{ t("Что делала задача") }}</div>
-                <div class="logs-context-intent">{{ intent or job_type_labels.get(job.job_type, job.job_type) }}</div>
+                <div class="logs-context-intent">{{ intent or t(job_type_labels.get(job.job_type, job.job_type)) }}</div>
                 {% if job.status == 'success' and not job.error_summary %}
                 <div class="logs-outcome-ok">{{ t("Успешно завершено — ошибок в журнале не зафиксировано.") }}</div>
                 {% elif job.status == 'running' %}
@@ -493,7 +493,7 @@
             <tr>
               <td>#{{ job.id }}</td>
               <td>
-                <div>{{ job_type_labels.get(job.job_type, job.job_type) }}</div>
+                <div>{{ t(job_type_labels.get(job.job_type, job.job_type)) }}</div>
                 <div class="logs-muted">{{ job.job_type }}</div>
               </td>
               <td>
@@ -515,7 +515,7 @@
                 {% set raw_f = jcf.get('error_raw', '') or '' %}
                 <div class="logs-context-card">
                   <div class="logs-context-label">{{ t("Что делала задача") }}</div>
-                  <div class="logs-context-intent">{{ intent_f or job_type_labels.get(job.job_type, job.job_type) }}</div>
+                  <div class="logs-context-intent">{{ intent_f or t(job_type_labels.get(job.job_type, job.job_type)) }}</div>
                   {% if hint_f %}
                   <div class="logs-error-hint"><strong>{{ t("Что случилось:") }}</strong> {{ hint_f }}</div>
                   {% endif %}
@@ -598,8 +598,8 @@
                 <div class="logs-muted" style="margin-top:4px">{{ event.event_type }}</div>
               </td>
               <td>
-                <div><strong>#{{ job.id }}</strong> · {{ job_type_labels.get(job.job_type, job.job_type) }}</div>
-                <div class="logs-muted">{{ job_status_labels.get(job.status, job.status or '—') }}</div>
+                <div><strong>#{{ job.id }}</strong> · {{ t(job_type_labels.get(job.job_type, job.job_type)) }}</div>
+                <div class="logs-muted">{{ t(job_status_labels.get(job.status, job.status or '—')) }}</div>
                 {% if event.fb_account_id %}
                 <div class="logs-muted">{{ t("Аккаунт:") }} {{ account_map.get(event.fb_account_id, 'ID ' ~ event.fb_account_id) }}</div>
                 {% endif %}
