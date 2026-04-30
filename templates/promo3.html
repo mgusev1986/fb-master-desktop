@@ -1006,6 +1006,13 @@
                     </button>
                 </div>
                 <div id="promoChatLog" class="flex-1 min-h-0 overflow-y-auto px-3 py-3 space-y-2 text-sm"></div>
+                <div class="px-3 py-1.5 border-t border-white/5 bg-black/30 shrink-0 flex items-center justify-between gap-2 text-[11px] text-white/50">
+                    <span>{{ t("Если ИИ не помог:") }}</span>
+                    <a href="https://t.me/socmaster_support" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-[#7cb9ff] hover:text-[#a8d0ff] transition-colors">
+                        <i class="fa-brands fa-telegram text-[12px]"></i>
+                        <span>{{ t("Связаться с поддержкой") }}</span>
+                    </a>
+                </div>
                 <div class="p-3 border-t border-white/10 bg-black/40 shrink-0">
                     <div class="flex items-center gap-2">
                         <input id="promoChatInput" type="text" maxlength="2000" autocomplete="off"
@@ -1205,6 +1212,9 @@
             function fmtAssistant(text) {
                 // **bold** → <strong>
                 var safe = escHtml(text).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+                // Auto-link URLs (https://, http://) — must run AFTER escHtml so & is &amp;
+                safe = safe.replace(/(https?:\/\/[^\s<]+[^\s<.,;:!?)\]'"])/g,
+                    '<a href="$1" target="_blank" rel="noopener noreferrer" class="underline text-[#f5d06e] hover:text-amber-300">$1</a>');
                 // newlines → <br>
                 return safe.replace(/\n/g, '<br>');
             }

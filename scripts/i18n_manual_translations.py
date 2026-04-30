@@ -1846,6 +1846,10 @@ TRANSLATIONS: dict[str, str] = {
     # Outreach intro (was concatenated with English)
     "Тексты для рассылки и прогрева. Маркеры:": "Texts for outreach and warmup. Markers:",
     "Таблицу можно скачать из программы. Повторный запуск продолжит сбор с того же места.": "The table can be downloaded from the program. A subsequent run will resume collection from the same spot.",
+
+    # ─── Wave 11: Telegram support footer in promo chat ───────────────
+    "Если ИИ не помог:": "If AI did not help:",
+    "Связаться с поддержкой": "Contact support",
 }
 # fmt: on
 
