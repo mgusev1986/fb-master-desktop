@@ -240,7 +240,7 @@
                 {% for c in all_categories %}{% if c.slug == post.category %}{% set cat_obj = c %}{% endif %}{% endfor %}
                 {% set cover = cat_class_map.get(post.category, ('cover-lidgen', 'fa-solid fa-bullseye')) %}
                 <article class="luxury-card overflow-hidden flex flex-col">
-                    <a href="/blog/{{ post.slug }}" class="block">
+                    <a href="/blog/{{ post.slug }}{% if is_en %}?lang=en{% endif %}" class="block">
                         <div class="post-cover {{ cover[0] }} h-40 flex items-center justify-center">
                             {% if post.cover_image %}
                             <img src="{{ post.cover_image }}" alt="{{ post.title }}" loading="lazy">
@@ -255,7 +255,7 @@
                         <a href="/blog?category={{ cat_obj.slug }}{% if is_en %}&lang=en{% endif %}" class="text-xs uppercase tracking-[0.15em] text-[#f5d06e] mb-2 self-start hover:underline">{% if is_en and cat_obj.name_en %}{{ cat_obj.name_en }}{% else %}{{ cat_obj.name }}{% endif %}</a>
                         {% endif %}
                         <h2 class="heading text-xl font-semibold mb-3 leading-tight">
-                            <a href="/blog/{{ post.slug }}" class="hover:text-[#f5d06e]">{{ post.title }}</a>
+                            <a href="/blog/{{ post.slug }}{% if is_en %}?lang=en{% endif %}" class="hover:text-[#f5d06e]">{{ post.title }}</a>
                         </h2>
                         <p class="text-sm text-white/60 leading-relaxed mb-4 grow">{{ post.excerpt }}</p>
                         <div class="flex items-center justify-between text-xs text-white/40 pt-4 border-t border-white/8">
