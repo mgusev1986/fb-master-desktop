@@ -2281,9 +2281,9 @@
     <p id="m2-sidecar-status" style="margin:0 0 8px">{{ t("Проверка…") }}</p>
     <p class="form-hint" style="margin:0">
       {% if messenger2_autostart %}
-      Программа на компьютере может запускаться автоматически вместе с сервером.
+      {{ t("Программа на компьютере может запускаться автоматически вместе с сервером.") }}
       {% else %}
-      Запустите настольную версию SOCMASTER — тогда мессенджер откроется внутри окна программы.
+      {{ t("Запустите настольную версию SOCMASTER — тогда мессенджер откроется внутри окна программы.") }}
       {% endif %}
     </p>
   </div>
@@ -2301,7 +2301,7 @@
 {% if not accounts %}
 <div class="card">
   <div class="card-body" style="padding:20px">
-    <p style="margin:0 0 12px">{% if cabinet_client_mode(request) %}Нет подключённых профилей Facebook. Сначала добавьте их в разделе «Аккаунты».{% else %}Нет Facebook-аккаунтов. Сначала добавьте аккаунт в разделе «Аккаунты».{% endif %}</p>
+    <p style="margin:0 0 12px">{% if cabinet_client_mode(request) %}{{ t("Нет подключённых профилей Facebook. Сначала добавьте их в разделе «Аккаунты».") }}{% else %}{{ t("Нет Facebook-аккаунтов. Сначала добавьте аккаунт в разделе «Аккаунты».") }}{% endif %}</p>
     <a href="/fb-accounts" class="btn btn-primary"><i class="ti ti-brand-facebook"></i> {% if cabinet_client_mode(request) %}{{ t("К аккаунтам") }}{% else %}{{ t("Перейти к аккаунтам") }}{% endif %}</a>
   </div>
 </div>
@@ -2342,7 +2342,7 @@
 <div class="card m2-launch-card" style="margin-bottom:16px">
   <div class="card-header" style="display:flex;align-items:center;gap:10px">
     <i class="ti ti-browser" style="font-size:1.25rem;opacity:0.85"></i>
-    {% if cabinet_client_mode(request) %}Отдельное окно для переписки{% else %}Из браузера: окно Playwright (Chromium){% endif %}
+    {% if cabinet_client_mode(request) %}{{ t("Отдельное окно для переписки") }}{% else %}{{ t("Из браузера: окно Playwright (Chromium)") }}{% endif %}
   </div>
   <div class="card-body" style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">
     <p class="form-hint" style="margin:0;max-width:520px">
@@ -2358,13 +2358,13 @@
         <button type="submit" id="m2-open-btn" class="btn btn-primary btn-lg" style="min-height:48px"
                 {% if not selected_account_id %}disabled{% endif %}
                 {% if selected_account_id and selected_account_id in login_busy_ids %}disabled title="{{ t("Окно для этого аккаунта уже открыто") }}"{% endif %}>
-          <i class="ti ti-browser"></i> {% if cabinet_client_mode(request) %}Открыть чат в отдельном окне{% else %}Открыть Messenger в Chromium{% endif %}
+          <i class="ti ti-browser"></i> {% if cabinet_client_mode(request) %}{{ t("Открыть чат в отдельном окне") }}{% else %}{{ t("Открыть Messenger в Chromium") }}{% endif %}
         </button>
         <a href="/fb-accounts" class="btn btn-secondary" style="text-decoration:none"><i class="ti ti-settings"></i> {{ t("Аккаунты") }}</a>
       </div>
       <label class="m2-auto-open-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:var(--font-size-sm);color:var(--text-secondary);user-select:none;margin:0">
         <input type="checkbox" id="m2-auto-open" autocomplete="off"/>
-        {% if cabinet_client_mode(request) %}При каждом заходе сюда сразу открывать окно чата{% else %}При каждом заходе на эту страницу сразу открывать Chromium{% endif %}
+        {% if cabinet_client_mode(request) %}{{ t("При каждом заходе сюда сразу открывать окно чата") }}{% else %}{{ t("При каждом заходе на эту страницу сразу открывать Chromium") }}{% endif %}
       </label>
     </form>
   </div>

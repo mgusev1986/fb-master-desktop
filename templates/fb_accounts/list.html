@@ -86,9 +86,9 @@
   <div class="card-header" style="display:flex;align-items:center;gap:8px">
     <i class="ti ti-file-import" style="font-size:1.2rem"></i>
     {% if cabinet_client_mode(request) %}
-    Импорт готового аккаунта
+    {{ t("Импорт готового аккаунта") }}
     {% else %}
-    Импорт аккаунта + прокси (cookie, TOTP, антидетект)
+    {{ t("Импорт аккаунта + прокси (cookie, TOTP, антидетект)") }}
     {% endif %}
   </div>
   <div class="card-body" style="font-size:var(--font-size-sm);line-height:1.55">
@@ -106,7 +106,7 @@
     </p>
     <form method="post" action="/fb-accounts/import-automation" enctype="multipart/form-data" class="form-row" style="display:flex;flex-direction:column;gap:14px;max-width:52rem">
       <div class="form-group" style="margin:0">
-        <label class="form-label" for="imp-file">{% if cabinet_client_mode(request) %}Файл с данными аккаунта{% else %}Файл аккаунта (.txt){% endif %}</label>
+        <label class="form-label" for="imp-file">{% if cabinet_client_mode(request) %}{{ t("Файл с данными аккаунта") }}{% else %}{{ t("Файл аккаунта (.txt)") }}{% endif %}</label>
         <input id="imp-file" name="account_file" type="file" accept=".txt,text/plain" class="form-input form-input-file"/>
       </div>
       <div class="form-group" style="margin:0">
@@ -120,7 +120,7 @@
                placeholder="{% if cabinet_client_mode(request) %}{{ t("Обязателен, если в строке аккаунта есть логин и пароль; иначе по желанию") }}{% else %}{{ t("Обязателен для формата с TOTP; для cookie — по желанию") }}{% endif %}"/>
         <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:10px">
           <button type="button" class="btn btn-secondary btn-sm" id="imp-geo-btn" data-client-mode="{% if cabinet_client_mode(request) %}1{% else %}0{% endif %}">
-            <i class="ti ti-map-pin"></i> {% if cabinet_client_mode(request) %}Страна по прокси{% else %}Узнать страну по прокси и выставить пресет{% endif %}
+            <i class="ti ti-map-pin"></i> {% if cabinet_client_mode(request) %}{{ t("Страна по прокси") }}{% else %}{{ t("Узнать страну по прокси и выставить пресет") }}{% endif %}
           </button>
           <span class="form-hint" style="margin:0">{% if cabinet_client_mode(request) %}Страна определяется <strong>{{ t("через ваш прокси") }}</strong>, как при работе с Facebook.{% else %}Запрос к гео-сервису идёт <strong>{{ t("через этот прокси") }}</strong> (как у Facebook).{% endif %}</span>
         </div>
@@ -138,7 +138,7 @@
           <input id="imp-label" name="label" type="text" class="form-input" maxlength="255" placeholder="{{ t("Например: Elena Vasquez — Прокси Турция") }}"/>
         </div>
         <div class="form-group" style="margin:0">
-          <label class="form-label" for="imp-region">{% if cabinet_client_mode(request) %}Страна / язык в браузере{% else %}Регион / отпечаток{% endif %}</label>
+          <label class="form-label" for="imp-region">{% if cabinet_client_mode(request) %}{{ t("Страна / язык в браузере") }}{% else %}{{ t("Регион / отпечаток") }}{% endif %}</label>
           <select id="imp-region" name="stealth_region" class="form-input" style="max-width:100%">
             {% for key, label in stealth_region_choices %}
             {% if not cabinet_client_mode(request) or key != 'custom' %}
@@ -172,7 +172,7 @@
         {% endif %}
       </label>
       <button type="submit" class="btn btn-primary" style="align-self:flex-start;min-height:44px">
-        <i class="ti ti-rocket"></i> {% if cabinet_client_mode(request) %}Импортировать{% else %}Импортировать и запустить{% endif %}
+        <i class="ti ti-rocket"></i> {% if cabinet_client_mode(request) %}{{ t("Импортировать") }}{% else %}{{ t("Импортировать и запустить") }}{% endif %}
       </button>
     </form>
   </div>
@@ -209,7 +209,7 @@
           <span>{{ t("Проверка:") }} {{ format_dt_madrid(a.last_login_check_at) }}</span>
           {% endif %}
           {% if a.session_saved_at %}
-          <span>{% if cabinet_client_mode(request) %}Сохранено{% else %}В базе{% endif %}: {{ format_dt_madrid(a.session_saved_at) }}</span>
+          <span>{% if cabinet_client_mode(request) %}{{ t("Сохранено") }}{% else %}{{ t("В базе") }}{% endif %}: {{ format_dt_madrid(a.session_saved_at) }}</span>
           {% endif %}
         </div>
         {% endif %}
@@ -245,7 +245,7 @@
           {% if a.proxy_enabled and a.proxy_tunnel_blocked %}
           {% set _proxy_err = (a.proxy_tunnel_last_error or '') %}
           <span class="badge badge-error" title="{{ _proxy_err }}">
-            {% if '407' in _proxy_err %}Прокси 407 — замените{% else %}Прокси заблокирован{% endif %}
+            {% if '407' in _proxy_err %}{{ t("Прокси 407 — замените") }}{% else %}{{ t("Прокси заблокирован") }}{% endif %}
           </span>
           {% endif %}
         </div>
@@ -269,9 +269,9 @@
             </div>
             <p class="form-hint" style="margin:6px 0 0;font-size:var(--font-size-xs);max-width:42rem;line-height:1.45">
               {% if cabinet_client_mode(request) %}
-              Подпись только для вас — участвует в поиске по списку. Логин Facebook ниже не меняется.
+              {{ t("Подпись только для вас — участвует в поиске по списку. Логин Facebook ниже не меняется.") }}
               {% else %}
-              Своя подпись для навигации и поиска (до 255 символов). Логин / ID Facebook — отдельно, см. строку ниже.
+              {{ t("Своя подпись для навигации и поиска (до 255 символов). Логин / ID Facebook — отдельно, см. строку ниже.") }}
               {% endif %}
             </p>
             {% if a.fb_login_username %}
@@ -286,9 +286,9 @@
           {% if a.fb_login_username and a.fb_login_username.strip() in duplicate_fb_logins %}
           <p class="form-hint" style="margin:6px 0 0;color:var(--text-secondary);font-size:var(--font-size-sm);max-width:42rem">
             {% if cabinet_client_mode(request) %}
-            Такой логин уже есть в другой карточке — лучше оставить одну запись, чтобы не путать статусы и вход.
+            {{ t("Такой логин уже есть в другой карточке — лучше оставить одну запись, чтобы не путать статусы и вход.") }}
             {% else %}
-            Этот логин/ID уже есть в другой карточке — лучше оставить одну запись с нужной папкой профиля, иначе статусы и вход легко перепутать.
+            {{ t("Этот логин/ID уже есть в другой карточке — лучше оставить одну запись с нужной папкой профиля, иначе статусы и вход легко перепутать.") }}
             {% endif %}
           </p>
           {% endif %}
@@ -444,14 +444,14 @@
         <form method="post" action="/fb-accounts/{{ a.id }}/auto-login-stored" style="display:inline">
           <button type="submit" class="btn btn-secondary btn-sm" {% if a.id in login_busy_ids %}disabled{% endif %}
                   title="{% if cabinet_client_mode(request) %}{{ t("Вход по сохранённым данным и коду с телефона") }}{% else %}{{ t("Логин + 2FA из сохранённых зашифрованных данных") }}{% endif %}">
-            <i class="ti ti-shield-lock"></i> {% if cabinet_client_mode(request) %}Автовход с кодом{% else %}Автовход (TOTP){% endif %}
+            <i class="ti ti-shield-lock"></i> {% if cabinet_client_mode(request) %}{{ t("Автовход с кодом") }}{% else %}{{ t("Автовход (TOTP)") }}{% endif %}
           </button>
         </form>
         {% endif %}
         <form method="post" action="/fb-accounts/{{ a.id }}/check-session" style="display:inline"
               onsubmit="(function(f){var b=f.querySelector('button[type=submit]');if(b&amp;&amp;!b.disabled){b.disabled=true;b.classList.add('fb-btn-pending');b.innerHTML='<i class=&quot;ti ti-loader-2&quot;></i> Проверка…';}})(this);return true;">
           <button type="submit" class="btn btn-secondary btn-sm">
-            <i class="ti ti-shield-check"></i> {% if cabinet_client_mode(request) %}Проверить вход{% else %}Проверить сессию{% endif %}
+            <i class="ti ti-shield-check"></i> {% if cabinet_client_mode(request) %}{{ t("Проверить вход") }}{% else %}{{ t("Проверить сессию") }}{% endif %}
           </button>
         </form>
       </div>
@@ -467,7 +467,7 @@
 
       {% if a.enc_totp_secret %}
       <details class="fb-totp-details">
-        <summary><i class="ti ti-shield-lock"></i> {% if cabinet_client_mode(request) %}Код с телефона (шесть цифр){% else %}Код 2FA (TOTP) для ручного ввода{% endif %}</summary>
+        <summary><i class="ti ti-shield-lock"></i> {% if cabinet_client_mode(request) %}{{ t("Код с телефона (шесть цифр)") }}{% else %}{{ t("Код 2FA (TOTP) для ручного ввода") }}{% endif %}</summary>
         <p class="form-hint" style="margin:10px 0 8px">
           {% if cabinet_client_mode(request) %}
           Одноразовый код, как в приложении на телефоне для входа в сервисы. <strong>{{ t("Ключ для настройки не показывается") }}</strong> — только текущие цифры. Они обычно меняются каждые 30 секунд; успейте ввести в Facebook.
@@ -494,7 +494,7 @@
       {% endif %}
 
       <details class="fb-credentials-details">
-        <summary>{% if cabinet_client_mode(request) %}Проверить логин и пароль (один раз){% else %}Проверить логин и пароль{% endif %}</summary>
+        <summary>{% if cabinet_client_mode(request) %}{{ t("Проверить логин и пароль (один раз)") }}{% else %}{{ t("Проверить логин и пароль") }}{% endif %}</summary>
         <p class="form-hint" style="margin:10px 0">
           {% if cabinet_client_mode(request) %}
           Только проверка: логин и пароль <strong>{{ t("не сохраняются") }}</strong>. Если включён прокси у этого профиля — он учитывается.
@@ -525,7 +525,7 @@
       </details>
 
       <details class="fb-proxy-details">
-        <summary>{% if cabinet_client_mode(request) %}Прокси и название{% else %}Сеть → Прокси{% endif %}</summary>
+        <summary>{% if cabinet_client_mode(request) %}{{ t("Прокси и название") }}{% else %}{{ t("Сеть → Прокси") }}{% endif %}</summary>
         <form method="post" action="/fb-accounts/{{ a.id }}/update" class="fb-proxy-form">
           <div class="form-group">
             <label class="form-label" for="label-{{ a.id }}">{{ t("Название в списке") }}</label>
@@ -538,7 +538,7 @@
             {{ t("Использовать прокси для этого аккаунта") }}
           </label>
           <div class="form-group">
-            <label class="form-label">{% if cabinet_client_mode(request) %}Адрес прокси{% else %}URL прокси{% endif %}</label>
+            <label class="form-label">{% if cabinet_client_mode(request) %}{{ t("Адрес прокси") }}{% else %}{{ t("URL прокси") }}{% endif %}</label>
             <input name="proxy_url" type="text" class="form-input" value="{{ a.proxy_url or '' }}"
                    placeholder="{% if cabinet_client_mode(request) %}{{ t("Как в инструкции к прокси") }}{% else %}{{ t("http://host:8080 или socks5://host:1080") }}{% endif %}"/>
             <p class="form-hint">{% if cabinet_client_mode(request) %}Можно вставить одной строкой, как в кабинете провайдера: <code>{{ t("IP:порт:логин:пароль") }}</code> {{ t("(например") }} <code>45.154.231.47:8000:user:pass</code>{{ t(") — при сохранении разложится на адрес, логин и пароль. Либо укажите") }} <code>http://…</code> и логин/пароль отдельно.{% else %}HTTP, HTTPS или SOCKS5 как в документации Playwright; также поддерживается одна строка <code>host:port:user:pass</code> в поле URL{% endif %}</p>
@@ -551,7 +551,7 @@
             <div class="form-group">
               <label class="form-label">{{ t("Пароль прокси") }}</label>
               <input name="proxy_password" type="password" class="form-input" placeholder="••••••••" autocomplete="new-password"/>
-              <p class="form-hint">{% if cabinet_client_mode(request) %}Пустое поле — оставить прежний пароль прокси{% else %}Оставьте пустым, чтобы не менять сохранённый{% endif %}</p>
+              <p class="form-hint">{% if cabinet_client_mode(request) %}{{ t("Пустое поле — оставить прежний пароль прокси") }}{% else %}{{ t("Оставьте пустым, чтобы не менять сохранённый") }}{% endif %}</p>
             </div>
           </div>
           <div class="form-group" style="margin-top:4px">
@@ -578,7 +578,7 @@
             </button>
             {% if a.proxy_url %}
             <button type="button" class="btn btn-ghost btn-sm fb-proxy-geo-apply" data-account-id="{{ a.id }}" data-client-mode="{% if cabinet_client_mode(request) %}1{% else %}0{% endif %}">
-              <i class="ti ti-map-pin"></i> {% if cabinet_client_mode(request) %}Страна по прокси → сохранить{% else %}Гео выхода → пресет в БД{% endif %}
+              <i class="ti ti-map-pin"></i> {% if cabinet_client_mode(request) %}{{ t("Страна по прокси → сохранить") }}{% else %}{{ t("Гео выхода → пресет в БД") }}{% endif %}
             </button>
             {% endif %}
             <span class="form-hint fb-proxy-geo-msg" id="geo-msg-{{ a.id }}" style="margin:0;flex-basis:100%"></span>
@@ -593,9 +593,9 @@
           <label class="fb-check">
             <input id="del-confirm-{{ a.id }}" type="checkbox" name="confirm" value="yes"/>
             {% if cabinet_client_mode(request) %}
-            Удалить аккаунт и все сохранённые данные входа на этом устройстве
+            {{ t("Удалить аккаунт и все сохранённые данные входа на этом устройстве") }}
             {% else %}
-            Удалить запись и папку профиля с диска
+            {{ t("Удалить запись и папку профиля с диска") }}
             {% endif %}
           </label>
           <button type="submit" class="btn btn-sm btn-danger" style="margin-top:10px"><i class="ti ti-trash"></i> {{ t("Удалить навсегда") }}</button>

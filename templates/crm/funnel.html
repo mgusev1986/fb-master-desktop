@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{% if cabinet_client_mode(request) %}Воронка продаж — SOCMASTER{% else %}Воронка — SOCMASTER{% endif %}{% endblock %}
+{% block title %}{% if cabinet_client_mode(request) %}{{ t("Воронка продаж — SOCMASTER") }}{% else %}{{ t("Воронка — SOCMASTER") }}{% endif %}{% endblock %}
 {% block body_class %}funnel-page{% endblock %}
 
 {% block head %}
@@ -530,11 +530,11 @@
 <div class="page-header">
   <div class="page-header-actions" style="width:100%;flex-wrap:wrap;gap:12px">
     <div>
-      <h1>{% if cabinet_client_mode(request) %}Воронка продаж{% else %}Воронка{% endif %}</h1>
+      <h1>{% if cabinet_client_mode(request) %}{{ t("Воронка продаж") }}{% else %}{{ t("Воронка") }}{% endif %}</h1>
       <p class="subtitle">{% if cabinet_client_mode(request) %}
-      Люди из контактов на доске по этапам (новый, в работе, сделка и т.д.). Перетащите карточку в другой столбец или пользуйтесь вкладками сверху.
+      {{ t("Люди из контактов на доске по этапам (новый, в работе, сделка и т.д.). Перетащите карточку в другой столбец или пользуйтесь вкладками сверху.") }}
       {% else %}
-      Стадии контактов и фильтры — перетащите карточку в другую колонку или откройте вкладки
+      {{ t("Стадии контактов и фильтры — перетащите карточку в другую колонку или откройте вкладки") }}
       {% endif %}</p>
     </div>
     <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">

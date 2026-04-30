@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% block title %}{% if cabinet_client_mode(request) %}Темп работы — SOCMASTER{% else %}Скорость и паузы — SOCMASTER{% endif %}{% endblock %}
+{% block title %}{% if cabinet_client_mode(request) %}{{ t("Темп работы — SOCMASTER") }}{% else %}{{ t("Скорость и паузы — SOCMASTER") }}{% endif %}{% endblock %}
 
 {% block content %}
 <div class="page-header">
-  <h1>{% if cabinet_client_mode(request) %}Темп работы{% else %}Скорость и паузы{% endif %}</h1>
+  <h1>{% if cabinet_client_mode(request) %}{{ t("Темп работы") }}{% else %}{{ t("Скорость и паузы") }}{% endif %}</h1>
   <p class="subtitle">{% if cabinet_client_mode(request) %}
   Насколько быстро программа делает паузы между действиями в Facebook. Для стабильности удобнее <strong>{{ t("«Медленно»") }}</strong> {{ t("или") }} <strong>{{ t("«Средне»") }}</strong>; «Быстро» и «Очень быстро» — заметно выше риск ограничений.
   {% else %}
@@ -16,7 +16,7 @@
   <input type="hidden" id="preset-input" name="preset" value="{{ current_preset }}"/>
 
   <div class="card" style="margin-bottom:24px">
-    <div class="card-header">{% if cabinet_client_mode(request) %}Выберите скорость{% else %}Выберите режим{% endif %}</div>
+    <div class="card-header">{% if cabinet_client_mode(request) %}{{ t("Выберите скорость") }}{% else %}{{ t("Выберите режим") }}{% endif %}</div>
     <div class="card-body">
       <div class="preset-grid">
 
@@ -77,7 +77,7 @@
             <th>{{ t("Действие") }}</th>
             <th>{{ t("Мин. пауза") }}</th>
             <th>{{ t("Макс. пауза") }}</th>
-            <th title="{% if cabinet_client_mode(request) %}{{ t("Минимальная пауза даже на быстром режиме") }}{% else %}{{ t("Одинаково для всех режимов: пауза никогда не короче этого значения (в т.ч. на «Быстро» и «Очень быстро»).") }}{% endif %}">{% if cabinet_client_mode(request) %}Минимум{% else %}Нижний пол{% endif %}</th>
+            <th title="{% if cabinet_client_mode(request) %}{{ t("Минимальная пауза даже на быстром режиме") }}{% else %}{{ t("Одинаково для всех режимов: пауза никогда не короче этого значения (в т.ч. на «Быстро» и «Очень быстро»).") }}{% endif %}">{% if cabinet_client_mode(request) %}{{ t("Минимум") }}{% else %}{{ t("Нижний пол") }}{% endif %}</th>
           </tr>
         </thead>
         <tbody id="speed-delays-tbody" aria-live="polite" aria-atomic="true">
@@ -96,7 +96,7 @@
 </div>
 
 <div class="card" style="margin-bottom:24px">
-  <div class="card-header">{% if cabinet_client_mode(request) %}Часовой пояс для сценариев по дням{% else %}Сценарии по дням — календарный день{% endif %}</div>
+  <div class="card-header">{% if cabinet_client_mode(request) %}{{ t("Часовой пояс для сценариев по дням") }}{% else %}{{ t("Сценарии по дням — календарный день") }}{% endif %}</div>
   <div class="card-body">
     {% if cabinet_client_mode(request) %}
     <p style="color:var(--text-secondary);margin-bottom:12px;font-size:var(--font-size-sm)">
@@ -134,7 +134,7 @@
         </select>
       </div>
       <div class="form-group" style="margin:0;flex:1;min-width:200px">
-        <label class="form-label" for="sequence_timezone">{% if cabinet_client_mode(request) %}Свой пояс (если знаете точное название){% else %}Своё имя (перекрывает список){% endif %}</label>
+        <label class="form-label" for="sequence_timezone">{% if cabinet_client_mode(request) %}{{ t("Свой пояс (если знаете точное название)") }}{% else %}{{ t("Своё имя (перекрывает список)") }}{% endif %}</label>
         <input id="sequence_timezone" name="sequence_timezone" type="text" class="form-input"
                value="{{ sequence_timezone_saved }}"
                placeholder="{{ sequence_timezone_effective }}" autocomplete="off"/>
@@ -143,7 +143,7 @@
     </form>
     <form method="post" action="/system/speed/sequence-timezone" style="margin-top:12px">
       <input type="hidden" name="sequence_timezone" value=""/>
-      <button type="submit" class="btn btn-ghost btn-sm">{% if cabinet_client_mode(request) %}Сбросить по умолчанию{% else %}Сбросить к .env{% endif %}</button>
+      <button type="submit" class="btn btn-ghost btn-sm">{% if cabinet_client_mode(request) %}{{ t("Сбросить по умолчанию") }}{% else %}{{ t("Сбросить к .env") }}{% endif %}</button>
     </form>
     <script>
       (function () {
@@ -156,7 +156,7 @@
 </div>
 
 <div class="card">
-  <div class="card-header">{% if cabinet_client_mode(request) %}Уложиться в заданное время{% else %}Режим «Уложиться во время»{% endif %}</div>
+  <div class="card-header">{% if cabinet_client_mode(request) %}{{ t("Уложиться в заданное время") }}{% else %}{{ t("Режим «Уложиться во время»") }}{% endif %}</div>
   <div class="card-body">
     <p style="color:var(--text-secondary);margin-bottom:16px;font-size:var(--font-size-sm)">
       {% if cabinet_client_mode(request) %}

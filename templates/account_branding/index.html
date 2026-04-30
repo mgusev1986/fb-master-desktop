@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{% if cabinet_client_mode(request) %}Оформление профиля — SOCMASTER{% else %}Оформление аккаунтов — SOCMASTER{% endif %}{% endblock %}
+{% block title %}{% if cabinet_client_mode(request) %}{{ t("Оформление профиля — SOCMASTER") }}{% else %}{{ t("Оформление аккаунтов — SOCMASTER") }}{% endif %}{% endblock %}
 {% block body_class %}page-account-branding{% endblock %}
 
 {% block content %}
@@ -75,11 +75,11 @@
             <span class="badge badge-warning">{% if cabinet_client_mode(request) %}{{ t("В очереди") }}{% else %}{{ t("Ожидание") }}{% endif %}</span>
             {% endif %}
             {% if a.session_ok is sameas true %}
-            <span class="badge badge-success">{% if cabinet_client_mode(request) %}Вход: ок{% else %}Сессия: ок{% endif %}</span>
+            <span class="badge badge-success">{% if cabinet_client_mode(request) %}{{ t("Вход: ок") }}{% else %}{{ t("Сессия: ок") }}{% endif %}</span>
             {% elif a.session_ok is sameas false %}
-            <span class="badge badge-warning">{% if cabinet_client_mode(request) %}Вход: нет{% else %}Сессия: нет{% endif %}</span>
+            <span class="badge badge-warning">{% if cabinet_client_mode(request) %}{{ t("Вход: нет") }}{% else %}{{ t("Сессия: нет") }}{% endif %}</span>
             {% else %}
-            <span class="badge badge-default">{% if cabinet_client_mode(request) %}Вход: —{% else %}Сессия: —{% endif %}</span>
+            <span class="badge badge-default">{% if cabinet_client_mode(request) %}{{ t("Вход: —") }}{% else %}{{ t("Сессия: —") }}{% endif %}</span>
             {% endif %}
             {% if job %}
             <span class="badge badge-default">{{ t("Задача:") }} {{ job.status }}</span>

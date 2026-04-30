@@ -6,7 +6,7 @@
 <div class="page-header">
   <div class="page-header-actions">
     <div>
-      <h1>{% if cabinet_client_mode(request) %}Лайки по списку людей{% else %}Прогрев по контактам{% endif %}</h1>
+      <h1>{% if cabinet_client_mode(request) %}{{ t("Лайки по списку людей") }}{% else %}{{ t("Прогрев по контактам") }}{% endif %}</h1>
       <p class="subtitle">{% if cabinet_client_mode(request) %}
       Лайки (и при желании короткие комментарии) к постам на страницах людей из <strong>{{ t("«Мои контакты»") }}</strong> {{ t("— без личных сообщений. Скорость задаётся в") }} <a href="/system/speed">{{ t("«Темп работы»") }}</a> {{ t("и в самой кампании. Мягкий многодневный прогрев самого аккаунта Facebook — в разделе") }} <a href="/account-warming">{{ t("«Прогрев профиля»") }}</a>.
       {% else %}

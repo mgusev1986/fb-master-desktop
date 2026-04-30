@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{% if cabinet_client_mode(request) %}Мои контакты — SOCMASTER{% else %}База контактов — SOCMASTER{% endif %}{% endblock %}
+{% block title %}{% if cabinet_client_mode(request) %}{{ t("Мои контакты — SOCMASTER") }}{% else %}{{ t("База контактов — SOCMASTER") }}{% endif %}{% endblock %}
 
 {% block content %}
 {% macro people_stage_badge_class(slug) -%}
@@ -14,7 +14,7 @@
 <div class="page-header">
   <div class="page-header-actions">
     <div>
-      <h1>{% if cabinet_client_mode(request) %}Мои контакты{% else %}База контактов{% endif %}</h1>
+      <h1>{% if cabinet_client_mode(request) %}{{ t("Мои контакты") }}{% else %}{{ t("База контактов") }}{% endif %}</h1>
       <p class="subtitle" id="people-subtitle">{% if cabinet_client_mode(request) %}Люди из загрузок и поиска — <span id="people-total-count">{{ total }}</span> записей{% else %}Все контакты из импорта и парсинга — <span id="people-total-count">{{ total }}</span> записей{% endif %}</p>
     </div>
   </div>
@@ -140,16 +140,16 @@
     <div id="people-panel-empty-db" class="empty-state" {% if total > 0 or search %}style="display:none"{% endif %}>
       <div class="empty-state-icon"><i class="ti ti-address-book"></i></div>
       <h3>{{ t("Контактов пока нет") }}</h3>
-      <p>{% if cabinet_client_mode(request) %}Загрузите файл со списком или воспользуйтесь разделом «Поиск людей» — контакты появятся здесь.{% else %}Импортируйте базу из CSV/XLSX или запустите парсинг донора — контакты появятся здесь.{% endif %}</p>
+      <p>{% if cabinet_client_mode(request) %}{{ t("Загрузите файл со списком или воспользуйтесь разделом «Поиск людей» — контакты появятся здесь.") }}{% else %}{{ t("Импортируйте базу из CSV/XLSX или запустите парсинг донора — контакты появятся здесь.") }}{% endif %}</p>
       <a href="/import" class="btn btn-primary">
-        <i class="ti ti-file-import"></i> {% if cabinet_client_mode(request) %}Загрузить список{% else %}Импортировать базу{% endif %}
+        <i class="ti ti-file-import"></i> {% if cabinet_client_mode(request) %}{{ t("Загрузить список") }}{% else %}{{ t("Импортировать базу") }}{% endif %}
       </a>
     </div>
 
     <div id="people-panel-empty-search" class="empty-state" {% if total > 0 or not search %}style="display:none"{% endif %}>
       <div class="empty-state-icon"><i class="ti ti-search"></i></div>
       <h3>{{ t("Ничего не найдено") }}</h3>
-      <p>{% if cabinet_client_mode(request) %}Попробуйте другие слова в поиске или снимите фильтр по этапу.{% else %}Попробуйте другой запрос или сбросьте фильтр стадии — поиск без учёта регистра, по части имени и URL.{% endif %}</p>
+      <p>{% if cabinet_client_mode(request) %}{{ t("Попробуйте другие слова в поиске или снимите фильтр по этапу.") }}{% else %}{{ t("Попробуйте другой запрос или сбросьте фильтр стадии — поиск без учёта регистра, по части имени и URL.") }}{% endif %}</p>
     </div>
 
     <div id="people-panel-table" {% if total == 0 %}style="display:none"{% endif %}>
@@ -161,7 +161,7 @@
             <th>{{ t("Имя") }}</th>
             <th>{{ t("Язык") }}</th>
             <th>{{ t("Профиль") }}</th>
-            <th>{% if cabinet_client_mode(request) %}Этап{% else %}Стадия CRM{% endif %}</th>
+            <th>{% if cabinet_client_mode(request) %}{{ t("Этап") }}{% else %}{{ t("Стадия CRM") }}{% endif %}</th>
             <th>{{ t("Добавлен") }}</th>
             <th style="width:1%;white-space:nowrap"></th>
           </tr>

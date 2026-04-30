@@ -131,7 +131,7 @@
   <div class="page-header-actions" style="width:100%;align-items:flex-start;gap:16px">
     <div>
       <h1>{{ t("Настройки") }}</h1>
-      <p class="subtitle">{% if settings_hide_infra %}Ключи для ИИ и параметры приложения.{% else %}Ключи для ИИ, вход в аккаунт и прочие параметры.{% endif %}</p>
+      <p class="subtitle">{% if settings_hide_infra %}{{ t("Ключи для ИИ и параметры приложения.") }}{% else %}{{ t("Ключи для ИИ, вход в аккаунт и прочие параметры.") }}{% endif %}</p>
     </div>
     <div class="settings-top-actions">
       <a href="/system/speed" class="btn btn-secondary btn-sm"><i class="ti ti-gauge"></i> {{ t("Скорость и паузы") }}</a>
@@ -201,7 +201,7 @@
 
 <form method="post" action="/system/settings/save" class="settings-form">
   <div class="card">
-    <div class="card-header">{% if settings_hide_infra %}Ключи для ИИ (ChatGPT и Gemini){% else %}Ключи для нейросетей{% endif %}</div>
+    <div class="card-header">{% if settings_hide_infra %}{{ t("Ключи для ИИ (ChatGPT и Gemini)") }}{% else %}{{ t("Ключи для нейросетей") }}{% endif %}</div>
     <div class="card-body">
       <p class="settings-note" style="margin-bottom:16px">
         {% if settings_hide_infra %}
@@ -213,7 +213,7 @@
       <div class="settings-subgrid">
         <section class="settings-field">
           <h3>OpenAI</h3>
-          <p class="settings-note" style="margin-bottom:10px">{% if settings_hide_infra %}Нужен для возможностей на базе ChatGPT.{% else %}Для функций на базе ChatGPT.{% endif %}</p>
+          <p class="settings-note" style="margin-bottom:10px">{% if settings_hide_infra %}{{ t("Нужен для возможностей на базе ChatGPT.") }}{% else %}{{ t("Для функций на базе ChatGPT.") }}{% endif %}</p>
           <input type="password" name="openai_api_key" class="form-input js-settings-masked-secret" autocomplete="new-password" placeholder="{% if has_openai_effective %}{{ t("Кликните и введите новый ключ") }}{% else %}{{ t("Вставьте ключ сюда") }}{% endif %}"{% if has_openai_effective %} data-key-mask-present="1"{% endif %}/>
           <div class="settings-field-save">
             <button type="submit" name="save_partial" value="openai" class="btn btn-primary"><i class="ti ti-device-floppy"></i> {{ t("Сохранить") }}</button>
@@ -229,7 +229,7 @@
 
         <section class="settings-field">
           <h3>Google AI (Gemini)</h3>
-          <p class="settings-note" style="margin-bottom:10px">{% if settings_hide_infra %}Нужен для возможностей на базе Gemini.{% else %}Для функций на базе Gemini.{% endif %} Можно ввести <strong>{{ t("несколько ключей") }}</strong> {{ t("— по одному на строку; при ошибке квоты или лимита используется следующий.") }}</p>
+          <p class="settings-note" style="margin-bottom:10px">{% if settings_hide_infra %}{{ t("Нужен для возможностей на базе Gemini.") }}{% else %}{{ t("Для функций на базе Gemini.") }}{% endif %} Можно ввести <strong>{{ t("несколько ключей") }}</strong> {{ t("— по одному на строку; при ошибке квоты или лимита используется следующий.") }}</p>
           <textarea name="google_llm_api_key" class="form-textarea js-settings-masked-secret" rows="{% if has_google_llm_effective %}{{ [google_llm_key_count, 4]|max }}{% else %}4{% endif %}" autocomplete="off" spellcheck="false" placeholder="{% if has_google_llm_effective %}{{ t("Кликните и вставьте ключи (каждый с новой строки)") }}{% else %}{{ t("Первый ключ") }}&#10;{{ t("Второй ключ (необязательно)") }}{% endif %}"{% if has_google_llm_effective %} data-key-mask-present="1" data-mask-line-count="{{ google_llm_key_count }}"{% endif %} style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px"></textarea>
           <div class="settings-field-save">
             <button type="submit" name="save_partial" value="google_llm" class="btn btn-primary"><i class="ti ti-device-floppy"></i> {{ t("Сохранить") }}</button>
@@ -372,11 +372,11 @@
   {% endif %}
 
   <div class="card">
-    <div class="card-header">{% if settings_hide_infra %}Окно браузера{% else %}Chromium при автоматизации{% endif %}</div>
+    <div class="card-header">{% if settings_hide_infra %}{{ t("Окно браузера") }}{% else %}{{ t("Chromium при автоматизации") }}{% endif %}</div>
     <div class="card-body">
       <div class="settings-subgrid">
         <section class="settings-field">
-          <h3>{% if settings_hide_infra %}Показывать окно или нет{% else %}Видимое окно{% endif %}</h3>
+          <h3>{% if settings_hide_infra %}{{ t("Показывать окно или нет") }}{% else %}{{ t("Видимое окно") }}{% endif %}</h3>
           {% if settings_hide_infra %}
           <p>
             {{ t("Обычно парсер, прогрев, рассылка и похожие действия выполняются") }} <strong>{{ t("в фоне") }}</strong> — отдельное окно браузера не открывается. Так удобнее и меньше отвлекает.
@@ -435,11 +435,11 @@
   </div>
 
   <div class="card">
-    <div class="card-header">{% if settings_hide_infra %}Мессенджер{% else %}Messenger в SOCMASTER Desktop{% endif %}</div>
+    <div class="card-header">{% if settings_hide_infra %}{{ t("Мессенджер") }}{% else %}{{ t("Messenger в SOCMASTER Desktop") }}{% endif %}</div>
     <div class="card-body">
       <div class="settings-subgrid">
         <section class="settings-field">
-          <h3>{% if settings_hide_infra %}Имя контакта в базе{% else %}Имя контакта из открытого чата{% endif %}</h3>
+          <h3>{% if settings_hide_infra %}{{ t("Имя контакта в базе") }}{% else %}{{ t("Имя контакта из открытого чата") }}{% endif %}</h3>
           {% if settings_hide_infra %}
           <p>
             {{ t("Если включено, при открытии чата во встроенном мессенджере имя в разделе") }} <strong>{{ t("«База контактов»") }}</strong> {{ t("подставляется таким, как в заголовке переписки в Facebook — чтобы совпадало с тем, что вы видите на экране. Выключите, если сами правите имена в CRM и не хотите, чтобы их меняло имя из мессенджера.") }}
@@ -466,7 +466,7 @@
   </div>
 
   <div class="card">
-    <div class="card-header">{% if settings_hide_infra %}После перезапуска программы{% else %}Автоматизация после перезапуска{% endif %}</div>
+    <div class="card-header">{% if settings_hide_infra %}{{ t("После перезапуска программы") }}{% else %}{{ t("Автоматизация после перезапуска") }}{% endif %}</div>
     <div class="card-body">
       <div class="settings-subgrid">
         <section class="settings-field">

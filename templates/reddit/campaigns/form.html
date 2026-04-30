@@ -1,12 +1,12 @@
 {% extends "reddit/base.html" %}
 
-{% block title %}{% if campaign %}Редактирование{% else %}Новая кампания{% endif %} · Reddit Master{% endblock %}
+{% block title %}{% if campaign %}{{ t("Редактирование") }}{% else %}{{ t("Новая кампания") }}{% endif %} · Reddit Master{% endblock %}
 
 {% block content %}
 <div class="reddit-page">
   <header class="reddit-page__header">
     <div class="reddit-page__title-wrap">
-      <h1 class="reddit-page__title">{% if campaign %}Редактирование кампании{% else %}Новая кампания{% endif %}</h1>
+      <h1 class="reddit-page__title">{% if campaign %}{{ t("Редактирование кампании") }}{% else %}{{ t("Новая кампания") }}{% endif %}</h1>
       <p class="reddit-page__subtitle">
         {{ t("По умолчанию") }} <strong>approval mode = manual</strong>{{ t(": каждое сообщение требует ручного подтверждения перед отправкой. Это максимально безопасный режим на старте.") }}
       </p>

@@ -163,7 +163,7 @@
     <div>
       <strong>{{ t("Автоматизация") }}</strong>
       <p style="margin:8px 0 0;color:var(--text-secondary)">
-        {% if automation.enabled %}Включена{% else %}Выключена{% endif %}<br/>
+        {% if automation.enabled %}{{ t("Включена") }}{% else %}{{ t("Выключена") }}{% endif %}<br/>
         Размер партии: {{ automation.batch_size }}<br/>
         Интервал между партиями: {{ automation.batch_wait_value }} {% if automation.batch_wait_unit == 'minutes' %}мин.{% elif automation.batch_wait_unit == 'hours' %}час.{% else %}дн.{% endif %}
       </p>

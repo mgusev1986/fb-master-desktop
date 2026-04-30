@@ -1,12 +1,12 @@
 {% extends "reddit/base.html" %}
 
-{% block title %}{% if row %}Редактирование{% else %}Новый шаблон{% endif %} · Reddit Master{% endblock %}
+{% block title %}{% if row %}{{ t("Редактирование") }}{% else %}{{ t("Новый шаблон") }}{% endif %} · Reddit Master{% endblock %}
 
 {% block content %}
 <div class="reddit-page">
   <header class="reddit-page__header">
     <div class="reddit-page__title-wrap">
-      <h1 class="reddit-page__title">{% if row %}Редактирование шаблона{% else %}Новый шаблон{% endif %}</h1>
+      <h1 class="reddit-page__title">{% if row %}{{ t("Редактирование шаблона") }}{% else %}{{ t("Новый шаблон") }}{% endif %}</h1>
       <p class="reddit-page__subtitle">
         Плейсхолдеры рендерятся при отправке: {% for p in known_placeholders %}<code>{{ '{' + p + '}' }}</code>{% if not loop.last %}, {% endif %}{% endfor %}.
       </p>

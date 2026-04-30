@@ -27,11 +27,11 @@
   <form method="post" action="{{ mb }}/conversation/{{ conv.id }}/action" class="vk-ms-dropdown-form">
     {{ _messenger_ret(ret_thread) }}
     <input type="hidden" name="action" value="pin_toggle"/>
-    <button type="submit" class="vk-ms-dropdown-item"><i class="ti ti-pin"></i> {% if conv.is_pinned %}Открепить чат{% else %}Закрепить чат{% endif %}</button>
+    <button type="submit" class="vk-ms-dropdown-item"><i class="ti ti-pin"></i> {% if conv.is_pinned %}{{ t("Открепить чат") }}{% else %}{{ t("Закрепить чат") }}{% endif %}</button>
   </form>
   <form method="post" action="{{ mb }}/conversation/{{ conv.id }}/archive" class="vk-ms-dropdown-form">
     {{ _messenger_ret(ret_thread) }}
-    <button type="submit" class="vk-ms-dropdown-item"><i class="ti ti-archive"></i> {% if conv.is_archived %}Вернуть из архива{% else %}Архивировать{% endif %}</button>
+    <button type="submit" class="vk-ms-dropdown-item"><i class="ti ti-archive"></i> {% if conv.is_archived %}{{ t("Вернуть из архива") }}{% else %}{{ t("Архивировать") }}{% endif %}</button>
   </form>
   <div class="vk-ms-dropdown-item vk-ms-has-sub" role="group">
     <span class="vk-ms-has-sub-label"><i class="ti ti-bell-off"></i> {{ t("Отключить уведомления") }}</span>

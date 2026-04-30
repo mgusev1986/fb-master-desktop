@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% block title %}{% if cabinet_client_mode(request) %}Загрузка списка — SOCMASTER{% else %}Импорт базы — SOCMASTER{% endif %}{% endblock %}
+{% block title %}{% if cabinet_client_mode(request) %}{{ t("Загрузка списка — SOCMASTER") }}{% else %}{{ t("Импорт базы — SOCMASTER") }}{% endif %}{% endblock %}
 
 {% block content %}
 <div class="page-header">
-  <h1>{% if cabinet_client_mode(request) %}Загрузка списка контактов{% else %}Импорт базы{% endif %}</h1>
+  <h1>{% if cabinet_client_mode(request) %}{{ t("Загрузка списка контактов") }}{% else %}{{ t("Импорт базы") }}{% endif %}</h1>
   <p class="subtitle">{% if cabinet_client_mode(request) %}
   Загрузите файл Excel или CSV со ссылками на людей в Facebook и именами. Программа сама разберёт колонки. Список появится в разделе <strong>{{ t("«Мои контакты»") }}</strong>.
   {% else %}

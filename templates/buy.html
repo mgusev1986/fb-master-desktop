@@ -357,7 +357,7 @@
     <div class="buy-header-row">
       <p class="buy-eyebrow" style="margin:0">{{ t("SOCMASTER · ОПЛАТА") }}</p>
       <div class="buy-lang-switch" role="group" aria-label="{{ t("Выбор языка") }}">
-        <a href="/buy" class="lang-btn active">RU</a>
+        <a href="/buy?lang=ru" class="lang-btn active">RU</a>
         <a href="/buy?lang=en" class="lang-btn">EN</a>
       </div>
     </div>
@@ -376,7 +376,7 @@
     <div class="buy-tariff">
       <span class="buy-tariff-label">{{ t("Подписка") }}</span>
       <span class="buy-tariff-price">${{ lavatop_price_usd_30 if lavatop_enabled else np_price_365 }}</span>
-      <span class="buy-tariff-period">{% if lavatop_enabled %}за 30 дней · автопродление{% else %}за 35 дней{% endif %}</span>
+      <span class="buy-tariff-period">{% if lavatop_enabled %}{{ t("за 30 дней · автопродление") }}{% else %}{{ t("за 35 дней") }}{% endif %}</span>
     </div>
 
     {% if lavatop_enabled %}

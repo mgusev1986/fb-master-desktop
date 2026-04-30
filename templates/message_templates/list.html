@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 {% from "macros/hints.html" import mailing_warmup_placeholders %}
-{% block title %}{% if cabinet_client_mode(request) %}Тексты сообщений — SOCMASTER{% else %}Шаблоны — SOCMASTER{% endif %}{% endblock %}
+{% block title %}{% if cabinet_client_mode(request) %}{{ t("Тексты сообщений — SOCMASTER") }}{% else %}{{ t("Шаблоны — SOCMASTER") }}{% endif %}{% endblock %}
 
 {% block content %}
 <div class="page-header">
   <div class="page-header-actions">
     <div>
-      <h1>{% if cabinet_client_mode(request) %}Тексты для сообщений{% else %}Шаблоны сообщений{% endif %}</h1>
+      <h1>{% if cabinet_client_mode(request) %}{{ t("Тексты для сообщений") }}{% else %}{{ t("Шаблоны сообщений") }}{% endif %}</h1>
       {{ mailing_warmup_placeholders('subtitle') }}
     </div>
     <a href="/templates/new" class="btn btn-primary">

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{% if cabinet_client_mode(request) %}История и отчёты — SOCMASTER{% else %}Журнал и отчёты — SOCMASTER{% endif %}{% endblock %}
+{% block title %}{% if cabinet_client_mode(request) %}{{ t("История и отчёты — SOCMASTER") }}{% else %}{{ t("Журнал и отчёты — SOCMASTER") }}{% endif %}{% endblock %}
 
 {% block head %}
 <style>
@@ -251,11 +251,11 @@
 <div class="page-header">
   <div class="page-header-actions" style="width:100%;align-items:flex-start;gap:16px">
     <div>
-      <h1>{% if cabinet_client_mode(request) %}История и отчёты{% else %}Журнал и отчёты{% endif %}</h1>
+      <h1>{% if cabinet_client_mode(request) %}{{ t("История и отчёты") }}{% else %}{{ t("Журнал и отчёты") }}{% endif %}</h1>
       <p class="subtitle">{% if cabinet_client_mode(request) %}
-      Что программа запускала, что завершилось с ошибкой, и готовые таблицы для скачивания.
+      {{ t("Что программа запускала, что завершилось с ошибкой, и готовые таблицы для скачивания.") }}
       {% else %}
-      Задачи, ошибки, job events и готовые выгрузки системы в одном месте.
+      {{ t("Задачи, ошибки, job events и готовые выгрузки системы в одном месте.") }}
       {% endif %}</p>
     </div>
     <div class="logs-header-actions">
@@ -275,7 +275,7 @@
     Показаны записи только для <strong>{{ t("режима агента") }}</strong> «{{ scenario_filter_name }}»
     (задачи с <code>campaign_id</code> в конфиге).
     {% endif %}
-    <span style="white-space:nowrap">· <a href="/scenarios/{{ scenario_id }}">{% if cabinet_client_mode(request) %}Открыть сценарий{% else %}Открыть режим{% endif %}</a>
+    <span style="white-space:nowrap">· <a href="/scenarios/{{ scenario_id }}">{% if cabinet_client_mode(request) %}{{ t("Открыть сценарий") }}{% else %}{{ t("Открыть режим") }}{% endif %}</a>
     · <a href="/system/logs?tab={{ active_tab }}">{{ t("Снять фильтр") }}</a></span>
   </div>
 </div>
