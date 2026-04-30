@@ -2852,3 +2852,51 @@ c5ff6c7 feat(promo-chat): Telegram-поддержка + info-канал в пр�
 ---
 
 *Конец документа Checkpoint. Последнее обновление: 30 апреля 2026 — релиз 3.0.7 + follow-up: премиум-редизайн `/buy`+`/purchase`, LavaTop graceful errors, `/auth/unlock` UX (5 итераций), Apple Pay cleanup, testimonials в `/promo3`, фикс checkpoint-hooks для worktrees, полный RU↔EN i18n кабинета (3242 ключа, 3937 обёрток в 122 шаблонах) **+ i18n waves 7-15: dict вырос до 4430 ключей, fix macro-context (9 шаблонов), custom file picker, Lava.top USD/EUR/RUB+PayPal, Telegram-поддержка в AI** — разделы §25.12, §25.13, §25.14, §25.15.*
+
+---
+
+## 26. SOCMASTER 3.0.8 — prod release (30 апр 2026, 23:30)
+
+**Релиз 3.0.8 в три платформы (mac arm64 + mac x64 + win x64).** Merge `claude/charming-chandrasekhar-6a7330` (113+ коммитов 3.0.7 follow-up + сегодняшние fix-ы 3.0.8) в `migration/private-submodule` через `/tmp/release-3.0.8` worktree, конфликт в `package.json` разрешён в пользу `"version": "3.0.8"`. Merge-commit `43e28b0`. Push в private `socmaster-core/migration/private-submodule`.
+
+### 26.1. Build pipeline (3 параллельных билда)
+- **mac-x64 (Intel) GHA:** run `25188706356` на `mgusev1986/socmaster-builder/public-shell-thin`, success 6m28s. Cross-arch fix `scripts/ensure-macos-embedded-python.sh` (3.0.7) сработал — `file Chromium` = `Mach-O 64-bit executable x86_64` (verify в смонтированном DMG).
+- **win-x64 GHA:** run `25188707449` (тот же репо), success 5m16s. Артефакт ~470 МБ, скачивание `gh run download` ~17 мин (CDN тормоза, известная проблема).
+- **mac-arm64 локально:** `prepare-desktop-backend-bundle.sh` + `npm run dist:mac:arm64` с `CSC_IDENTITY_AUTO_DISCOVERY=false SKIP_NOTARIZE=1`, ~547 МБ DMG.
+
+### 26.2. Артефакты (8 файлов в `static/releases/`)
+| Файл | Размер | Origin |
+|---|---|---|
+| `SOCMASTER-3.0.8-mac-arm64.dmg` | 547 МБ | local arm64 build |
+| `SOCMASTER-3.0.8-mac-arm64.dmg.blockmap` | 585 КБ | local |
+| `SOCMASTER-3.0.8-mac-arm64-bundle.zip` | 546 МБ | `zip-mac-arm64-bundle.sh 3.0.8` |
+| `SOCMASTER-3.0.8-mac-x64.dmg` | 555 МБ | GHA mac-x64 |
+| `SOCMASTER-3.0.8-mac-x64.dmg.blockmap` | 592 КБ | GHA |
+| `SOCMASTER-3.0.8-mac-x64-bundle.zip` | 554 МБ | `zip-mac-x64-bundle.sh 3.0.8` |
+| `SOCMASTER-3.0.8-win-x64.exe` | 469 МБ | GHA win |
+| `SOCMASTER-3.0.8-win-x64.exe.blockmap` | 499 КБ | GHA |
+
+### 26.3. Deploy на VPS (`46.62.230.106:/opt/fb-master/static/releases/`)
+- `deploy/publish-desktop-release.sh root@46.62.230.106 3.0.8 socmaster.pro` — покрыл arm64 (dmg + bundle.zip) + win (exe). Удалил старые `SOCMASTER-*` перед rsync. Обновил `.env`: `FB_DESKTOP_LATEST_VERSION=3.0.8`, `FB_DESKTOP_DOWNLOAD_DARWIN_ARM64`, `FB_DESKTOP_DOWNLOAD_DARWIN_ARM64_BUNDLE`, `FB_DESKTOP_DOWNLOAD_WIN32_X64`, `FB_DESKTOP_RELEASE_NOTES`.
+- **Manual rsync для mac-x64** (publish-script его не покрывает): `rsync` 3 файлов (`*.dmg`, `*.dmg.blockmap`, `*-bundle.zip`) + `chown fbmaster:fbmaster`. Backend `_buy_page_auto_dmg_x64_url` / `_buy_page_auto_bundle_x64_url` авто-детектят файлы по `FB_DESKTOP_LATEST_VERSION` — отдельные env-переменные не нужны.
+- `systemctl restart fb-master` → service active.
+
+### 26.4. Verify (production)
+- 5/5 артефактов отдают `HTTP 200` на `https://socmaster.pro/static/releases/SOCMASTER-3.0.8-*`
+- `/auth/unlock` HTML содержит ссылки на `arm64-bundle.zip`, `x64-bundle.zip`, `win-x64.exe` (3 OS-кнопки)
+- 4/4 публичные страницы `/`, `/buy`, `/purchase`, `/auth/unlock` → `200`
+- `/api/public/desktop-update` отдаёт корректный JSON: `latest_version=3.0.8`, signed URLs `arm64_bundle`/`arm64`, прямой URL `win32_x64`, `release_notes` с заявленным текстом
+
+### 26.5. Что нового в 3.0.8 (по сравнению с 3.0.7)
+- **Цены NowPayments выровнены с LavaTop**: defaults `$100/$270/$499/$865` для тарифов 30/90/180/365 дней (было $29/$79/$139/$2000 → 35d/$100 костыль)
+- **Email-tooltip на `/buy`**: жёлтый popover-стрелка под input email при клике «Картой» с пустым/невалидным email, авто-скрытие 4с
+- **Фикс 500 на `/discovery` и `/templates`**: shadow-bug Jinja `{% for t in ... %}` + `{{ t("...") }}` → `TypeError: '...' object is not callable`. Переименовал переменную цикла в `task` / `tpl`
+- **Перевод Messenger CRM**: `In CRM:`, `AI replies:`, `Session & sync: OK`, кнопки стадий воронки (Already contacted / Interested / ...) через JS-bridge `window.M2_I18N` + `t(st.label)` в шаблоне
+- **Перевод Logs & reports**: `error_summary` обёрнут в `t()`, добавлен `Stopped by user` в i18n_dict
+- **RU/EN pill** в sidebar и на launcher: приоритет query→cookie→default (как в `get_lang`), контраст для светлой темы (`#b8860b` + box-shadow + `var(--text-secondary)` для неактивной)
+- **Launcher переводы**: 6 описаний модулей (Facebook/Reddit/LinkedIn/Twitter/Instagram/Telegram) добавлены в i18n_dict, обёрнуты в `t(card.short_description)`
+- **LavaTop currency**: `RUB` → `USD` в payload `create_invoice` (подсказывает checkout-странице USD как валюту по умолчанию)
+
+### 26.6. Известные нерешённые баги
+- **6 beta-шаблонов** имеют тот же shadow-bug `for t in ... t(...)` (Twitter/Reddit/LinkedIn/Instagram). Не починены — beta, отдельный релиз.
+- **LavaTop monthly опция**: чтобы убрать «Ежемесячный $X» с checkout-страницы — нужно вручную в кабинете LavaTop отключить MONTHLY periodicity для каждого offer (программно не управляется).
