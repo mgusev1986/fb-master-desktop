@@ -38,6 +38,7 @@ from backend.services.messenger_settings import (
     set_messenger_auto_inbox_sync_interval_sec,
     set_messenger_poll_interval_sec,
 )
+from backend.services.i18n import get_lang as _get_lang, translate as _translate
 from backend.services.sequence_timezone import COMMON_TIMEZONES, normalize_sequence_tz_name, raw_sequence_timezone_name
 from backend.services.throttle import (
     MIN_FLOORS,
@@ -80,12 +81,15 @@ async def speed_page(request: Request, db: Session = Depends(get_db)):
     tz_saved = _get_setting(db, "sequence_timezone", None)
     tz_effective = normalize_sequence_tz_name(raw_sequence_timezone_name(db))
 
+    _lang = _get_lang(request)
+    _preset_labels_localized = {k: _translate(v, _lang) for k, v in PRESET_LABELS.items()}
+
     templates = request.app.state.templates
     return templates.TemplateResponse("system/speed.html", {
         "request": request,
         "user": request.session.get("user"),
         "current_preset": current_preset,
-        "preset_labels": PRESET_LABELS,
+        "preset_labels": _preset_labels_localized,
         "delays": delays,
         "delays_by_preset": delays_by_preset,
         "reference_delays": REFERENCE_DELAYS,

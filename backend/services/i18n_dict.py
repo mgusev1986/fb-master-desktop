@@ -4477,6 +4477,12 @@ TRANSLATIONS: Final[dict[str, dict[str, str]]] = {
         # ─── Manual (post-auto): file picker labels (fb_accounts/list.html) ──
         "Выберите файл": "Choose file",
         "Файл не выбран": "No file chosen",
+        # ─── Manual (post-auto): throttle PRESET_LABELS (system/speed.html) ──
+        "Улитка (~20 сообщ./час)": "Snail (~20 msg/hour)",
+        "Медленно (~30 сообщ./час)": "Slowly (~30 msg/hour)",
+        "Средне (~45 сообщ./час)": "Medium (~45 msg/hour)",
+        "Быстро (~60 сообщ./час, повышенный риск)": "Fast (~60 msg/hour, increased risk)",
+        "Очень быстро (~100 сообщ./час, высокий риск)": "Very fast (~100 msg/hour, high risk)",
         # ─── Manual (post-auto): country / region labels (fb_stealth_profile.py) ──
         "Австралия": "Australia",
         "Австрия": "Austria",

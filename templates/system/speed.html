@@ -188,6 +188,7 @@
 <script type="application/json" id="fb-speed-preset-labels">{{ preset_labels | tojson }}</script>
 <script>
 (function () {
+  var SEC_LABEL = {{ t("сек")|tojson }};
   function parseJsonScript(id) {
     var el = document.getElementById(id);
     if (!el || !el.textContent) return null;
@@ -216,8 +217,8 @@
         if (!pair || pair.length < 2) return;
         var lo = tr.querySelector(".delay-lo");
         var hi = tr.querySelector(".delay-hi");
-        if (lo) lo.textContent = pair[0] + " сек";
-        if (hi) hi.textContent = pair[1] + " сек";
+        if (lo) lo.textContent = pair[0] + " " + SEC_LABEL;
+        if (hi) hi.textContent = pair[1] + " " + SEC_LABEL;
       });
     }
     if (titleEl && presetLabelsForSpeed && presetLabelsForSpeed[preset]) {
