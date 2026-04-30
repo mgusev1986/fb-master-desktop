@@ -32,6 +32,13 @@ from typing import Final
 
 TRANSLATIONS: Final[dict[str, dict[str, str]]] = {
     "en": {
+        # ─── Launcher / стартовый экран workspaces — описания модулей ────
+        "Аккаунты, парсер, рассылка, сценарии, Messenger и CRM для работы с Facebook.": "Accounts, scraper, outreach, scenarios, Messenger, and CRM for working with Facebook.",
+        "Работа с Reddit: аккаунты, сабреддиты, поиск аудитории, недавняя активность, очереди сообщений, AI-помощник и безопасный агент.": "Working with Reddit: accounts, subreddits, audience search, recent activity, message queues, AI assistant, and safe agent.",
+        "Профили, компании, поиск аудитории, цепочки касаний, AI-помощник и безопасный outreach для LinkedIn.": "Profiles, companies, audience search, touch sequences, AI assistant, and safe outreach for LinkedIn.",
+        "Профили, поиск аудитории, рассылка DM, реплаи, AI-помощник и AI-автоответчик для X (Twitter).": "Profiles, audience search, DM outreach, replies, AI assistant, and AI auto-responder for X (Twitter).",
+        "Профили, поиск по hashtag, рассылка Direct, лайки/комменты по целевой аудитории, лайки сторисов, парсер аудитории конкурентов, AI-автоответчик.": "Profiles, hashtag search, Direct outreach, likes/comments on the target audience, story likes, competitor audience scraper, AI auto-responder.",
+        "Аккаунты, парсинг чатов и каналов, рассылка в личку, AI-помощник и outreach для Telegram — в плане на будущие релизы.": "Accounts, parsing chats and channels, direct messaging, AI assistant, and outreach for Telegram — planned for future releases.",
         # ─── Logs & reports: динамические записи воркеров (3.0.8) ─────────
         "Остановлено пользователем": "Stopped by user",
         # ─── Messenger 3.0.8: JS i18n bridge (window.M2_I18N / window.M_I18N) ─

@@ -19,9 +19,9 @@
     {# Language switcher — приоритет query→cookie→'ru' (как в backend/services/i18n.py:get_lang).
        Cookie запоминается middleware'ом → выбор сохранится при переходе в любой workspace. #}
     {% set _cur_lang = request.query_params.get('lang') or request.cookies.get('lang') or 'ru' %}
-    <div class="fbm-launcher__lang" role="group" aria-label="{{ t('Сменить язык') }}" style="display:inline-flex;gap:2px;padding:2px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:999px;margin-left:8px">
-      <a href="?lang=ru" style="padding:4px 11px;font-size:11px;font-family:inherit;border-radius:999px;text-decoration:none;{% if _cur_lang != 'en' %}background:rgba(245,208,110,0.12);color:#f5d06e;font-weight:600;{% else %}color:rgba(255,255,255,0.55);font-weight:500;{% endif %}">RU</a>
-      <a href="?lang=en" style="padding:4px 11px;font-size:11px;font-family:inherit;border-radius:999px;text-decoration:none;{% if _cur_lang == 'en' %}background:rgba(245,208,110,0.12);color:#f5d06e;font-weight:600;{% else %}color:rgba(255,255,255,0.55);font-weight:500;{% endif %}">EN</a>
+    <div class="fbm-launcher__lang" role="group" aria-label="{{ t('Сменить язык') }}" style="display:inline-flex;gap:2px;padding:2px;background:color-mix(in srgb,var(--text-secondary,#777) 8%,transparent);border:1px solid color-mix(in srgb,var(--text-secondary,#777) 18%,transparent);border-radius:999px;margin-left:8px">
+      <a href="?lang=ru" style="padding:4px 11px;font-size:11px;font-family:inherit;border-radius:999px;text-decoration:none;{% if _cur_lang != 'en' %}background:rgba(245,208,110,0.22);color:#b8860b;font-weight:700;box-shadow:0 0 0 1px rgba(245,208,110,0.45) inset;{% else %}color:var(--text-secondary,rgba(255,255,255,0.55));font-weight:500;{% endif %}">RU</a>
+      <a href="?lang=en" style="padding:4px 11px;font-size:11px;font-family:inherit;border-radius:999px;text-decoration:none;{% if _cur_lang == 'en' %}background:rgba(245,208,110,0.22);color:#b8860b;font-weight:700;box-shadow:0 0 0 1px rgba(245,208,110,0.45) inset;{% else %}color:var(--text-secondary,rgba(255,255,255,0.55));font-weight:500;{% endif %}">EN</a>
     </div>
   </header>
 
