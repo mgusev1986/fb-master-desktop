@@ -436,7 +436,7 @@
                 {% if err_raw %}
                 <div class="logs-error-raw" title="{{ t("Текст ошибки из системы") }}">{{ err_raw }}</div>
                 {% elif job.error_summary %}
-                <div class="logs-error-raw" title="{{ t("Текст ошибки из системы") }}">{{ job.error_summary }}</div>
+                <div class="logs-error-raw" title="{{ t("Текст ошибки из системы") }}">{{ t(job.error_summary) }}</div>
                 {% endif %}
                 {% endif %}
                 {% if job.correlation_id %}
@@ -522,7 +522,7 @@
                   {% if raw_f %}
                   <div class="logs-error-raw">{{ raw_f }}</div>
                   {% elif job.error_summary %}
-                  <div class="logs-error-raw">{{ job.error_summary }}</div>
+                  <div class="logs-error-raw">{{ t(job.error_summary) }}</div>
                   {% endif %}
                   {% if job.correlation_id %}
                   <details class="logs-tech-details">
@@ -629,7 +629,7 @@
                   {% if raw_e %}
                   <div class="logs-error-raw">{{ raw_e }}</div>
                   {% elif job.error_summary %}
-                  <div class="logs-error-raw">{{ job.error_summary }}</div>
+                  <div class="logs-error-raw">{{ t(job.error_summary) }}</div>
                   {% endif %}
                   {% endif %}
                   {% if job.correlation_id %}

@@ -335,6 +335,10 @@
 
 <script>
 var MB = {{ mb | tojson }};
+window.M_I18N = {
+  ai_replies: {{ t("Ответов AI:") | tojson }},
+  no_limit: {{ t("без лимита") | tojson }},
+};
 (function messengerAutoReloadWhenSyncDone() {
   var panel = document.getElementById('vk-ms-thread-panel');
   var initialBusy = panel && panel.getAttribute('data-sync-busy') === 'true';
@@ -665,8 +669,9 @@ var MB = {{ mb | tojson }};
           if (!d || !d.ok) return;
           var u = d.ai_reply_steps_used != null ? d.ai_reply_steps_used : 0;
           var m = d.ai_reply_steps_max != null ? d.ai_reply_steps_max : 0;
-          el.textContent =
-            m <= 0 ? 'Ответов AI: ' + u + ' (без лимита)' : 'Ответов AI: ' + u + ' / ' + m;
+          el.textContent = m <= 0
+            ? window.M_I18N.ai_replies + ' ' + u + ' (' + window.M_I18N.no_limit + ')'
+            : window.M_I18N.ai_replies + ' ' + u + ' / ' + m;
         })
         .catch(function () {});
     }

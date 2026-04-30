@@ -656,6 +656,16 @@
   {% endif %}
 </div>
 <script>
+// i18n bridge для JS-литералов в этом шаблоне (3.0.8: messenger2 был частично русским в EN-режиме)
+window.M2_I18N = {
+  in_crm: {{ t("В CRM:") | tojson }},
+  no_contact_hint: {{ t("Контакт ещё не в «Базе контактов» — нажмите ниже нужную стадию CRM, чтобы добавить его в базу и воронку.") | tojson }},
+  ai_replies: {{ t("Ответов AI:") | tojson }},
+  no_limit: {{ t("без лимита") | tojson }},
+  session_sync_ok: {{ t("Сессия и синхронизация: OK") | tojson }},
+};
+</script>
+<script>
 (function () {
   function withTimeoutMs(promise, ms) {
     return Promise.race([
@@ -763,10 +773,9 @@
           if (j.has_contact && j.crm_stage) {
             var lab = j.stage_label || j.crm_stage;
             statusEl.textContent =
-              'В CRM: «' + lab + '»' + (j.person_name ? ' · ' + j.person_name : '');
+              window.M2_I18N.in_crm + ' «' + lab + '»' + (j.person_name ? ' · ' + j.person_name : '');
           } else if (j.has_open_thread) {
-            statusEl.textContent =
-              'Контакт ещё не в «Базе контактов» — нажмите ниже нужную стадию CRM, чтобы добавить его в базу и воронку.';
+            statusEl.textContent = window.M2_I18N.no_contact_hint;
           } else {
             defaultHint();
           }
@@ -789,9 +798,9 @@
     var u = typeof used === 'number' ? used : parseInt(String(used || 0), 10) || 0;
     var m = typeof max === 'number' ? max : parseInt(String(max || 0), 10) || 0;
     if (m <= 0) {
-      el.textContent = 'Ответов AI: ' + u + ' (без лимита)';
+      el.textContent = window.M2_I18N.ai_replies + ' ' + u + ' (' + window.M2_I18N.no_limit + ')';
     } else {
-      el.textContent = 'Ответов AI: ' + u + ' / ' + m;
+      el.textContent = window.M2_I18N.ai_replies + ' ' + u + ' / ' + m;
     }
     var pv = document.getElementById('m2-ai-shell-preview');
     if (pv) pv.textContent = el.textContent;
@@ -1851,7 +1860,7 @@
       }
       return {
         kind: 'ok',
-        text: 'Сессия и синхронизация: OK',
+        text: window.M2_I18N.session_sync_ok,
         title: 'Вход сохранён, сервер и профиль в режиме полной синхронизации. Ограничения отдельных чатов Facebook показываются справа отдельным предупреждением.'
       };
     }

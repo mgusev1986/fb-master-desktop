@@ -32,6 +32,14 @@ from typing import Final
 
 TRANSLATIONS: Final[dict[str, dict[str, str]]] = {
     "en": {
+        # ─── Logs & reports: динамические записи воркеров (3.0.8) ─────────
+        "Остановлено пользователем": "Stopped by user",
+        # ─── Messenger 3.0.8: JS i18n bridge (window.M2_I18N / window.M_I18N) ─
+        "В CRM:": "In CRM:",
+        "Контакт ещё не в «Базе контактов» — нажмите ниже нужную стадию CRM, чтобы добавить его в базу и воронку.": "Contact is not in the Contacts database yet — click the desired CRM stage below to add it to the database and funnel.",
+        "Ответов AI:": "AI replies:",
+        "без лимита": "no limit",
+        "Сессия и синхронизация: OK": "Session & sync: OK",
         # ─── Sidebar / Navigation (templates/base.html) ──────────────────
         "Главная": "Home",
         "Обзор": "Overview",
