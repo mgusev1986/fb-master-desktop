@@ -24,9 +24,29 @@ import logging
 import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Any
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 import httpx
 from sqlalchemy.orm import Session
+
+
+def _strip_payment_params(url: str) -> str:
+    """Удалить query-param `paymentParams` из URL чекаута LavaTop.
+
+    LavaTop при создании invoice через API кладёт в URL base64-состояние
+    предзаполненной формы (валюта + метод оплаты). Если оставить —
+    пользователь не увидит выбора валюты (RUB/EUR/USD) и PayPal'а.
+    После strip'а — открывается универсальный checkout. Остальные query
+    (если когда-нибудь появятся) сохраняются.
+    """
+    if not url:
+        return url
+    try:
+        parsed = urlparse(url)
+        kept = [(k, v) for k, v in parse_qsl(parsed.query, keep_blank_values=True) if k != "paymentParams"]
+        return urlunparse(parsed._replace(query=urlencode(kept)))
+    except Exception:  # noqa: BLE001
+        return url
 
 from backend import config as app_config
 from backend.models import (
@@ -161,9 +181,19 @@ async def create_invoice(
                 )
                 return None, f"http_{r.status_code}: {r.text[:200]}"
             data = r.json()
-            invoice_url = (
+            raw_invoice_url = (
                 data.get("paymentUrl") or data.get("payment_url") or data.get("url") or ""
             ).strip()
+            # LavaTop возвращает URL вида
+            #   /products/<id>/<offer>?paymentParams=<base64-state>
+            # paymentParams форсирует валюту RUB + способ "карта" (см. payload
+            # currency=RUB выше), что лишает пользователя выбора валюты
+            # (RUB/EUR/USD) и PayPal'а в форме оплаты. Убираем этот query —
+            # пользователь попадает на универсальную checkout-форму LavaTop.
+            # Webhook tracking не страдает: invoice_id и contractId уже
+            # сохранены ниже и приходят от LavaTop в IPN независимо от того,
+            # какую валюту/способ выбрал пользователь в форме.
+            invoice_url = _strip_payment_params(raw_invoice_url)
             if not invoice_url:
                 return None, "no_payment_url_in_response"
             order.lava_invoice_id = (
