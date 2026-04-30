@@ -2,7 +2,7 @@
 
 Документ для передачи контекста нейросети или разработчику: продукт, **архитектура клиент–сервер**, лицензирование, **обновления десктопа (macOS + Windows)**, защита, деплой, маршруты, механики, дерево файлов. Язык: русский.
 
-**Последнее обновление документа:** 30 апреля 2026 (после релиза 3.0.7 — LavaTop billing + Brevo email + база знаний `/promo3` + `/blog` + auto-checkpoint hooks — раздел §25). **Текущая версия десктопа (semver):** **3.0.5** (`desktop/fb-master-desktop/package.json`, не менялся). **Текущая публичная версия серверного релиза:** **3.0.7** (LavaTop+Brevo+blog в `/opt/fb-master/`). **Desktop-релиз 3.0.7 пока не собирался** — текущий публичный desktop-update остаётся **3.0.5**.
+**Последнее обновление документа:** 30 апреля 2026 (релиз 3.0.7 + follow-up итерации: премиум-редизайн `/buy`+`/purchase`, LavaTop graceful errors, `/auth/unlock` UX × 5, Apple Pay cleanup, testimonials в `/promo3`, фикс checkpoint-hooks для worktrees — разделы §25.12 и §25.13). **Текущая версия десктопа (semver):** **3.0.5** (`desktop/fb-master-desktop/package.json`, не менялся). **Текущая публичная версия серверного релиза:** **3.0.7** (LavaTop+Brevo+blog в `/opt/fb-master/`). **Desktop-релиз 3.0.7 пока не собирался** — текущий публичный desktop-update остаётся **3.0.5**.
 
 **Важно про имя продукта:** с версии 2.5 продукт переименован с *FbMaster* в **SOCMASTER**. Все новые артефакты публикуются с префиксом **`SOCMASTER-`** (а не `FbMaster-`). Legacy-имена `FbMaster-*.dmg` остаются в историческом списке и обрабатываются скриптами как fallback, но **новые релизы пишутся только как `SOCMASTER-*`**. В коде продуктовое имя — `productName: "SOCMASTER"` в `package.json`, а класс Electron-app и bundle id остались `pro.socmaster.fbmaster` (обратная совместимость на уровне auto-update).
 
@@ -2560,6 +2560,73 @@ b10aa9d feat(billing): LavaTop подписки + Brevo email-сервис (3.0.
 5682d22 ux(bundle-instr): возврат к простому формату xattr -cr (без sudo+codesign)  ← parent (3.0.6)
 ```
 
+### 25.12. Follow-up итерации после релиза 3.0.7 (ночь и утро 30 апр)
+
+После начального релиза 3.0.7 (b10aa9d, 0e83242, 2a87468) и фиксации §25 в Checkpoint (`dbdbd23`) — серия точечных правок UI и billing edge-cases. **Все коммиты в той же ветке `claude/charming-chandrasekhar-6a7330`, продакшн раскатывается с неё через `rsync` (см. §25.6).**
+
+#### Премиум-редизайн страниц оплаты `/buy` и `/purchase`
+
+```
+eab7931 feat(buy): premium Apple-style /buy — горизонтальные кнопки «Картой» + «Криптой»
+c0a074d fix(billing): LavaTop /create — корректное имя функции цены + единый дизайн /purchase
+cddbe29 ux(buy/purchase): убрать «Apple Pay» из подписи карточной оплаты (LavaTop его не процессит)
+```
+
+`templates/buy.html` (554 строки, +404 −150) и `templates/billing/purchase.html` приведены к единому Apple-style: gold gradient на ключевых словах, Playfair Display + Inter, 2 горизонтальные payment-card'ы (grid 2-col → 1-col на <600px), email-поле над кнопками, hover-анимации translateY+glow. Backend-контракт без изменений (`lavatop_enabled`, `np_price_365`, `nowpayments_enabled`). Подпись карточки: `RU · Visa · Mastercard · СБП` (без Apple Pay).
+
+#### LavaTop graceful error
+
+```
+3669e2b fix(billing): graceful error без 500 при отказе LavaTop create-invoice
+```
+
+`backend/routers/billing_lavatop.py` — при HTTP-ошибке от LavaTop API возвращает 200 + `purchase.html` с `purchase_error`, не 500. UX: пользователь видит красную плашку, а не «Internal Server Error».
+
+#### `/auth/unlock` — 5 UX-итераций по download-картам
+
+```
+ee52a07 fix(auth/unlock): объединить downloads + key-form в единый view
+fccc70b fix(auth/unlock): key-form ВСЕГДА видна под download-картами
+c2fd5c0 fix(auth/unlock): big premium download cards (Screen 1) + key-form скрыта от public
+6ecda47 ux(auth/unlock): card max-width 44rem → 76rem (1216px) — оказалось слишком широко
+e04e67b ux(auth/unlock): card max-width 76rem → 60rem (960px) — золотая середина
+```
+
+`templates/auth/unlock.html` — итеративная подгонка по скриншотам: сначала структура (один view вместо двух), потом видимость key-form для авторизованных, потом подбор max-width контейнера. Финальное значение **60rem (960px)**.
+
+#### Главная (`/promo3`)
+
+```
+20e9347 ux(promo3): testimonials блок между «Простой старт» и FAQ
+```
+
+`templates/promo3.html` — блок «Результаты предпринимателей» (testimonials) перенесён в правильную позицию: между «Простой старт за несколько минут» и «Частые вопросы».
+
+#### Production deploys (rsync на 46.62.230.106:/opt/fb-master)
+
+| Время | Файлы | Заметка |
+|---|---|---|
+| `30 апр 00:15` | `templates/buy.html` | первый раскат премиум-редизайна |
+| `30 апр 00:24` | `backend/routers/billing_lavatop.py` + `templates/billing/purchase.html` | LavaTop fix + единый дизайн `/purchase` |
+| `30 апр 00:33` | `backend/routers/billing_lavatop.py` | graceful error fix |
+| `30 апр 00:39 → 00:54` | `templates/auth/unlock.html` × 5 | 5 итераций UX |
+| `30 апр 01:17` | `templates/buy.html` + `templates/billing/purchase.html` | Apple Pay removal |
+| `30 апр 09:50` | `templates/promo3.html` | testimonials reorder |
+
+**Все деплои:** `rsync` отдельных файлов с фиксом владельца через `chown fbmaster:fbmaster` после rsync (см. §25.6). Restart `fb-master` НЕ нужен для template-only изменений (Jinja2 читает HTML с диска при каждом запросе) — restart выполнялся только для backend-only коммитов (LavaTop graceful error, fix /create).
+
+### 25.13. Auto-checkpoint hooks: фикс для worktrees
+
+При работе из git worktree (`.claude/worktrees/<name>/`) Claude Code использует **локальную** `.claude/settings.json` worktree, а не главного проекта. Чтобы checkpoint-hooks (PostToolUse:Bash + Stop) срабатывали в worktree-сессиях, нужно скопировать `settings.json` из родителя:
+
+```bash
+cp ".claude/settings.json" ".claude/worktrees/<name>/.claude/settings.json"
+```
+
+Изменение `settings.json` подхватывается Claude Code только при **старте сессии**, не на лету.
+
+**Долгосрочное решение (TODO):** post-create-worktree скрипт или shell-обёртка `gwt-add` в `~/.zshrc` поверх `git worktree add`, которая автоматически копирует `settings.json`.
+
 ---
 
-*Конец документа Checkpoint. Последнее обновление: 30 апреля 2026 — релиз 3.0.7 (LavaTop + Brevo + база знаний promo3/blog + auto-checkpoint hooks) — раздел §25.*
+*Конец документа Checkpoint. Последнее обновление: 30 апреля 2026 — релиз 3.0.7 + follow-up: премиум-редизайн `/buy`+`/purchase`, LavaTop graceful errors, `/auth/unlock` UX (5 итераций), Apple Pay cleanup, testimonials в `/promo3`, фикс checkpoint-hooks для worktrees — разделы §25.12 и §25.13.*
