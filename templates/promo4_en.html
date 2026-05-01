@@ -400,7 +400,10 @@
             animation: hero-blob-2 22s ease-in-out infinite;
             animation-delay: -7s;
         }
-        section[id] > * { position: relative; z-index: 1; }
+        /* Content above blobs — but exclude hero/final-cta (they have their own
+           hero-blob with z-index:0; overriding to 1 would float blobs over content
+           and blur would darken everything). */
+        section[id]:not(#hero):not(#final-cta) > * { position: relative; z-index: 1; }
 
         /* 2. Sparkles / golden particles in hero */
         @keyframes sparkle-float {
@@ -1555,6 +1558,30 @@
         // ─── PROMO4: blob animation in all sections ─────────────────────────
         // Implemented via CSS ::before/::after on section[id]:not(#hero):not(#final-cta)
         // (see <style> block) — no JS dependency, blobs appear immediately on page load.
+
+        // ─── PROMO4: sparkles (golden particles) in all sections ────────────
+        (function () {
+            // hero/final-cta already have their own sparkles
+            document.querySelectorAll('section[id]').forEach(function (sec, idx) {
+                if (sec.id === 'hero' || sec.id === 'final-cta') return;
+                if (sec.querySelector('.sparkle')) return;
+                sec.style.position = 'relative';
+                sec.style.overflow = 'hidden';
+                var positions = [8, 22, 38, 54, 72, 88]; // % left
+                positions.forEach(function (leftPct, i) {
+                    var s = document.createElement('span');
+                    s.className = 'sparkle';
+                    s.setAttribute('aria-hidden', 'true');
+                    s.style.position = 'absolute';
+                    s.style.left = leftPct + '%';
+                    s.style.bottom = '0';
+                    s.style.top = 'auto';
+                    s.style.zIndex = '0';
+                    s.style.animationDelay = (i * 1.3 + (idx % 4) * 0.7) + 's';
+                    sec.appendChild(s);
+                });
+            });
+        })();
 
         // ─── Testimonials carousel (reuses promo2 data) ────────────────────
         (function () {
