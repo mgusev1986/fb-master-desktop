@@ -91,7 +91,6 @@ async def lifespan(app: FastAPI):
     init_db()
     try:
         from backend.database import SessionLocal
-        from backend.services.automation_auto_resume import run_auto_resume_after_stale_recovery
         from backend.services.stale_job_recovery import recover_stale_automation_on_startup
 
         s = SessionLocal()
@@ -101,13 +100,13 @@ async def lifespan(app: FastAPI):
                 logger.info("Восстановление состояния задач при старте: %s", stats)
         finally:
             s.close()
-        s2 = SessionLocal()
-        try:
-            auto = run_auto_resume_after_stale_recovery(s2)
-            if auto.get("outreach_resumed") or auto.get("warmup_resumed"):
-                logger.info("Автовозобновление рассылки/прогрева после перезапуска: %s", auto)
-        finally:
-            s2.close()
+        # 3.0.81+: автовозобновление рассылки/прогрева ОТКЛЮЧЕНО.
+        # recover_stale_automation_on_startup ставит активные кампании на паузу
+        # (job → cancelled, queue items → queued, кампания → paused).
+        # При следующем открытии программы кампания остаётся на паузе и пользователь
+        # сам жмёт «Продолжить». Это устраняет «спонтанный Chromium с запросом
+        # логина» при старте программы. Все остальные настройки (включая
+        # cabinet_playwright_show_browser) НЕ меняются — клиент сам управляет ими.
     except Exception:
         logger.exception("Восстановление зависших задач при старте")
 
