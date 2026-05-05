@@ -1,0 +1,202 @@
+name: Release SOCMASTER DEV (matrix)
+
+# D.3 (05.05.2026) — изолированный matrix-workflow для DEV канала.
+# Параллельно с prod-workflow `Release SOCMASTER (matrix)` (release.yml).
+#
+# Изоляция от prod:
+#   - Клонирует ветку `dev-channel` (НЕ `migration/private-submodule`)
+#   - Использует npm scripts `dist:dev:*` с overrides:
+#       appId=pro.socmaster.fbmaster.dev (можно установить параллельно с prod)
+#       productName='SOCMASTER DEV' (видно в Dock/Apps&Features)
+#       artifactName='SOCMASTER-DEV-${version}-${os}-${arch}.${ext}' (DEV в имени)
+#   - Tag pattern `dev-v*` (НЕ пересекается с prod `v*`)
+#   - Upload artifact name: `SOCMASTER-DEV-${version}-${platform}`
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'DEV версия (например 3.0.92 — без префикса v и без -dev суффикса)'
+        required: true
+        default: '3.0.92'
+  push:
+    tags:
+      - 'dev-v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build DEV ${{ matrix.platform.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - name: mac-arm64
+            os: macos-14
+            arch_expected: arm64
+            npm_target: 'dist:dev:mac:arm64'
+          - name: mac-x64
+            os: macos-14
+            arch_expected: x86_64
+            npm_target: 'dist:dev:mac:x64'
+            node_arch: 'x64'
+            fbm_target_arch: 'x86_64'
+            macos_target: '12.0'
+          - name: win-x64
+            os: windows-latest
+            arch_expected: x64
+            npm_target: 'dist:dev:win'
+    runs-on: ${{ matrix.platform.os }}
+    timeout-minutes: 60
+    env:
+      FBM_TARGET_ARCH: ${{ matrix.platform.fbm_target_arch || '' }}
+      MACOSX_DEPLOYMENT_TARGET: ${{ matrix.platform.macos_target || '' }}
+    steps:
+      # ─── Clone private socmaster-core (dev-channel — изолировано от prod) ───
+      - name: Clone private socmaster-core (dev-channel branch)
+        shell: bash
+        env:
+          PAT: ${{ secrets.CORE_REPO_PAT }}
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          git clone --depth 1 --branch dev-channel "https://x-access-token:${PAT}@github.com/mgusev1986/socmaster-core.git" "$RUNNER_TEMP/code"
+          cp -R "$RUNNER_TEMP/code/." ./
+          rm -rf "$RUNNER_TEMP/code"
+          if [[ "${{ github.ref }}" == refs/tags/dev-v* ]]; then
+            TAG="${{ github.ref_name }}"
+            git fetch --tags --depth=1 origin 2>/dev/null || true
+            git checkout "$TAG" 2>/dev/null && echo "Checked out tag $TAG in private repo (dev-channel)" || echo "Tag $TAG not in private, using dev-channel HEAD"
+          fi
+          ls -la | head -10
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          architecture: ${{ matrix.platform.node_arch || '' }}
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verify cross-arch (mac-x64 only)
+        if: matrix.platform.name == 'mac-x64'
+        shell: bash
+        run: |
+          if [[ "$(node -p 'process.arch')" != "x64" ]]; then
+            echo "ERROR: node не x64 (process.arch=$(node -p 'process.arch'))" && exit 1
+          fi
+          arch -x86_64 /usr/bin/true && echo "Rosetta 2 OK" || (echo "Rosetta 2 не установлена" && exit 1)
+
+      - name: Determine version
+        id: ver
+        shell: bash
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            echo "v=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == refs/tags/dev-v* ]]; then
+            # Strip 'dev-v' prefix → 3.0.92
+            echo "v=${GITHUB_REF#refs/tags/dev-v}" >> $GITHUB_OUTPUT
+          else
+            echo "v=0.0.0-dev-default" >> $GITHUB_OUTPUT
+          fi
+          cat $GITHUB_OUTPUT
+
+      - name: Set package.json version
+        shell: bash
+        run: |
+          python3 -c "
+          import json
+          p = 'desktop/fb-master-desktop/package.json'
+          with open(p, encoding='utf-8') as f: d = json.load(f)
+          d['version'] = '${{ steps.ver.outputs.v }}'
+          with open(p, 'w', encoding='utf-8') as f: json.dump(d, f, indent=2, ensure_ascii=False)
+          print('package.json version ->', '${{ steps.ver.outputs.v }}')
+          "
+
+      - name: Prepare backend bundle (macOS)
+        if: matrix.platform.os == 'macos-14'
+        shell: bash
+        run: |
+          chmod +x scripts/prepare-desktop-backend-bundle.sh
+          bash scripts/prepare-desktop-backend-bundle.sh
+
+      - name: Prepare backend bundle (Windows)
+        if: matrix.platform.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          powershell -ExecutionPolicy Bypass -File .\scripts\prepare-desktop-backend-bundle-win.ps1
+
+      - name: Verify bundled Chromium architecture (macOS)
+        if: matrix.platform.os == 'macos-14'
+        shell: bash
+        run: |
+          CHROMIUM=$(find desktop/fb-master-desktop/resources-fb-master-backend/playwright-browsers -type f -path '*/MacOS/Chromium' | head -1)
+          if [[ -z "$CHROMIUM" ]]; then
+            echo "ERROR: bundled Chromium не найден!" && exit 1
+          fi
+          file "$CHROMIUM"
+          file "$CHROMIUM" | grep -q "${{ matrix.platform.arch_expected }}" || (echo "ERROR: bundled Chromium не ${{ matrix.platform.arch_expected }}!" && exit 1)
+          echo "Bundled Chromium ${{ matrix.platform.arch_expected }} OK"
+
+      - name: Install Electron dependencies
+        shell: bash
+        working-directory: desktop/fb-master-desktop
+        run: npm ci --no-audit --no-fund
+
+      - name: Build DEV dist (${{ matrix.platform.npm_target }})
+        shell: bash
+        working-directory: desktop/fb-master-desktop
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+          SKIP_NOTARIZE: '1'
+        run: npm run ${{ matrix.platform.npm_target }}
+
+      - name: Verify built DMG architecture (mac-x64)
+        if: matrix.platform.name == 'mac-x64'
+        shell: bash
+        run: |
+          DMG="desktop/fb-master-desktop/dist/SOCMASTER-DEV-${{ steps.ver.outputs.v }}-mac-x64.dmg"
+          if [[ ! -f "$DMG" ]]; then
+            echo "ERROR: DEV DMG не создан: $DMG" && exit 1
+          fi
+          MNT=$(mktemp -d)
+          hdiutil attach "$DMG" -mountpoint "$MNT" -nobrowse -readonly
+          BIN=$(find "$MNT" -name "SOCMASTER DEV" -path "*/MacOS/*" | head -1)
+          file "$BIN" | grep -q "x86_64" || (hdiutil detach "$MNT" -quiet && echo "ERROR: .app не x86_64!" && exit 1)
+          hdiutil detach "$MNT" -quiet
+          echo ".app x86_64 OK"
+
+      - name: Collect artifacts
+        shell: bash
+        run: |
+          DIST="desktop/fb-master-desktop/dist"
+          ls -la "$DIST"
+          mkdir -p "artifacts-DEV-${{ matrix.platform.name }}"
+          for ext in dmg dmg.blockmap exe exe.blockmap; do
+            cp "$DIST"/SOCMASTER-DEV-${{ steps.ver.outputs.v }}-${{ matrix.platform.name }}.$ext "artifacts-DEV-${{ matrix.platform.name }}/" 2>/dev/null || true
+          done
+          ls -lh "artifacts-DEV-${{ matrix.platform.name }}/"
+
+      - name: Upload DEV artifact
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: SOCMASTER-DEV-${{ steps.ver.outputs.v }}-${{ matrix.platform.name }}
+          path: artifacts-DEV-${{ matrix.platform.name }}/*
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish DEV to GitHub Release (fallback)
+        if: always()
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: dev-v${{ steps.ver.outputs.v }}
+          name: SOCMASTER DEV ${{ steps.ver.outputs.v }}
+          files: |
+            artifacts-DEV-${{ matrix.platform.name }}/*
+          fail_on_unmatched_files: false
+          token: ${{ secrets.GITHUB_TOKEN }}
