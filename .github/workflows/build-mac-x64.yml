@@ -35,8 +35,10 @@ jobs:
     env:
       # Кросс-сборка x86_64 на arm64-runner.
       FBM_TARGET_ARCH: x86_64
-      # Минимальная версия macOS у клиента — Monterey 12.0 (MacBook Air 2017 → 12.7.6).
-      MACOSX_DEPLOYMENT_TARGET: '12.0'
+      # Минимальная версия macOS у клиента — Catalina 10.15 (с 06.05.2026: клиент на
+      # macOS 10.15.7 Intel Mac не мог запустить prod 3.0.91, который требовал 11.0+).
+      # python-build-standalone cpython-3.12.8 x86_64-apple-darwin tarball поддерживает 10.15+.
+      MACOSX_DEPLOYMENT_TARGET: '10.15'
     steps:
       # 3.0.6+: код живёт в private repo socmaster-core. Клонируем его сюда вместо
       # actions/checkout@v4 (которая бы клонировала public socmaster-builder).

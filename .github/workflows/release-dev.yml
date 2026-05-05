@@ -43,7 +43,7 @@ jobs:
             npm_target: 'dist:dev:mac:x64'
             node_arch: 'x64'
             fbm_target_arch: 'x86_64'
-            macos_target: '12.0'
+            macos_target: '10.15'  # Catalina+ (с 06.05.2026 — для клиентов на 10.15.7)
           - name: win-x64
             os: windows-latest
             arch_expected: x64
