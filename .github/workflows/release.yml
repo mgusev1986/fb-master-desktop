@@ -89,6 +89,32 @@ jobs:
         with:
           python-version: '3.12'
 
+      # ─── Cache (с 06.05.2026) — ускорение build на ~1-2 мин ───
+      - name: Cache npm modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('desktop/fb-master-desktop/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      - name: Cache python-build-standalone (macOS bundle)
+        if: matrix.platform.os == 'macos-14'
+        uses: actions/cache@v4
+        with:
+          path: .cache/fbm-embedded-python-macos
+          key: ${{ runner.os }}-pbs-${{ matrix.platform.arch_expected }}-20241219
+          restore-keys: |
+            ${{ runner.os }}-pbs-${{ matrix.platform.arch_expected }}-
+
+      - name: Cache pip wheels
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
       - name: Verify cross-arch (mac-x64 only)
         if: matrix.platform.name == 'mac-x64'
         shell: bash
