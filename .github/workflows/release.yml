@@ -113,15 +113,17 @@ jobs:
           cat $GITHUB_OUTPUT
 
       # ─── Set package.json version (Python для cross-platform JSON edit) ───
+      # encoding='utf-8' критично — на Windows Python defaults cp1252,
+      # package.json содержит кириллицу в description → UnicodeDecodeError.
       - name: Set package.json version
         shell: bash
         run: |
           python3 -c "
           import json
           p = 'desktop/fb-master-desktop/package.json'
-          with open(p) as f: d = json.load(f)
+          with open(p, encoding='utf-8') as f: d = json.load(f)
           d['version'] = '${{ steps.ver.outputs.v }}'
-          with open(p, 'w') as f: json.dump(d, f, indent=2, ensure_ascii=False)
+          with open(p, 'w', encoding='utf-8') as f: json.dump(d, f, indent=2, ensure_ascii=False)
           print('package.json version →', '${{ steps.ver.outputs.v }}')
           "
 
