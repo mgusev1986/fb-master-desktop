@@ -1,0 +1,219 @@
+name: Release SOCMASTER (matrix)
+
+# Pt.2 (05.05.2026) — единый matrix-workflow для всех 3 платформ.
+# Цель: drift между сборками невозможен (clone-логика и общие шаги — в одном месте).
+#
+# Существующие build-windows.yml + build-mac-x64.yml остаются как fallback пока
+# этот matrix не пройдёт тест на реальном prod-релизе. После успешного теста
+# старые workflow можно удалить.
+#
+# mac-arm64 раньше собирался локально на ноуте разработчика — теперь и он в GHA.
+# Это убирает зависимость релиза от наличия локального M1/M2 + диска ≥18GB.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Версия сборки (например 3.0.91)'
+        required: true
+        default: '3.0.91'
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.platform.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          # mac-arm64 — нативная arm64 сборка на macos-14 (arm64-runner).
+          # Setup Node без architecture override → arm64.
+          - name: mac-arm64
+            os: macos-14
+            arch_expected: arm64
+            npm_target: 'dist:mac:arm64'
+          # mac-x64 — cross-arch x86_64 на arm64-runner через Rosetta.
+          # FBM_TARGET_ARCH=x86_64 → ensure-macos-embedded-python.sh качает x86_64
+          # CPython, который под Rosetta тригерит x86_64 Chromium download.
+          # MACOSX_DEPLOYMENT_TARGET=12.0 → совместимость с Monterey 12.x.
+          - name: mac-x64
+            os: macos-14
+            arch_expected: x86_64
+            npm_target: 'dist:mac:x64'
+            node_arch: 'x64'
+            fbm_target_arch: 'x86_64'
+            macos_target: '12.0'
+          # win-x64 — windows-latest нативно.
+          - name: win-x64
+            os: windows-latest
+            arch_expected: x64  # не проверяем для win — артефакт .exe сам по себе x86_64
+            npm_target: 'dist:win'
+    runs-on: ${{ matrix.platform.os }}
+    timeout-minutes: 60
+    env:
+      FBM_TARGET_ARCH: ${{ matrix.platform.fbm_target_arch || '' }}
+      MACOSX_DEPLOYMENT_TARGET: ${{ matrix.platform.macos_target || '' }}
+    steps:
+      # ─── Clone private socmaster-core (single source of truth — drift impossible) ───
+      - name: Clone private socmaster-core repo
+        shell: bash
+        env:
+          PAT: ${{ secrets.CORE_REPO_PAT }}
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          git clone --depth 1 --branch migration/private-submodule "https://x-access-token:${PAT}@github.com/mgusev1986/socmaster-core.git" "$RUNNER_TEMP/code"
+          cp -R "$RUNNER_TEMP/code/." ./
+          rm -rf "$RUNNER_TEMP/code"
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            TAG="${{ github.ref_name }}"
+            git fetch --tags --depth=1 origin 2>/dev/null || true
+            git checkout "$TAG" 2>/dev/null && echo "Checked out tag $TAG in private repo" || echo "Tag $TAG not in private, using migration HEAD"
+          fi
+          ls -la | head -10
+
+      # ─── Setup Node.js (architecture override только для mac-x64) ───
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          architecture: ${{ matrix.platform.node_arch || '' }}
+
+      # ─── Setup Python 3.12 (нужен на macOS для CI scripts; Win — embedded в bundle) ───
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verify cross-arch (mac-x64 only)
+        if: matrix.platform.name == 'mac-x64'
+        shell: bash
+        run: |
+          if [[ "$(node -p 'process.arch')" != "x64" ]]; then
+            echo "ERROR: node не x64 (process.arch=$(node -p 'process.arch'))" && exit 1
+          fi
+          arch -x86_64 /usr/bin/true && echo "Rosetta 2 OK" || (echo "Rosetta 2 не установлена" && exit 1)
+
+      # ─── Determine version (workflow_dispatch input ИЛИ tag) ───
+      - name: Determine version
+        id: ver
+        shell: bash
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            echo "v=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "v=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          else
+            echo "v=0.0.0-dev" >> $GITHUB_OUTPUT
+          fi
+          cat $GITHUB_OUTPUT
+
+      # ─── Set package.json version (Python для cross-platform JSON edit) ───
+      - name: Set package.json version
+        shell: bash
+        run: |
+          python3 -c "
+          import json
+          p = 'desktop/fb-master-desktop/package.json'
+          with open(p) as f: d = json.load(f)
+          d['version'] = '${{ steps.ver.outputs.v }}'
+          with open(p, 'w') as f: json.dump(d, f, indent=2, ensure_ascii=False)
+          print('package.json version →', '${{ steps.ver.outputs.v }}')
+          "
+
+      # ─── Prepare backend bundle (platform-specific script) ───
+      - name: Prepare backend bundle (macOS)
+        if: matrix.platform.os == 'macos-14'
+        shell: bash
+        run: |
+          chmod +x scripts/prepare-desktop-backend-bundle.sh
+          bash scripts/prepare-desktop-backend-bundle.sh
+
+      - name: Prepare backend bundle (Windows)
+        if: matrix.platform.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          powershell -ExecutionPolicy Bypass -File .\scripts\prepare-desktop-backend-bundle-win.ps1
+
+      # ─── Verify Chromium arch (gotcha C для mac-x64; sanity для mac-arm64) ───
+      - name: Verify bundled Chromium architecture (macOS)
+        if: matrix.platform.os == 'macos-14'
+        shell: bash
+        run: |
+          CHROMIUM=$(find desktop/fb-master-desktop/resources-fb-master-backend/playwright-browsers -type f -path '*/MacOS/Chromium' | head -1)
+          if [[ -z "$CHROMIUM" ]]; then
+            echo "ERROR: bundled Chromium не найден!" && exit 1
+          fi
+          file "$CHROMIUM"
+          file "$CHROMIUM" | grep -q "${{ matrix.platform.arch_expected }}" || (echo "ERROR: bundled Chromium не ${{ matrix.platform.arch_expected }}!" && exit 1)
+          echo "Bundled Chromium ${{ matrix.platform.arch_expected }} OK"
+
+      # ─── npm install ───
+      - name: Install Electron dependencies
+        shell: bash
+        working-directory: desktop/fb-master-desktop
+        run: npm ci --no-audit --no-fund
+
+      # ─── Build dist (electron-builder) ───
+      - name: Build dist (${{ matrix.platform.npm_target }})
+        shell: bash
+        working-directory: desktop/fb-master-desktop
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+          SKIP_NOTARIZE: '1'
+        run: npm run ${{ matrix.platform.npm_target }}
+
+      # ─── Verify built artifact architecture (mac-x64 — gotcha C double-check) ───
+      - name: Verify built DMG architecture (mac-x64)
+        if: matrix.platform.name == 'mac-x64'
+        shell: bash
+        run: |
+          DMG="desktop/fb-master-desktop/dist/SOCMASTER-${{ steps.ver.outputs.v }}-mac-x64.dmg"
+          if [[ ! -f "$DMG" ]]; then
+            echo "ERROR: DMG не создан: $DMG" && exit 1
+          fi
+          MNT=$(mktemp -d)
+          hdiutil attach "$DMG" -mountpoint "$MNT" -nobrowse -readonly
+          BIN=$(find "$MNT" -name "SOCMASTER" -path "*/MacOS/*" | head -1)
+          file "$BIN" | grep -q "x86_64" || (hdiutil detach "$MNT" -quiet && echo "ERROR: .app не x86_64!" && exit 1)
+          hdiutil detach "$MNT" -quiet
+          echo ".app x86_64 OK"
+
+      # ─── Collect artifacts ───
+      - name: Collect artifacts
+        shell: bash
+        run: |
+          DIST="desktop/fb-master-desktop/dist"
+          ls -la "$DIST"
+          mkdir -p "artifacts-${{ matrix.platform.name }}"
+          # Берём DMG/exe + blockmap для текущей платформы
+          for ext in dmg dmg.blockmap exe exe.blockmap; do
+            cp "$DIST"/SOCMASTER-${{ steps.ver.outputs.v }}-${{ matrix.platform.name }}.$ext "artifacts-${{ matrix.platform.name }}/" 2>/dev/null || true
+          done
+          ls -lh "artifacts-${{ matrix.platform.name }}/"
+
+      # ─── Upload artifact (с continue-on-error для quota issues) ───
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: SOCMASTER-${{ steps.ver.outputs.v }}-${{ matrix.platform.name }}
+          path: artifacts-${{ matrix.platform.name }}/*
+          if-no-files-found: error
+          retention-days: 30
+
+      # ─── Publish to GitHub Release (fallback when artifacts quota full) ───
+      - name: Publish to GitHub Release (fallback)
+        if: always()
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.ver.outputs.v }}
+          name: SOCMASTER ${{ steps.ver.outputs.v }}
+          files: |
+            artifacts-${{ matrix.platform.name }}/*
+          fail_on_unmatched_files: false
+          token: ${{ secrets.GITHUB_TOKEN }}
