@@ -124,7 +124,7 @@ jobs:
           with open(p, encoding='utf-8') as f: d = json.load(f)
           d['version'] = '${{ steps.ver.outputs.v }}'
           with open(p, 'w', encoding='utf-8') as f: json.dump(d, f, indent=2, ensure_ascii=False)
-          print('package.json version →', '${{ steps.ver.outputs.v }}')
+          print('package.json version ->', '${{ steps.ver.outputs.v }}')  # ASCII arrow (Win Python cp1252 stdout не handle Unicode)
           "
 
       # ─── Prepare backend bundle (platform-specific script) ───
