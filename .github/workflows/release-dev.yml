@@ -148,7 +148,7 @@ jobs:
         shell: bash
         run: |
           chmod +x scripts/prepare-desktop-backend-bundle.sh
-          bash scripts/prepare-desktop-backend-bundle.sh
+          bash scripts/prepare-desktop-backend-bundle.sh --dev
 
       - name: Prepare backend bundle (Windows)
         if: matrix.platform.os == 'windows-latest'
