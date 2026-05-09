@@ -108,6 +108,40 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
+      # ─── Cache Playwright Chromium (09.05.2026) — главный потребитель,
+      #     download ~170MB занимает ~3 мин/job. Cache даёт ~3 мин экономии. ───
+      - name: Cache Playwright Chromium
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/ms-playwright
+            ~\AppData\Local\ms-playwright
+          key: ${{ runner.os }}-${{ matrix.platform.arch_expected }}-playwright-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.platform.arch_expected }}-playwright-
+
+      # ─── Cache Electron binary — ~150MB download, ~1 мин экономии. ───
+      - name: Cache Electron binary
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/electron
+            ~\AppData\Local\electron\Cache
+          key: ${{ runner.os }}-electron-${{ hashFiles('desktop/fb-master-desktop/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-electron-
+
+      # ─── Cache electron-builder downloads — DMG/EXE tools, ~30MB. ───
+      - name: Cache electron-builder
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/electron-builder
+            ~\AppData\Local\electron-builder\Cache
+          key: ${{ runner.os }}-electron-builder-${{ hashFiles('desktop/fb-master-desktop/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-electron-builder-
+
       - name: Verify cross-arch (mac-x64 only)
         if: matrix.platform.name == 'mac-x64'
         shell: bash

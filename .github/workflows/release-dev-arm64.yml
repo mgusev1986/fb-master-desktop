@@ -1,0 +1,173 @@
+name: Release SOCMASTER DEV (arm64-only fast)
+
+# 09.05.2026 — DEV-only arm64 workflow для быстрых dev-итераций.
+# Один job вместо matrix-3 → ~7 мин вместо ~15 мин. Используется для
+# большинства dev-релизов, когда нужно тестировать только на M1/M2.
+#
+# Отношение к release-dev.yml:
+#   - release-dev.yml — full matrix (mac-arm64 + mac-x64 + win-x64) для
+#     финальных dev-релизов перед клиентами на разных ОС.
+#   - release-dev-arm64.yml (этот) — только mac-arm64, быстрая итерация.
+#
+# Триггер: ТОЛЬКО workflow_dispatch (через `gh workflow run`). НЕ tag-push,
+# чтобы tag dev-v* не запускал и release-dev.yml И release-dev-arm64.yml
+# параллельно (это потратило бы GHA минуты дважды).
+#
+# release-dev-matrix.sh в socmaster-core по умолчанию запускает этот
+# workflow; для full-matrix нужен флаг --full-matrix (тогда триггерится
+# release-dev.yml через push tag).
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'DEV версия (например 3.1.0-dev10)'
+        required: true
+        default: '3.1.0-dev10'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build DEV mac-arm64 (fast)
+    runs-on: macos-14
+    timeout-minutes: 30
+    steps:
+      - name: Clone private socmaster-core (dev-channel branch)
+        shell: bash
+        env:
+          PAT: ${{ secrets.CORE_REPO_PAT }}
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          git clone --depth 1 --branch dev-channel "https://x-access-token:${PAT}@github.com/mgusev1986/socmaster-core.git" "$RUNNER_TEMP/code"
+          cp -R "$RUNNER_TEMP/code/." ./
+          rm -rf "$RUNNER_TEMP/code"
+          ls -la | head -10
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Cache npm modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('desktop/fb-master-desktop/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      - name: Cache python-build-standalone
+        uses: actions/cache@v4
+        with:
+          path: .cache/fbm-embedded-python-macos
+          key: ${{ runner.os }}-pbs-arm64-20241219
+          restore-keys: |
+            ${{ runner.os }}-pbs-arm64-
+
+      - name: Cache pip wheels
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Cache Playwright Chromium
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/ms-playwright
+          key: ${{ runner.os }}-arm64-playwright-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-arm64-playwright-
+
+      - name: Cache Electron binary
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/electron
+          key: ${{ runner.os }}-electron-${{ hashFiles('desktop/fb-master-desktop/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-electron-
+
+      - name: Cache electron-builder
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/electron-builder
+          key: ${{ runner.os }}-electron-builder-${{ hashFiles('desktop/fb-master-desktop/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-electron-builder-
+
+      - name: Determine version
+        id: ver
+        shell: bash
+        run: |
+          echo "v=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          cat $GITHUB_OUTPUT
+
+      - name: Set package.json version
+        shell: bash
+        run: |
+          python3 -c "
+          import json
+          p = 'desktop/fb-master-desktop/package.json'
+          with open(p, encoding='utf-8') as f: d = json.load(f)
+          d['version'] = '${{ steps.ver.outputs.v }}'
+          with open(p, 'w', encoding='utf-8') as f: json.dump(d, f, indent=2, ensure_ascii=False)
+          print('package.json version ->', '${{ steps.ver.outputs.v }}')
+          "
+
+      - name: Prepare backend bundle (macOS arm64)
+        shell: bash
+        run: |
+          chmod +x scripts/prepare-desktop-backend-bundle.sh
+          bash scripts/prepare-desktop-backend-bundle.sh --dev
+
+      - name: Verify bundled Chromium architecture (arm64)
+        shell: bash
+        run: |
+          CHROMIUM=$(find desktop/fb-master-desktop/resources-fb-master-backend/playwright-browsers -type f -path '*/MacOS/Chromium' | head -1)
+          if [[ -z "$CHROMIUM" ]]; then
+            echo "ERROR: bundled Chromium не найден!" && exit 1
+          fi
+          file "$CHROMIUM"
+          file "$CHROMIUM" | grep -q "arm64" || (echo "ERROR: bundled Chromium не arm64!" && exit 1)
+          echo "Bundled Chromium arm64 OK"
+
+      - name: Install Electron dependencies
+        shell: bash
+        working-directory: desktop/fb-master-desktop
+        run: npm ci --no-audit --no-fund
+
+      - name: Build DEV dist (mac-arm64)
+        shell: bash
+        working-directory: desktop/fb-master-desktop
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+          SKIP_NOTARIZE: '1'
+        run: npm run dist:dev:mac:arm64
+
+      - name: Collect artifacts
+        shell: bash
+        run: |
+          DIST="desktop/fb-master-desktop/dist"
+          ls -la "$DIST"
+          mkdir -p "artifacts-DEV-mac-arm64"
+          for ext in dmg dmg.blockmap; do
+            cp "$DIST"/SOCMASTER-DEV-${{ steps.ver.outputs.v }}-mac-arm64.$ext "artifacts-DEV-mac-arm64/" 2>/dev/null || true
+          done
+          ls -lh "artifacts-DEV-mac-arm64/"
+
+      - name: Upload DEV artifact
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: SOCMASTER-DEV-${{ steps.ver.outputs.v }}-mac-arm64
+          path: artifacts-DEV-mac-arm64/*
+          if-no-files-found: error
+          retention-days: 30
