@@ -52,7 +52,7 @@ jobs:
           cd "$GITHUB_WORKSPACE"
           # 3.0.7+: явно клонируем рабочую ветку с fix'ами (на main политика
           # запрещает прямой push без PR review, поэтому fix лежит на feature-branch).
-          git clone --depth 1 --branch migration/private-submodule "https://x-access-token:${PAT}@github.com/mgusev1986/socmaster-core.git" "$RUNNER_TEMP/code"
+          git clone --depth 1 --branch migration/private-submodule "https://x-access-token:${PAT}@github.com/socmaster2-team/socmaster-core.git" "$RUNNER_TEMP/code"
           cp -R "$RUNNER_TEMP/code/." ./
           rm -rf "$RUNNER_TEMP/code"
           # Если пуш был на тег — пытаемся checkout того же тега в private (если он там есть)
